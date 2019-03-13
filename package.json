@@ -1,0 +1,84 @@
+{
+  "name": "apollos",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/react-native",
+      "**/react-native/**",
+      "**/react-native-*",
+      "**/react-native-*/**",
+      "**/rn-*",
+      "**/rn-*/**"
+    ]
+  },
+  "scripts": {
+    "start": "if test \"$NOW_ENV\" = \"true\" ; then yarn start:now ; else yarn start:dev ; fi",
+    "start:now": "./node_modules/.bin/lerna run start --scope apollos-church-api",
+    "start:dev": "./node_modules/.bin/lerna run start --parallel",
+    "lint": "./node_modules/.bin/lerna run lint",
+    "test": "./node_modules/.bin/lerna run test",
+    "ci-test": "./node_modules/.bin/lerna run test  --stream -- --maxWorkers=2",
+    "storybook": "./node_modules/.bin/lerna run storybook --stream --scope apolloschurchapp",
+    "ios": "./node_modules/.bin/lerna run ios --stream --scope apolloschurchapp",
+    "android": "./node_modules/.bin/lerna run android --stream --scope apolloschurchapp",
+    "release": "./node_modules/.bin/lerna publish --no-push && echo \"Release has been tagged!\nPlease look over the CHANGELOG.md file, and use 'git commit -amend' to amend any edits.\nWhen done, be sure to 'git push --tags' and create a release PR\"",
+    "preversion": "./scripts/update-change-log.sh",
+    "prepublish": "./node_modules/.bin/lerna run build",
+    "publish-schema": "./node_modules/.bin/apollo schema:publish --endpoint=\"https://apollos-church-api.now.sh\" --key=$ENGINE_API_KEY",
+    "deploy": "now --public --team apolloschurch --token $NOW_TOKEN --docker && now alias --team apolloschurch --token $NOW_TOKEN && now rm apollos-church-api --team apolloschurch --safe --yes --token $NOW_TOKEN && npm run publish-schema",
+    "nuke": "./scripts/boom.sh && yarn nuke:node && yarn nuke:cache",
+    "nuke:node": "rm -rdf ./node_modules packages/*/node_modules && yarn cache clean && yarn",
+    "nuke:cache": "watchman watch-del-all && ./node_modules/.bin/lerna run start --scope apolloschurchapp --stream -- --reset-cache",
+    "postinstall": "lerna run build --parallel"
+  },
+  "resolutions": {
+    "babel-core": "7.0.0-bridge.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "7.1.5",
+    "@babel/core": "7.1.6",
+    "@babel/node": "7.0.0",
+    "@babel/parser": "7.1.6",
+    "@babel/runtime": "7.1.5",
+    "apollo": "^1.9.2",
+    "babel-core": "7.0.0-bridge.0",
+    "babel-eslint": "10.0.1",
+    "babel-jest": "23.6.0",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^17.0.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-import-resolver-babel-module": "^5.0.0-beta.0",
+    "eslint-plugin-babel": "^5.1.0",
+    "eslint-plugin-import": "^2.12.0",
+    "eslint-plugin-jest": "^21.15.2",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-prettier": "^2.6.0",
+    "eslint-plugin-react": "^7.10.0",
+    "eslint-plugin-react-native": "^3.2.1",
+    "babel-plugin-module-resolver": "3.1.1",
+    "lerna": "^3.0.6",
+    "prettier": "^1.14.2",
+    "prop-types": "15.6.1",
+    "react": "16.6.1",
+    "react-native": "0.57.5",
+    "react-native-linear-gradient": "2.4.0",
+    "react-native-svg": "6.5.2"
+  },
+  "now": {
+    "name": "apollos-church-api",
+    "alias": "apollos-church-api.now.sh",
+    "env": {
+      "ROCK_API": "@rock_api",
+      "ROCK_TOKEN": "@rock_token",
+      "BIBLE_API_KEY": "@bible_api_key",
+      "BIBLE_ID": "@bible_id",
+      "ENGINE_API_KEY": "@engine_api_key",
+      "PORT": "443",
+      "CLOUDINARY_URL": "@cloudinary_url",
+      "NOW_ENV": "true"
+    }
+  }
+}
