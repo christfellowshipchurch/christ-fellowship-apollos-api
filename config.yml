@@ -72,6 +72,9 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
     ContentItem:
       EntityType: ContentChannelItem
+    WebsitePagesContentItem:
+      EntityType: ContentChannelItem
+      ContentChannelTypeId: [14]
   
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews
@@ -94,6 +97,12 @@ ROCK_MAPPINGS:
     - 5
     - 6
     - 8
+  # Apollos will pull content items from these channels and expose them on a website
+  # However, it will not expose the channel itself.
+  WEBSITE_CONTENT_CHANNEL_IDS:
+    # Content Channels to be used for the Wordpress Migration Website
+    WORDPRESS_MIGRATION:
+      - 23
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:

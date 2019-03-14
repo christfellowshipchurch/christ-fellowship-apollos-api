@@ -29,6 +29,10 @@ import * as Theme from './theme';
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
 import * as OneSignalWithRock from './oneSignalWithRock';
 
+// Localized Modules
+// import * as ContentItem from './content-item';
+import * as WebsitePagesContentItem from './website-pages-content-item';
+
 const data = {
   Followings,
   ContentChannel,
@@ -51,6 +55,7 @@ const data = {
   Pass,
   Template,
   Campus,
+  WebsitePagesContentItem,
 };
 
 const {
