@@ -18,8 +18,6 @@ export default class WebsitePagesContentItem extends ContentItem.dataSource {
             `WEBSITE_CONTENT_CHANNEL_IDS.${website}`,
             null);
 
-        console.log({ websiteContentChannelIds });
-
         if (websiteContentChannelIds) {
             // Get the Content Channel Items from Content Channel Id
             const websiteContentChannelItems = await this.request()
@@ -30,15 +28,11 @@ export default class WebsitePagesContentItem extends ContentItem.dataSource {
 
             if (websiteContentChannelItems) {
                 // Find top 1 page whose 
-                const contentItem = first(
+                return first(
                     websiteContentChannelItems.filter(
                         (item) => normalizeWebPageTitle(get(item, 'title', '')) === normalizeWebPageTitle(title)
                     )
                 );
-
-                console.log({ contentItem });
-
-                return contentItem;
             }
         }
 

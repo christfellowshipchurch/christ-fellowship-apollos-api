@@ -7,7 +7,7 @@ const resolver = {
             await context.dataSources.WebsitePagesContentItem.getWebsitePageContentByTitle(website, title),
     },
     WebsitePagesContentItem: {
-
+        ...ContentItem.resolver.ContentItem,
     }
 }
 
