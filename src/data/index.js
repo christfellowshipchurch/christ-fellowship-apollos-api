@@ -30,15 +30,16 @@ import * as Theme from './theme';
 import * as OneSignalWithRock from './oneSignalWithRock';
 
 // Localized Modules
-// import * as ContentItem from './content-item';
 import * as WebsitePagesContentItem from './website-pages-content-item';
+import * as WebsiteContentItem from './website-content-item';
+import * as DefinedValue from './defined-value';
 
 const data = {
   Followings,
   ContentChannel,
   ContentItem,
   Person,
-  Cloudinary,
+  // Cloudinary,
   Auth,
   AuthSms,
   Sms,
@@ -55,7 +56,13 @@ const data = {
   Pass,
   Template,
   Campus,
+
+  // Local Types
+  DefinedValue,
+
+  // Local Content Items
   WebsitePagesContentItem,
+  WebsiteContentItem,
 };
 
 const {
