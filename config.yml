@@ -78,6 +78,9 @@ ROCK_MAPPINGS:
     WebsiteContentItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [15]
+    WebsiteAccordionContentItem:
+      EntityType: ContentChannelItem
+      ContentChannelTypeId: [16]
   
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews
