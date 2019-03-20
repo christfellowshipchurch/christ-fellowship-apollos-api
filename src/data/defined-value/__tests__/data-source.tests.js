@@ -37,13 +37,6 @@ describe('Defined Value', () => {
 
     // Run the getValueBYBlablablablab
     it('gets a defined value from a valid guid or integer id', async () => {
-        const dataSource = new DefinedValue();
-        const id = '999'
-
-        dataSource.get = jest.fn();
-
-        const result = await dataSource.getDefinedValueByIdentifier(id);
-
         expect(dataSource.get.mocks).toMatchSnapshot();
         const id = '999'
 
