@@ -16,6 +16,7 @@ ROCK:
   API_URL: ${ROCK_API}/api
   API_TOKEN: ${ROCK_TOKEN}
   IMAGE_URL: ${ROCK_API}/GetImage.ashx
+  FILE_URL: ${ROCK_API}/GetFile.ashx
   # This should match the timezone of the Rock server
   TIMEZONE: 'America/New_York'
 ONE_SIGNAL:
