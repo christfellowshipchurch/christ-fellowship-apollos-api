@@ -1,5 +1,8 @@
 import { ContentItem } from '@apollosproject/data-connector-rock';
 import { schemaMerge } from '@apollosproject/server-core';
+import {
+    get
+} from 'lodash'
 
 const resolver = {
     Query: {
@@ -8,6 +11,14 @@ const resolver = {
     },
     WebsitePagesContentItem: {
         ...ContentItem.resolver.ContentItem,
+        metaDescription: async ({ attributeValues }) =>
+            get(attributeValues, 'metaDescription.value', ''),
+        metaKeywords: async ({ attributeValues }) =>
+            get(attributeValues, 'metaKeywords.value', [])
+                .split('|')
+                .filter((n) => {
+                    return n !== '';
+                }),
     }
 }
 

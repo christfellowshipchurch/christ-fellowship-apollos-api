@@ -25,5 +25,8 @@ export default gql`
         ): ContentItemsConnection
         parentChannel: ContentChannel
         theme: Theme
+
+        metaDescription: String
+        metaKeywords: [String]
     }
 `;
