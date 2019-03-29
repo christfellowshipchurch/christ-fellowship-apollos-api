@@ -2,7 +2,7 @@ import { ContentItem, Utils } from '@apollosproject/data-connector-rock';
 import { schemaMerge } from '@apollosproject/server-core';
 import ApollosConfig from '@apollosproject/config';
 import {
-    get
+    get, lowerCase
 } from 'lodash';
 
 const createVideoUrlFromGuid = (uri) =>
@@ -59,6 +59,10 @@ const resolver = {
                     })
                 : []
         },
+        target: ({ attributeValues }, args, context) =>
+            lowerCase(get(attributeValues, 'openLinksInNewTab.value', 'false')) === 'true'
+                ? '_blank'
+                : '',
     }
 }
 

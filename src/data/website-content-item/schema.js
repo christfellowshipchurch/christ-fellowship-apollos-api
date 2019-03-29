@@ -31,5 +31,6 @@ export default gql`
         imageAlt: String
         imageRatio: String
         callsToAction: [CallToAction]
+        target: String
     }
 `;
