@@ -4,6 +4,14 @@ import {
     get
 } from 'lodash'
 
+const parseProtocols = (str) => str
+    ? str.split('|')
+        .map((n) => {
+            var splt = n.split('^')
+            return { content: splt[0] || '', name: splt[1] || '' };
+        })
+    : []
+
 const resolver = {
     Query: {
         getWebsitePageContentByTitle: async (root, { website, title }, context) =>
@@ -19,6 +27,10 @@ const resolver = {
                 .filter((n) => {
                     return n !== '';
                 }),
+        openGraphProtocols: ({ attributeValues }) =>
+            parseProtocols(get(attributeValues, 'openGraphProtocols.value', null)),
+        twitterProtocols: ({ attributeValues }) =>
+            parseProtocols(get(attributeValues, 'twitterProtocols.value', null)),
     }
 }
 
