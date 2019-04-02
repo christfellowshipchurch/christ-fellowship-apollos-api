@@ -6,6 +6,11 @@ export default gql`
         getWebsitePageContentByTitle(website: String!, title: String!): WebsitePagesContentItem
     }
 
+    type MetaTag {
+        name: String
+        content: String
+    }
+
     type WebsitePagesContentItem implements ContentItem & Node {
         id: ID!
         title: String
@@ -28,5 +33,7 @@ export default gql`
 
         metaDescription: String
         metaKeywords: [String]
+        openGraphProtocols: [MetaTag]
+        twitterProtocols: [MetaTag]
     }
 `;
