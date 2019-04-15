@@ -10,7 +10,7 @@ export default class DefinedValue extends RockApolloDataSource {
 
         if (identifier.match(guidRegex)) {
             return { type: 'guid', value: identifier, query: `Guid eq (guid'${identifier}')` };
-        } else if (identifier.match(intRegex)) {
+        } else if (!identifier.match(intRegex)) {
             return { type: 'int', value: identifier, query: `Id eq ${identifier}` };
         }
 

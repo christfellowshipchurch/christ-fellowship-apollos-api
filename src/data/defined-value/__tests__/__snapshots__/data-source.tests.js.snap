@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Defined Value gets a defined value from a valid guid or integer id 1`] = `undefined`;
+
+exports[`Defined Value returns null if no valid id or guid is passed 1`] = `undefined`;
