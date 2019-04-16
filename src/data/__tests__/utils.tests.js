@@ -19,4 +19,8 @@ describe('ParseRockKeyValuePairs', () => {
 
         expect(parseRockKeyValuePairs(str, 'keyOverride', 'valueOverride')).toMatchSnapshot()
     })
+
+    it('is passed null for the keyValueStr attribute and returns null', () => {
+        expect(parseRockKeyValuePairs(null)).toEqual(null)
+    })
 })
