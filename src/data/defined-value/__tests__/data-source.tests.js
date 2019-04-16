@@ -43,7 +43,7 @@ describe('Defined Value', () => {
 
         const result = dataSource.getDefinedValueByIdentifier(id);
 
-        expect(dataSource.get.mocks).toMatchSnapshot();
+        expect(dataSource.get).toMatchSnapshot();
     });
 
     it('returns null if no valid id or guid is passed', async () => {
@@ -51,7 +51,6 @@ describe('Defined Value', () => {
         const id = 'some-random-identifier'
         const result = await dataSource.getDefinedValueByIdentifier(id);
 
-        expect(dataSource.get.mocks).toMatchSnapshot();
         expect(result).toEqual(null);
     });
 });
