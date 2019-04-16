@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ParseRockKeyValuePairs parses a key value pair string that contains an empty key value pairing 1`] = `
+Array [
+  Object {
+    "keyOverride": "firstKey",
+    "valueOverride": "firstValue",
+  },
+  Object {
+    "keyOverride": "",
+    "valueOverride": "",
+  },
+]
+`;
+
+exports[`ParseRockKeyValuePairs parses a key value pair string with key and value labeling overrides 1`] = `
+Array [
+  Object {
+    "keyOverride": "firstKey",
+    "valueOverride": "firstValue",
+  },
+  Object {
+    "keyOverride": "secondKey",
+    "valueOverride": "secondValue",
+  },
+]
+`;
+
+exports[`ParseRockKeyValuePairs parses a key value pair string with no overrides 1`] = `
+Array [
+  Object {
+    "key": "firstKey",
+    "value": "firstValue",
+  },
+  Object {
+    "key": "secondKey",
+    "value": "secondValue",
+  },
+]
+`;

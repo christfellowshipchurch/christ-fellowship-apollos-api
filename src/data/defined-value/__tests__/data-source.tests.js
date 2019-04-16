@@ -1,6 +1,5 @@
 import ApollosConfig from '@apollosproject/config';
 import DefinedValue from '../data-source';
-import { buildGetMock } from '../../test-utils';
 
 ApollosConfig.loadJs({
     ROCK: {
@@ -14,7 +13,7 @@ describe('Defined Value', () => {
     // Parse Identifier parameter
     it('parses identifer as a guid', () => {
         const dataSource = new DefinedValue();
-        const id = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
+        const id = 'f6bc95f5-057b-4313-8946-75381d7c5129';
         const identifierType = dataSource.getIdentifierType(id);
 
         expect(identifierType).toEqual({ type: 'guid', value: id, query: `Guid eq (guid'${id}')` });
@@ -37,25 +36,21 @@ describe('Defined Value', () => {
 
     // Run the getValueBYBlablablablab
     it('gets a defined value from a valid guid or integer id', async () => {
-        expect(dataSource.get.mocks).toMatchSnapshot();
+        const dataSource = new DefinedValue();
         const id = '999'
 
-        dataSource.get = jest.fn();
+        dataSource.get = jest.fn(() => Promise.resolve([{ Id: 999, Value: 'Foo' }]));
 
-        const result = await dataSource.getDefinedValueByIdentifier(id);
+        const result = dataSource.getDefinedValueByIdentifier(id);
 
-        expect(dataSource.get.mocks).toMatchSnapshot();
+        expect(dataSource.get).toMatchSnapshot();
     });
 
-    it('returns null if no valid id or guid is passed', () => {
+    it('returns null if no valid id or guid is passed', async () => {
         const dataSource = new DefinedValue();
         const id = 'some-random-identifier'
-
-        dataSource.get = jest.fn();
-
         const result = await dataSource.getDefinedValueByIdentifier(id);
 
-        expect(dataSource.get.mocks).toMatchSnapshot();
         expect(result).toEqual(null);
     });
 });

@@ -3,14 +3,7 @@ import { schemaMerge } from '@apollosproject/server-core';
 import {
     get
 } from 'lodash'
-
-const parseProtocols = (str) => str
-    ? str.split('|')
-        .map((n) => {
-            var splt = n.split('^')
-            return { content: splt[0] || '', name: splt[1] || '' };
-        })
-    : []
+import { parseRockKeyValuePairs } from '../utils'
 
 const resolver = {
     Query: {
@@ -28,9 +21,15 @@ const resolver = {
                     return n !== '';
                 }),
         openGraphProtocols: ({ attributeValues }) =>
-            parseProtocols(get(attributeValues, 'openGraphProtocols.value', null)),
+            parseRockKeyValuePairs(
+                get(attributeValues, 'openGraphProtocols.value', ''),
+                'content', 'name'
+            ),
         twitterProtocols: ({ attributeValues }) =>
-            parseProtocols(get(attributeValues, 'twitterProtocols.value', null)),
+            parseRockKeyValuePairs(
+                get(attributeValues, 'twitterProtocols.value', ''),
+                'content', 'name'
+            ),
     }
 }
 

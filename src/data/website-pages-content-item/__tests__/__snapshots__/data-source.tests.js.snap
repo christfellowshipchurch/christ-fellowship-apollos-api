@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Website Pages Content Item gets a Website Page Content Item from passing in a website key and page title 1`] = `
+Array [
+  Array [
+    "ContentChannelItemSlugs?loadAttributes=expanded&%24filter=Slug%20eq%20%27hello-there%27&%24select=ContentChannelItemId%2C%20Slug&%24top=1",
+    Object {},
+    Object {},
+  ],
+  Array [
+    "ContentChannelItems?loadAttributes=expanded&%24filter=%28%28ContentChannelId%20eq%201%29%29%20and%20%28Id%20eq%201%29&%24top=1",
+    Object {},
+    Object {},
+  ],
+]
+`;
+
+exports[`Website Pages Content Item makes a call to ContentChannelItemSlugs where Slug is equal to the noramlized title passed in 1`] = `
+Array [
+  Array [
+    "ContentChannelItemSlugs?loadAttributes=expanded&%24filter=Slug%20eq%20%27hello-there%27&%24select=ContentChannelItemId%2C%20Slug&%24top=1",
+    Object {},
+    Object {},
+  ],
+]
+`;

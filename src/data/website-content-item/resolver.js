@@ -1,9 +1,10 @@
-import { ContentItem, Utils } from '@apollosproject/data-connector-rock';
-import { schemaMerge } from '@apollosproject/server-core';
-import ApollosConfig from '@apollosproject/config';
+import { ContentItem, Utils } from '@apollosproject/data-connector-rock'
+import { schemaMerge } from '@apollosproject/server-core'
+import ApollosConfig from '@apollosproject/config'
 import {
     get, lowerCase
-} from 'lodash';
+} from 'lodash'
+import { parseRockKeyValuePairs } from '../utils'
 
 const createVideoUrlFromGuid = (uri) =>
     uri.split('-').length === 5
@@ -32,9 +33,6 @@ const resolver = {
                 return video;
             });
         },
-
-        // NOTE : removes the sanitizeHtml() from the content, so Graph passes back all of the HTML that Rock is returning
-        // htmlContent: ({ content }) => content,
         contentLayout: async ({ attributeValues }, args, context) => {
             const definedValueGuid = get(attributeValues, 'contentLayout.value', '');
             const definedValue = await context.dataSources.DefinedValue.getDefinedValueByIdentifier(definedValueGuid);
@@ -52,11 +50,7 @@ const resolver = {
             const cta = get(attributeValues, 'callsToAction.value', null);
 
             return cta
-                ? cta.split('|')
-                    .map((n) => {
-                        var splt = n.split('^')
-                        return { call: splt[0] || '', action: splt[1] || '' };
-                    })
+                ? parseRockKeyValuePairs(cta, 'call', 'action')
                 : []
         },
         target: ({ attributeValues }, args, context) =>
