@@ -19,7 +19,7 @@ describe('ParseRockKeyValuePairs', () => {
 
         expect(parseRockKeyValuePairs(str, 'keyOverride', 'valueOverride')).toMatchSnapshot()
     })
-
+  
     it('is passed an empty string for the keyValueStr attribute and returns an empty array', () => {
         expect(parseRockKeyValuePairs('')).toEqual([])
     })
