@@ -18,5 +18,5 @@ export const parseRockKeyValuePairs = (keyValueStr, keyOverride = null, valueOve
 
         return rtn
       })
-    : null
+    : []
 }
