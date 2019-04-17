@@ -5,8 +5,6 @@ export const parseRockKeyValuePairs = (keyValueStr, keyOverride = null, valueOve
   const key = keyOverride || 'key'
   const value = valueOverride || 'value'
 
-  console.log("Parsing Key Value Pairs: ", { keyValueStr })
-
   return keyValueStr
     ? keyValueStr.split('|')
       .map((n) => {
