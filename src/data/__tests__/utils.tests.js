@@ -20,11 +20,11 @@ describe('ParseRockKeyValuePairs', () => {
         expect(parseRockKeyValuePairs(str, 'keyOverride', 'valueOverride')).toMatchSnapshot()
     })
 
-    it('is passed an empty string for the keyValueStr attribute and returns null', () => {
-        expect(parseRockKeyValuePairs('')).toEqual(null)
+    it('is passed an empty string for the keyValueStr attribute and returns an empty array', () => {
+        expect(parseRockKeyValuePairs('')).toEqual([])
     })
 
-    it('is passed null for the keyValueStr attribute and returns null', () => {
-        expect(parseRockKeyValuePairs(null)).toEqual(null)
+    it('is passed null for the keyValueStr attribute and returns an empty array', () => {
+        expect(parseRockKeyValuePairs(null)).toEqual([])
     })
 })
