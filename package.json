@@ -32,17 +32,17 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@apollosproject/config": "^0.8.0",
-    "@apollosproject/data-connector-analytics": "^0.8.0",
-    "@apollosproject/data-connector-bible": "^0.8.0",
-    "@apollosproject/data-connector-church-online": "^0.8.0",
-    "@apollosproject/data-connector-cloudinary": "^0.8.0",
-    "@apollosproject/data-connector-onesignal": "^0.8.0",
-    "@apollosproject/data-connector-passes": "^0.8.0",
-    "@apollosproject/data-connector-rock": "^0.8.0",
-    "@apollosproject/data-connector-twilio": "^0.8.0",
-    "@apollosproject/rock-apollo-data-source": "^0.8.0",
-    "@apollosproject/server-core": "^0.8.0",
+    "@apollosproject/config": "^1.0.0-beta.0",
+    "@apollosproject/data-connector-analytics": "^1.0.0",
+    "@apollosproject/data-connector-bible": "^1.0.0",
+    "@apollosproject/data-connector-church-online": "^1.0.0",
+    "@apollosproject/data-connector-cloudinary": "^1.0.0-beta.0",
+    "@apollosproject/data-connector-onesignal": "^1.0.0",
+    "@apollosproject/data-connector-passes": "^1.0.0",
+    "@apollosproject/data-connector-rock": "^1.0.0",
+    "@apollosproject/data-connector-twilio": "^1.0.0-beta.0",
+    "@apollosproject/rock-apollo-data-source": "^1.0.0",
+    "@apollosproject/server-core": "^1.0.0",
     "apollo-server": "^2.0.5",
     "color": "3.0.0",
     "dotenv": "6.0.0",
@@ -50,17 +50,22 @@
     "jest": "^24.7.1",
     "jest-fetch-mock": "^2.1.2",
     "prettier": "1.12.1",
-    "randomcolor": "0.5.3"
+    "randomcolor": "0.5.3",
+    "apollo-server-express": "2.4.8",
+    "express": "^4.17.0"
   },
   "devDependencies": {
-    "@apollosproject/apollo-server-env-mock": "^0.8.0",
-    "@apollosproject/babel-preset-apollos": "^0.8.0",
+    "@apollosproject/apollo-server-env-mock": "^1.0.0-beta.0",
+    "@apollosproject/babel-preset-apollos": "^1.0.0-beta.0",
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.6",
     "@babel/node": "7.0.0",
     "@babel/parser": "7.1.6",
     "@babel/runtime": "7.1.5",
     "codecov": "3.0.2",
-    "nodemon": "1.18.7"
+    "nodemon": "1.18.7",
+    "@entria/graphql-findbreakingchanges": "^1.0.1",
+    "get-graphql-schema": "^2.1.2",
+    "graphql-schema-linter": "^0.2.0"
   }
 }

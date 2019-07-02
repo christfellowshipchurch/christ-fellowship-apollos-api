@@ -22,6 +22,8 @@ ROCK:
 ONE_SIGNAL:
   APP_ID: b6e75a77-003f-4466-95ca-82cc5cdc407b
   REST_KEY: ${ONE_SIGNAL_REST_KEY}
+CHURCH_ONLINE:
+  URL: https://apollos.churchonline.org/api/v1/
 TWILIO:
   ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
   AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
@@ -71,6 +73,8 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
     UniversalContentItem:
       EntityType: ContentChannelItem
+    WeekendContentItem:
+      EntityType: ContentChannelItem
     ContentItem:
       EntityType: ContentChannelItem
     WebsitePagesContentItem:
@@ -83,6 +87,7 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [16]
   
+
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews
     PersonaId: 210
@@ -110,6 +115,9 @@ ROCK_MAPPINGS:
     # Content Channels to be used for the Wordpress Migration Website
     WORDPRESS_MIGRATION:
       - 23
+
+  CAMPAIGN_CHANNEL_IDS:
+    - 11
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:
