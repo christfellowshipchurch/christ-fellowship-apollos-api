@@ -1,5 +1,5 @@
 import { ContentItem } from '@apollosproject/data-connector-rock';
-import { schemaMerge } from '@apollosproject/server-core';
+import { resolverMerge } from '@apollosproject/server-core';
 import {
     get
 } from 'lodash'
@@ -33,4 +33,4 @@ const resolver = {
     }
 }
 
-export default schemaMerge(resolver, ContentItem)
+export default resolverMerge(resolver, ContentItem)

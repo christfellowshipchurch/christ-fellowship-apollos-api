@@ -32,5 +32,10 @@ export default gql`
         imageRatio: String
         callsToAction: [CallToAction]
         target: String
+        subtitle: String
+        buttonColor: String
+        backgroundColor: String
+        gridImageLink: String
+        openLinksInNewTab: String
     }
 `;

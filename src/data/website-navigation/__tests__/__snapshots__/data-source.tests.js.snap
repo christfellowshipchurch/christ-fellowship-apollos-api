@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Website Navigation requests the website navigation based on a website key 1`] = `
+Array [
+  Array [
+    "ContentChannels?loadAttributes=expanded&%24filter=Id%20eq%201&%24top=1",
+    Object {},
+    Object {},
+  ],
+]
+`;

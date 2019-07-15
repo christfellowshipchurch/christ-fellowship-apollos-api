@@ -29,27 +29,21 @@ export default class WebsitePagesContentItem extends ContentItem.dataSource {
         const contentChannelIdBySlug = await this.getContentChannelIdByTitle(title)
 
         // Get the Content Channels for the specified Website
-        const websiteContentChannelIds = get(
+        const websiteContentChannelId = get(
             ROCK_MAPPINGS,
             `WEBSITE_CONTENT_CHANNEL_IDS.${website}`,
             null);
 
-        if (websiteContentChannelIds && contentChannelIdBySlug) {
+        if (websiteContentChannelId && contentChannelIdBySlug) {
             // query ContentChannelItems by ContentChannelId and ContentChannelItemId
             // return the first result (we only want 1 item to be passed back since page title to page should be a 1-1 relationship)
             // const { contentChannelItemId } = first(contentChannelItemIds)
             const { contentChannelItemId } = contentChannelIdBySlug
             return await this.request()
                 .filter(
-                    `(${[...websiteContentChannelIds].map(
-                        (channelId) => `(ContentChannelId eq ${channelId})`
-                    ).join(' or ')}) and (Id eq ${contentChannelItemId})`
+                    `(ContentChannelId eq ${websiteContentChannelId}) and (Id eq ${contentChannelItemId})`
                 )
                 .first();
-
-            // if (websiteContentChannelItems) {
-            //     return first(websiteContentChannelItems);
-            // }
         }
 
         return null;
