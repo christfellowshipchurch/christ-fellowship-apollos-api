@@ -44,15 +44,16 @@
     "@apollosproject/rock-apollo-data-source": "^1.0.0",
     "@apollosproject/server-core": "^1.0.0",
     "apollo-server": "^2.0.5",
+    "apollo-server-express": "2.4.8",
     "color": "3.0.0",
     "dotenv": "6.0.0",
+    "express": "^4.17.0",
     "graphql": "0.13.2",
     "jest": "^24.7.1",
     "jest-fetch-mock": "^2.1.2",
     "prettier": "1.12.1",
     "randomcolor": "0.5.3",
-    "apollo-server-express": "2.4.8",
-    "express": "^4.17.0"
+    "twilio": "^3.33.1"
   },
   "devDependencies": {
     "@apollosproject/apollo-server-env-mock": "^1.0.0-beta.0",
@@ -62,10 +63,10 @@
     "@babel/node": "7.0.0",
     "@babel/parser": "7.1.6",
     "@babel/runtime": "7.1.5",
-    "codecov": "3.0.2",
-    "nodemon": "1.18.7",
     "@entria/graphql-findbreakingchanges": "^1.0.1",
+    "codecov": "3.0.2",
     "get-graphql-schema": "^2.1.2",
-    "graphql-schema-linter": "^0.2.0"
+    "graphql-schema-linter": "^0.2.0",
+    "nodemon": "1.18.7"
   }
 }
