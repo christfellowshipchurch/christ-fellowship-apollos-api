@@ -65,6 +65,7 @@ const data = {
   Campus,
   BinaryFiles,
   Features,
+  TwilioNotify,
 
   // Local Types
   DefinedValue,
