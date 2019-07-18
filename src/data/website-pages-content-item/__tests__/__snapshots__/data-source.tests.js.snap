@@ -8,7 +8,7 @@ Array [
     Object {},
   ],
   Array [
-    "ContentChannelItems?loadAttributes=expanded&%24filter=%28%28ContentChannelId%20eq%201%29%29%20and%20%28Id%20eq%201%29&%24top=1",
+    "ContentChannelItems?loadAttributes=expanded&%24filter=%28ContentChannelId%20eq%201%29%20and%20%28Id%20eq%201%29&%24top=1",
     Object {},
     Object {},
   ],
