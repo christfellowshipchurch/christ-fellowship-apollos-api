@@ -13,11 +13,11 @@ import {
   Followings,
   Interactions,
   RockConstants,
-  Person,
+  // Person,
   ContentItem,
   ContentChannel,
   Sharable,
-  Auth,
+  // Auth,
   PersonalDevice,
   Template,
   AuthSms,
@@ -40,6 +40,9 @@ import * as WebsiteNavigation from './website-navigation'
 import * as DefinedValue from './defined-value';
 
 import * as TwilioNotify from './twilio-notify'
+import * as Auth from './auth'
+import * as Person from './people'
+import * as PhoneNumber from './phone-number'
 
 const data = {
   Followings,
@@ -48,7 +51,7 @@ const data = {
   Person,
   // Cloudinary,
   Auth,
-  AuthSms,
+  AuthSms: Auth,
   Sms: TwilioNotify,
   LiveStream,
   Theme,
@@ -69,6 +72,7 @@ const data = {
 
   // Local Types
   DefinedValue,
+  PhoneNumber,
 
   // Local Content Items
   WebsitePagesContentItem,
