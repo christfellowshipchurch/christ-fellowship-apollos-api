@@ -10,7 +10,7 @@ export default class PhoneNumber extends RockApolloDataSource {
   Uses Twilio's recommended format to validate the phone number
   
   https://www.twilio.com/docs/glossary/what-e164 */
-  parsePhoneNumber = ({ phoneNumber }) => {
+  parsePhoneNumber = (phoneNumber) => {
     const number = new AwesomePhoneNumber(phoneNumber, 'US');
 
     return {
@@ -24,9 +24,9 @@ export default class PhoneNumber extends RockApolloDataSource {
     };
   };
 
-  addPhoneNumberToPerson = async ({ personId, phoneNumber }) => {
-    if (personId && phoneNumber) {
-      const { valid, phoneNumber, countryCode } = this.parsePhoneNumber({ phoneNumber })
+  addPhoneNumberToPerson = async ({ personId, phoneNumber: phoneNumberInput }) => {
+    if (personId && phoneNumberInput) {
+      const { valid, phoneNumber, countryCode } = this.parsePhoneNumber(phoneNumberInput)
 
       if (valid) {
         return this.post('/PhoneNumbers', {
