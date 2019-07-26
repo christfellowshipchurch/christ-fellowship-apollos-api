@@ -20,8 +20,8 @@ import {
   // Auth,
   PersonalDevice,
   Template,
-  AuthSms,
-  Campus,
+  // AuthSms,
+  // Campus,
   BinaryFiles,
   Features,
 } from '@apollosproject/data-connector-rock';
@@ -41,6 +41,7 @@ import * as DefinedValue from './defined-value';
 
 import * as TwilioNotify from './twilio-notify'
 import * as Auth from './auth'
+import * as Campus from './campus'
 import * as Person from './people'
 import * as PhoneNumber from './phone-number'
 
