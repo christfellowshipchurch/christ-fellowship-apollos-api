@@ -6,7 +6,7 @@ export const secret = process.env.SECRET || 'ASea$2gadj#asd0';
 export const parseToken = (token) => jwt.verify(token, secret);
 
 export const registerToken = (token) => {
-    console.log({ token });
+    // console.log({ token })
 
     try {
         const { cookie, sessionId } = parseToken(token);
