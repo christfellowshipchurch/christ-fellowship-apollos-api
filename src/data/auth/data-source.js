@@ -34,13 +34,14 @@ export default class Auth extends coreAuth.dataSource {
 
             // looks for an existing user with the given identity
             const existingUserLogin = await this.getUserLogin(identity)
+            console.log({ existingUserLogin })
 
             // placeholder object for personOptions
             let personOptions = { PersonId: DEFAULT_ROCK_APOLLOS_PERSON_ID }
 
             // Updating PlainTextPassword via Patch doesn't work, so we delete and recreate.
             if (existingUserLogin) {
-                this.isExistingUserLogin = true
+                this.isExistingUserLogin = existingUserLogin.personId !== DEFAULT_ROCK_APOLLOS_PERSON_ID
                 // if we have a PersonId on the user login, we should move it over to the new login.
                 if (existingUserLogin.personId)
                     personOptions = { PersonId: existingUserLogin.personId }
