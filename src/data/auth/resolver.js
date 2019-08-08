@@ -7,9 +7,6 @@ const resolver = {
             dataSources.AuthSms.requestSmsLogin({ phoneNumber }),
         authenticateCredentials: (root, { identity, passcode }, { dataSources }) =>
             dataSources.Auth.authenticateCredentials({ identity, passcode }),
-        // TODO : insecure, please remove
-        updateUserLogin: (root, { identity, passcode }, { dataSources }) =>
-            dataSources.Auth.updateIdentityPassword({ identity, passcode }),
         relateUserLoginToPerson: (root, { identity, passcode, input }, { dataSources }) =>
             dataSources.Auth.relateUserLoginToPerson({ identity, passcode, input }),
         createNewUserLogin: async (root, { identity, passcode }, { dataSources }) => {
@@ -29,6 +26,10 @@ const resolver = {
                 ? { success: true, isExistingIdentity: true }
                 : { success: true, isExistingIdentity: false }
         },
+    },
+    Query: {
+        hasEmailUserLogin: (root, props, { dataSources }) =>
+            dataSources.Auth.hasEmailUserLogin(),
     }
 }
 
