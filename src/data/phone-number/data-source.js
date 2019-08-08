@@ -1,6 +1,10 @@
 import RockApolloDataSource from '@apollosproject/rock-apollo-data-source'
 import AwesomePhoneNumber from 'awesome-phonenumber'
-import { UserInputError } from 'apollo-server';
+import { UserInputError } from 'apollo-server'
+
+const numberTypeValueIdMap = {
+  mobile: 12
+}
 
 export default class PhoneNumber extends RockApolloDataSource {
   resource = 'PhoneNumbers'
@@ -16,6 +20,7 @@ export default class PhoneNumber extends RockApolloDataSource {
     return {
       valid: number.isValid(),
       phoneNumber: number.getNumber('significant'),
+      numericOnlyPhoneNumber: number.getNumber('significant').replace(/[^0-9]/gi, ''),
       countryCode: AwesomePhoneNumber.getCountryCodeForRegionCode(
         number.getRegionCode()
       ),
@@ -24,7 +29,7 @@ export default class PhoneNumber extends RockApolloDataSource {
     };
   };
 
-  addPhoneNumberToPerson = async ({ personId, phoneNumber: phoneNumberInput }) => {
+  addPhoneNumberToPerson = async ({ personId, phoneNumber: phoneNumberInput, numberType = 'mobile' }) => {
     if (personId && phoneNumberInput) {
       const { valid, phoneNumber, countryCode } = this.parsePhoneNumber(phoneNumberInput)
 
@@ -35,7 +40,7 @@ export default class PhoneNumber extends RockApolloDataSource {
           IsSystem: false,
           Number: phoneNumber,
           CountryCode: countryCode,
-          NumberTypeValueId: 12, // 12 is a Constant Set in Rock, means "Mobile"
+          NumberTypeValueId: numberTypeValueIdMap[numberType]
         })
       }
 

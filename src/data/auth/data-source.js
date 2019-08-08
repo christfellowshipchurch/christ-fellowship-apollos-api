@@ -14,6 +14,16 @@ export default class Auth extends coreAuth.dataSource {
     // TODO : propose that UserLogins have the ability to have passwords updated without deleting so we can accomplish this using createDateTime
     isExistingUserLogin = false
 
+    parseIdentityAsPhoneNumber = (identity) => {
+        // try parsing identity as a phone number
+        const { valid, phoneNumber, e164, numericOnlyPhoneNumber } = this.context.dataSources.PhoneNumber.parsePhoneNumber(identity)
+
+        // if valid phone number, set identity to the formatted number with no special characters
+        if (valid) return numericOnlyPhoneNumber
+
+        return identity
+    }
+
     hashPassword = ({ passcode }) =>
         crypto
             .createHash('sha256')
@@ -69,10 +79,7 @@ export default class Auth extends coreAuth.dataSource {
 
     authenticateCredentials = async ({ identity, passcode }) => {
         // try parsing identity as a phone number
-        const { valid, phoneNumber, e164 } = this.context.dataSources.PhoneNumber.parsePhoneNumber(identity)
-
-        // if valid phone number, set identity to the formatted number
-        if (valid) identity = phoneNumber
+        identity = this.parseIdentityAsPhoneNumber(identity)
 
         // find user login where username is equal to the identity passed in
         const userLogin = await this.request('/UserLogins')
@@ -99,7 +106,7 @@ export default class Auth extends coreAuth.dataSource {
     requestSmsLogin = async ({ phoneNumber: phoneNumberInput }) => {
         // E.164 Regex that twilio recommends
         // https://www.twilio.com/docs/glossary/what-e164
-        const { valid, phoneNumber, e164 } = this.context.dataSources.PhoneNumber.parsePhoneNumber(phoneNumberInput)
+        const { valid, phoneNumber, e164, numericOnlyPhoneNumber } = this.context.dataSources.PhoneNumber.parsePhoneNumber(phoneNumberInput)
 
         // throw error if invalid phone number was given
         if (!valid) {
@@ -110,7 +117,7 @@ export default class Auth extends coreAuth.dataSource {
         const pin = `${Math.floor(Math.random() * 1000000)}`.padStart(6, '0')
 
         // update or create new user login using phone number as identity and pin as passcode
-        const user = await this.updateIdentityPassword({ identity: phoneNumber, passcode: pin })
+        const user = await this.updateIdentityPassword({ identity: numericOnlyPhoneNumber, passcode: pin })
 
         console.log({ user })
 
@@ -127,6 +134,9 @@ export default class Auth extends coreAuth.dataSource {
 
     // TODO : does this method need authenitcation of the identity and passcode before patching??
     relateUserLoginToPerson = async ({ identity, passcode, input }) => {
+        // try parsing identity as a phone number
+        identity = this.parseIdentityAsPhoneNumber(identity)
+        
         const { id, createdDateTime } = await this.getUserLogin(identity)
 
         if (id) {
