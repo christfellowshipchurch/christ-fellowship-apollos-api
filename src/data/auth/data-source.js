@@ -143,7 +143,7 @@ export default class Auth extends coreAuth.dataSource {
     relateUserLoginToPerson = async ({ identity, passcode, input }) => {
         // try parsing identity as a phone number
         identity = this.parseIdentityAsPhoneNumber(identity)
-
+      
         const { id, createdDateTime } = await this.getUserLogin(identity)
 
         if (id) {
