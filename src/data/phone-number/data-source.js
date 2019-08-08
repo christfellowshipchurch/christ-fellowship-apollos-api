@@ -15,12 +15,14 @@ export default class PhoneNumber extends RockApolloDataSource {
   
   https://www.twilio.com/docs/glossary/what-e164 */
   parsePhoneNumber = (phoneNumber) => {
-    const number = new AwesomePhoneNumber(phoneNumber, 'US');
+    const number = new AwesomePhoneNumber(phoneNumber, 'US')
 
     return {
       valid: number.isValid(),
       phoneNumber: number.getNumber('significant'),
-      numericOnlyPhoneNumber: number.getNumber('significant').replace(/[^0-9]/gi, ''),
+      numericOnlyPhoneNumber: number.isValid()
+        ? number.getNumber('significant').replace(/[^0-9]/gi, '')
+        : null,
       countryCode: AwesomePhoneNumber.getCountryCodeForRegionCode(
         number.getRegionCode()
       ),
