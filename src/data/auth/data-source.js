@@ -8,6 +8,7 @@ import { secret } from './token';
 import { string } from 'yup'
 
 const DEFAULT_ROCK_APOLLOS_PERSON_ID = 360207
+const APOLLOS_ROCK_USER_LOGIN_ATTR_KEY = 'IsApollosUserLogin'
 
 export default class Auth extends coreAuth.dataSource {
     // global flag to be accessed to keep state of whether a user login is pre-existing or new
@@ -67,7 +68,17 @@ export default class Auth extends coreAuth.dataSource {
                 ...personOptions, // { PersonId: ID } OR null
             })
 
-            if (userLogin) return { success: true, isExistingIdentity: this.isExistingUserLogin }
+            if (userLogin) {
+                // TODO : figure out why this code isn't working
+                // await this.post(`/UserLogins/AttributeValue/${userLogin}`, {
+                //     AttributeKey: APOLLOS_ROCK_USER_LOGIN_ATTR_KEY,
+                //     AttributeValue: "True"
+                // })
+
+                // console.log({ userLogin })
+
+                return { success: true, isExistingIdentity: this.isExistingUserLogin }
+            }
 
             return { success: false, isExistingIdentity: this.isExistingUserLogin }
         } catch (e) {
@@ -90,11 +101,9 @@ export default class Auth extends coreAuth.dataSource {
         if (!userLogin) {
             throw new AuthenticationError('Invalid input')
         }
-        console.log("ln:83")
+
         // hash passcode passed in
         const password = this.hashPassword({ passcode })
-
-        console.log("ln:87", { identity, password })
 
         // return authenticated using identity and hashed password
         return this.context.dataSources.Auth.authenticate({
@@ -119,8 +128,6 @@ export default class Auth extends coreAuth.dataSource {
         // update or create new user login using phone number as identity and pin as passcode
         const user = await this.updateIdentityPassword({ identity: numericOnlyPhoneNumber, passcode: pin })
 
-        console.log({ user })
-
         // send sms with readable pin to the e164 formatted number
         await this.context.dataSources.Sms.sendSms({
             to: e164,
@@ -136,7 +143,7 @@ export default class Auth extends coreAuth.dataSource {
     relateUserLoginToPerson = async ({ identity, passcode, input }) => {
         // try parsing identity as a phone number
         identity = this.parseIdentityAsPhoneNumber(identity)
-        
+      
         const { id, createdDateTime } = await this.getUserLogin(identity)
 
         if (id) {
@@ -211,5 +218,17 @@ export default class Auth extends coreAuth.dataSource {
         }
 
         throw new Error(`No User Login found for the Identity: ${identity}`)
+    }
+
+    hasEmailUserLogin = async () => {
+        const currentUser = await this.getCurrentPerson()
+        const { email, id } = currentUser
+        const login = await this.request('/UserLogins')
+            .filter(`UserName eq '${email}'`)
+            .first()
+
+        if (login) return true
+
+        return false
     }
 }

@@ -13,8 +13,11 @@ export default gql`
         requestSmsLoginPin(phoneNumber: String!): IdentityResult
         authenticateCredentials(identity: String!, passcode: String!): Authentication
         createNewUserLogin(identity: String!, passcode: String!): Authentication
-        updateUserLogin(identity: String!, passcode: String!): IdentityResult
         relateUserLoginToPerson(identity: String!, passcode: String!, input:[UpdateProfileInput]!): Authentication
         isValidIdentity(identity: String): IdentityResult
+    }
+
+    extend type Query {
+        hasEmailUserLogin: Boolean
     }
 `
