@@ -9,21 +9,23 @@ const { enforceCurrentUser } = Utils
 
 const resolver = {
     Person: {
-        ethnicity: enforceCurrentUser(({ attributeValues }) =>
-            get(attributeValues, 'ethnicity.value', null)),
         address: (root, args, { dataSources }) =>
             dataSources.Address.getByUser(),
-        baptismDate: enforceCurrentUser(({ attributeValues }) =>
-            get(attributeValues, 'baptismDate.value', null)),
-        salvationDate: enforceCurrentUser((root) => {
-            console.log({ root })
-
-
-            return get(
-                root.attributeValues,
-                `${get(ApollosConfig, 'ROCK_MAPPING.PERSON_ATTRIBUTES.SALVATION')}`,
-                null)
-        }),
+        ethnicity: enforceCurrentUser(({ id }, args, { dataSources }) =>
+            dataSources.Person.getAttributeByKey({
+                personId: id,
+                key: 'ethnicity'
+            })),
+        baptismDate: enforceCurrentUser(({ id }, args, { dataSources }) =>
+            dataSources.Person.getAttributeByKey({
+                personId: id,
+                key: 'baptismDate'
+            })),
+        salvationDate: enforceCurrentUser(({ id }, args, { dataSources }) =>
+            dataSources.Person.getAttributeByKey({
+                personId: id,
+                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.SALVATION')
+            })),
     },
     Query: {
         getEthnicityList: (root, args, { dataSources }) =>

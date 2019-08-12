@@ -125,7 +125,7 @@ ROCK_MAPPINGS:
     # when migrating from Arena to Rock, the Arena keys were kept
     # this configuration helps eliminate the need to remember specific Arena keys
   PERSON_ATTRIBUTES:
-    SALVATION: 'Arena-15-139'
+    SALVATION: 'arena15139'
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:

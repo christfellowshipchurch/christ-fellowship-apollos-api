@@ -2,6 +2,7 @@ import {
     Person as corePerson,
 } from '@apollosproject/data-connector-rock'
 import moment from 'moment'
+import { get } from 'lodash'
 
 const RockGenderMap = {
     Unknown: 0,
@@ -48,5 +49,17 @@ export default class Person extends corePerson.dataSource {
         return this
             .request(`/Groups/GetFamilies/${personId}`)
             .first()
+    }
+
+    getAttributeByKey = async ({ personId, key }) => {
+        if (personId) {
+            console.log({ key })
+
+            const { attributeValues } = await this.request(`/People/${personId}`).get()
+
+            return get(attributeValues, `${key}.value`, null)
+        }
+
+        throw Error("You must pass in a personId to get a person's attribute")
     }
 }
