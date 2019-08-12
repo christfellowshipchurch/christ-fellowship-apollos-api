@@ -13,6 +13,9 @@ export default gql`
         NickName
         Gender
         BirthDate
+        Ethnicity
+        BaptismDate
+        SalvationDate
     }
 
     input UpdateProfileInput {
@@ -31,6 +34,8 @@ export default gql`
         photo: ImageMediaSource
         ethnicity: String
         address: Address
+        baptismDate: String
+        salvationDate: String
     }
 
     extend type Mutation {

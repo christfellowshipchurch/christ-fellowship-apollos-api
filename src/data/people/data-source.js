@@ -10,6 +10,8 @@ const RockGenderMap = {
 }
 
 export default class Person extends corePerson.dataSource {
+    expanded = true
+
     parseDateAsBirthday = (date) => {
         const birthDate = moment(date);
 
