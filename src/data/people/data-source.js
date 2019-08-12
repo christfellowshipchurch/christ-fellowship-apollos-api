@@ -10,7 +10,6 @@ const RockGenderMap = {
 }
 
 export default class Person extends corePerson.dataSource {
-
     parseDateAsBirthday = (date) => {
         const birthDate = moment(date);
 
@@ -41,4 +40,11 @@ export default class Person extends corePerson.dataSource {
         }),
         {}
     )
+
+    getFamilyByUser = async () => {
+        const { id: personId } = await this.context.dataSources.Auth.getCurrentPerson()
+        return this
+            .request(`/Groups/GetFamilies/${personId}`)
+            .first()
+    }
 }

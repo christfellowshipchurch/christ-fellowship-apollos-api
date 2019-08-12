@@ -115,6 +115,12 @@ ROCK_MAPPINGS:
   CAMPAIGN_CHANNEL_IDS:
     - 11
 
+  # List of Id's associated with important/commonly used Defined Types
+  # (primarily used by the Defined Value List data type)
+  DEFINED_TYPES:
+    ETHNICITY: 277
+    STATES: 28
+
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:
   TEXT: 1

@@ -32,18 +32,20 @@ import * as Theme from './theme';
 import * as OneSignalWithRock from './oneSignalWithRock';
 
 // Localized Modules
-import * as WebsitePagesContentItem from './website-pages-content-item';
-import * as WebsiteContentItem from './website-content-item';
-import * as WebsiteGroupContentItem from './website-group-content-item';
+import * as WebsitePagesContentItem from './website-pages-content-item'
+import * as WebsiteContentItem from './website-content-item'
+import * as WebsiteGroupContentItem from './website-group-content-item'
 import * as WebsiteNavigation from './website-navigation'
 
-import * as DefinedValue from './defined-value';
+import * as DefinedValue from './defined-value'
+import * as DefinedValueList from './defined-value-list'
 
 import * as TwilioNotify from './twilio-notify'
 import * as Auth from './auth'
 import * as Campus from './campus'
 import * as Person from './people'
 import * as PhoneNumber from './phone-number'
+import * as Address from './address'
 
 const data = {
   Followings,
@@ -73,7 +75,9 @@ const data = {
 
   // Local Types
   DefinedValue,
+  DefinedValueList,
   PhoneNumber,
+  Address,
 
   // Local Content Items
   WebsitePagesContentItem,
