@@ -9,6 +9,11 @@ const { enforceCurrentUser } = Utils
 
 const resolver = {
     Person: {
+        phoneNumber: enforceCurrentUser(async ({ id }, args, { dataSources }) => {
+            const { number } = await dataSources.PhoneNumber.getByUser()
+
+            return number
+        }),
         address: (root, args, { dataSources }) =>
             dataSources.Address.getByUser(),
         ethnicity: enforceCurrentUser(({ id }, args, { dataSources }) =>
@@ -26,6 +31,15 @@ const resolver = {
                 personId: id,
                 key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.SALVATION')
             })),
+        communicationPreferences: ({ emailPreference }, args, { dataSources }) => ({
+            allowSMS: async () => {
+                const { isMessagingEnabled } = await dataSources.PhoneNumber.getByUser()
+
+                return isMessagingEnabled
+            },
+            allowEmail: emailPreference < 2,
+            allowPushNotifications: null
+        })
     },
     Query: {
         getEthnicityList: (root, args, { dataSources }) =>
@@ -40,6 +54,8 @@ const resolver = {
             dataSources.Person.updateProfileWithAttributes([{ field, value }]),
         updateProfileFields: (root, { input }, { dataSources }) =>
             dataSources.Person.updateProfileWithAttributes(input),
+        updateCommunicationPreference: (root, { type, allow }, { dataSources }) =>
+            dataSources.Person.updateCommunicationPreference({ type, allow }),
     }
 }
 

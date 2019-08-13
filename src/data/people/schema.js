@@ -6,6 +6,7 @@ export default gql`
         Female
         Unknown
     }
+
     enum UPDATEABLE_PROFILE_FIELDS {
         FirstName
         LastName
@@ -16,6 +17,11 @@ export default gql`
         Ethnicity
         BaptismDate
         SalvationDate
+    }
+
+    enum UPDATEABLE_COMMUNICATION_PREFERENCES {
+        SMS
+        Email
     }
 
     input UpdateProfileInput {
@@ -29,6 +35,7 @@ export default gql`
         lastName: String!
         nickName: String
         email: String
+        phoneNumber: String
         gender: GENDER
         birthDate: String
         photo: ImageMediaSource
@@ -36,6 +43,13 @@ export default gql`
         address: Address
         baptismDate: String
         salvationDate: String
+        communicationPreferences: CommunicationPreferences
+    }
+
+    type CommunicationPreferences {
+        allowSMS: Boolean
+        allowEmail: Boolean
+        allowPushNotification: Boolean
     }
 
     extend type Mutation {
@@ -43,6 +57,7 @@ export default gql`
         updateProfileFields(input: [UpdateProfileInput]!): Person
         uploadProfileImage(file: Upload!, size: Int!): Person
         updateAddress(street1: String!, street2: String, city: String!, state: String!, postalCode: String!): Address
+        updateCommunicationPreference(type: UPDATEABLE_COMMUNICATION_PREFERENCES!, allow: Boolean!): Person
     }
 
     extend type Query {

@@ -51,4 +51,22 @@ export default class PhoneNumber extends RockApolloDataSource {
 
     throw new Error('You must provide a Person Id and Phone Number to add a Phone Number')
   }
+
+  getByUser = async () => {
+    const { id } = await this.context.dataSources.Auth.getCurrentPerson()
+
+    if (!id) throw new Error('Invalid credentials')
+
+    return this.request()
+      .filter(`(PersonId eq ${id}) and (NumberTypeValueId eq ${numberTypeValueIdMap.mobile})`)
+      .first()
+  }
+
+  updateEnableSMS = async (allow) => {
+    const { id } = await this.getByUser()
+
+    return this.patch(`/PhoneNumbers/${id}`, {
+      IsMessagingEnabled: allow
+    })
+  }
 }

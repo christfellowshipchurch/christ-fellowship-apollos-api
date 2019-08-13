@@ -122,4 +122,27 @@ export default class Person extends corePerson.dataSource {
             }
         }
     }
+
+    updateCommunicationPreference = async ({ type, allow }) => {
+        switch (type) {
+            case 'SMS':
+                try {
+                    await this.context.dataSources.PhoneNumber.updateEnableSMS(allow)
+                } catch (e) {
+                    throw new Error(e)
+                }
+
+                return this.context.dataSources.Auth.getCurrentPerson()
+            case 'Email':
+                const currentPerson = await this.context.dataSources.Auth.getCurrentPerson()
+
+                console.log({ currentPerson })
+
+                await this.patch(`/People/${currentPerson.id}`, {
+                    EmailPreference: allow ? 0 : 2
+                })
+
+                return currentPerson
+        }
+    }
 }
