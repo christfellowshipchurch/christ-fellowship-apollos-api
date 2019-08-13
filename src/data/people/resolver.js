@@ -34,7 +34,12 @@ const resolver = {
             ),
     },
     Mutation: {
-        updateAddress: (root, args, { dataSources }) => dataSources.Address.updateByUser({ ...args })
+        updateAddress: (root, args, { dataSources }) =>
+            dataSources.Address.updateByUser({ ...args }),
+        updateProfileField: (root, { input: { field, value } }, { dataSources }) =>
+            dataSources.Person.updateProfileWithAttributes([{ field, value }]),
+        updateProfileFields: (root, { input }, { dataSources }) =>
+            dataSources.Person.updateProfileWithAttributes(input),
     }
 }
 

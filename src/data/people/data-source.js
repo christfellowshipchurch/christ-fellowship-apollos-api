@@ -1,13 +1,20 @@
 import {
     Person as corePerson,
 } from '@apollosproject/data-connector-rock'
+import ApollosConfig from '@apollosproject/config'
 import moment from 'moment'
-import { get } from 'lodash'
+import { get, has, forEach } from 'lodash'
 
 const RockGenderMap = {
     Unknown: 0,
     Male: 1,
     Female: 2,
+}
+
+const RockAttributeValues = {
+    Ethnicity: 'Ethnicity',
+    BaptismDate: 'BaptismDate',
+    SalvationDate: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.SALVATION')
 }
 
 export default class Person extends corePerson.dataSource {
@@ -61,5 +68,63 @@ export default class Person extends corePerson.dataSource {
         }
 
         throw Error("You must pass in a personId to get a person's attribute")
+    }
+
+    updateProfileWithAttributes = async (fields) => {
+        console.log({ fields })
+
+        // requires auth
+        const currentPerson = await this.context.dataSources.Auth.getCurrentPerson()
+
+        if (!currentPerson.id) throw new AuthenticationError('Invalid Credentials')
+
+        // placeholder arrays
+        let attributeValueFields = []
+        let attributeFields = []
+        let updatedAttributeValues = {}
+
+        // map attributes and attribute values to separate arrays
+        fields.map(n => has(RockAttributeValues, n.field)
+            ? attributeValueFields.push(n)
+            : attributeFields.push(n)
+        )
+
+        // Rock only allows for 1 attribute value to be updated at a time
+        // we loop through each of the attributeValueFields in order to update them one at a time
+        // TODO : create a workflow that handles this cause one at a time is just rediculous
+        forEach(attributeValueFields, async (n, i) => {
+            try {
+                const reponse = await this.post(`/People/AttributeValue/${currentPerson.id}`, {
+                    attributeKey: n.field,
+                    attributeValue: n.value,
+                })
+
+                if (response) {
+                    updatedAttributeValues[n.field] = n.value
+                } else {
+                    throw new Error(`Something went wrong while updating the following attribute value: ${n.field}`)
+                }
+            } catch (e) {
+                console.log("Error:", { e })
+                throw new Error(`There was an issue updating the following attribute value: ${n.field}`)
+            }
+        })
+
+        // Run the normal updateProfile method if there are attributeFields to update
+        if (attributeFields) {
+            const updatedProfileFields = await this.updateProfile(attributeFields)
+
+            // updateProfile returns the deconstructed currentPerson
+            // there's no need to add it to this return value
+            return {
+                ...updatedProfileFields,
+                ...updatedAttributeValues
+            }
+        } else {
+            return {
+                ...currentPerson,
+                ...updatedAttributeValues
+            }
+        }
     }
 }

@@ -86,7 +86,7 @@ ROCK_MAPPINGS:
       ContentChannelTypeId: [15]
     WebsiteGroupContentItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: []
+      ContentChannelTypeId: [16]
   
 
   DATAVIEW_CATEGORIES:
@@ -111,6 +111,8 @@ ROCK_MAPPINGS:
     # Content Channels to be used for the Wordpress Migration Website
     WORDPRESS_MIGRATION:
       - 23
+    EXTERNAL_MARKETING:
+      - 33
 
   CAMPAIGN_CHANNEL_IDS:
     - 11
@@ -121,11 +123,14 @@ ROCK_MAPPINGS:
     ETHNICITY: 277
     STATES: 28
 
-    # List of attribute keys for Profile information
-    # when migrating from Arena to Rock, the Arena keys were kept
-    # this configuration helps eliminate the need to remember specific Arena keys
+  # List of attribute keys for Profile information
+  # when migrating from Arena to Rock, the Arena keys were kept
+  # this configuration helps eliminate the need to remember specific Arena keys
   PERSON_ATTRIBUTES:
     SALVATION: 'arena15139'
+
+  LOCATION_TYPES:
+    HOME_ADDRESS: 19
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:

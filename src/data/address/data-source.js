@@ -1,4 +1,6 @@
 import RockApolloDataSource from '@apollosproject/rock-apollo-data-source'
+import ApollosConfig from '@apollosproject/config'
+import { get } from 'lodash'
 
 export default class Address extends RockApolloDataSource {
     resource = 'Locations'
@@ -8,7 +10,11 @@ export default class Address extends RockApolloDataSource {
 
         const { locationId } = await this
             .request(`/GroupLocations`)
-            .filter(`GroupId eq ${familyId}`)
+            .filter(`
+                (GroupId eq ${familyId})
+                and
+                (GroupLocationTypeValueId eq ${get(ApollosConfig, 'ROCK_MAPPINGS.LOCATION_TYPES.HOME_ADDRESS', 0)})
+            `)
             .first()
 
         return this.request().filter(`Id eq ${locationId}`).first()
