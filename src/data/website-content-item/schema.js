@@ -7,7 +7,7 @@ export default gql`
         action: String
     }
 
-    type WebsiteContentItem implements ContentItem & Node {
+    type WebsiteBlockItem implements ContentItem & Node {
         id: ID!
         title: String
         coverImage: ImageMedia
@@ -30,12 +30,9 @@ export default gql`
         contentLayout: String
         imageAlt: String
         imageRatio: String
-        callsToAction: [CallToAction]
+        callToAction: [CallToAction]
+        secondaryCallToAction: [CallToAction]
         target: String
         subtitle: String
-        buttonColor: String
-        backgroundColor: String
-        gridImageLink: String
-        openLinksInNewTab: String
     }
 `;

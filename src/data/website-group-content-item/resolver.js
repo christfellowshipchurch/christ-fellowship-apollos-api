@@ -12,7 +12,7 @@ const createVideoUrlFromGuid = (uri) =>
         : Utils.enforceProtocol(uri);
 
 const resolver = {
-    WebsiteGroupContentItem: {
+    WebsiteGroupItem: {
         ...ContentItem.resolver.ContentItem,
         title: ({ title, attributeValues }, args, context) => {
             const titleOverride = get(attributeValues, 'titleOverride.value', '');

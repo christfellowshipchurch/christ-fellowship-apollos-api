@@ -18,7 +18,7 @@ ROCK:
   IMAGE_URL: ${ROCK_API}/GetImage.ashx
   FILE_URL: ${ROCK_API}/GetFile.ashx
   # This should match the timezone of the Rock server
-  TIMEZONE: 'America/New_York'
+  TIMEZONE: "America/New_York"
 ONE_SIGNAL:
   APP_ID: b6e75a77-003f-4466-95ca-82cc5cdc407b
   REST_KEY: ${ONE_SIGNAL_REST_KEY}
@@ -44,7 +44,7 @@ ANALYTICS:
   GA_ID:
 BIBLE_API:
   KEY: ${BIBLE_API_KEY}
-  BIBLE_ID: '9879dbb7cfe39e4d-01'
+  BIBLE_ID: "9879dbb7cfe39e4d-01"
 CLOUDINARY:
   # Cloudinary is used to improve image loading
   # value should look something like
@@ -81,13 +81,12 @@ ROCK_MAPPINGS:
     WebsitePagesContentItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [14]
-    WebsiteContentItem:
+    WebsiteBlockItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [15]
-    WebsiteGroupContentItem:
+    WebsiteGroupItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [16]
-  
 
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews
@@ -127,7 +126,7 @@ ROCK_MAPPINGS:
   # when migrating from Arena to Rock, the Arena keys were kept
   # this configuration helps eliminate the need to remember specific Arena keys
   PERSON_ATTRIBUTES:
-    SALVATION: 'arena15139'
+    SALVATION: "arena15139"
 
   LOCATION_TYPES:
     HOME_ADDRESS: 19
