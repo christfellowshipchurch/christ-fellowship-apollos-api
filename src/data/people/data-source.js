@@ -60,8 +60,6 @@ export default class Person extends corePerson.dataSource {
 
     getAttributeByKey = async ({ personId, key }) => {
         if (personId) {
-            console.log({ key })
-
             const { attributeValues } = await this.request(`/People/${personId}`).get()
 
             return get(attributeValues, `${key}.value`, null)
@@ -71,8 +69,6 @@ export default class Person extends corePerson.dataSource {
     }
 
     updateProfileWithAttributes = async (fields) => {
-        console.log({ fields })
-
         // requires auth
         const currentPerson = await this.context.dataSources.Auth.getCurrentPerson()
 
@@ -94,10 +90,9 @@ export default class Person extends corePerson.dataSource {
         // TODO : create a workflow that handles this cause one at a time is just rediculous
         forEach(attributeValueFields, async (n, i) => {
             try {
-                const reponse = await this.post(`/People/AttributeValue/${currentPerson.id}`, {
-                    attributeKey: n.field,
-                    attributeValue: n.value,
-                })
+                const attributeKey = `attributeKey=${n.field}`
+                const attributeValue = `attributeValue=${n.value}`
+                const response = await this.post(`/People/AttributeValue/${currentPerson.id}?${attributeKey}&${attributeValue}`)
 
                 if (response) {
                     updatedAttributeValues[n.field] = n.value
@@ -111,7 +106,7 @@ export default class Person extends corePerson.dataSource {
         })
 
         // Run the normal updateProfile method if there are attributeFields to update
-        if (attributeFields) {
+        if (attributeFields.length) {
             const updatedProfileFields = await this.updateProfile(attributeFields)
 
             // updateProfile returns the deconstructed currentPerson
