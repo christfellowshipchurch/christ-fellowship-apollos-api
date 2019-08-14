@@ -69,4 +69,18 @@ export default class PhoneNumber extends RockApolloDataSource {
       IsMessagingEnabled: allow
     })
   }
+
+  updateByUser = async (phoneNumber) => {
+    const { valid, numericOnlyPhoneNumber } = this.parsePhoneNumber(phoneNumber)
+
+    if (valid) {
+      const { id } = await this.getByUser()
+
+      return this.patch(`/PhoneNumbers/${id}`, {
+        Number: numericOnlyPhoneNumber
+      })
+    }
+
+    throw new Error('Phone Number passed is invalid')
+  }
 }

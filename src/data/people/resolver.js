@@ -56,6 +56,10 @@ const resolver = {
             dataSources.Person.updateProfileWithAttributes(input),
         updateCommunicationPreference: (root, { type, allow }, { dataSources }) =>
             dataSources.Person.updateCommunicationPreference({ type, allow }),
+        updatePhoneNumber: async (root, { phoneNumber }, { dataSources }) => {
+            await dataSources.PhoneNumber.updateByUser(phoneNumber)
+            return dataSources.Auth.getCurrentPerson()
+        },
     }
 }
 

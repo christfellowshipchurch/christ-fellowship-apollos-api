@@ -57,6 +57,7 @@ export default gql`
         updateProfileFields(input: [UpdateProfileInput]!): Person
         uploadProfileImage(file: Upload!, size: Int!): Person
         updateAddress(street1: String!, street2: String, city: String!, state: String!, postalCode: String!): Address
+        updatePhoneNumber(phoneNumber: String!): Person
         updateCommunicationPreference(type: UPDATEABLE_COMMUNICATION_PREFERENCES!, allow: Boolean!): Person
     }
 
