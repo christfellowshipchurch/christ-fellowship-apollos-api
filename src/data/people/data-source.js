@@ -3,7 +3,7 @@ import {
 } from '@apollosproject/data-connector-rock'
 import ApollosConfig from '@apollosproject/config'
 import moment from 'moment'
-import { get, has, forEach } from 'lodash'
+import { get, has, forEach, camelCase, replace, snakeCase } from 'lodash'
 
 const RockGenderMap = {
     Unknown: 0,
@@ -59,6 +59,7 @@ export default class Person extends corePerson.dataSource {
     }
 
     getAttributeByKey = async ({ personId, key }) => {
+        key = camelCase(replace(key, /\s|[-]/g, ''))
         if (personId) {
             const { attributeValues } = await this.request(`/People/${personId}`).get()
 
@@ -90,7 +91,12 @@ export default class Person extends corePerson.dataSource {
         // TODO : create a workflow that handles this cause one at a time is just rediculous
         forEach(attributeValueFields, async (n, i) => {
             try {
-                const attributeKey = `attributeKey=${n.field}`
+                const snakeCaseField = snakeCase(n.field).toUpperCase()
+                const key = get(ApollosConfig, `ROCK_MAPPINGS.PERSON_ATTRIBUTES.${snakeCaseField}`, null)
+
+                if (!key) throw new Error('There is no Attribute Value key found in the config for the following attribute:', n.field)
+
+                const attributeKey = `attributeKey=${key}`
                 const attributeValue = `attributeValue=${n.value}`
                 const response = await this.post(`/People/AttributeValue/${currentPerson.id}?${attributeKey}&${attributeValue}`)
 

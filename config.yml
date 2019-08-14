@@ -127,7 +127,9 @@ ROCK_MAPPINGS:
   # when migrating from Arena to Rock, the Arena keys were kept
   # this configuration helps eliminate the need to remember specific Arena keys
   PERSON_ATTRIBUTES:
-    SALVATION: 'arena15139'
+    SALVATION_DATE: 'Arena-15-139'
+    BAPTISM_DATE: 'BaptismDate'
+    ETHNICITY: 'Ethnicity'
 
   LOCATION_TYPES:
     HOME_ADDRESS: 19

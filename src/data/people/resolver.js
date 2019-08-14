@@ -19,17 +19,17 @@ const resolver = {
         ethnicity: enforceCurrentUser(({ id }, args, { dataSources }) =>
             dataSources.Person.getAttributeByKey({
                 personId: id,
-                key: 'ethnicity'
+                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.ETHNICITY')
             })),
         baptismDate: enforceCurrentUser(({ id }, args, { dataSources }) =>
             dataSources.Person.getAttributeByKey({
                 personId: id,
-                key: 'baptismDate'
+                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.BAPTISM_DATE')
             })),
         salvationDate: enforceCurrentUser(({ id }, args, { dataSources }) =>
             dataSources.Person.getAttributeByKey({
                 personId: id,
-                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.SALVATION')
+                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.SALVATION_DATE')
             })),
         communicationPreferences: ({ emailPreference }, args, { dataSources }) => ({
             allowSMS: async () => {
