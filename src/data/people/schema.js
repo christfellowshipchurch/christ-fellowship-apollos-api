@@ -63,5 +63,7 @@ export default gql`
 
     extend type Query {
         getEthnicityList: DefinedValueList
+        getSpouse: Person
+        getChildren: [Person]
     }
 `

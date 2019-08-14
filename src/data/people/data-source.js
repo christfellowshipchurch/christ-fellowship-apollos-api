@@ -151,4 +151,26 @@ export default class Person extends corePerson.dataSource {
                 return currentPerson
         }
     }
+
+    getSpouseByUser = async () => {
+        const { id, primaryFamilyId } = await this.context.dataSources.Auth.getCurrentPerson()
+
+        return id
+            ? this.request()
+                .filter(`PrimaryFamilyId eq ${primaryFamilyId} and Id ne ${id} and MaritalStatusValueId eq 143`)
+                .expand('Photo')
+                .first()
+            : null
+    }
+
+    getChildrenByUser = async () => {
+        const { id, primaryFamilyId } = await this.context.dataSources.Auth.getCurrentPerson()
+
+        return id
+            ? this.request()
+                .filter(`PrimaryFamilyId eq ${primaryFamilyId} and Id ne ${id} and MaritalStatusValueId ne 143`)
+                .expand('Photo')
+                .get()
+            : null
+    }
 }

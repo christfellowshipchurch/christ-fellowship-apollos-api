@@ -46,6 +46,10 @@ const resolver = {
             dataSources.DefinedValueList.getByIdentifier(
                 get(ApollosConfig, 'ROCK_MAPPINGS.DEFINED_TYPES.ETHNICITY')
             ),
+        getSpouse: (root, args, { dataSources }) =>
+            dataSources.Person.getSpouseByUser(),
+        getChildren: (root, args, { dataSources }) =>
+            dataSources.Person.getChildrenByUser(),
     },
     Mutation: {
         updateAddress: (root, args, { dataSources }) =>
