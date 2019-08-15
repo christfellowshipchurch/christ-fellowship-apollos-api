@@ -153,24 +153,38 @@ export default class Person extends corePerson.dataSource {
     }
 
     getSpouseByUser = async () => {
-        const { id, primaryFamilyId } = await this.context.dataSources.Auth.getCurrentPerson()
+        try {
+            const { id, primaryFamilyId } = await this.context.dataSources.Auth.getCurrentPerson()
 
-        return id
-            ? this.request()
-                .filter(`PrimaryFamilyId eq ${primaryFamilyId} and Id ne ${id} and MaritalStatusValueId eq 143`)
-                .expand('Photo')
-                .first()
-            : null
+            return id
+                ? this.request()
+                    .filter(`PrimaryFamilyId eq ${primaryFamilyId} and Id ne ${id} and MaritalStatusValueId eq 143`)
+                    .expand('Photo')
+                    .first()
+                : null
+        } catch (e) {
+            console.log({ e })
+            console.log(`This is likely because the the following family does not a spouse associated with it: ${familyId}`)
+        }
+
+        return null
     }
 
     getChildrenByUser = async () => {
-        const { id, primaryFamilyId } = await this.context.dataSources.Auth.getCurrentPerson()
+        try {
+            const { id, primaryFamilyId } = await this.context.dataSources.Auth.getCurrentPerson()
 
-        return id
-            ? this.request()
-                .filter(`PrimaryFamilyId eq ${primaryFamilyId} and Id ne ${id} and MaritalStatusValueId ne 143`)
-                .expand('Photo')
-                .get()
-            : null
+            return id
+                ? this.request()
+                    .filter(`PrimaryFamilyId eq ${primaryFamilyId} and Id ne ${id} and MaritalStatusValueId ne 143`)
+                    .expand('Photo')
+                    .get()
+                : null
+        } catch (e) {
+            console.log({ e })
+            console.log(`This is likely because the the following family does not have children associated with it: ${familyId}`)
+        }
+
+        return null
     }
 }
