@@ -9,29 +9,47 @@ const { enforceCurrentUser } = Utils
 
 const resolver = {
     Person: {
+        phoneNumber: enforceCurrentUser(async ({ id }, args, { dataSources }) => {
+            const { number } = await dataSources.PhoneNumber.getByUser()
+
+            return number
+        }),
         address: (root, args, { dataSources }) =>
             dataSources.Address.getByUser(),
         ethnicity: enforceCurrentUser(({ id }, args, { dataSources }) =>
             dataSources.Person.getAttributeByKey({
                 personId: id,
-                key: 'ethnicity'
+                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.ETHNICITY')
             })),
         baptismDate: enforceCurrentUser(({ id }, args, { dataSources }) =>
             dataSources.Person.getAttributeByKey({
                 personId: id,
-                key: 'baptismDate'
+                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.BAPTISM_DATE')
             })),
         salvationDate: enforceCurrentUser(({ id }, args, { dataSources }) =>
             dataSources.Person.getAttributeByKey({
                 personId: id,
-                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.SALVATION')
+                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.SALVATION_DATE')
             })),
+        communicationPreferences: ({ emailPreference }, args, { dataSources }) => ({
+            allowSMS: async () => {
+                const { isMessagingEnabled } = await dataSources.PhoneNumber.getByUser()
+
+                return isMessagingEnabled
+            },
+            allowEmail: emailPreference < 2,
+            allowPushNotifications: null
+        })
     },
     Query: {
         getEthnicityList: (root, args, { dataSources }) =>
             dataSources.DefinedValueList.getByIdentifier(
                 get(ApollosConfig, 'ROCK_MAPPINGS.DEFINED_TYPES.ETHNICITY')
             ),
+        getSpouse: (root, args, { dataSources }) =>
+            dataSources.Person.getSpouseByUser(),
+        getChildren: (root, args, { dataSources }) =>
+            dataSources.Person.getChildrenByUser(),
     },
     Mutation: {
         updateAddress: (root, args, { dataSources }) =>
@@ -40,6 +58,12 @@ const resolver = {
             dataSources.Person.updateProfileWithAttributes([{ field, value }]),
         updateProfileFields: (root, { input }, { dataSources }) =>
             dataSources.Person.updateProfileWithAttributes(input),
+        updateCommunicationPreference: (root, { type, allow }, { dataSources }) =>
+            dataSources.Person.updateCommunicationPreference({ type, allow }),
+        updatePhoneNumber: async (root, { phoneNumber }, { dataSources }) => {
+            await dataSources.PhoneNumber.updateByUser(phoneNumber)
+            return dataSources.Auth.getCurrentPerson()
+        },
     }
 }
 

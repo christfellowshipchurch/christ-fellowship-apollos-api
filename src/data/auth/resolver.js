@@ -28,8 +28,8 @@ const resolver = {
         },
     },
     Query: {
-        hasEmailUserLogin: (root, props, { dataSources }) =>
-            dataSources.Auth.hasEmailUserLogin(),
+        getUserLoginTypes: (root, props, { dataSources }) =>
+            dataSources.Auth.getUserLoginTypes(),
     }
 }
 

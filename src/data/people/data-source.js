@@ -3,7 +3,7 @@ import {
 } from '@apollosproject/data-connector-rock'
 import ApollosConfig from '@apollosproject/config'
 import moment from 'moment'
-import { get, has, forEach } from 'lodash'
+import { get, has, forEach, camelCase, replace, snakeCase } from 'lodash'
 
 const RockGenderMap = {
     Unknown: 0,
@@ -59,6 +59,7 @@ export default class Person extends corePerson.dataSource {
     }
 
     getAttributeByKey = async ({ personId, key }) => {
+        key = camelCase(replace(key, /\s|[-]/g, ''))
         if (personId) {
             const { attributeValues } = await this.request(`/People/${personId}`).get()
 
@@ -90,7 +91,12 @@ export default class Person extends corePerson.dataSource {
         // TODO : create a workflow that handles this cause one at a time is just rediculous
         forEach(attributeValueFields, async (n, i) => {
             try {
-                const attributeKey = `attributeKey=${n.field}`
+                const snakeCaseField = snakeCase(n.field).toUpperCase()
+                const key = get(ApollosConfig, `ROCK_MAPPINGS.PERSON_ATTRIBUTES.${snakeCaseField}`, null)
+
+                if (!key) throw new Error('There is no Attribute Value key found in the config for the following attribute:', n.field)
+
+                const attributeKey = `attributeKey=${key}`
                 const attributeValue = `attributeValue=${n.value}`
                 const response = await this.post(`/People/AttributeValue/${currentPerson.id}?${attributeKey}&${attributeValue}`)
 
@@ -121,5 +127,64 @@ export default class Person extends corePerson.dataSource {
                 ...updatedAttributeValues
             }
         }
+    }
+
+    updateCommunicationPreference = async ({ type, allow }) => {
+        switch (type) {
+            case 'SMS':
+                try {
+                    await this.context.dataSources.PhoneNumber.updateEnableSMS(allow)
+                } catch (e) {
+                    throw new Error(e)
+                }
+
+                return this.context.dataSources.Auth.getCurrentPerson()
+            case 'Email':
+                const currentPerson = await this.context.dataSources.Auth.getCurrentPerson()
+
+                console.log({ currentPerson })
+
+                await this.patch(`/People/${currentPerson.id}`, {
+                    EmailPreference: allow ? 0 : 2
+                })
+
+                return currentPerson
+        }
+    }
+
+    getSpouseByUser = async () => {
+        try {
+            const { id, primaryFamilyId } = await this.context.dataSources.Auth.getCurrentPerson()
+
+            return id
+                ? this.request()
+                    .filter(`PrimaryFamilyId eq ${primaryFamilyId} and Id ne ${id} and MaritalStatusValueId eq 143`)
+                    .expand('Photo')
+                    .first()
+                : null
+        } catch (e) {
+            console.log({ e })
+            console.log(`This is likely because the the following family does not a spouse associated with it: ${familyId}`)
+        }
+
+        return null
+    }
+
+    getChildrenByUser = async () => {
+        try {
+            const { id, primaryFamilyId } = await this.context.dataSources.Auth.getCurrentPerson()
+
+            return id
+                ? this.request()
+                    .filter(`PrimaryFamilyId eq ${primaryFamilyId} and Id ne ${id} and MaritalStatusValueId ne 143`)
+                    .expand('Photo')
+                    .get()
+                : null
+        } catch (e) {
+            console.log({ e })
+            console.log(`This is likely because the the following family does not have children associated with it: ${familyId}`)
+        }
+
+        return null
     }
 }

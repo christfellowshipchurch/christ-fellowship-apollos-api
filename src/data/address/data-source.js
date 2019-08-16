@@ -6,18 +6,29 @@ export default class Address extends RockApolloDataSource {
     resource = 'Locations'
 
     getByUser = async () => {
-        const { id: familyId } = await this.context.dataSources.Person.getFamilyByUser()
+        const family = await this.context.dataSources.Person.getFamilyByUser()
 
-        const { locationId } = await this
-            .request(`/GroupLocations`)
-            .filter(`
-                (GroupId eq ${familyId})
-                and
-                (GroupLocationTypeValueId eq ${get(ApollosConfig, 'ROCK_MAPPINGS.LOCATION_TYPES.HOME_ADDRESS', 0)})
-            `)
-            .first()
+        if (!family) {
+            const { id: familyId } = family
 
-        return this.request().filter(`Id eq ${locationId}`).first()
+            try {
+                const { locationId } = await this
+                    .request(`/GroupLocations`)
+                    .filter(`
+                        (GroupId eq ${familyId})
+                        and
+                        (GroupLocationTypeValueId eq ${get(ApollosConfig, 'ROCK_MAPPINGS.LOCATION_TYPES.HOME_ADDRESS', 0)})
+                    `)
+                    .first()
+
+                return this.request().filter(`Id eq ${locationId}`).first()
+            } catch (e) {
+                console.log({ e })
+                console.log(`This is likely because the the following family does not have an address associated with it: ${familyId}`)
+            }
+        }
+
+        return null
     }
 
 
