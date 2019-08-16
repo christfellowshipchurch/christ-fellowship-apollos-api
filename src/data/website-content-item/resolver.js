@@ -12,7 +12,7 @@ const createVideoUrlFromGuid = (uri) =>
         : Utils.enforceProtocol(uri);
 
 const resolver = {
-    WebsiteContentItem: {
+    WebsiteBlockItem: {
         ...ContentItem.resolver.ContentItem,
         title: ({ title, attributeValues }, args, context) => {
             const titleOverride = get(attributeValues, 'titleOverride.value', '');
@@ -47,29 +47,23 @@ const resolver = {
 
             return get(definedValue, 'value', '');
         },
-        callsToAction: ({ attributeValues }, args, context) => {
+        callToAction: ({ attributeValues }, args, context) => {
 
-            const cta = get(attributeValues, 'callsToAction.value', null);
+            const cta= get(attributeValues, 'callToAction.value', null);
 
             return cta
                 ? parseRockKeyValuePairs(cta, 'call', 'action')
                 : []
         },
-        target: ({ attributeValues }, args, context) =>
-            lowerCase(get(attributeValues, 'openLinksInNewTab.value', 'false')) === 'true'
-                ? '_blank'
-                : '',
-        subtitle: ({ attributeValues }) => get(attributeValues, 'subtitle.value', null),
-        buttonColor: ({ attributeValues }) => {
-            const value = get(attributeValues, 'buttonColor.value', null)
-            return value ? parseHexCode(value) : null
+        secondaryCallToAction: ({ attributeValues }, args, context) => {
+
+            const ctaSecondary = get(attributeValues, 'secondaryCallToAction.value', null);
+
+            return ctaSecondary
+                ? parseRockKeyValuePairs(ctaSecondary, 'call', 'action')
+                : []
         },
-        backgroundColor: ({ attributeValues }) => {
-            const value = get(attributeValues, 'backgroundColor.value', null)
-            return value ? parseHexCode(value) : null
-        },
-        gridImageLink: ({ attributeValues }) => get(attributeValues, 'gridImageLink.value', null),
-        openLinksInNewTab: ({ attributeValues }) => get(attributeValues, 'openLinksInNewTab.value', null)
+        subtitle: ({ attributeValues }) => get(attributeValues, 'subtitle.value', null)
     }
 }
 

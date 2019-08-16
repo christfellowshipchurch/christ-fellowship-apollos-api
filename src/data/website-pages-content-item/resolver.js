@@ -10,7 +10,7 @@ const resolver = {
         getWebsitePageContentByTitle: async (root, { website, title }, context) =>
             await context.dataSources.WebsitePagesContentItem.getWebsitePageContentByTitle(website, title),
     },
-    WebsitePagesContentItem: {
+    WebsitePagesItem: {
         ...ContentItem.resolver.ContentItem,
         metaDescription: async ({ attributeValues }) =>
             get(attributeValues, 'metaDescription.value', ''),

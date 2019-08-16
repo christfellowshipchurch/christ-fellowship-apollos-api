@@ -12,7 +12,7 @@ const createVideoUrlFromGuid = (uri) =>
         : Utils.enforceProtocol(uri);
 
 const resolver = {
-    WebsiteGroupContentItem: {
+    WebsiteGroupItem: {
         ...ContentItem.resolver.ContentItem,
         title: ({ title, attributeValues }, args, context) => {
             const titleOverride = get(attributeValues, 'titleOverride.value', '');
@@ -44,11 +44,6 @@ const resolver = {
             const definedValue = await dataSources.DefinedValue.getDefinedValueByIdentifier(typeId)
 
             return get(definedValue, 'value', null)
-        },
-        backgroundColor: ({ attributeValues }) => {
-            const value = get(attributeValues, 'backgroundColor.value', null)
-
-            return value ? parseHexCode(value) : null
         }
     }
 }

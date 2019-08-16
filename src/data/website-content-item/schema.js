@@ -7,14 +7,14 @@ export default gql`
         action: String
     }
 
-    type WebsiteContentItem implements ContentItem & Node {
+    type WebsiteBlockItem implements ContentItem & Node {
         id: ID!
         title: String
+        htmlContent: String
         coverImage: ImageMedia
         images: [ImageMedia]
         videos: [VideoMedia]
         audios: [AudioMedia]
-        htmlContent: String
         summary: String
         childContentItemsConnection(
             first: Int
@@ -26,16 +26,12 @@ export default gql`
         ): ContentItemsConnection
         parentChannel: ContentChannel
         theme: Theme
+        target: String
 
         contentLayout: String
         imageAlt: String
         imageRatio: String
-        callsToAction: [CallToAction]
-        target: String
+        callToAction: [CallToAction]
+        secondaryCallToAction: [CallToAction]
         subtitle: String
-        buttonColor: String
-        backgroundColor: String
-        gridImageLink: String
-        openLinksInNewTab: String
-    }
 `;

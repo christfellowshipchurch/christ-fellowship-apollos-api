@@ -11,7 +11,7 @@ export default gql`
         content: String
     }
 
-    type WebsitePagesContentItem implements ContentItem & Node {
+    type WebsitePagesItem implements ContentItem & Node {
         id: ID!
         title: String
         coverImage: ImageMedia

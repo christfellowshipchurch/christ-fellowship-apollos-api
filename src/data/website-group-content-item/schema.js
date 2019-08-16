@@ -2,7 +2,7 @@ import { contentItemSchema } from '@apollosproject/data-schema';
 import { gql } from 'apollo-server';
 
 export default gql`
-    type WebsiteGroupContentItem implements ContentItem & Node {
+    type WebsiteGroupItem implements ContentItem & Node {
         id: ID!
         title: String
         coverImage: ImageMedia
@@ -24,6 +24,5 @@ export default gql`
 
         groupLayout: String
         accordionType: String
-        backgroundColor: String
     }
 `;
