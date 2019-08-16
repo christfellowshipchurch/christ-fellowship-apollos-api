@@ -8,6 +8,11 @@ export default gql`
         success: Boolean
         isExistingIdentity: Boolean
     }
+
+    type UserLoginResult {
+        sms: Boolean
+        email: Boolean
+    }
     
     extend type Mutation {
         requestSmsLoginPin(phoneNumber: String!): IdentityResult
@@ -18,6 +23,6 @@ export default gql`
     }
 
     extend type Query {
-        hasEmailUserLogin: Boolean
+        getUserLoginTypes: UserLoginResult
     }
 `

@@ -2,7 +2,7 @@ import {
     Auth as coreAuth,
 } from '@apollosproject/data-connector-rock'
 import { AuthenticationError, UserInputError } from 'apollo-server';
-import { find, forEach, head } from 'lodash'
+import { get, forEach, upperCase } from 'lodash'
 import crypto from 'crypto'
 import { secret } from './token';
 import { string } from 'yup'
@@ -69,13 +69,7 @@ export default class Auth extends coreAuth.dataSource {
             })
 
             if (userLogin) {
-                // TODO : figure out why this code isn't working
-                // await this.post(`/UserLogins/AttributeValue/${userLogin}`, {
-                //     AttributeKey: APOLLOS_ROCK_USER_LOGIN_ATTR_KEY,
-                //     AttributeValue: "True"
-                // })
-
-                // console.log({ userLogin })
+                await this.post(`/UserLogins/AttributeValue/${userLogin}?attributeKey=${APOLLOS_ROCK_USER_LOGIN_ATTR_KEY}&attributeValue=True`)
 
                 return { success: true, isExistingIdentity: this.isExistingUserLogin }
             }
@@ -143,7 +137,7 @@ export default class Auth extends coreAuth.dataSource {
     relateUserLoginToPerson = async ({ identity, passcode, input }) => {
         // try parsing identity as a phone number
         identity = this.parseIdentityAsPhoneNumber(identity)
-      
+
         const { id, createdDateTime } = await this.getUserLogin(identity)
 
         if (id) {
@@ -220,15 +214,25 @@ export default class Auth extends coreAuth.dataSource {
         throw new Error(`No User Login found for the Identity: ${identity}`)
     }
 
-    hasEmailUserLogin = async () => {
-        const currentUser = await this.getCurrentPerson()
-        const { email, id } = currentUser
-        const login = await this.request('/UserLogins')
-            .filter(`UserName eq '${email}'`)
-            .first()
+    getUserLoginTypes = async () => {
+        const { email, id } = await this.getCurrentPerson()
+        const { number } = await this.context.dataSources.PhoneNumber.getByUser()
+        const logins = await this.request('/UserLogins?loadAttributes=simple')
+            .filter(`PersonId eq ${id}`)
+            .get()
+        const hasLogin = {
+            sms: false,
+            email: false
+        }
 
-        if (login) return true
+        logins.forEach(({ userName, attributeValues }) => {
+            console.log({ userName, attributeValues })
+            if (upperCase(get(attributeValues, 'isApollosUserLogin.value', 'FALSE')) === 'TRUE') {
+                if (userName === email) hasLogin.email = true
+                if (userName === number) hasLogin.sms = true
+            }
+        })
 
-        return false
+        return hasLogin
     }
 }
