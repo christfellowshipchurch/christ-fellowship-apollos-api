@@ -2,7 +2,7 @@ import {
     createGlobalId,
 } from '@apollosproject/server-core';
 import {
-    get, first
+    get, first, forEach
 } from 'lodash'
 
 import { parseRockKeyValuePairs } from '../utils'
@@ -27,24 +27,27 @@ const resolver = {
                 'call',
                 'action'))
         ),
-        images: (root, args, { dataSources: { ContentItem } }) =>
-            ContentItem.getImages(root),
-
-        instagramUrl: ({ attributeValues }) => (
-            get(attributeValues, 'instagramUrl.value', null)
-        ),
-        twitterUrl: ({ attributeValues }) => (
-            get(attributeValues, 'twitterUrl.value', null)
-        ),
-        facebookUrl: ({ attributeValues }) => (
-            get(attributeValues, 'facebookUrl.value', null)
-        ),
         footerLinks: ({ attributeValues }) => (
             parseRockKeyValuePairs(
                 get(attributeValues, 'footerLinks.value', ''),
                 'call',
                 'action')
-        )
+        ),
+        socialMediaLinks: async ({ attributeValues }, args, { dataSources }) => {
+            let callsToAction = parseRockKeyValuePairs(
+                get(attributeValues, 'socialMediaLinks.value', ''),
+                'link',
+                'definedValueId')
+
+            return callsToAction.map(async ({ definedValueId, link }) => {
+                const definedValue = await dataSources.DefinedValue.getByIdentifier(definedValueId)
+
+                return ({
+                    call: get(definedValue, 'value', ''),
+                    action: link
+                })
+            })
+        }
     }
 }
 

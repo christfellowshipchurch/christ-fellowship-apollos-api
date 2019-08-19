@@ -4,7 +4,8 @@ import { getIdentifierType } from '../utils'
 export default class DefinedValue extends RockApolloDataSource {
     resource = 'DefinedValues'
 
-    getDefinedValueByIdentifier = (id) => {
+    getDefinedValueByIdentifier = (id) => this.getByIdentifier(id)
+    getByIdentifier = (id) => {
         const type = getIdentifierType(id)
 
         return type.query
