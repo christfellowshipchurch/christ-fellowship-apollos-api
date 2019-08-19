@@ -30,8 +30,8 @@ export default gql`
         contentLayout: String
         imageAlt: String
         imageRatio: String
-        callToAction: [CallToAction]
-        secondaryCallToAction: [CallToAction]
+        callToAction: CallToAction
+        secondaryCallToAction: CallToAction
         target: String
         subtitle: String
     }

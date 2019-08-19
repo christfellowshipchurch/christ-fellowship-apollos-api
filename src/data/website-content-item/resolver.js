@@ -2,7 +2,7 @@ import { ContentItem, Utils } from '@apollosproject/data-connector-rock'
 import { resolverMerge } from '@apollosproject/server-core'
 import ApollosConfig from '@apollosproject/config'
 import {
-    get, lowerCase
+    get, lowerCase, first
 } from 'lodash'
 import { parseRockKeyValuePairs, parseHexCode } from '../utils'
 
@@ -49,19 +49,21 @@ const resolver = {
         },
         callToAction: ({ attributeValues }, args, context) => {
 
-            const cta = get(attributeValues, 'callToAction.value', null);
+            const cta = get(attributeValues, 'callToAction.value', null)
+
+            console.log({ cta })
 
             return cta
-                ? parseRockKeyValuePairs(cta, 'call', 'action')
-                : []
+                ? first(parseRockKeyValuePairs(cta, 'call', 'action'))
+                : null
         },
         secondaryCallToAction: ({ attributeValues }, args, context) => {
 
-            const cta = get(attributeValues, 'secondaryCalltoAction.value', null);
+            const cta = get(attributeValues, 'secondaryCalltoAction.value', null)
 
             return cta
-                ? parseRockKeyValuePairs(cta, 'call', 'action')
-                : []
+                ? first(parseRockKeyValuePairs(cta, 'call', 'action'))
+                : null
         },
         target: ({ attributeValues }, args, context) =>
             lowerCase(get(attributeValues, 'openLinksInNewTab.value', 'false')) === 'true'
@@ -71,4 +73,4 @@ const resolver = {
     }
 }
 
-export default resolverMerge(resolver, ContentItem);
+export default resolverMerge(resolver, ContentItem)
