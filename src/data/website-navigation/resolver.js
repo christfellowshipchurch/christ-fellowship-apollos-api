@@ -27,6 +27,8 @@ const resolver = {
                 'call',
                 'action'))
         ),
+        images: (root, args, { dataSources: { ContentItem } }) =>
+            ContentItem.getImages(root),
         footerLinks: ({ attributeValues }) => (
             parseRockKeyValuePairs(
                 get(attributeValues, 'footerLinks.value', ''),
