@@ -8,7 +8,7 @@ export default class Address extends RockApolloDataSource {
     getByUser = async () => {
         const family = await this.context.dataSources.Person.getFamilyByUser()
 
-        if (!family) {
+        if (family) {
             const { id: familyId } = family
 
             try {
@@ -28,6 +28,7 @@ export default class Address extends RockApolloDataSource {
             }
         }
 
+        console.log("No family found")
         return null
     }
 
