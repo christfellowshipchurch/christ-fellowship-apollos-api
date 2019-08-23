@@ -9,15 +9,25 @@ const { createImageUrlFromGuid } = Utils
 
 const resolver = {
   Campus: {
-    image: ({ attributeValues }) => ({
-      uri: get(attributeValues, 'squareImageUrl.value', null)
-    }),
+    // image: ({ attributeValues }) => ({
+    //   uri: get(attributeValues, 'squareImageUrl.value', null)
+    // }),
+    image: async ({ id }, args, { dataSources }) => {
+      const { attributeValues } = await dataSources.Campus.getFromId(id)
+
+      console.log(get(attributeValues, 'campusImage.value', null))
+
+      return ({
+        uri: get(attributeValues, 'campusImage.value', null) ? createImageUrlFromGuid(attributeValues.featuredImage.value) : null,
+      })
+    },
     featuredImage: async ({ id }, args, { dataSources }) => {
       const { attributeValues } = await dataSources.Campus.getFromId(id)
+
+      console.log(get(attributeValues, 'featuredImage.value', null))
+
       return ({
-        uri: has(attributeValues, 'featuredImage.value') ? createImageUrlFromGuid(attributeValues.featuredImage.value) : null,
-        width: 0,
-        height: 0
+        uri: get(attributeValues, 'featuredImage.value', null) ? createImageUrlFromGuid(attributeValues.featuredImage.value) : null,
       })
     },
   }
