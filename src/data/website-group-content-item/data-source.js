@@ -1,3 +1,3 @@
-import { ContentItem, ContentChannel } from '@apollosproject/data-connector-rock';
+import { ContentItem } from '@apollosproject/data-connector-rock'
 
-export default ContentItem.dataSource;
+export default ContentItem.dataSource

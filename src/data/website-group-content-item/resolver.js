@@ -34,10 +34,15 @@ const resolver = {
             });
         },
         groupLayout: async ({ attributeValues }, args, { dataSources }) => {
-            const layoutId = get(attributeValues, 'groupLayout.value', '')
-            const definedValue = await dataSources.DefinedValue.getDefinedValueByIdentifier(layoutId)
+            const layoutId = get(attributeValues, 'groupLayout.value', null)
 
-            return get(definedValue, 'value', null)
+            if (layoutId) {
+                const definedValue = await dataSources.DefinedValue.getDefinedValueByIdentifier(layoutId)
+
+                return get(definedValue, 'value', null)
+            }
+
+            return null
         },
         accordionType: async ({ attributeValues }, args, { dataSources }) => {
             const typeId = get(attributeValues, 'accordionType.value', '')
@@ -53,4 +58,4 @@ const resolver = {
     }
 }
 
-export default resolverMerge(resolver, ContentItem);
+export default resolverMerge(resolver, ContentItem)

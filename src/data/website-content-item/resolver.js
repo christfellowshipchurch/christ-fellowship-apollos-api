@@ -48,17 +48,13 @@ const resolver = {
             return get(definedValue, 'value', '');
         },
         callToAction: ({ attributeValues }, args, context) => {
-
             const cta = get(attributeValues, 'callToAction.value', null)
-
-            console.log({ cta })
 
             return cta
                 ? first(parseRockKeyValuePairs(cta, 'call', 'action'))
                 : null
         },
         secondaryCallToAction: ({ attributeValues }, args, context) => {
-
             const cta = get(attributeValues, 'secondaryCalltoAction.value', null)
 
             return cta

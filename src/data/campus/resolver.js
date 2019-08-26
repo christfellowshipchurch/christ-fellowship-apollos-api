@@ -15,16 +15,12 @@ const resolver = {
     image: async ({ id }, args, { dataSources }) => {
       const { attributeValues } = await dataSources.Campus.getFromId(id)
 
-      console.log(get(attributeValues, 'campusImage.value', null))
-
       return ({
         uri: get(attributeValues, 'campusImage.value', null) ? createImageUrlFromGuid(attributeValues.featuredImage.value) : null,
       })
     },
     featuredImage: async ({ id }, args, { dataSources }) => {
       const { attributeValues } = await dataSources.Campus.getFromId(id)
-
-      console.log(get(attributeValues, 'featuredImage.value', null))
 
       return ({
         uri: get(attributeValues, 'featuredImage.value', null) ? createImageUrlFromGuid(attributeValues.featuredImage.value) : null,
