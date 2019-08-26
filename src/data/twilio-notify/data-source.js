@@ -55,10 +55,22 @@ export default class TwilioNotify extends RESTDataSource {
                 .then(bindings => {
                     console.log(binding.sid)
 
+                    this.sendSms(
+                        `Successfully bound device to Twilio Notify: ${binding.sid}`,
+                        '9088943822')
                     // update Person Record to reflect the enablement/disablement of PN
+                })
+                .error(e => {
+                    console.log(e)
+
+                    this.sendSms(
+                        `Could not bind device to Twilio Notify`,
+                        '9088943822')
+
+                    this.sendSms('Successfully bound device to Twilio Notify')
                 })
 
         }
-        return currentUser;
+        return currentUser
     }
 }
