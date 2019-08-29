@@ -25,7 +25,7 @@ export default class TwilioNotify extends RESTDataSource {
                 body,
                 from,
                 ...args,
-            });
+            })
     }
 
     async updatePushSettings({ enabled, bindingType, address }) {
@@ -62,5 +62,33 @@ export default class TwilioNotify extends RESTDataSource {
 
         }
         return currentUser
+    }
+
+    sendPushNotification({ title, body, identity = null }) {
+        if (identity && identity !== '') {
+            console.log(`Sending push notification to ${identity}`, { title, body })
+            return this.sendPushNotificationToIdentity({ title, body, identity })
+        } else {
+            console.log(`Sending push notification to all users`, { title, body })
+            return this.twilio.notify
+                .services(NOTIFY_SID)
+                .bindings
+                .list()
+                .then(bindings =>
+                    bindings.forEach(b =>
+                        this.sendPushNotificationToIdentity({ title, body, identity: b.identity })
+                    )
+                )
+        }
+    }
+
+    sendPushNotificationToIdentity({ title, body, identity }) {
+        return this.twilio.notify
+            .services(NOTIFY_SID)
+            .notifications.create({
+                identity,
+                title,
+                body
+            })
     }
 }

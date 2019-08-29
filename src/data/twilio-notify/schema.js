@@ -7,7 +7,14 @@ export default gql`
         address: String
     }
 
+    input PushMessageInput {
+        title: String
+        body: String
+        identity: String
+    }
+
     extend type Mutation {
         updateUserPushSettingsTN(input: TwilioNotifyPushInput!): Person
+        sendPushNotification(input: PushMessageInput): Boolean
     }
 `
