@@ -20,7 +20,7 @@ export default class TwilioNotify extends RESTDataSource {
             .notifications.create({
                 toBinding: JSON.stringify({
                     binding_type: 'sms',
-                    address: to
+                    address: to,
                 }),
                 body,
                 from,
@@ -44,8 +44,6 @@ export default class TwilioNotify extends RESTDataSource {
             // get the current person's PersonAliasId
             const { primaryAliasId } = currentUser
 
-            const { e164 } = this.context.dataSources.PhoneNumber.parsePhoneNumber('9088943822')
-
             // create a binding with Twilio Notify using PersonAliasId as the Identifier and the device id for the device being registered
             this.twilio.notify
                 .services(NOTIFY_SID)
@@ -54,22 +52,8 @@ export default class TwilioNotify extends RESTDataSource {
                     bindingType,
                     address
                 })
-                .then(async bindings => {
-                    console.log({ bindings })
-
-                    await this.sendSms({
-                        body: `Successfully bound device to Twilio Notify`,
-                        to: e164
-                    })
-                    // update Person Record to reflect the enablement/disablement of PN
-                })
                 .catch(async e => {
                     console.log({ e })
-
-                    await this.sendSms({
-                        body: `Could not bind device to Twilio Notify`,
-                        to: e164
-                    })
                 })
 
         }
