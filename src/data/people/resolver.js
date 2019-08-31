@@ -10,9 +10,11 @@ const { enforceCurrentUser } = Utils
 const resolver = {
     Person: {
         phoneNumber: enforceCurrentUser(async ({ id }, args, { dataSources }) => {
-            const { number } = await dataSources.PhoneNumber.getByUser()
+            const phoneNumber = await dataSources.PhoneNumber.getByUser()
 
-            return number
+            return phoneNumber
+                ? get(phoneNumber, 'number', '')
+                : ''
         }),
         address: (root, args, { dataSources }) =>
             dataSources.Address.getByUser(),
@@ -33,9 +35,11 @@ const resolver = {
             })),
         communicationPreferences: ({ emailPreference }, args, { dataSources }) => ({
             allowSMS: async () => {
-                const { isMessagingEnabled } = await dataSources.PhoneNumber.getByUser()
+                const phoneNumber = await dataSources.PhoneNumber.getByUser()
 
-                return isMessagingEnabled
+                return phoneNumber
+                    ? get(phoneNumber, 'isMessagingEnabled', false)
+                    : false
             },
             allowEmail: emailPreference < 2,
             allowPushNotifications: null

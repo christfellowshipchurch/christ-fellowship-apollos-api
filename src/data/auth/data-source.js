@@ -192,6 +192,8 @@ export default class Auth extends coreAuth.dataSource {
                 // this post method returns the PersonId
                 const personId = await this.post('/People', rockPersonFields)
 
+                console.log({ personId })
+
                 // determine if identity is a phone number
                 if (!rockPersonFields.Email) {
                     const { valid, phoneNumber } = this.context.dataSources.PhoneNumber.parsePhoneNumber(identity)
