@@ -1,4 +1,7 @@
 import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock'
+import { Utils } from '@apollosproject/data-connector-rock'
+
+const { createImageUrlFromGuid } = Utils
 
 export default class ContentItem extends coreContentItem.dataSource {
     getImages = ({ attributeValues, attributes }) => {

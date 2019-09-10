@@ -14,7 +14,7 @@ import {
   Interactions,
   RockConstants,
   // Person,
-  // ContentItem,
+  ContentItem,
   ContentChannel,
   Sharable,
   // Auth,
@@ -31,13 +31,14 @@ import * as Theme from './theme';
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
 import * as OneSignalWithRock from './oneSignalWithRock';
 
-import * as ContentItem from './content-item'
+// import * as ContentItem from './content-item'
 
 // Localized Modules
 import * as WebsitePagesContentItem from './website-pages-content-item'
 import * as WebsiteContentItem from './website-content-item'
 import * as WebsiteGroupContentItem from './website-group-content-item'
 import * as WebsiteNavigation from './website-navigation'
+import * as WebsiteFeature from './website-feature'
 
 import * as DefinedValue from './defined-value'
 import * as DefinedValueList from './defined-value-list'
@@ -85,7 +86,8 @@ const data = {
   WebsitePagesContentItem,
   WebsiteContentItem,
   WebsiteGroupContentItem,
-  WebsiteNavigation
+  WebsiteNavigation,
+  WebsiteFeature
 };
 
 const {
