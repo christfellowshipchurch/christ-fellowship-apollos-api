@@ -1,17 +1,7 @@
-import { contentItemSchema } from '@apollosproject/data-schema';
-import { gql } from 'apollo-server';
+import { gql } from 'apollo-server'
 
 export default gql`
-    extend type Query {
-        getWebsitePageContentByTitle(website: String!, title: String!): WebsitePagesContentItem
-    }
-
-    type MetaTag {
-        name: String
-        content: String
-    }
-
-    type WebsitePagesContentItem implements ContentItem & Node {
+    type WebsiteFeature implements ContentItem & Node {
         id: ID!
         title: String
         coverImage: ImageMedia
@@ -31,9 +21,6 @@ export default gql`
         parentChannel: ContentChannel
         theme: Theme
 
-        metaDescription: String
-        metaKeywords: [String]
-        openGraphProtocols: [MetaTag]
-        twitterProtocols: [MetaTag]
+        feature: String
     }
-`
+`;

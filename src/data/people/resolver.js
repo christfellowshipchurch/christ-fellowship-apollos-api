@@ -9,6 +9,7 @@ const { enforceCurrentUser } = Utils
 
 const resolver = {
     Person: {
+
         phoneNumber: enforceCurrentUser(async ({ id }, args, { dataSources }) => {
             const phoneNumber = await dataSources.PhoneNumber.getByUser()
 
