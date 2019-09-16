@@ -5,8 +5,6 @@ import { get } from 'lodash'
 
 export default class Campus extends coreCampus.dataSource {
   getForPerson = async ({ personId }) => {
-    console.log({ personId })
-
     const family = await this.request(`/Groups/GetFamilies/${personId}`)
       .expand('Campus')
       .expand('Campus/Location')

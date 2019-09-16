@@ -1,6 +1,11 @@
 import { gql } from 'apollo-server'
 
 export default gql`
+    type ServiceTime {
+        day: String
+        time: String
+    }
+
     type Campus implements Node {
         id: ID!
         name: String
@@ -14,6 +19,7 @@ export default gql`
         image: ImageMediaSource
         featuredImage: ImageMediaSource
         distanceFromLocation(location: CampusLocationInput): Float
+        serviceTimes: [ServiceTime]
     }
 
     extend type Query {
