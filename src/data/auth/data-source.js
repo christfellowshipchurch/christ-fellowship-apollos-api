@@ -192,8 +192,6 @@ export default class Auth extends coreAuth.dataSource {
                 // this post method returns the PersonId
                 const personId = await this.post('/People', rockPersonFields)
 
-                console.log({ personId })
-
                 // determine if identity is a phone number
                 if (!rockPersonFields.Email) {
                     const { valid, phoneNumber } = this.context.dataSources.PhoneNumber.parsePhoneNumber(identity)
@@ -203,7 +201,6 @@ export default class Auth extends coreAuth.dataSource {
                 }
 
                 // patch the user login to include the personId pulled from the above post to People
-                console.log("User Logins", { id, personId })
                 await this.patch(`/UserLogins/${id}`, { PersonId: personId })
 
             } catch (e) {
@@ -228,7 +225,6 @@ export default class Auth extends coreAuth.dataSource {
         }
 
         logins.forEach(({ userName, attributeValues }) => {
-            console.log({ userName, attributeValues })
             if (upperCase(get(attributeValues, 'isApollosUserLogin.value', 'FALSE')) === 'TRUE') {
                 if (userName === email) hasLogin.email = true
                 if (userName === number) hasLogin.sms = true

@@ -1,5 +1,29 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ParseRockKeyValuePairs identifies a custom identifier 1`] = `
+Object {
+  "query": null,
+  "type": "custom",
+  "value": "some-custom-id",
+}
+`;
+
+exports[`ParseRockKeyValuePairs identifies a guid identifier 1`] = `
+Object {
+  "query": "Guid eq (guid'967d2b2c-1d2a-474f-bc6e-9278443b3d6a')",
+  "type": "guid",
+  "value": "967d2b2c-1d2a-474f-bc6e-9278443b3d6a",
+}
+`;
+
+exports[`ParseRockKeyValuePairs identifies an integer identifier 1`] = `
+Object {
+  "query": "Id eq 123",
+  "type": "int",
+  "value": "123",
+}
+`;
+
 exports[`ParseRockKeyValuePairs parses a key value pair string that contains an empty key value pairing 1`] = `
 Array [
   Object {

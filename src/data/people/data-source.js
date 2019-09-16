@@ -142,8 +142,6 @@ export default class Person extends corePerson.dataSource {
             case 'Email':
                 const currentPerson = await this.context.dataSources.Auth.getCurrentPerson()
 
-                console.log({ currentPerson })
-
                 await this.patch(`/People/${currentPerson.id}`, {
                     EmailPreference: allow ? 0 : 2
                 })

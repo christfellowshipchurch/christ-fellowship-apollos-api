@@ -19,7 +19,6 @@ const resolver = {
             throw new Error("Unable to create User Login:", { identity, passcode })
         },
         isValidIdentity: async (root, { identity }, { dataSources }) => {
-            console.log({ identity })
             const userLogin = await dataSources.Auth.getUserLogin(identity)
 
             return userLogin

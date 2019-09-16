@@ -20,8 +20,6 @@ export default class ContentItem extends coreContentItem.dataSource {
         )
 
         if (imageKeys.length) {
-
-            console.log({ imageKeys })
             images = imageKeys.map((key) => ({
                 __typename: 'ImageMedia',
                 key,

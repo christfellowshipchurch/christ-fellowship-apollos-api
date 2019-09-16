@@ -53,7 +53,6 @@ export default class TwilioNotify extends RESTDataSource {
                     address
                 })
                 .then(async bindings => {
-                    console.log({ bindings })
                     // update Person Record to reflect the enablement/disablement of PN
                 })
                 .catch(async e => {

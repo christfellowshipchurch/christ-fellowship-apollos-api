@@ -16,8 +16,6 @@ export default class Campus extends coreCampus.dataSource {
      *   `{ campus: { location: {} } }`
      */
 
-    console.log({ family })
-
     if (family && family.campus && family.campus.location) {
       return family.campus
     }
@@ -29,8 +27,6 @@ export default class Campus extends coreCampus.dataSource {
     try {
       console.log(`Updating family id ${family.id} with default campus id ${9}`)
       const familyPatch = await this.patch(`/Groups/${family.id}`, { CampusId: 9 })
-
-      console.log({ familyPatch })
 
       if (familyPatch) {
         this.getForPerson({ personId })

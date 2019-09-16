@@ -1,19 +1,3 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Defined Value gets a defined value from a valid guid or integer id 1`] = `
-[MockFunction] {
-  "calls": Array [
-    Array [
-      "DefinedValues?%24filter=Id%20eq%20999&%24top=1",
-      Object {},
-      Object {},
-    ],
-  ],
-  "results": Array [
-    Object {
-      "isThrow": false,
-      "value": Promise {},
-    },
-  ],
-}
-`;
+exports[`Defined Value List gets a defined value from a valid guid or integer id 1`] = `Promise {}`;
