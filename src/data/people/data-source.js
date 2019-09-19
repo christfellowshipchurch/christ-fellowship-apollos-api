@@ -1,9 +1,16 @@
 import {
     Person as corePerson,
 } from '@apollosproject/data-connector-rock'
+import {
+    get,
+    has,
+    forEach,
+    camelCase,
+    replace,
+    snakeCase
+} from 'lodash'
 import ApollosConfig from '@apollosproject/config'
 import moment from 'moment'
-import { get, has, forEach, camelCase, replace, snakeCase } from 'lodash'
 
 const RockGenderMap = {
     Unknown: 0,
@@ -43,7 +50,8 @@ export default class Person extends corePerson.dataSource {
         return RockGenderMap[gender];
     }
 
-    reduceUpdateProfileInput = (input) => input.reduce(
+    reduceUpdateProfileInput = (input) => this.reduceInput(input)
+    reduceInput = (input) => input.reduce(
         (accum, { field, value }) => ({
             ...accum,
             [field]: value,
@@ -184,5 +192,68 @@ export default class Person extends corePerson.dataSource {
         }
 
         return null
+    }
+
+    submitRsvp = async (input) => {
+        // Set the default return value of a workflow attribute
+        // to null in order to make it easier to check in the 
+        // conditional statement later
+        const reducedInput = this.reduceInput(input)
+        const attributes = {
+            firstName: get(reducedInput, 'firstName', null),
+            lastName: get(reducedInput, 'lastName', null),
+
+            adults: get(reducedInput, 'adults', 1),
+            children: get(reducedInput, 'children', 0),
+
+            visitDate: get(reducedInput, 'visitDate', null),
+            visitTime: get(reducedInput, 'visitTime', null),
+
+            email: get(reducedInput, 'email', null),
+        }
+
+        console.log({ reducedInput, attributes })
+
+        // Only run the method if the following attributes
+        // are found in the attributes object
+        if (attributes.firstName
+            && attributes.lastName
+            && attributes.visitDate
+            && attributes.visitTime
+            && attributes.email) {
+            try {
+                // Check for a valid phone number
+                const {
+                    valid,
+                    numericOnlyPhoneNumber
+                } = this.context.dataSources.PhoneNumber.parsePhoneNumber(get(reducedInput, 'phoneNumber', ''))
+
+
+                if (valid) {
+                    // Get the Campus Guid from the campus name
+                    const { guid } = await this.context.dataSources.Campus.getByName(
+                        get(reducedInput, 'campus', '')
+                    )
+
+                    if (guid) {
+                        await this.context.dataSources.Workflow.trigger({
+                            id: get(ApollosConfig, 'ROCK_MAPPINGS.WORKFLOW_IDS.RSVP'),
+                            attributes: {
+                                ...attributes,
+                                phoneNumber: numericOnlyPhoneNumber,
+                                campus: guid
+                            }
+                        })
+
+                        return true
+                    }
+                }
+            } catch (e) {
+                console.log({ e })
+            }
+        }
+
+        // Default return value
+        return false
     }
 }
