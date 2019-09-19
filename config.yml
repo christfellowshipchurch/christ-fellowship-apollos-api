@@ -136,6 +136,9 @@ ROCK_MAPPINGS:
   LOCATION_TYPES:
     HOME_ADDRESS: 19
 
+  WORKFLOW_IDS:
+    RSVP: 206
+
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:
   TEXT: 1

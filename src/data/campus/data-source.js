@@ -52,4 +52,6 @@ export default class Campus extends coreCampus.dataSource {
 
     throw new Error(`We were unable to find a default campus in Rock. Please check that there is a campus and location set up for the campud id: ${9}`)
   }
+
+  getByName = async (name) => this.request().filter(`Name eq '${name}'`).first()
 }

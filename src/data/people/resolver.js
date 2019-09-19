@@ -9,7 +9,6 @@ const { enforceCurrentUser } = Utils
 
 const resolver = {
     Person: {
-
         phoneNumber: enforceCurrentUser(async ({ id }, args, { dataSources }) => {
             const phoneNumber = await dataSources.PhoneNumber.getByUser()
 
@@ -69,6 +68,10 @@ const resolver = {
             await dataSources.PhoneNumber.updateByUser(phoneNumber)
             return dataSources.Auth.getCurrentPerson()
         },
+        submitRsvp: (root, { input }, { dataSources }) => {
+            console.log({ input })
+            return dataSources.Person.submitRsvp(input)
+        }
     }
 }
 

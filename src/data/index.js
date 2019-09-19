@@ -49,6 +49,7 @@ import * as Campus from './campus'
 import * as Person from './people'
 import * as PhoneNumber from './phone-number'
 import * as Address from './address'
+import * as Workflow from './workflow'
 
 const data = {
   Followings,
@@ -81,6 +82,7 @@ const data = {
   DefinedValueList,
   PhoneNumber,
   Address,
+  Workflow,
 
   // Local Content Items
   WebsitePagesContentItem,

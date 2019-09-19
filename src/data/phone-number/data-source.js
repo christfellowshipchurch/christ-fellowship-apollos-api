@@ -28,8 +28,8 @@ export default class PhoneNumber extends RockApolloDataSource {
       ),
       // "The international public telecommunication numbering plan", twilio likes numbers to be in this format.
       e164: number.getNumber('e164'),
-    };
-  };
+    }
+  }
 
   addPhoneNumberToPerson = async ({ personId, phoneNumber: phoneNumberInput, numberType = 'mobile' }) => {
     if (personId && phoneNumberInput) {

@@ -59,6 +59,7 @@ export default gql`
         updateAddress(street1: String!, street2: String, city: String!, state: String!, postalCode: String!): Address
         updatePhoneNumber(phoneNumber: String!): Person
         updateCommunicationPreference(type: UPDATEABLE_COMMUNICATION_PREFERENCES!, allow: Boolean!): Person
+        submitRsvp(input: [Attribute]!): Boolean
     }
 
     extend type Query {
