@@ -1,5 +1,5 @@
-import { contentItemSchema } from '@apollosproject/data-schema';
-import { gql } from 'apollo-server';
+import { contentItemSchema } from '@apollosproject/data-schema'
+import { gql } from 'apollo-server'
 
 export default gql`
     type CallToAction {
@@ -35,4 +35,4 @@ export default gql`
         target: String
         subtitle: String
     }
-`;
+`

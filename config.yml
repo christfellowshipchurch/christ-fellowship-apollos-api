@@ -80,7 +80,7 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
     ArticleContentItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [38]
+      ContentChannelTypeId: [21]
     WebsitePagesContentItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [14]
