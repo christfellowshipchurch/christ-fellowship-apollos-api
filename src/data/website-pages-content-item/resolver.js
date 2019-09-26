@@ -1,7 +1,7 @@
 import { ContentItem } from '@apollosproject/data-connector-rock';
 import { resolverMerge } from '@apollosproject/server-core';
 import {
-    get
+    get,
 } from 'lodash'
 import { parseRockKeyValuePairs } from '../utils'
 
@@ -30,6 +30,12 @@ const resolver = {
                 get(attributeValues, 'twitterProtocols.value', ''),
                 'content', 'name'
             ),
+        icon: async ({ attributeValues }, args, { dataSources }) => {
+            const definedValueGuid = get(attributeValues, 'icon.value', '')
+            const definedValue = await dataSources.DefinedValue.getDefinedValueByIdentifier(definedValueGuid)
+
+            return get(definedValue, 'value', '')
+        }
     }
 }
 
