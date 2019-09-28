@@ -9,10 +9,10 @@ const { createImageUrlFromGuid } = Utils
 
 const resolver = {
     Query: {
-        getArticles: (root, { title }, context) =>
-            context.dataSources.ArticleContentItem.getArticles(),
-        getArticleByTitle: async (root, { title }, context) =>
-            await context.dataSources.ArticleContentItem.getArticleContentItemByTitle(title),
+        getArticles: async (root, args, { dataSources }) =>
+            await dataSources.ArticleContentItem.getArticles({ first: get(args, 'first', 0) }),
+        getArticleByTitle: async (root, { title }, { dataSources }) =>
+            await dataSources.ArticleContentItem.getArticleContentItemByTitle(title),
     },
     ArticleContentItem: {
         ...ContentItem.resolver.ContentItem,

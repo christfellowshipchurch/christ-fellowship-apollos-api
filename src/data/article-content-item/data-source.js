@@ -11,15 +11,22 @@ export default class ArticleContentItem extends ContentItem.dataSource {
 
     formatArticleTitleAsUrl = (title) => kebabCase(toLower(title))
 
-    getArticles = async () => {
+    getArticles = async (props) => {
+        const first = get(props, 'first', 0)
+
         const contentChannelTypes = get(ROCK_MAPPINGS, 'CONTENT_ITEM.ArticleContentItem.ContentChannelTypeId', [])
 
         const contentChannelTypeFilters = contentChannelTypes.map((n, i) =>
             `ContentChannelTypeId eq ${n}`)
 
-        const articles = await this.request()
-            .filterOneOf(contentChannelTypeFilters)
-            .get()
+        const articles = first && first > 0
+            ? await this.request()
+                .filterOneOf(contentChannelTypeFilters)
+                .top(first)
+                .get()
+            : await this.request()
+                .filterOneOf(contentChannelTypeFilters)
+                .get()
 
         return articles
     }
