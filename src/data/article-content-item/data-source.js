@@ -34,4 +34,19 @@ export default class ArticleContentItem extends ContentItem.dataSource {
         )
     }
 
+    getCategories = async (id) => {
+        const parentAssociations = await this.request(
+            'ContentChannelItemAssociations'
+        )
+            .filter(`ChildContentChannelItemId eq ${id}`)
+            .get()
+
+        if (!parentAssociations || !parentAssociations.length) return null
+
+        return parentAssociations.map(async ({ contentChannelItemId }) => {
+            const { title } = await this.context.dataSources.ContentItem.getFromId(contentChannelItemId)
+
+            return title
+        })
+    }
 }
