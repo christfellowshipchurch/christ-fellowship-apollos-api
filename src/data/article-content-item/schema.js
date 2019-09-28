@@ -4,7 +4,7 @@ import { gql } from 'apollo-server';
 export default gql`
 
     extend type Query {
-        getArticles: [ArticleContentItem]
+        getArticles(first:Int): [ArticleContentItem]
         getArticleByTitle(title: String!): ArticleContentItem
     }
 
@@ -34,5 +34,6 @@ export default gql`
         author: Person
         readTime: String
         publishDate: String
+        categories: [String]
     }
 `
