@@ -1,14 +1,14 @@
-import { gql } from 'apollo-server';
+import { gql } from 'apollo-server'
 
-import { createApolloServerConfig } from '@apollosproject/server-core';
+import { createApolloServerConfig } from '@apollosproject/server-core'
 
-import * as Analytics from '@apollosproject/data-connector-analytics';
-import * as Scripture from '@apollosproject/data-connector-bible';
-import * as LiveStream from '@apollosproject/data-connector-church-online';
-import * as Cloudinary from '@apollosproject/data-connector-cloudinary';
-import * as OneSignal from '@apollosproject/data-connector-onesignal';
-import * as Pass from '@apollosproject/data-connector-passes';
-import * as Sms from '@apollosproject/data-connector-twilio';
+import * as Analytics from '@apollosproject/data-connector-analytics'
+import * as Scripture from '@apollosproject/data-connector-bible'
+import * as LiveStream from '@apollosproject/data-connector-church-online'
+import * as Cloudinary from '@apollosproject/data-connector-cloudinary'
+import * as OneSignal from '@apollosproject/data-connector-onesignal'
+import * as Pass from '@apollosproject/data-connector-passes'
+import * as Sms from '@apollosproject/data-connector-twilio'
 import {
   Followings,
   Interactions,
@@ -24,12 +24,12 @@ import {
   // Campus,
   BinaryFiles,
   Features,
-} from '@apollosproject/data-connector-rock';
-import * as Theme from './theme';
+} from '@apollosproject/data-connector-rock'
+import * as Theme from './theme'
 
 // This module is used to attach Rock User updating to the OneSignal module.
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
-import * as OneSignalWithRock from './oneSignalWithRock';
+import * as OneSignalWithRock from './oneSignalWithRock'
 
 // import * as ContentItem from './content-item'
 
@@ -39,6 +39,9 @@ import * as WebsiteContentItem from './website-content-item'
 import * as WebsiteGroupContentItem from './website-group-content-item'
 import * as WebsiteNavigation from './website-navigation'
 import * as WebsiteFeature from './website-feature'
+
+// Content Types
+import * as ArticleContentItem from './article-content-item'
 
 import * as DefinedValue from './defined-value'
 import * as DefinedValueList from './defined-value-list'
@@ -89,8 +92,9 @@ const data = {
   WebsiteContentItem,
   WebsiteGroupContentItem,
   WebsiteNavigation,
-  WebsiteFeature
-};
+  WebsiteFeature,
+  ArticleContentItem
+}
 
 const {
   dataSources,
@@ -98,9 +102,9 @@ const {
   schema,
   context,
   applyServerMiddleware,
-} = createApolloServerConfig(data);
+} = createApolloServerConfig(data)
 
-export { dataSources, resolvers, schema, context, applyServerMiddleware };
+export { dataSources, resolvers, schema, context, applyServerMiddleware }
 
 // the upload Scalar is added
 export const testSchema = [
@@ -108,4 +112,4 @@ export const testSchema = [
     scalar Upload
   `,
   ...schema,
-];
+]
