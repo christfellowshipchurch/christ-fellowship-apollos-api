@@ -4,13 +4,13 @@ import { gql } from 'apollo-server';
 export default gql`
 
     extend type Query {
-        getArticleContentItemByTitle(title: String!): ArticleContentItem
+        getArticles: [ArticleContentItem]
+        getArticleByTitle(title: String!): ArticleContentItem
     }
 
     type ArticleContentItem implements ContentItem & Node {
         id: ID!
         title: String
-        subtitle: String
         coverImage: ImageMedia
         images: [ImageMedia]
         videos: [VideoMedia]
@@ -19,16 +19,20 @@ export default gql`
         summary: String
 
         childContentItemsConnection(
-        first: Int
-        after: String
+            first: Int
+            after: String
         ): ContentItemsConnection
 
         siblingContentItemsConnection(
-        first: Int
-        after: String
+            first: Int
+            after: String
         ): ContentItemsConnection
 
         parentChannel: ContentChannel
         theme: Theme
+
+        author: Person
+        readTime: String
+        publishDate: String
     }
 `

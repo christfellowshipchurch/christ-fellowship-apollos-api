@@ -1,19 +1,17 @@
 import { ContentItem, Utils } from '@apollosproject/data-connector-rock'
 import { resolverMerge } from '@apollosproject/server-core'
-import ApollosConfig from '@apollosproject/config'
 import {
-    get
+    get, has
 } from 'lodash'
-import { parseRockKeyValuePairs, parseHexCode } from '../utils'
+import moment from 'moment'
 
-const createVideoUrlFromGuid = (uri) =>
-    uri.split('-').length === 5
-        ? `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`
-        : Utils.enforceProtocol(uri);
+const { createImageUrlFromGuid } = Utils
 
 const resolver = {
     Query: {
-        getArticleContentItemByTitle: async (root, { title }, context) =>
+        getArticles: (root, { title }, context) =>
+            context.dataSources.ArticleContentItem.getArticles(),
+        getArticleByTitle: async (root, { title }, context) =>
             await context.dataSources.ArticleContentItem.getArticleContentItemByTitle(title),
     },
     ArticleContentItem: {
@@ -26,7 +24,25 @@ const resolver = {
                 : titleOverride;
         },
         htmlContent: ({ content }) => content,
-        subtitle: ({ attributeValues }) => get(attributeValues, 'subtitle.value', null),
+        summary: ({ attributeValues }) => get(attributeValues, 'subtitle.value', null),
+        author: async ({ attributeValues }, args, { dataSources }) => {
+            if (has(attributeValues, 'author.value')) {
+                const { id } = await dataSources.Person.getFromAliasId(attributeValues.author.value)
+
+                const person = await dataSources.Person.getFromId(id)
+
+                return {
+                    ...person,
+                    photo: {
+                        url: createImageUrlFromGuid(get(person, 'photo.guid', ''))
+                    }
+                }
+            }
+
+            return null
+        },
+        readTime: ({ attributeValues }) => get(attributeValues, 'estimatedReadTime.value', null),
+        publishDate: ({ startDateTime }) => moment(startDateTime).toISOString()
     }
 }
 

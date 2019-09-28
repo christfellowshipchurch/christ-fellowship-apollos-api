@@ -11,6 +11,9 @@ import {
 } from 'lodash'
 import ApollosConfig from '@apollosproject/config'
 import moment from 'moment'
+import {
+    getIdentifierType
+} from '../utils'
 
 const RockGenderMap = {
     Unknown: 0,
@@ -26,6 +29,29 @@ const RockAttributeValues = {
 
 export default class Person extends corePerson.dataSource {
     expanded = true
+
+    // Overrides the Core method to allow for the Id
+    //  passed to be either an int or guid
+    getFromId = (id) =>
+        this.request()
+            .filter(getIdentifierType(id).query)
+            .expand('Photo')
+            .first()
+
+    getFromAliasId = async (id) => {
+        // Fetch the PersonAlias, selecting only the PersonId.
+        const personAlias = await this.request('/PersonAlias')
+            .filter(getIdentifierType(id).query)
+            .select('PersonId')
+            .first();
+
+        // If we have a personAlias, return him.
+        if (personAlias) {
+            return this.getFromId(personAlias.personId);
+        }
+        // Otherwise, return null.
+        return null;
+    }
 
     parseDateAsBirthday = (date) => {
         const birthDate = moment(date);
