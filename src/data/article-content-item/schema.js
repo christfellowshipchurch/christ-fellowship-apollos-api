@@ -33,5 +33,6 @@ export default gql`
 
         author: Person
         readTime: String
+        publishDate: String
     }
 `

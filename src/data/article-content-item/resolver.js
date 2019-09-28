@@ -1,16 +1,11 @@
 import { ContentItem, Utils } from '@apollosproject/data-connector-rock'
 import { resolverMerge } from '@apollosproject/server-core'
-import ApollosConfig from '@apollosproject/config'
 import {
     get, has
 } from 'lodash'
-import { parseRockKeyValuePairs, parseHexCode } from '../utils'
+import moment from 'moment'
 
 const { createImageUrlFromGuid } = Utils
-const createVideoUrlFromGuid = (uri) =>
-    uri.split('-').length === 5
-        ? `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`
-        : Utils.enforceProtocol(uri);
 
 const resolver = {
     Query: {
@@ -47,6 +42,7 @@ const resolver = {
             return null
         },
         readTime: ({ attributeValues }) => get(attributeValues, 'estimatedReadTime.value', null),
+        publishDate: ({ startDateTime }) => moment(startDateTime).toISOString()
     }
 }
 
