@@ -1,5 +1,4 @@
-import { contentItemSchema } from '@apollosproject/data-schema';
-import { gql } from 'apollo-server';
+import { gql } from 'apollo-server'
 
 export default gql`
     extend type Query {
@@ -35,5 +34,7 @@ export default gql`
         metaKeywords: [String]
         openGraphProtocols: [MetaTag]
         twitterProtocols: [MetaTag]
+
+        icon: String
     }
 `
