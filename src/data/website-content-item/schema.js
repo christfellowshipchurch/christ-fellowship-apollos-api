@@ -34,5 +34,7 @@ export default gql`
         secondaryCallToAction: CallToAction
         target: String
         subtitle: String
+
+        openLinksInNewTab: String
     }
 `
