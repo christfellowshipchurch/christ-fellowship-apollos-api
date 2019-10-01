@@ -7,7 +7,8 @@ import {
     camelCase,
     replace,
     snakeCase,
-    upperFirst
+    upperFirst,
+    mapValues
 } from 'lodash'
 
 export default class Workflow extends RockApolloDataSource {
@@ -19,7 +20,7 @@ export default class Workflow extends RockApolloDataSource {
         return rtnAttrs
     }
 
-    trigger = ({ id, attributes }) => {
+    trigger = async ({ id, attributes }) => {
         if (id && attributes) {
             let ampersand = ''
             let queryString = ''
@@ -29,9 +30,16 @@ export default class Workflow extends RockApolloDataSource {
                 ampersand = '&'
             })
 
-            return this.post(
+            const workflowResponse = await this.post(
                 `/Workflows/WorkflowEntry/${id}?${queryString}`
             )
+
+            const attributeValues = get(workflowResponse, 'attributeValues', {})
+
+            return {
+                status: get(workflowResponse, 'status', 'Failed'),
+                attributes: mapValues(attributeValues, (n) => get(n, 'value', ''))
+            }
         }
 
         return null

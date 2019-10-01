@@ -238,8 +238,6 @@ export default class Person extends corePerson.dataSource {
             email: get(reducedInput, 'email', null),
         }
 
-        console.log({ reducedInput, attributes })
-
         // Only run the method if the following attributes
         // are found in the attributes object
         if (attributes.firstName
@@ -262,7 +260,7 @@ export default class Person extends corePerson.dataSource {
                     )
 
                     if (guid) {
-                        await this.context.dataSources.Workflow.trigger({
+                        const workflow = await this.context.dataSources.Workflow.trigger({
                             id: get(ApollosConfig, 'ROCK_MAPPINGS.WORKFLOW_IDS.RSVP'),
                             attributes: {
                                 ...attributes,
@@ -271,7 +269,7 @@ export default class Person extends corePerson.dataSource {
                             }
                         })
 
-                        return true
+                        return workflow.status
                     }
                 }
             } catch (e) {
@@ -280,6 +278,38 @@ export default class Person extends corePerson.dataSource {
         }
 
         // Default return value
-        return false
+        return "Failed"
+    }
+
+    submitEmailCapture = async (input) => {
+        // Set the default return value of a workflow attribute
+        // to null in order to make it easier to check in the 
+        // conditional statement later
+        const reducedInput = this.reduceInput(input)
+        const attributes = {
+            firstName: get(reducedInput, 'firstName', null),
+            lastName: get(reducedInput, 'lastName', null),
+            email: get(reducedInput, 'email', null),
+        }
+
+        // Only run the method if the following attributes
+        // are found in the attributes object
+        if (attributes.firstName
+            && attributes.lastName
+            && attributes.email) {
+            try {
+                const workflow = await this.context.dataSources.Workflow.trigger({
+                    id: get(ApollosConfig, 'ROCK_MAPPINGS.WORKFLOW_IDS.EMAIL_CAPTURE'),
+                    attributes
+                })
+
+                return workflow.status
+            } catch (e) {
+                console.log({ e })
+            }
+        }
+
+        // Default return value
+        return "Failed"
     }
 }

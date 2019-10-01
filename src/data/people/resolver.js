@@ -68,10 +68,10 @@ const resolver = {
             await dataSources.PhoneNumber.updateByUser(phoneNumber)
             return dataSources.Auth.getCurrentPerson()
         },
-        submitRsvp: (root, { input }, { dataSources }) => {
-            console.log({ input })
-            return dataSources.Person.submitRsvp(input)
-        }
+        submitRsvp: (root, { input }, { dataSources }) =>
+            dataSources.Person.submitRsvp(input),
+        submitEmailCapture: (root, { input }, { dataSources }) =>
+            dataSources.Person.submitEmailCapture(input)
     }
 }
 
