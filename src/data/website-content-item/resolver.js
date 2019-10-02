@@ -61,11 +61,7 @@ const resolver = {
                 ? first(parseRockKeyValuePairs(cta, 'call', 'action'))
                 : null
         },
-        openLinksInNewTab: ({ attributeValues }) => get(attributeValues, 'openLinksInNewTab.value', null),
-        target: ({ attributeValues }, args, context) =>
-            lowerCase(get(attributeValues, 'openLinksInNewTab.value', 'false')) === 'true'
-                ? '_blank'
-                : '',
+        openLinksInNewTab: ({ attributeValues }) => get(attributeValues, 'openLinksInNewTab.value', false) === true,
         subtitle: ({ attributeValues }) => get(attributeValues, 'subtitle.value', null),
     }
 }

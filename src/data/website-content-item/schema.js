@@ -35,6 +35,6 @@ export default gql`
         target: String
         subtitle: String
 
-        openLinksInNewTab: String
+        openLinksInNewTab: Boolean
     }
 `
