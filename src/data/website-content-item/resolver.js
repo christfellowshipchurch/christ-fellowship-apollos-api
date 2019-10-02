@@ -2,7 +2,7 @@ import { ContentItem, Utils } from '@apollosproject/data-connector-rock'
 import { resolverMerge } from '@apollosproject/server-core'
 import ApollosConfig from '@apollosproject/config'
 import {
-    get, lowerCase, first
+    get, toLower, first
 } from 'lodash'
 import { parseRockKeyValuePairs, parseHexCode } from '../utils'
 
@@ -61,7 +61,8 @@ const resolver = {
                 ? first(parseRockKeyValuePairs(cta, 'call', 'action'))
                 : null
         },
-        openLinksInNewTab: ({ attributeValues }) => get(attributeValues, 'openLinksInNewTab.value', false) === true,
+        openLinksInNewTab: ({ attributeValues }) =>
+            toLower(get(attributeValues, 'openLinksInNewTab.value', 'false')) === 'true',
         subtitle: ({ attributeValues }) => get(attributeValues, 'subtitle.value', null),
     }
 }
