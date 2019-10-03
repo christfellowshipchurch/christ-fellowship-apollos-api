@@ -32,7 +32,8 @@ export default gql`
         imageRatio: String
         callToAction: CallToAction
         secondaryCallToAction: CallToAction
-        target: String
         subtitle: String
+
+        openLinksInNewTab: Boolean
     }
 `
