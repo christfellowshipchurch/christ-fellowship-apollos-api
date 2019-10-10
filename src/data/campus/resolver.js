@@ -4,6 +4,7 @@ import {
 } from '@apollosproject/data-connector-rock'
 import { resolverMerge } from '@apollosproject/server-core'
 import { get } from 'lodash'
+import moment from 'moment'
 import { parseRockKeyValuePairs } from '../utils'
 
 const { createImageUrlFromGuid } = Utils
@@ -34,7 +35,28 @@ const resolver = {
         uri: get(attributeValues, 'featuredImage.value', null) ? createImageUrlFromGuid(attributeValues.featuredImage.value) : null,
       })
     },
-    serviceTimes: ({ serviceTimes }) => parseRockKeyValuePairs(serviceTimes, 'day', 'time'),
+    serviceTimes: async ({ serviceTimes, attributeValues }, args, { dataSources }) => {
+      const serviceSchedule = get(attributeValues, 'serviceSchedule.value', null)
+
+      if (serviceSchedule && serviceSchedule !== '') {
+        const schedule = await dataSources.Campus.getSchedule(serviceSchedule)
+        const { friendlyScheduleText } = schedule
+        const timesParsedFromHtml = friendlyScheduleText
+          .match(/<li>(.*?)<\/li>/g)
+          .map((n) => n.replace(/<\/?li>/g, ''))
+
+        return timesParsedFromHtml.map((n) => {
+          const m = moment(n)
+
+          return {
+            day: m.format('YYYY-MM-DD'),
+            time: m.format('LT')
+          }
+        })
+      }
+
+      return parseRockKeyValuePairs(serviceTimes, 'day', 'time')
+    },
   }
 }
 
