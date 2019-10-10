@@ -2,6 +2,7 @@ import {
   Campus as coreCampus,
 } from '@apollosproject/data-connector-rock'
 import { get } from 'lodash'
+import { getIdentifierType } from '../utils'
 
 export default class Campus extends coreCampus.dataSource {
   getForPerson = async ({ personId }) => {
@@ -54,4 +55,9 @@ export default class Campus extends coreCampus.dataSource {
   }
 
   getByName = async (name) => this.request().filter(`Name eq '${name}'`).first()
+
+  getSchedule = (id) => this
+    .request('Schedules')
+    .filter(getIdentifierType(id).query)
+    .first()
 }
