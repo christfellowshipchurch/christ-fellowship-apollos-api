@@ -1,10 +1,11 @@
 import {
     Auth as coreAuth,
 } from '@apollosproject/data-connector-rock'
-import { AuthenticationError, UserInputError } from 'apollo-server';
+import { AuthenticationError, UserInputError } from 'apollo-server'
+
 import { get, forEach, upperCase } from 'lodash'
 import crypto from 'crypto'
-import { secret } from './token';
+import { secret } from './token'
 import { string } from 'yup'
 
 const DEFAULT_ROCK_APOLLOS_PERSON_ID = 360207
@@ -30,6 +31,8 @@ export default class Auth extends coreAuth.dataSource {
             .createHash('sha256')
             .update(`${passcode}${secret}`)
             .digest('hex')
+
+    generatePin = () => `${Math.floor(Math.random() * 1000000)}`.padStart(6, '0')
 
     getUserLogin = (identity) => this.request('/UserLogins')
         .filter(`UserName eq '${identity}'`)
@@ -117,7 +120,7 @@ export default class Auth extends coreAuth.dataSource {
         }
 
         // generates pin and password
-        const pin = `${Math.floor(Math.random() * 1000000)}`.padStart(6, '0')
+        const pin = this.generatePin()
 
         // update or create new user login using phone number as identity and pin as passcode
         const user = await this.updateIdentityPassword({ identity: numericOnlyPhoneNumber, passcode: pin })
@@ -131,6 +134,16 @@ export default class Auth extends coreAuth.dataSource {
         console.log("Request SMS:", { pin })
 
         return { success: true, isExistingIdentity: this.isExistingUserLogin }
+    }
+
+    requestEmailPin = async ({ email }) => {
+        const pin = this.generatePin()
+
+        await this.updateIdentityPassword({ identity: email, passcode: pin })
+
+        console.log("Request Email Pin:", { pin })
+
+        return { success: true, isExistingIdentity: true }
     }
 
     // TODO : does this method need authenitcation of the identity and passcode before patching??
@@ -232,5 +245,28 @@ export default class Auth extends coreAuth.dataSource {
         })
 
         return hasLogin
+    }
+
+    changeEmailPassword = async ({ identity, passcode, newPasscode }) => {
+        const schema = string().email()
+
+        // Confirm identity is email address
+        if (await schema.isValid(identity)) {
+            // Authenticate the current passcode with identity
+            await this.authenticateCredentials({ identity, passcode })
+
+            // Update the identity with the new passcode
+            const { success } = await this.updateIdentityPassword({ identity, passcode: newPasscode })
+
+            // If successfully updated, 
+            //  return the authentication of the identity and new passcode
+            if (success) {
+                return this.authenticateCredentials({ identity, passcode: newPasscode })
+            }
+
+            throw new Error("Unable to update identity with new passcode")
+        }
+
+        throw new Error("Invalid email address for password change")
     }
 }

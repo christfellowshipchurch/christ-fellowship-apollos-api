@@ -5,6 +5,8 @@ const resolver = {
     Mutation: {
         requestSmsLoginPin: (root, { phoneNumber }, { dataSources }) =>
             dataSources.AuthSms.requestSmsLogin({ phoneNumber }),
+        requestEmailLoginPin: (root, { email }, { dataSources }) =>
+            dataSources.Auth.requestEmailPin({ email }),
         authenticateCredentials: (root, { identity, passcode }, { dataSources }) =>
             dataSources.Auth.authenticateCredentials({ identity, passcode }),
         relateUserLoginToPerson: (root, { identity, passcode, input }, { dataSources }) =>
@@ -25,6 +27,8 @@ const resolver = {
                 ? { success: true, isExistingIdentity: true }
                 : { success: true, isExistingIdentity: false }
         },
+        requestPasswordChange: (root, { identity, passcode, newPasscode }, { dataSources }) =>
+            dataSources.Auth.changeEmailPassword({ identity, passcode, newPasscode }),
     },
     Query: {
         getUserLoginTypes: (root, props, { dataSources }) =>
