@@ -1,6 +1,7 @@
 import {
     Auth as coreAuth,
 } from '@apollosproject/data-connector-rock'
+import ApollosConfig from '@apollosproject/config'
 import { AuthenticationError, UserInputError } from 'apollo-server'
 
 import { get, forEach, upperCase } from 'lodash'
@@ -143,7 +144,15 @@ export default class Auth extends coreAuth.dataSource {
 
         console.log("Request Email Pin:", { pin })
 
-        return { success: true, isExistingIdentity: true }
+        const workflow = await this.context.dataSources.Workflow.trigger({
+            id: get(ApollosConfig, 'ROCK_MAPPINGS.WORKFLOW_IDS.PASSWORD_RESET_EMAIL'),
+            attributes: {
+                email,
+                confirmationCode: pin
+            }
+        })
+
+        return workflow.status
     }
 
     // TODO : does this method need authenitcation of the identity and passcode before patching??

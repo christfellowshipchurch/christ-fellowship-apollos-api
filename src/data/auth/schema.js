@@ -16,12 +16,12 @@ export default gql`
     
     extend type Mutation {
         requestSmsLoginPin(phoneNumber: String!): IdentityResult
-        requestEmailLoginPin(email: String!): IdentityResult
+        requestEmailLoginPin(email: String!): String
         authenticateCredentials(identity: String!, passcode: String!): Authentication
         createNewUserLogin(identity: String!, passcode: String!): Authentication
         relateUserLoginToPerson(identity: String!, passcode: String!, input:[UpdateProfileInput]!): Authentication
-        isValidIdentity(identity: String): IdentityResult
         requestPasswordChange(identity: String!, passcode: String!, newPasscode: String!): Authentication
+        isValidIdentity(identity: String): IdentityResult
     }
 
     extend type Query {

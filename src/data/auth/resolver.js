@@ -20,6 +20,8 @@ const resolver = {
 
             throw new Error("Unable to create User Login:", { identity, passcode })
         },
+        requestPasswordChange: (root, { identity, passcode, newPasscode }, { dataSources }) =>
+            dataSources.Auth.changeEmailPassword({ identity, passcode, newPasscode }),
         isValidIdentity: async (root, { identity }, { dataSources }) => {
             const userLogin = await dataSources.Auth.getUserLogin(identity)
 
@@ -27,17 +29,11 @@ const resolver = {
                 ? { success: true, isExistingIdentity: true }
                 : { success: true, isExistingIdentity: false }
         },
-        requestPasswordChange: (root, { identity, passcode, newPasscode }, { dataSources }) =>
-            dataSources.Auth.changeEmailPassword({ identity, passcode, newPasscode }),
     },
     Query: {
         getUserLoginTypes: (root, props, { dataSources }) =>
             dataSources.Auth.getUserLoginTypes(),
     }
-}
-
-function timeout(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export default resolverMerge(resolver, coreAuth)
