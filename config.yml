@@ -148,6 +148,7 @@ ROCK_MAPPINGS:
   WORKFLOW_IDS:
     RSVP: 206
     EMAIL_CAPTURE: 208
+    PASSWORD_RESET_EMAIL: 209
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:

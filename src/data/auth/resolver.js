@@ -5,6 +5,8 @@ const resolver = {
     Mutation: {
         requestSmsLoginPin: (root, { phoneNumber }, { dataSources }) =>
             dataSources.AuthSms.requestSmsLogin({ phoneNumber }),
+        requestEmailLoginPin: (root, { email }, { dataSources }) =>
+            dataSources.Auth.requestEmailPin({ email }),
         authenticateCredentials: (root, { identity, passcode }, { dataSources }) =>
             dataSources.Auth.authenticateCredentials({ identity, passcode }),
         relateUserLoginToPerson: (root, { identity, passcode, input }, { dataSources }) =>
@@ -18,6 +20,8 @@ const resolver = {
 
             throw new Error("Unable to create User Login:", { identity, passcode })
         },
+        requestPasswordChange: (root, { identity, passcode, newPasscode }, { dataSources }) =>
+            dataSources.Auth.changeEmailPassword({ identity, passcode, newPasscode }),
         isValidIdentity: async (root, { identity }, { dataSources }) => {
             const userLogin = await dataSources.Auth.getUserLogin(identity)
 
@@ -30,10 +34,6 @@ const resolver = {
         getUserLoginTypes: (root, props, { dataSources }) =>
             dataSources.Auth.getUserLoginTypes(),
     }
-}
-
-function timeout(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export default resolverMerge(resolver, coreAuth)
