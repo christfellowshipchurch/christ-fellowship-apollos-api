@@ -81,7 +81,6 @@ export default class Auth extends coreAuth.dataSource {
             return { success: false, isExistingIdentity: this.isExistingUserLogin }
         } catch (e) {
             console.log({ e })
-
             return { success: false, isExistingIdentity: this.isExistingUserLogin }
         }
     }
@@ -129,7 +128,7 @@ export default class Auth extends coreAuth.dataSource {
         // send sms with readable pin to the e164 formatted number
         await this.context.dataSources.Sms.sendSms({
             to: e164,
-            body: `Your login code is ${pin}`,
+            body: `Christ Fellowship Login Code: ${pin}`,
         });
 
         console.log("Request SMS:", { pin })
