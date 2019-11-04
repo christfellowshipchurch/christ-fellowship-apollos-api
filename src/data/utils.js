@@ -1,3 +1,5 @@
+import ApollosConfig from '@apollosproject/config'
+
 /*
  Splits up a Rock Key Value paired string where | splits pairs and ^ splits key and value
  Returns null if keyValueStr is null */
@@ -35,3 +37,11 @@ export const getIdentifierType = (identifier) => {
 
   return { type: 'custom', value: identifier, query: null }
 }
+
+/*
+  Accepts a GUID for a video file, then creates the appropriate uri endpoint
+  for the video file */
+export const createVideoUrlFromGuid = (uri) =>
+    uri.split('-').length === 5
+        ? `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`
+        : Utils.enforceProtocol(uri)

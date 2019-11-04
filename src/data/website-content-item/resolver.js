@@ -4,12 +4,12 @@ import ApollosConfig from '@apollosproject/config'
 import {
     get, toLower, first
 } from 'lodash'
-import { parseRockKeyValuePairs, parseHexCode } from '../utils'
+import { parseRockKeyValuePairs, createVideoUrlFromGuid } from '../utils'
 
-const createVideoUrlFromGuid = (uri) =>
-    uri.split('-').length === 5
-        ? `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`
-        : Utils.enforceProtocol(uri);
+// const createVideoUrlFromGuid = (uri) =>
+//     uri.split('-').length === 5
+//         ? `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`
+//         : Utils.enforceProtocol(uri);
 
 const resolver = {
     WebsiteBlockItem: {
