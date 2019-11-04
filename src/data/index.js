@@ -32,6 +32,7 @@ import * as Theme from './theme'
 import * as OneSignalWithRock from './oneSignalWithRock'
 
 import * as ContentItem from './content-item'
+import * as Browse from './browse'
 
 // Localized Modules
 import * as WebsitePagesContentItem from './website-pages-content-item'
@@ -93,7 +94,8 @@ const data = {
   WebsiteGroupContentItem,
   WebsiteNavigation,
   WebsiteFeature,
-  ArticleContentItem
+  ArticleContentItem,
+  Browse,
 }
 
 const {

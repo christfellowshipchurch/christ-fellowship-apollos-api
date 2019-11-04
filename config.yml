@@ -114,6 +114,9 @@ ROCK_MAPPINGS:
   #   See DISCOVER_CONTENT_CHANNEL_IDS and FEED_CONTENT_CHANNEL_IDS for App
   ARTICLE_CATEGORY_CONTENT_CHANNEL_IDS:
     - 38
+    
+  BROWSE_CATEGORY_CONTENT_CHANNEL_IDS:
+    - 38
 
   # Apollos will pull content items from these channels and expose them on a website
   # However, it will not expose the channel itself.
