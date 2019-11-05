@@ -15,7 +15,7 @@ import { createVideoUrlFromGuid } from '../utils'
 const { createImageUrlFromGuid } = Utils
 const { ROCK_MAPPINGS } = ApollosConfig
 
-const sortCategoryContentChannelItems = ({
+const sortContentChannelItems = ({
   sortOrder,
   contentChannelItems
 }) => {
@@ -68,7 +68,7 @@ export default class Browse extends RockApolloDataSource {
       .cache({ ttl: 5 })
       .get()
 
-    return sortCategoryContentChannelItems({
+    return sortContentChannelItems({
       contentChannelItems,
       sortOrder: ROCK_MAPPINGS.BROWSE_CATEGORY_CONTENT_CHANNEL_IDS
     })
