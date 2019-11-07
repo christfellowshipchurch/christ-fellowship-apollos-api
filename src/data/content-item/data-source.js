@@ -1,35 +1,27 @@
 import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock'
 import { Utils } from '@apollosproject/data-connector-rock'
+import { get, split } from 'lodash'
 
 const { createImageUrlFromGuid } = Utils
+import { createVideoUrlFromGuid } from '../utils'
 
 export default class ContentItem extends coreContentItem.dataSource {
-    getImages = ({ attributeValues, attributes }) => {
-        let images = [{
-            __typename: 'ImageMedia',
-            key: '',
-            name: '',
-            sources: [{ uri: 'https://picsum.photos/640/640/?random' }],
-        }]
-        const imageKeys = Object.keys(attributes).filter((key) =>
-            this.attributeIsImage({
-                key,
-                attributeValues,
-                attributes,
-            })
-        )
-
-        if (imageKeys.length) {
-            images = imageKeys.map((key) => ({
-                __typename: 'ImageMedia',
-                key,
-                name: attributes[key].name,
-                sources: attributeValues[key].value
-                    ? [{ uri: createImageUrlFromGuid(attributeValues[key].value) }]
-                    : [{ uri: 'https://picsum.photos/640/640/?random' }],
-            }))
-        }
-
-        return images
-    }
+  getVideos = ({ attributeValues, attributes }) => {
+    const videoKeys = Object.keys(attributes).filter((key) =>
+      this.attributeIsVideo({
+        key,
+        attributeValues,
+        attributes,
+      })
+    );
+    return videoKeys.map((key) => ({
+      __typename: 'VideoMedia',
+      key,
+      name: attributes[key].name,
+      embedHtml: get(attributeValues, 'videoEmbed.value', null), // TODO: this assumes that the key `VideoEmebed` is always used on Rock
+      sources: attributeValues[key].value
+        ? [{ uri: createVideoUrlFromGuid(attributeValues[key].value) }]
+        : [],
+    }));
+  }
 }

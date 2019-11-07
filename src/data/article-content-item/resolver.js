@@ -41,7 +41,7 @@ const resolver = {
 
             return null
         },
-        readTime: ({ attributeValues }) => get(attributeValues, 'estimatedReadTime.value', null),
+        readTime: ({ attributeValues }) => get(attributeValues, 'estimatedTime.value', null),
         publishDate: ({ startDateTime }) => moment(startDateTime).toISOString(),
         categories: ({ id }, args, { dataSources }) => dataSources.ArticleContentItem.getCategories(id)
     }
