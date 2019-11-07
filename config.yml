@@ -78,8 +78,8 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
     ContentItem:
       EntityType: ContentChannelItem
-    ArticleContentItem:
-      EntityType: ContentChannelItem
+    # ArticleContentItem:
+    #   EntityType: ContentChannelItem
       # ContentChannelTypeId: [21]
     WebsitePagesContentItem:
       EntityType: ContentChannelItem
@@ -109,14 +109,11 @@ ROCK_MAPPINGS:
     - 6
     - 10
 
-  # Apollos will pull content items from these channels and expose them on the articles page
+  # Apollos will pull content items from these channels
   # This will NOT add these Content Channels to the app.
   #   See DISCOVER_CONTENT_CHANNEL_IDS and FEED_CONTENT_CHANNEL_IDS for App
-  ARTICLE_CATEGORY_CONTENT_CHANNEL_IDS:
-    - 38
-    
-  BROWSE_CATEGORY_CONTENT_CHANNEL_IDS:
-    - 38
+  BROWSE_CONTENT_CHANNEL_IDS:
+    - 37
 
   # Apollos will pull content items from these channels and expose them on a website
   # However, it will not expose the channel itself.

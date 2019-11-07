@@ -1,11 +1,17 @@
-import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock'
+import {
+  ContentItem as coreContentItem,
+  Utils
+} from '@apollosproject/data-connector-rock'
 import { resolverMerge } from '@apollosproject/server-core'
+import moment from 'moment'
 import {
   get,
-  split
+  has,
+  split,
 } from 'lodash'
 
 import { parseRockKeyValuePairs } from '../utils'
+const { createImageUrlFromGuid } = Utils
 
 const resolverExtensions = {
   tags: ({ attributeValues }) =>
@@ -15,9 +21,31 @@ const resolverExtensions = {
 
     return get(parsed, '[0].key', 'book-open')
   },
+  estimatedTime: ({ attributeValues }) => get(attributeValues, 'estimatedTime.value', null),
+  publishDate: ({ startDateTime }) => moment(startDateTime).toISOString(),
+  author: async ({ attributeValues }, args, { dataSources }) => {
+    if (has(attributeValues, 'author.value')) {
+      const { id } = await dataSources.Person.getFromAliasId(attributeValues.author.value)
+
+      const person = await dataSources.Person.getFromId(id)
+
+      return {
+        ...person,
+        photo: {
+          url: createImageUrlFromGuid(get(person, 'photo.guid', ''))
+        }
+      }
+    }
+
+    return null
+  },
 }
 
 const resolver = {
+  Query: {
+    getContentItemByTitle: async (root, { title }, { dataSources }) =>
+      await dataSources.ContentItem.getByTitle(title),
+  },
   ContentItem: {
     title: ({ title: originalTitle, attributeValues }, { hyphenated }) => {
       // Check for an attribute value called titleOverride
@@ -64,7 +92,7 @@ const resolver = {
     },
   },
   DevotionalContentItem: {
-    ...resolverExtensions
+    ...resolverExtensions,
   },
   UniversalContentItem: {
     ...resolverExtensions
