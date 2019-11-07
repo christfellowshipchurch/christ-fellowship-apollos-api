@@ -24,17 +24,4 @@ export default class ContentItem extends coreContentItem.dataSource {
         : [],
     }));
   }
-
-  getDecorations = async ({ id }) => {
-    if (!!id) {
-      const contentItem = await this.getFromId(id)
-
-      return {
-        tags: split(get(contentItem, 'attributeValues.tags.value', ''), ','),
-        icon: get(contentItem, 'attributeValues.icon.value', '')
-      }
-    }
-
-    return null
-  }
 }

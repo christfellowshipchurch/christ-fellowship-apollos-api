@@ -1,12 +1,23 @@
 import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock'
 import { resolverMerge } from '@apollosproject/server-core'
-import { get } from 'lodash'
+import {
+  get,
+  split
+} from 'lodash'
+
+import { parseRockKeyValuePairs } from '../utils'
+
+const resolverExtensions = {
+  tags: ({ attributeValues }) =>
+    split(get(attributeValues, 'tags.value', ''), ','),
+  icon: ({ attributeValues }) => {
+    const parsed = parseRockKeyValuePairs(get(attributeValues, 'icon.value', 'book-open'))
+
+    return get(parsed, '[0].key', 'book-open')
+  },
+}
 
 const resolver = {
-  Query: {
-    contentDecorations: (root, { id }, { dataSources }) =>
-      dataSources.ContentItem.getDecorations({ id })
-  },
   ContentItem: {
     title: ({ title: originalTitle, attributeValues }, { hyphenated }) => {
       // Check for an attribute value called titleOverride
@@ -51,11 +62,21 @@ const resolver = {
         )
         .join(' ');
     },
-    // tags: () => []
   },
-  ContentDecorations: {
-    tags: ({ tags }) => tags,
-    icon: ({ icon }) => icon
+  DevotionalContentItem: {
+    ...resolverExtensions
+  },
+  UniversalContentItem: {
+    ...resolverExtensions
+  },
+  ContentSeriesContentItem: {
+    ...resolverExtensions
+  },
+  MediaContentItem: {
+    ...resolverExtensions
+  },
+  WeekendContentItem: {
+    ...resolverExtensions
   }
 }
 

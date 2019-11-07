@@ -4,12 +4,29 @@ import gql from 'graphql-tag'
 export default gql`
   ${ContentItem.schema}
 
-  type ContentDecorations {
+  extend type DevotionalContentItem {
     tags: [String]
     icon: String
   }
 
-  extend type Query {
-    contentDecorations(id: ID!): ContentDecorations
+  extend type UniversalContentItem {
+    tags: [String]
+    icon: String
   }
+
+  extend type ContentSeriesContentItem {
+    tags: [String]
+    icon: String
+  }
+
+  extend type MediaContentItem {
+    tags: [String]
+    icon: String
+  }
+
+  extend type WeekendContentItem {
+    tags: [String]
+    icon: String
+  }
+
 `
