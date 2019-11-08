@@ -16,7 +16,6 @@ const { createImageUrlFromGuid } = Utils
 const titleResolver = {
   title: ({ title: originalTitle, attributeValues }, { hyphenated }) => {
     // Check for an attribute value called titleOverride
-    console.log({ attributeValues })
     const title = get(attributeValues, 'titleOverride.value', originalTitle)
 
     if (!hyphenated) {
@@ -61,6 +60,7 @@ const titleResolver = {
 }
 
 const resolverExtensions = {
+  ...coreContentItem.resolver.ContentItem,
   ...titleResolver,
   summary: () => "THIS IS THE SUMMARY",
   htmlContent: () => "HTML CONTENT",
@@ -98,9 +98,6 @@ const resolver = {
     getContentItemByTitle: async (root, { title }, { dataSources }) =>
       await dataSources.ContentItem.getByTitle(title),
   },
-  ContentItem: {
-
-  },
   DevotionalContentItem: {
     ...resolverExtensions,
   },
@@ -113,18 +110,18 @@ const resolver = {
   MediaContentItem: {
     ...resolverExtensions
   },
-  WeekendContentItem: {
-    ...resolverExtensions
-  },
-  WebsitePagesContentItem: {
-    ...titleResolver,
-  },
-  WebsiteBlockItem: {
-    ...titleResolver,
-  },
-  WebsiteGroupItem: {
-    ...titleResolver,
-  },
+  // WeekendContentItem: {
+  //   ...titleResolver
+  // },
+  // WebsitePagesContentItem: {
+  //   ...titleResolver,
+  // },
+  // WebsiteBlockItem: {
+  //   ...titleResolver,
+  // },
+  // WebsiteGroupItem: {
+  //   ...titleResolver,
+  // },
 }
 
 export default resolverMerge(resolver, coreContentItem)
