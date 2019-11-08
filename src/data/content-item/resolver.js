@@ -20,9 +20,9 @@ const titleResolver = {
     const title = get(attributeValues, 'titleOverride.value', originalTitle)
 
     if (!hyphenated) {
-      return title;
+      return title
     }
-    const words = title.split(' ');
+    const words = title.split(' ')
 
     /* We only want to hyphenate the end of words because Hyper uses a language dictionary to add
      * "soft" hyphens at the appropriate places. By only adding "soft" hyphens to the end of we
@@ -45,10 +45,10 @@ const titleResolver = {
      * TODO: Expose the hyphenation point to make this more flexible in the future.
      */
     const hyphenateEndOfWord = (word, segment) =>
-      word.length > 7 ? word + '\u00AD' + segment : word + segment;
+      word.length > 7 ? word + '\u00AD' + segment : word + segment
 
     const hyphenateLongWords = (word, hyphenateFunction) =>
-      word.length > 7 ? hyphenateFunction(word) : word;
+      word.length > 7 ? hyphenateFunction(word) : word
 
     return words
       .map((w) =>
@@ -56,17 +56,12 @@ const titleResolver = {
           hypher.hyphenate(w).reduce(hyphenateEndOfWord)
         )
       )
-      .join(' ');
+      .join(' ')
   },
 }
 
 const resolverExtensions = {
-  // ...titleResolver,
-  title: ({ title: originalTitle, attributeValues }, { hyphenated }) => {
-    console.log({ attributeValues })
-
-    return "TITLE"
-  },
+  ...titleResolver,
   summary: () => "THIS IS THE SUMMARY",
   htmlContent: () => "HTML CONTENT",
   tags: ({ attributeValues }) =>
@@ -81,7 +76,6 @@ const resolverExtensions = {
   publishDate: ({ startDateTime }) =>
     moment(startDateTime).toISOString(),
   author: async ({ attributeValues }, args, { dataSources }) => {
-    console.log({ attributeValues })
     if (has(attributeValues, 'author.value')) {
       const { id } = await dataSources.Person.getFromAliasId(attributeValues.author.value)
 
@@ -105,14 +99,13 @@ const resolver = {
       await dataSources.ContentItem.getByTitle(title),
   },
   ContentItem: {
-    title: () => "TITLE"
+
   },
   DevotionalContentItem: {
     ...resolverExtensions,
   },
   UniversalContentItem: {
     ...resolverExtensions,
-    title: () => "TITLE"
   },
   ContentSeriesContentItem: {
     ...resolverExtensions
@@ -123,15 +116,15 @@ const resolver = {
   WeekendContentItem: {
     ...resolverExtensions
   },
-  // WebsitePagesContentItem: {
-  //   ...titleResolver,
-  // },
-  // WebsiteBlockItem: {
-  //   ...titleResolver,
-  // },
-  // WebsiteGroupItem: {
-  //   ...titleResolver,
-  // },
+  WebsitePagesContentItem: {
+    ...titleResolver,
+  },
+  WebsiteBlockItem: {
+    ...titleResolver,
+  },
+  WebsiteGroupItem: {
+    ...titleResolver,
+  },
 }
 
 export default resolverMerge(resolver, coreContentItem)
