@@ -3,7 +3,7 @@ import { gql } from 'apollo-server'
 export default gql`
     type WebsiteFeature implements ContentItem & Node {
         id: ID!
-        title: String
+        title(hyphenated: Boolean): String
         coverImage: ImageMedia
         images: [ImageMedia]
         videos: [VideoMedia]

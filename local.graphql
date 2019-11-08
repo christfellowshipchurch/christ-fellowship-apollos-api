@@ -1,5 +1,6 @@
 enum ACTION_FEATURE_ACTION {
   READ_CONTENT
+  READ_EVENT
 }
 
 type ActionListAction {
@@ -69,7 +70,8 @@ type AudioMediaSource implements MediaSource {
 type AuthenticatedUser {
   id: ID!
   profile: Person
-  rockToken: String
+  rock: RockPersonDetails
+  rockToken: String @deprecated(reason: "Use rock.authCookie instead")
 }
 
 type Authentication {
@@ -94,6 +96,7 @@ type Campus implements Node {
   longitude: Float
   image: ImageMediaSource
   distanceFromLocation(location: CampusLocationInput): Float
+  events: [Event]
 }
 
 input CampusLocationInput {
@@ -115,7 +118,7 @@ type ContentChannel implements Node {
 
 interface ContentItem {
   id: ID!
-  title: String
+  title(hyphenated: Boolean): String
   coverImage: ImageMedia
   images: [ImageMedia]
   videos: [VideoMedia]
@@ -148,7 +151,27 @@ input ContentItemsConnectionInput {
 
 type ContentSeriesContentItem implements ContentItem & Node {
   id: ID!
-  title: String
+  title(hyphenated: Boolean): String
+  coverImage: ImageMedia
+  images: [ImageMedia]
+  videos: [VideoMedia]
+  audios: [AudioMedia]
+  htmlContent: String
+  summary: String
+  childContentItemsConnection(first: Int, after: String): ContentItemsConnection
+  siblingContentItemsConnection(first: Int, after: String): ContentItemsConnection
+  parentChannel: ContentChannel
+  theme: Theme
+  scriptures: [Scripture]
+  isLiked: Boolean
+  likedCount: Int
+  sharing: SharableContentItem
+  features: [Feature]
+}
+
+type DevotionalContentItem implements ContentItem & Node {
+  id: ID!
+  title(hyphenated: Boolean): String
   coverImage: ImageMedia
   images: [ImageMedia]
   videos: [VideoMedia]
@@ -165,23 +188,14 @@ type ContentSeriesContentItem implements ContentItem & Node {
   sharing: SharableContentItem
 }
 
-type DevotionalContentItem implements ContentItem & Node {
+type Event implements Node {
   id: ID!
-  title: String
-  coverImage: ImageMedia
-  images: [ImageMedia]
-  videos: [VideoMedia]
-  audios: [AudioMedia]
-  htmlContent: String
-  summary: String
-  childContentItemsConnection(first: Int, after: String): ContentItemsConnection
-  siblingContentItemsConnection(first: Int, after: String): ContentItemsConnection
-  parentChannel: ContentChannel
-  theme: Theme
-  scriptures: [Scripture]
-  isLiked: Boolean
-  likedCount: Int
-  sharing: SharableContentItem
+  name: String
+  description: String
+  location: String
+  start: String
+  end: String
+  image: ImageMedia
 }
 
 interface Feature {
@@ -193,6 +207,20 @@ enum GENDER {
   Male
   Female
   Unknown
+}
+
+type Group implements Node {
+  id: ID!
+  name: String
+  leader: Person @deprecated(reason: "No longer used, use 'leaders' instead")
+  leaders: [Person]
+  members: [Person]
+}
+
+enum GROUP_TYPE {
+  Serving
+  Community
+  Family
 }
 
 type ImageMedia implements Media {
@@ -218,6 +246,8 @@ input LikeEntityInput {
 type LiveStream {
   isLive: Boolean
   eventStartTime: String
+  media: VideoMedia
+  webViewUrl: String
 }
 
 interface Media {
@@ -228,7 +258,7 @@ interface Media {
 
 type MediaContentItem implements ContentItem & Node {
   id: ID!
-  title: String
+  title(hyphenated: Boolean): String
   coverImage: ImageMedia
   images: [ImageMedia]
   videos: [VideoMedia]
@@ -318,13 +348,14 @@ enum PassType {
 type Person implements Node {
   id: ID!
   firstName: String
-  lastName: String!
+  lastName: String
   nickName: String
   email: String
   gender: GENDER
   birthDate: String
   photo: ImageMediaSource
   campus: Campus
+  groups(type: GROUP_TYPE, asLeader: Boolean): [Group]
 }
 
 input PushSettingsInput {
@@ -342,34 +373,74 @@ type Query {
   personaFeed(first: Int, after: String): ContentItemsConnection
   currentUser: AuthenticatedUser
   liveStream: LiveStream
-  scripture(query: String!): Scripture
-  scriptures(query: String!): [Scripture]
+  scripture(query: String!, version: VERSION): Scripture
+  scriptures(query: String!, version: VERSION): [Scripture]
   userPass: Pass
+  search(query: String!, first: Int, after: String): SearchResultsConnection
   campuses(location: CampusLocationInput): [Campus]
   userFeedFeatures: [Feature]
 }
 
-type Scripture {
-  id: String
+type RockPersonDetails {
+  authToken: String
+  authCookie: String
+}
+
+type Scripture implements Node {
+  id: ID!
   html: String
   reference: String
   copyright: String
+  version: String
+}
+
+type ScriptureFeature implements Feature & Node {
+  id: ID!
+  order: Int
+  scriptures: [Scripture]
+  sharing: SharableFeature
+}
+
+type SearchResult {
+  cursor: String
+  title: String
+  summary: String
+  coverImage: ImageMedia
+  node: Node
+}
+
+type SearchResultsConnection {
+  edges: [SearchResult]
+  pageInfo: PaginationInfo
 }
 
 interface Sharable {
-  url: String
   message: String
   title: String
+  url: String @deprecated(reason: "Not supported on the interface")
 }
 
 type SharableContentItem implements Sharable {
-  url: String
   message: String
   title: String
+  url: String
+}
+
+type SharableFeature implements Sharable {
+  message: String
+  title: String
+  url: String @deprecated(reason: "Not supported on a feature")
 }
 
 type SmsPinResult {
   success: Boolean
+}
+
+type TextFeature implements Feature & Node {
+  id: ID!
+  order: Int
+  body: String
+  sharing: SharableFeature
 }
 
 type Theme {
@@ -392,7 +463,7 @@ enum ThemeType {
 
 type UniversalContentItem implements ContentItem & Node {
   id: ID!
-  title: String
+  title(hyphenated: Boolean): String
   coverImage: ImageMedia
   images: [ImageMedia]
   videos: [VideoMedia]
@@ -425,6 +496,11 @@ input UpdateProfileInput {
 """The `Upload` scalar type represents a file upload."""
 scalar Upload
 
+enum VERSION {
+  WEB
+  KJV
+}
+
 type VideoMedia implements Media {
   name: String
   key: String
@@ -438,7 +514,7 @@ type VideoMediaSource implements MediaSource {
 
 type WeekendContentItem implements ContentItem & Node {
   id: ID!
-  title: String
+  title(hyphenated: Boolean): String
   coverImage: ImageMedia
   images: [ImageMedia]
   videos: [VideoMedia]
@@ -451,6 +527,7 @@ type WeekendContentItem implements ContentItem & Node {
   theme: Theme
   isLiked: Boolean
   likedCount: Int
+  liveStream: LiveStream
   sharing: SharableContentItem
   features: [Feature]
 }

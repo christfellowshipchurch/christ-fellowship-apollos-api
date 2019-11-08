@@ -8,6 +8,7 @@ import * as LiveStream from '@apollosproject/data-connector-church-online'
 import * as Cloudinary from '@apollosproject/data-connector-cloudinary'
 import * as OneSignal from '@apollosproject/data-connector-onesignal'
 import * as Pass from '@apollosproject/data-connector-passes'
+import * as Cache from '@apollosproject/data-connector-redis-cache';
 import * as Sms from '@apollosproject/data-connector-twilio'
 import {
   Followings,
@@ -40,9 +41,6 @@ import * as WebsiteContentItem from './website-content-item'
 import * as WebsiteGroupContentItem from './website-group-content-item'
 import * as WebsiteNavigation from './website-navigation'
 import * as WebsiteFeature from './website-feature'
-
-// Content Types
-import * as ArticleContentItem from './article-content-item'
 
 import * as DefinedValue from './defined-value'
 import * as DefinedValueList from './defined-value-list'
@@ -96,6 +94,7 @@ const data = {
   WebsiteFeature,
   // ArticleContentItem,
   Browse,
+  Cache,
 }
 
 const {
@@ -104,9 +103,17 @@ const {
   schema,
   context,
   applyServerMiddleware,
+  setupJobs,
 } = createApolloServerConfig(data)
 
-export { dataSources, resolvers, schema, context, applyServerMiddleware }
+export {
+  dataSources,
+  resolvers,
+  schema,
+  context,
+  applyServerMiddleware,
+  setupJobs,
+}
 
 // the upload Scalar is added
 export const testSchema = [

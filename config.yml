@@ -17,16 +17,29 @@ ROCK:
   API_TOKEN: ${ROCK_TOKEN}
   IMAGE_URL: ${CLOUDFRONT}/GetImage.ashx
   FILE_URL: ${CLOUDFRONT}/GetFile.ashx
+  SHARE_URL: https://apollosrock.newspring.cc
   # This should match the timezone of the Rock server
   TIMEZONE: "America/New_York"
+  DEEP_LINK_HOST: 
+  ROOT_API_URL: ${ROOT_URL}
+  JOBS_USERNAME: ${JOBS_USERNAME}
+  JOBS_PASSWORD: ${JOBS_PASSWORD}
+  USE_PLUGIN: false
+  SHOW_INACTIVE_CONTENT: ${ROCK_SHOW_INACTIVE_CONTENT}
 ONE_SIGNAL:
   APP_ID: b6e75a77-003f-4466-95ca-82cc5cdc407b
   REST_KEY: ${ONE_SIGNAL_REST_KEY}
 CHURCH_ONLINE:
   URL: https://apollos.churchonline.org/api/v1/
+  MEDIA_URLS: []
+  WEB_VIEW_URL: https://apollos.churchonline.org/
+ALGOLIA:
+  APPLICATION_ID: ${ALGOLIA_APP_ID}
+  API_KEY: ${ALGOLIA_API_KEY}
+  # TODO: should we support multiple indices? how?
+  SEARCH_INDEX: test_ContentItems
 TWILIO:
   ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
-  NOTIFY_SID: ${TWILIO_NOTIFY_SID}
   AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
   FROM_NUMBER: ${TWILIO_FROM_NUMBER}
 PASS:
@@ -42,14 +55,20 @@ ANALYTICS:
   # on the accompanying service
   SEGMENT_KEY:
   GA_ID:
+  USE_ROCK: true
 BIBLE_API:
   KEY: ${BIBLE_API_KEY}
-  BIBLE_ID: "9879dbb7cfe39e4d-01"
+  BIBLE_ID:
+    WEB: '9879dbb7cfe39e4d-01'
+    KJV: 'de4e12af7f28f599-02'
 CLOUDINARY:
   # Cloudinary is used to improve image loading
   # value should look something like
   # cloudinary://123123123:adkfnla_adASDv_adAS@test
   URL: ${CLOUDINARY_URL}
+ENGINE:
+  API_KEY: ${ENGINE_API_KEY}
+  SCHEMA_TAG: ${ENGINE_SCHEMA_TAG}
 
 # This key holds various properties that allow our GraphQL server to map to your Rock Instance
 ROCK_MAPPINGS:
@@ -148,6 +167,24 @@ ROCK_MAPPINGS:
     RSVP: 206
     EMAIL_CAPTURE: 208
     PASSWORD_RESET_EMAIL: 209
+  SERMON_CHANNEL_ID: 5
+
+  SERVING_GROUP_TYPE_ID: 23
+  COMMUNITY_GROUP_TYPE_ID: 25
+  FAMILY_GROUP_TYPE_ID: 10
+
+HOME_FEATURES:
+  - title: FOR YOU
+    algorithms: [SERMON_CHILDREN, PERSONA_FEED]
+    subtitle: Explore what God calls you to today
+  - title: BULLETIN
+    subtitle: What's happening at apollos?
+    algorithms:
+      - type: CONTENT_CHANNEL
+        arguments:
+          contentChannelId: 13
+      - type: UPCOMING_EVENTS
+
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:
