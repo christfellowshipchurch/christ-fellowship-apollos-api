@@ -14,6 +14,13 @@ const createVideoUrlFromGuid = (uri) =>
 const resolver = {
     WebsiteGroupItem: {
         ...ContentItem.resolver.ContentItem,
+        title: ({ title, attributeValues }, args, context) => {
+            const titleOverride = get(attributeValues, 'titleOverride.value', '');
+
+            return titleOverride === ''
+                ? title
+                : titleOverride;
+        },
         videos: (root, args, { dataSources: { ContentItem } }) => {
             const videos = ContentItem.getVideos(root);
 

@@ -14,6 +14,13 @@ import { parseRockKeyValuePairs, createVideoUrlFromGuid } from '../utils'
 const resolver = {
     WebsiteBlockItem: {
         ...ContentItem.resolver.ContentItem,
+        title: ({ title, attributeValues }, args, context) => {
+            const titleOverride = get(attributeValues, 'titleOverride.value', '');
+
+            return titleOverride === ''
+                ? title
+                : titleOverride;
+        },
         htmlContent: ({ content }) => content,
         videos: (root, args, { dataSources: { ContentItem } }) => {
             const videos = ContentItem.getVideos(root);
