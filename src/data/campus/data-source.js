@@ -60,4 +60,9 @@ export default class Campus extends coreCampus.dataSource {
     .request('Schedules')
     .filter(getIdentifierType(id).query)
     .first()
+
+  getFromIds = (ids) =>
+    this.request()
+      .filterOneOf(ids.map(n => getIdentifierType(n).query))
+      .get()
 }

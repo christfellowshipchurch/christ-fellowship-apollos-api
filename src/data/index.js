@@ -16,7 +16,7 @@ import {
   RockConstants,
   // Person,
   // ContentItem,
-  ContentChannel,
+  // ContentChannel,
   Sharable,
   // Auth,
   PersonalDevice,
@@ -32,6 +32,7 @@ import * as Theme from './theme'
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
 import * as OneSignalWithRock from './oneSignalWithRock'
 
+import * as ContentChannel from './content-channel'
 import * as ContentItem from './content-item'
 import * as Browse from './browse'
 
@@ -52,6 +53,7 @@ import * as Person from './people'
 import * as PhoneNumber from './phone-number'
 import * as Address from './address'
 import * as Workflow from './workflow'
+import * as Schedule from './schedule'
 
 const data = {
   Followings,
@@ -85,6 +87,7 @@ const data = {
   PhoneNumber,
   Address,
   Workflow,
+  Schedule,
 
   // Local Content Items
   WebsitePagesContentItem,
@@ -92,7 +95,7 @@ const data = {
   WebsiteGroupContentItem,
   WebsiteNavigation,
   WebsiteFeature,
-  // ArticleContentItem,
+
   Browse,
   Cache,
 }

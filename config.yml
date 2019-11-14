@@ -39,9 +39,11 @@ ALGOLIA:
   # TODO: should we support multiple indices? how?
   SEARCH_INDEX: test_ContentItems
 TWILIO:
+  NOTIFY_SID: ${TWILIO_NOTIFY_SID}
   ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
   AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
   FROM_NUMBER: ${TWILIO_FROM_NUMBER}
+
 PASS:
   TEMPLATES:
     CHECKIN: ${PWD}/wallet-passes/checkin.pass
@@ -97,9 +99,15 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
     ContentItem:
       EntityType: ContentChannelItem
-    # ArticleContentItem:
-    #   EntityType: ContentChannelItem
-      # ContentChannelTypeId: [21]
+    # DO NOT remove the ContentChannelTypeId from EventContentItem
+    # It's being used inside of the getEventByTitle dataSource method
+    #   for querying Events
+    EventContentItem:
+      EntityType: ContentChannelItem
+      ContentChannelTypeId: [22]
+    EventScheduleItem:
+      EntityType: ContentChannelItem
+      ContentChannelTypeId: [23]
     WebsitePagesContentItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [14]
@@ -120,6 +128,10 @@ ROCK_MAPPINGS:
   # Apollos will pull these content channels and expose them in the app on the discover screen.
   DISCOVER_CONTENT_CHANNEL_IDS:
     - 40
+
+  # Apollos will pull these content channels and expose them as events.
+  EVENTS_CONTENT_CHANNEL_IDS:
+    - 42
 
   # Apollos will pull content items from these channels and expose them on the user feed
   # However, it will not expose the channel itself.
