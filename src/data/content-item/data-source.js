@@ -48,4 +48,34 @@ export default class ContentItem extends coreContentItem.dataSource {
       this.formatTitleAsUrl(get(n, 'title', '')) === this.formatTitleAsUrl(title)
     )
   }
+
+  getFromTypeIds = (ids) =>
+    this.request()
+      .filterOneOf(ids.map(n => `ContentChannelTypeId eq ${n}`))
+      .get()
+
+  getEvents = () => {
+    const contentChannelTypes = get(ROCK_MAPPINGS, 'CONTENT_ITEM.EventContentItem.ContentChannelTypeId', [])
+
+    if (contentChannelTypes.length === 0) {
+      console.warn(
+        'No Content Channel Types were found for events'
+      )
+      return null
+    }
+
+    return this.request(`ContentChannelItems`)
+      .filterOneOf(contentChannelTypes.map(n => `ContentChannelTypeId eq ${n}`))
+      .get()
+  }
+
+  getEventByTitle = async (title) => {
+    if (title === '') return null
+
+    const contentItems = await this.getEvents()
+
+    return find(contentItems, (n) =>
+      this.formatTitleAsUrl(get(n, 'title', '')) === this.formatTitleAsUrl(title)
+    )
+  }
 }

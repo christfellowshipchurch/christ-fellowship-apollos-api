@@ -6871,6 +6871,11 @@ lru-cache@^5.0.0:
   dependencies:
     yallist "^3.0.2"
 
+luxon@^1.3.3:
+  version "1.21.1"
+  resolved "https://registry.yarnpkg.com/luxon/-/luxon-1.21.1.tgz#00c9c9e624e66cfef745a8476c4ead14a3966a61"
+  integrity sha512-3zxaKX7mj7eA80TU0sm4CfNEtiUZ2QXGjMc80rfG4d1dOnnOOWz63U9j4nYR7+1w716DYtWfdOeVhDXYlH+D4w==
+
 make-dir@^1.0.0, make-dir@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/make-dir/-/make-dir-1.3.0.tgz#79c1033b80515bd6d24ec9933e860ca75ee27f0c"
@@ -7122,7 +7127,7 @@ moment-timezone@^0.5.23:
   dependencies:
     moment ">= 2.9.0"
 
-moment-timezone@^0.5.25:
+moment-timezone@^0.5.25, moment-timezone@^0.5.27:
   version "0.5.27"
   resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.27.tgz#73adec8139b6fe30452e78f210f27b1f346b8877"
   integrity sha512-EIKQs7h5sAsjhPCqN6ggx6cEbs94GK050254TIJySD1bzoM5JTYDwAU1IoVOeTOL6Gm27kYJ51/uuvq1kIlrbw==
@@ -7240,6 +7245,16 @@ node-forge@^0.7.6:
   version "0.7.6"
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.7.6.tgz#fdf3b418aee1f94f0ef642cd63486c77ca9724ac"
   integrity sha512-sol30LUpz1jQFBjOKwbjxijiE3b6pjd74YwfD0fJOKPjF+fONKb2Yg8rYgS6+bK6VDl+/wfr4IYpC7jDzLUIfw==
+
+node-ical@^0.10.0:
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/node-ical/-/node-ical-0.10.0.tgz#bfe12a4a141812fd43834107193854af8a4f728f"
+  integrity sha512-EzI2Lha7ZGnQg+cBqz8BCXrn0ey0pRapwHFEni9gSjNx/6hjAYP7T7rcoGxbMRLmnDDe3ksqc1aHKb83c3iydw==
+  dependencies:
+    moment-timezone "^0.5.23"
+    request "^2.88.0"
+    rrule "^2.5.6"
+    uuid "^3.3.2"
 
 node-int64@^0.4.0:
   version "0.4.0"
@@ -8513,6 +8528,15 @@ rootpath@0.1.2:
   resolved "https://registry.yarnpkg.com/rootpath/-/rootpath-0.1.2.tgz#5b379a87dca906e9b91d690a599439bef267ea6b"
   integrity sha1-Wzeah9ypBum5HWkKWZQ5vvJn6ms=
 
+rrule@^2.5.6:
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/rrule/-/rrule-2.6.2.tgz#f175c6c0b20d6f798739e4e1d979ffb3d79589e8"
+  integrity sha512-xL38CM1zOYOIp4OO8hdD6zHH5UdR9siHMvPiv+CCSh7o0LYJ0owg87QcFW7GXJ0PfpLBHjanEMvvBjJxbRhAcQ==
+  dependencies:
+    tslib "^1.9.0"
+  optionalDependencies:
+    luxon "^1.3.3"
+
 rsvp@^3.3.3:
   version "3.6.2"
   resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.6.2.tgz#2e96491599a96cde1b515d5674a8f7a91452926a"
@@ -9287,6 +9311,11 @@ trim-right@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/trim-right/-/trim-right-1.0.1.tgz#cb2e1203067e0c8de1f614094b9fe45704ea6003"
   integrity sha1-yy4SAwZ+DI3h9hQJS5/kVwTqYAM=
+
+tslib@^1.9.0:
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.10.0.tgz#c3c19f95973fb0a62973fb09d90d961ee43e5c8a"
+  integrity sha512-qOebF53frne81cf0S9B41ByenJ3/IuH8yJKngAX35CmiZySA0khhkovshKK+jGCaMnVomla7gVlIcc3EvKPbTQ==
 
 tunnel-agent@^0.6.0:
   version "0.6.0"

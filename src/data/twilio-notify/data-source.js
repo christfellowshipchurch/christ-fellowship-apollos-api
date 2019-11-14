@@ -1,16 +1,16 @@
-import { RESTDataSource } from 'apollo-datasource-rest';
-import ApollosConfig from '@apollosproject/config';
-import Twilio from 'twilio';
+import { RESTDataSource } from 'apollo-datasource-rest'
+import ApollosConfig from '@apollosproject/config'
+import Twilio from 'twilio'
 
-const { TWILIO } = ApollosConfig;
+const { TWILIO } = ApollosConfig
 const { ACCOUNT_SID, AUTH_TOKEN, FROM_NUMBER, NOTIFY_SID } = TWILIO
 
 export default class TwilioNotify extends RESTDataSource {
 
     // Creates a new instance of the Twilio object using Account SID and an Auth Token
     constructor(...args) {
-        super(...args);
-        this.twilio = new Twilio(ACCOUNT_SID, AUTH_TOKEN);
+        super(...args)
+        this.twilio = new Twilio(ACCOUNT_SID, AUTH_TOKEN)
     }
 
     // Sends an SMS to a phone number using Twilio Notify
@@ -32,7 +32,7 @@ export default class TwilioNotify extends RESTDataSource {
         console.log("Updating Push Settings", { enabled, bindingType, address })
 
         // Gets current person from Auth
-        const currentUser = await this.context.dataSources.Auth.getCurrentPerson();
+        const currentUser = await this.context.dataSources.Auth.getCurrentPerson()
 
         // If not enabled
         if (!enabled) {

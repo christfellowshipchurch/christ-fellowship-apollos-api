@@ -2,16 +2,22 @@ import {
   ContentItem as coreContentItem,
   Utils
 } from '@apollosproject/data-connector-rock'
+import ApollosConfig from '@apollosproject/config'
 import { resolverMerge } from '@apollosproject/server-core'
 import moment from 'moment'
 import {
   get,
   has,
   split,
+  orderBy,
 } from 'lodash'
 
 import { parseRockKeyValuePairs } from '../utils'
+import * as EventContentItem from '../event-content-item'
+
 const { createImageUrlFromGuid } = Utils
+const { ROCK_MAPPINGS } = ApollosConfig
+
 
 const titleResolver = {
   title: ({ title: originalTitle, attributeValues }, { hyphenated }) => {
@@ -60,7 +66,6 @@ const titleResolver = {
 }
 
 const resolverExtensions = {
-  ...coreContentItem.resolver.ContentItem,
   ...titleResolver,
   summary: () => "THIS IS THE SUMMARY",
   htmlContent: () => "HTML CONTENT",
@@ -96,7 +101,18 @@ const resolverExtensions = {
 const resolver = {
   Query: {
     getContentItemByTitle: async (root, { title }, { dataSources }) =>
-      await dataSources.ContentItem.getByTitle(title),
+      dataSources.ContentItem.getByTitle(title),
+    getEventContentByTitle: async (root, { title }, { dataSources }) =>
+      dataSources.ContentItem.getEventByTitle(title),
+    allEvents: async (root, args, { dataSources }) => {
+      const events = await dataSources.ContentItem.getEvents()
+      const sorted = orderBy(events,
+        (n) => moment(n.startDateTime).format('YYYYMMDD'),
+        ['asc']
+      )
+
+      return sorted
+    },
   },
   DevotionalContentItem: {
     ...resolverExtensions,
@@ -110,18 +126,7 @@ const resolver = {
   MediaContentItem: {
     ...resolverExtensions
   },
-  // WeekendContentItem: {
-  //   ...titleResolver
-  // },
-  // WebsitePagesContentItem: {
-  //   ...titleResolver,
-  // },
-  // WebsiteBlockItem: {
-  //   ...titleResolver,
-  // },
-  // WebsiteGroupItem: {
-  //   ...titleResolver,
-  // },
+  ...EventContentItem.resolver
 }
 
 export default resolverMerge(resolver, coreContentItem)

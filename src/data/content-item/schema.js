@@ -1,8 +1,11 @@
 import { ContentItem } from '@apollosproject/data-connector-rock'
 import gql from 'graphql-tag'
 
+import * as EventContentItem from '../event-content-item'
+
 export default gql`
   ${ContentItem.schema}
+  ${EventContentItem.schema}
 
   extend type DevotionalContentItem {
     tags: [String]
@@ -46,5 +49,6 @@ export default gql`
 
   extend type Query { 
     getContentItemByTitle(title: String!): ContentItem
+    allEvents: [EventContentItem]
   }
 `
