@@ -30,6 +30,7 @@ export default gql`
     endDate: String
 
     tags: [String]
+    callsToAction: [CallToAction]
   }
 
   type EventScheduleItem implements ContentItem & Node {

@@ -11,6 +11,8 @@ import {
 import moment from 'moment'
 import momentTz from 'moment-timezone'
 
+import { parseRockKeyValuePairs } from '../utils'
+
 const resolver = {
   EventContentItem: {
     ...coreContentItem.resolver.ContentItem,
@@ -26,7 +28,12 @@ const resolver = {
           ApollosConfig.ROCK.TIMEZONE
         ) : null,
     tags: ({ attributeValues }) =>
-      split(get(attributeValues, 'tags.value', ''), ',')
+      split(get(attributeValues, 'tags.value', ''), ','),
+    callsToAction: ({ attributeValues }, args, { dataSources }) =>
+      parseRockKeyValuePairs(
+        get(attributeValues, 'callsToAction.value', ''),
+        'call',
+        'action')
   },
   EventScheduleItem: {
     ...coreContentItem.resolver.ContentItem,
@@ -49,8 +56,8 @@ const resolver = {
         //  and then sort it before returning
         return flatten(mappedSchedule)
           .sort((a, b) => {
-            var dateA = new Date(a)
-            var dateB = new Date(b)
+            const dateA = new Date(a)
+            const dateB = new Date(b)
             return dateA - dateB
           })
       }
