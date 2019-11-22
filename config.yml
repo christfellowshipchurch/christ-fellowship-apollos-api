@@ -24,7 +24,7 @@ ROCK:
   ROOT_API_URL: ${ROOT_URL}
   JOBS_USERNAME: ${JOBS_USERNAME}
   JOBS_PASSWORD: ${JOBS_PASSWORD}
-  USE_PLUGIN: false
+  USE_PLUGIN: true
   SHOW_INACTIVE_CONTENT: ${ROCK_SHOW_INACTIVE_CONTENT}
 ONE_SIGNAL:
   APP_ID: b6e75a77-003f-4466-95ca-82cc5cdc407b
@@ -123,7 +123,7 @@ ROCK_MAPPINGS:
 
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews
-    PersonaId: 210
+    PersonaId: 434
 
   # Apollos will pull these content channels and expose them in the app on the discover screen.
   DISCOVER_CONTENT_CHANNEL_IDS:
@@ -157,6 +157,8 @@ ROCK_MAPPINGS:
   CAMPAIGN_CHANNEL_IDS:
     - 11
 
+  ANNOUNCEMENTS_CHANNEL_ID: 46
+
   # List of Id's associated with important/commonly used Defined Types
   # (primarily used by the Defined Value List data type)
   DEFINED_TYPES:
@@ -184,17 +186,63 @@ ROCK_MAPPINGS:
   COMMUNITY_GROUP_TYPE_ID: 25
   FAMILY_GROUP_TYPE_ID: 10
 
+# TODO : @caleb "I would like to not have to manually put the index in the GLOBAL_CONTENT feature"
+# NOTE : GLOBAL_CONTENT uses a 0 based index
 HOME_FEATURES:
+  - title: GLOBAL ITEM
+    algorithms:
+      - type: GLOBAL_CONTENT
+        arguments:
+          index: 0
+          limit: 2
+  - title: GLOBAL ITEM
+    algorithms:
+      - type: GLOBAL_CONTENT
+        arguments:
+          index: 1
+          limit: 1
+  - title: GLOBAL ITEM
+    algorithms:
+      - type: GLOBAL_CONTENT
+        arguments:
+          index: 2
+          limit: 1
   - title: FOR YOU
-    algorithms: [SERMON_CHILDREN, PERSONA_FEED]
+    algorithms: [PERSONA_FEED]
     subtitle: Explore what God calls you to today
-  - title: BULLETIN
-    subtitle: What's happening at apollos?
+  - title: Most Recent (Articles)
     algorithms:
       - type: CONTENT_CHANNEL
         arguments:
-          contentChannelId: 13
-      - type: UPCOMING_EVENTS
+          contentChannelId: 37
+          limit: 3
+  - title: UPCOMING EVENTS
+    algorithms: 
+      - type: CONTENT_CHANNEL
+        arguments:
+          contentChannelId: 40
+          limit: 1
+
+# HOME_FEATURES:
+#   - title: GLOBAL ANNOUNCEMENT 1
+#     - type: CONTENT_CHANNEL
+#         arguments:
+#           contentChannelId: 13
+#           index: 0
+#   - title: Most Recent (Articles)
+#     - type: CONTENT_CHANNEL
+#         arguments:
+#           contentChannelId: 13
+#   - title: Watch the latest sermon
+#     - type: CONTENT_CHANNEL
+#         arguments:
+#           contentChannelId: 13
+#   - title: UPCOMING EVENTS
+#     - type: CONTENT_CHANNEL
+#         arguments:
+#           contentChannelId: 13
+#   - title: SUGGESTED CATEGORIES
+#     - type: PERSONA_FEED
 
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
