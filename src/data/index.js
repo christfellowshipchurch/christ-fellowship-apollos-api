@@ -24,7 +24,7 @@ import {
   // AuthSms,
   // Campus,
   BinaryFiles,
-  Features,
+  // Features,
 } from '@apollosproject/data-connector-rock'
 import * as Theme from './theme'
 
@@ -54,6 +54,7 @@ import * as PhoneNumber from './phone-number'
 import * as Address from './address'
 import * as Workflow from './workflow'
 import * as Schedule from './schedule'
+import * as Features from './features'
 
 const data = {
   Followings,
