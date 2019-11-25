@@ -220,8 +220,8 @@ HOME_FEATURES:
     algorithms: 
       - type: CONTENT_CHANNEL
         arguments:
-          contentChannelId: 40
-          limit: 1
+          contentChannelId: 42
+          limit: 4
 
 # HOME_FEATURES:
 #   - title: GLOBAL ANNOUNCEMENT 1
