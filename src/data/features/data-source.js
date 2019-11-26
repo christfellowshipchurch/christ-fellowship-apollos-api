@@ -13,12 +13,12 @@ export default class Features extends coreFeatures.dataSource {
     // Names of Action Algoritms mapping to the functions that create the actions.
     ACTION_ALGORITHIMS = {
         // We need to make sure `this` refers to the class, not the `ACTION_ALGORITHIMS` object.
-        PERSONA_FEED: this.personaFeedAlgorithm.bind(this),
-        CONTENT_CHANNEL: this.contentChannelAlgorithm.bind(this),
+        PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride.bind(this),
+        CONTENT_CHANNEL: this.contentChannelAlgorithmWithActionOverride.bind(this),
         SERMON_CHILDREN: this.sermonChildrenAlgorithm.bind(this),
         UPCOMING_EVENTS: this.upcomingEventsAlgorithm.bind(this),
         GLOBAL_CONTENT: this.globalContentAlgorithm.bind(this)
-    };
+    }
 
     async globalContentAlgorithm({ index = 0, limit = null } = {}) {
         const contentChannelId = get(ROCK_MAPPINGS, 'ANNOUNCEMENTS_CHANNEL_ID', null)
@@ -43,7 +43,23 @@ export default class Features extends coreFeatures.dataSource {
             subtitle: get(item, 'contentChannel.name'),
             relatedNode: { ...item, __type: ContentItem.resolveType(item) },
             image: ContentItem.getCoverImage(item),
-            action: 'READ_CONTENT',
+            action: 'READ_GLOBAL_CONTENT',
         }))
+    }
+
+    async contentChannelAlgorithmWithActionOverride({ action = null, contentChannelId, limit = null } = {}) {
+        const contentChannel = await this.contentChannelAlgorithm({ contentChannelId, limit })
+
+        return !!action
+            ? contentChannel.map(n => ({ ...n, action }))
+            : contentChannel
+    }
+
+    async personaFeedAlgorithmWithActionOverride({ action = null } = {}) {
+        const personaFeed = await this.personaFeedAlgorithm()
+
+        return !!action
+            ? personaFeed.map(n => ({ ...n, action }))
+            : personaFeed
     }
 }
