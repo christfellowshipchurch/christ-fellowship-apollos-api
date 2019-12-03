@@ -25,6 +25,8 @@ const resolver = {
         videos: (root, args, { dataSources: { ContentItem } }) => {
             const videos = ContentItem.getVideos(root);
 
+            return videos
+
             return videos.map((video) => {
                 video.sources = video.sources.map((sources) => {
                     sources.uri = createVideoUrlFromGuid(sources.uri)
