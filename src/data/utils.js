@@ -42,6 +42,7 @@ export const getIdentifierType = (identifier) => {
 /*
   Accepts a GUID for a video file, then creates the appropriate uri endpoint
   for the video file */
+// export const createVideoUrlFromGuid = (uri) => uri
 export const createVideoUrlFromGuid = (uri) =>
   uri.split('-').length === 5
     ? `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`
