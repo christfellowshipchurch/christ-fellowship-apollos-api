@@ -101,7 +101,9 @@ const resolverExtensions = {
 const resolver = {
   Query: {
     getContentItemByTitle: async (root, { title }, { dataSources }) =>
-      dataSources.ContentItem.getByTitle(title),
+      dataSources.ContentItem.getContentByTitle(title),
+    getCategoryByTitle: async (root, { title }, { dataSources }) =>
+      dataSources.ContentItem.getCategoryByTitle(title),
     getEventContentByTitle: async (root, { title }, { dataSources }) =>
       dataSources.ContentItem.getEventByTitle(title),
     allEvents: async (root, args, { dataSources }) => {

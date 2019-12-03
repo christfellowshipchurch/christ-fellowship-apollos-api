@@ -49,6 +49,7 @@ export default gql`
 
   extend type Query { 
     getContentItemByTitle(title: String!): ContentItem
+    getCategoryByTitle(title: String!): ContentItem
     allEvents: [EventContentItem]
   }
 `

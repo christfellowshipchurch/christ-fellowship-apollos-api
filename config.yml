@@ -145,6 +145,12 @@ ROCK_MAPPINGS:
   BROWSE_CONTENT_CHANNEL_IDS:
     - 37
 
+  # Apollos will pull content items as categories from these channels
+  # This will NOT add these Content Channels to the app.
+  #   See DISCOVER_CONTENT_CHANNEL_IDS and FEED_CONTENT_CHANNEL_IDS for App
+  CATEGORY_CONTENT_CHANNEL_IDS:
+    - 38
+
   # Apollos will pull content items from these channels and expose them on a website
   # However, it will not expose the channel itself.
   WEBSITE_CONTENT_CHANNEL_IDS:
@@ -195,12 +201,6 @@ HOME_FEATURES:
         arguments:
           index: 0
           limit: 1
-  - title: Latest Articles
-    algorithms:
-      - type: CONTENT_CHANNEL
-        arguments:
-          contentChannelId: 37
-          limit: 3
   - title: Upcoming Events
     algorithms: 
       - type: CONTENT_CHANNEL
@@ -208,12 +208,12 @@ HOME_FEATURES:
           contentChannelId: 42
           limit: 4
           action: READ_EVENT
-  - title: GLOBAL ITEM
+  - title: Latest Content
     algorithms:
-      - type: GLOBAL_CONTENT
+      - type: CONTENT_CHANNEL
         arguments:
-          index: 1
-          limit: 1
+          contentChannelId: 37
+          limit: 5
   - title: FOR YOU
     algorithms:
       - type: PERSONA_FEED
@@ -223,7 +223,7 @@ HOME_FEATURES:
     algorithms:
       - type: GLOBAL_CONTENT
         arguments:
-          index: 2
+          index: 1
           limit: 1
 
 # HOME_FEATURES:

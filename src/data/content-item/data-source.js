@@ -35,8 +35,8 @@ export default class ContentItem extends coreContentItem.dataSource {
   }
 
   // title pattern should follow: the-article-title
-  getByTitle = async (title) => {
-    const contentChannels = get(ROCK_MAPPINGS, 'BROWSE_CONTENT_CHANNEL_IDS', [])
+  getByTitle = async (title, mapping) => {
+    const contentChannels = get(ROCK_MAPPINGS, mapping, [])
 
     if (title === '' || contentChannels.length === 0) return null
 
@@ -48,6 +48,9 @@ export default class ContentItem extends coreContentItem.dataSource {
       this.formatTitleAsUrl(get(n, 'title', '')) === this.formatTitleAsUrl(title)
     )
   }
+
+  getContentByTitle = (title) => this.getByTitle(title, 'BROWSE_CONTENT_CHANNEL_IDS')
+  getCategoryByTitle = (title) => this.getByTitle(title, 'CATEGORY_CONTENT_CHANNEL_IDS')
 
   getFromTypeIds = (ids) =>
     this.request()
