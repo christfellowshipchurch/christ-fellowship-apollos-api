@@ -38,6 +38,8 @@ const resolver = {
   EventScheduleItem: {
     ...coreContentItem.resolver.ContentItem,
     dates: async ({ startDateTime, attributeValues }, args, { dataSources }) => {
+      console.log({ attributeValues })
+
       const scheduleGuids = get(attributeValues, 'schedules.value', null)
 
       if (scheduleGuids) {

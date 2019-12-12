@@ -186,6 +186,7 @@ ROCK_MAPPINGS:
     RSVP: 206
     EMAIL_CAPTURE: 208
     PASSWORD_RESET_EMAIL: 209
+    ADDRESS_UPDATE: 210
   SERMON_CHANNEL_ID: 5
 
   SERVING_GROUP_TYPE_ID: 23
@@ -225,27 +226,6 @@ HOME_FEATURES:
         arguments:
           index: 1
           limit: 1
-
-# HOME_FEATURES:
-#   - title: GLOBAL ANNOUNCEMENT 1
-#     - type: CONTENT_CHANNEL
-#         arguments:
-#           contentChannelId: 13
-#           index: 0
-#   - title: Most Recent (Articles)
-#     - type: CONTENT_CHANNEL
-#         arguments:
-#           contentChannelId: 13
-#   - title: Watch the latest sermon
-#     - type: CONTENT_CHANNEL
-#         arguments:
-#           contentChannelId: 13
-#   - title: UPCOMING EVENTS
-#     - type: CONTENT_CHANNEL
-#         arguments:
-#           contentChannelId: 13
-#   - title: SUGGESTED CATEGORIES
-#     - type: PERSONA_FEED
 
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.

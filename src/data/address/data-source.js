@@ -36,39 +36,39 @@ export default class Address extends RockApolloDataSource {
     updateByUser = () => null
 
     // TODO : Create this as a Rock Workflow cause there's way too much Rock specific logic to try and ahere to
-    // updateByUser = async ({ street1, street2, city, state, postalCode }) => {
-    //     // get the family id for the current user
-    //     const { id: familyId } = await this.context.dataSources.Person.getFamilyByUser()
+    updateByUser = async ({ street1, street2, city, state, postalCode }) => {
+        // get the family id for the current user
+        const { id: personId } = await this.context.dataSources.Auth.getCurrentPerson()
 
-    //     // create a new location
-    //     const location = await this.post('/Locations', {
-    //         Street1: street1,
-    //         Street2: street2,
-    //         City: city,
-    //         State: state,
-    //         PostalCode: postalCode,
-    //         Country: 'US' // TODO : assuming US for now, to be updated later
-    //     })
+        // create a new location
+        const location = await this.post('/Locations', {
+            Street1: street1,
+            Street2: street2,
+            City: city,
+            State: state,
+            PostalCode: postalCode,
+            Country: 'US' // TODO : assuming US for now, to be updated later
+        })
 
-    //     if (location) {
-    //         console.log({ familyId, location })
+        if (location) {
+            const { guid: locationGuid } = await this
+                .request(`/Locations/${location}`)
+                .get()
 
-    //         // post the family id and location id to the GroupLocations table to associate the date
-    //         const groupLocation = await this.post('/GroupLocations', {
-    //             GroupId: familyId,
-    //             LocationId: location.id,
-    //             IsMailingLocation: true,
-    //             IsMappedLocation: true,
-    //             Order: 0, // required by Rock
-    //             GroupLocationTypeValueId: 19 // marks the address as a Home Address
-    //         })
+            const workflow = await this.context.dataSources.Workflow.trigger({
+                id: get(ApollosConfig, 'ROCK_MAPPINGS.WORKFLOW_IDS.ADDRESS_UPDATE'),
+                attributes: {
+                    address: locationGuid,
+                    personId
+                }
+            })
 
-    //         return groupLocation
-    //             ? location
-    //             : null
-    //     }
+            if (workflow.status === 'Completed') {
+                return { street1, street2, city, state, postalCode }
+            }
+        }
 
-    //     return null
+        return null
 
-    // }
+    }
 }
