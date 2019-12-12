@@ -1,7 +1,7 @@
 import { Person as corePerson } from '@apollosproject/data-connector-rock'
 import { resolverMerge } from '@apollosproject/server-core'
 import ApollosConfig from '@apollosproject/config'
-import { get } from 'lodash'
+import { get, filter, find } from 'lodash'
 import { Utils } from '@apollosproject/data-connector-rock'
 
 
@@ -56,18 +56,33 @@ const resolver = {
             dataSources.Person.getChildrenByUser(),
     },
     Mutation: {
-        updateAddress: (root, args, { dataSources }) =>
-            dataSources.Address.updateByUser({ ...args }),
-        updateProfileField: (root, { input: { field, value } }, { dataSources }) =>
-            dataSources.Person.updateProfileWithAttributes([{ field, value }]),
-        updateProfileFields: (root, { input }, { dataSources }) =>
-            dataSources.Person.updateProfileWithAttributes(input),
-        updateCommunicationPreference: (root, { type, allow }, { dataSources }) =>
-            dataSources.Person.updateCommunicationPreference({ type, allow }),
-        updatePhoneNumber: async (root, { phoneNumber }, { dataSources }) => {
-            await dataSources.PhoneNumber.updateByUser(phoneNumber)
+        updateAddress: (root, { address }, { dataSources }) =>
+            dataSources.Address.updateByUser(address),
+        updateProfileField: async (root, { input: { field, value } }, { dataSources }) => {
+            if (field === 'PhoneNumber') {
+                await dataSources.PhoneNumber.updateByUser(value)
+                return dataSources.Auth.getCurrentPerson()
+            } else {
+                return dataSources.Person.updateProfileWithAttributes([{ field, value }])
+            }
+        },
+        updateProfileFields: async (root, { input }, { dataSources }) => {
+            const otherFields = filter(input, n => n.field !== 'PhoneNumber')
+            const phoneNumber = find(input, n => n.field === 'PhoneNumber')
+
+            await Promise.all([
+                (otherFields.length
+                    ? dataSources.Person.updateProfileWithAttributes(otherFields)
+                    : () => { }),
+                (get(phoneNumber, 'value', '') !== ''
+                    ? dataSources.PhoneNumber.updateByUser(phoneNumber.value)
+                    : () => { })
+            ])
+
             return dataSources.Auth.getCurrentPerson()
         },
+        updateCommunicationPreference: (root, { type, allow }, { dataSources }) =>
+            dataSources.Person.updateCommunicationPreference({ type, allow }),
         submitRsvp: (root, { input }, { dataSources }) =>
             dataSources.Person.submitRsvp(input),
         submitEmailCapture: (root, { input }, { dataSources }) =>

@@ -17,6 +17,7 @@ export default gql`
         Ethnicity
         BaptismDate
         SalvationDate
+        PhoneNumber
     }
 
     enum UPDATEABLE_COMMUNICATION_PREFERENCES {
@@ -52,12 +53,19 @@ export default gql`
         allowPushNotification: Boolean
     }
 
+    input AddressInput {
+        street1: String!
+        street2: String
+        city: String!
+        state: String!
+        postalCode: String!
+    }
+
     extend type Mutation {
         updateProfileField(input: UpdateProfileInput!): Person
         updateProfileFields(input: [UpdateProfileInput]!): Person
         uploadProfileImage(file: Upload!, size: Int!): Person
-        updateAddress(street1: String!, street2: String, city: String!, state: String!, postalCode: String!): Address
-        updatePhoneNumber(phoneNumber: String!): Person
+        updateAddress(address: AddressInput!): Address
         updateCommunicationPreference(type: UPDATEABLE_COMMUNICATION_PREFERENCES!, allow: Boolean!): Person
         submitRsvp(input: [Attribute]!): String
         submitEmailCapture(input: [Attribute]!): String
