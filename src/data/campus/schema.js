@@ -6,6 +6,14 @@ export default gql`
         time: String
     }
 
+    type CampusFeature {
+        title: String
+        summary: String
+        htmlContent: String
+        options: [String]
+        icon: String
+    }
+
     type Campus implements Node {
         id: ID!
         name: String
@@ -20,10 +28,12 @@ export default gql`
         featuredImage: ImageMediaSource
         distanceFromLocation(location: CampusLocationInput): Float
         serviceTimes: [ServiceTime]
+        campusFeatures: [CampusFeature]
     }
 
     extend type Query {
         campuses(location: CampusLocationInput): [Campus]
+        campus(name: String!): Campus
     }
 
     input CampusLocationInput {

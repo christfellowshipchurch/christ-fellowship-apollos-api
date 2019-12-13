@@ -3,9 +3,10 @@ import {
   Utils
 } from '@apollosproject/data-connector-rock'
 import { resolverMerge } from '@apollosproject/server-core'
-import { get } from 'lodash'
+import { get, remove } from 'lodash'
 import moment from 'moment'
 import { parseRockKeyValuePairs } from '../utils'
+import sanitizeHtml from '@apollosproject/data-connector-rock/lib/sanitize-html'
 
 const { createImageUrlFromGuid } = Utils
 
@@ -57,6 +58,31 @@ const resolver = {
 
       return parseRockKeyValuePairs(serviceTimes, 'day', 'time')
     },
+    campusFeatures: ({ attributeValues }, args, { dataSources }) => {
+      const featureGuidsStr = get(attributeValues, 'atThisLocation.value', '')
+      const featureGuidsArr = remove(featureGuidsStr.split(','), n => n !== '')
+
+      return Promise.all(featureGuidsArr.map(async n => {
+        const { value, attributeValues } = await dataSources.DefinedValue.getByIdentifier(n)
+        const subtitle = get(attributeValues, 'subtitle.value', '')
+        const content = get(attributeValues, 'content.value', '')
+        const icon = get(attributeValues, 'icon.value', '')
+
+        return {
+          title: value,
+          summary: dataSources.ContentItem.createSummary({
+            attributeValues: { summary: { value: subtitle } },
+            content
+          }),
+          htmlContent: sanitizeHtml(content),
+          options: remove(get(attributeValues, 'options.value', '').split('|'), n => n !== ''),
+          icon,
+        }
+      }))
+    },
+  },
+  Query: {
+    campus: (root, { name }, { dataSources }) => dataSources.Campus.getByName(name)
   }
 }
 

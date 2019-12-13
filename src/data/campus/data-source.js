@@ -1,7 +1,7 @@
 import {
   Campus as coreCampus,
 } from '@apollosproject/data-connector-rock'
-import { get } from 'lodash'
+import { get, upperCase } from 'lodash'
 import { getIdentifierType } from '../utils'
 
 export default class Campus extends coreCampus.dataSource {
@@ -54,7 +54,10 @@ export default class Campus extends coreCampus.dataSource {
     throw new Error(`We were unable to find a default campus in Rock. Please check that there is a campus and location set up for the campud id: ${9}`)
   }
 
-  getByName = async (name) => this.request().filter(`Name eq '${name}'`).first()
+  getByName = async (name) => this
+    .request()
+    .filter(`toupper(Name) eq '${upperCase(name)}'`)
+    .first()
 
   getSchedule = (id) => this
     .request('Schedules')
