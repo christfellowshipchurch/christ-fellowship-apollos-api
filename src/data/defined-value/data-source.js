@@ -3,6 +3,7 @@ import { getIdentifierType } from '../utils'
 
 export default class DefinedValue extends RockApolloDataSource {
     resource = 'DefinedValues'
+    expanded = true
 
     getDefinedValueByIdentifier = (id) => this.getByIdentifier(id)
     getByIdentifier = (id) => {
