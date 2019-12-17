@@ -2,13 +2,16 @@ import {
   Campus as coreCampus,
   Utils
 } from '@apollosproject/data-connector-rock'
+import ApollosConfig from '@apollosproject/config'
 import { resolverMerge } from '@apollosproject/server-core'
-import { get, remove } from 'lodash'
+import { get, remove, lowerCase, head } from 'lodash'
 import moment from 'moment'
-import { parseRockKeyValuePairs } from '../utils'
 import sanitizeHtml from '@apollosproject/data-connector-rock/lib/sanitize-html'
 
+import { parseRockKeyValuePairs, getIdentifierType } from '../utils'
+
 const { createImageUrlFromGuid } = Utils
+const { ROCK_MAPPINGS } = ApollosConfig
 
 /* 
 * Rock will not alaways return the expanded Location object
@@ -66,7 +69,10 @@ const resolver = {
         const { value, attributeValues } = await dataSources.DefinedValue.getByIdentifier(n)
         const subtitle = get(attributeValues, 'subtitle.value', '')
         const content = get(attributeValues, 'content.value', '')
-        const icon = get(attributeValues, 'icon.value', '')
+        // Currently, Rock returns the icon as an array of icons, but
+        //  we only want to return a single icon, so we'll split by the
+        //  deliminator and get the very first in that array
+        const icon = head(get(attributeValues, 'icon.value', '').split('|'))
 
         return {
           title: value,
@@ -76,13 +82,41 @@ const resolver = {
           }),
           htmlContent: sanitizeHtml(content),
           options: remove(get(attributeValues, 'options.value', '').split('|'), n => n !== ''),
-          icon,
+          icon: icon !== '' ? icon : 'hand-point-right',
         }
       }))
     },
+    pastor: async ({ leaderPersonAliasId }, args, { dataSources }) => {
+      const person = await dataSources.Person.getFromAliasId(leaderPersonAliasId)
+      const { firstName, lastName, photo: { guid } } = person
+
+      return {
+        firstName,
+        lastName,
+        photo: {
+          uri: createImageUrlFromGuid(guid)
+        },
+        email: `${lowerCase(firstName)}.${lowerCase(lastName)}@christfellowship.church`
+      }
+    },
   },
   Query: {
-    campus: (root, { name }, { dataSources }) => dataSources.Campus.getByName(name)
+    campus: (root, { name }, { dataSources }) =>
+      dataSources.Campus.getByName(name),
+    campusFAQ: async (root, { name }, { dataSources }) =>
+      dataSources.ContentItem.byContentChannelIds(
+        get(ROCK_MAPPINGS, 'CAMPUS_FAQ_CONTENT_CHANNEL_IDS', [])
+      ).get(),
+    campusContentItems: async (root, { name }, { dataSources }) => {
+      const { attributeValues } = await dataSources.Campus.getByName(name)
+      const guid = get(attributeValues, 'campusPageBlockItem.value', '')
+
+      if (!!guid && guid === '') return []
+
+      const items = await dataSources.ContentItem.getFromId(guid)
+
+      return items
+    },
   }
 }
 

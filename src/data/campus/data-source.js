@@ -57,6 +57,9 @@ export default class Campus extends coreCampus.dataSource {
   getByName = async (name) => this
     .request()
     .filter(`toupper(Name) eq '${upperCase(name)}'`)
+    .expand('Location')
+    .expand('Location/Image')
+    .cache({ ttl: 600 }) // ten minutes
     .first()
 
   getSchedule = (id) => this

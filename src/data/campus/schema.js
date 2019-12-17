@@ -14,6 +14,13 @@ export default gql`
         icon: String
     }
 
+    type CampusPastor { 
+        firstName: String
+        lastName: String
+        email: String
+        photo: ImageMediaSource
+    }
+
     type Campus implements Node {
         id: ID!
         name: String
@@ -29,11 +36,14 @@ export default gql`
         distanceFromLocation(location: CampusLocationInput): Float
         serviceTimes: [ServiceTime]
         campusFeatures: [CampusFeature]
+        pastor: CampusPastor
     }
 
     extend type Query {
         campuses(location: CampusLocationInput): [Campus]
         campus(name: String!): Campus
+        campusFAQ(name: String): [ContentItem]
+        campusContentItems(name: String!): [ContentItem]
     }
 
     input CampusLocationInput {
