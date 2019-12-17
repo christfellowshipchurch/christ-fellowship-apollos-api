@@ -139,6 +139,9 @@ ROCK_MAPPINGS:
     - 37
     - 42
 
+  CAMPUS_FAQ_CONTENT_CHANNEL_IDS:
+    - 47
+
   # Apollos will pull content items from these channels
   # This will NOT add these Content Channels to the app.
   #   See DISCOVER_CONTENT_CHANNEL_IDS and FEED_CONTENT_CHANNEL_IDS for App

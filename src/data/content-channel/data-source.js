@@ -13,6 +13,8 @@ export default class ContentChannel extends coreContentChannel.dataSource {
 
   }
 
+  getFromIds = (ids) => this.getContentChannelsFromIds(ids)
+
   getContentChannelsFromIds = async (ids) => {
     const channels = await this.request()
       .filter(
