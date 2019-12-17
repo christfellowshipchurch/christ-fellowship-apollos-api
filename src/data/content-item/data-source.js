@@ -7,11 +7,16 @@ import {
   toLower,
 } from 'lodash'
 
-import { createVideoUrlFromGuid } from '../utils'
+import { createVideoUrlFromGuid, getIdentifierType } from '../utils'
 
 const { ROCK_MAPPINGS } = ApollosConfig
 
 export default class ContentItem extends coreContentItem.dataSource {
+  expanded = true
+
+  getFromId = (id) => this.request()
+    .filter(getIdentifierType(id).query)
+    .get()
 
   formatTitleAsUrl = (title) => kebabCase(toLower(title))
 

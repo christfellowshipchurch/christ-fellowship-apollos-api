@@ -6,8 +6,9 @@ import ApollosConfig from '@apollosproject/config'
 import { resolverMerge } from '@apollosproject/server-core'
 import { get, remove, lowerCase, head } from 'lodash'
 import moment from 'moment'
-import { parseRockKeyValuePairs } from '../utils'
 import sanitizeHtml from '@apollosproject/data-connector-rock/lib/sanitize-html'
+
+import { parseRockKeyValuePairs, getIdentifierType } from '../utils'
 
 const { createImageUrlFromGuid } = Utils
 const { ROCK_MAPPINGS } = ApollosConfig
@@ -108,16 +109,13 @@ const resolver = {
       ).get(),
     campusContentItems: async (root, { name }, { dataSources }) => {
       const { attributeValues } = await dataSources.Campus.getByName(name)
+      const guid = get(attributeValues, 'campusPageBlockItem.value', '')
 
-      console.log({ attributeValues })
+      if (!!guid && guid === '') return []
 
-      const item = await dataSources.ContentItem.request(
-        `Guid eq (guid'${get(attributeValues, 'campusPageBlockItem.value', '')}')`
-      ).get()
+      const items = await dataSources.ContentItem.getFromId(guid)
 
-
-
-      return [item]
+      return items
     },
   }
 }
