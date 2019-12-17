@@ -113,7 +113,9 @@ const resolver = {
 
       if (!!guid && guid === '') return []
 
-      const items = await dataSources.ContentItem.getFromId(guid)
+      const items = await dataSources.ContentItem.request()
+        .filter(getIdentifierType(guid).query)
+        .get()
 
       return items
     },
