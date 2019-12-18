@@ -216,8 +216,9 @@ HOME_FEATURES:
     algorithms:
       - type: CONTENT_CHANNEL
         arguments:
-          contentChannelId: 37
+          contentChannelId: 48
           limit: 5
+          action: VIEW_CHILDREN
   - title: FOR YOU
     algorithms:
       - type: PERSONA_FEED
