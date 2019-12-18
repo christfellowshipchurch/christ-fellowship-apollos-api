@@ -3,6 +3,7 @@ import {
 } from '@apollosproject/data-connector-rock'
 import {
     get,
+    take,
 } from 'lodash'
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
@@ -16,7 +17,7 @@ export default class Features extends coreFeatures.dataSource {
         PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride.bind(this),
         CONTENT_CHANNEL: this.contentChannelAlgorithmWithActionOverride.bind(this),
         SERMON_CHILDREN: this.sermonChildrenAlgorithm.bind(this),
-        UPCOMING_EVENTS: this.upcomingEventsAlgorithm.bind(this),
+        UPCOMING_EVENTS: this.upcomingEventsAlgorithmWithActionOverride.bind(this),
         GLOBAL_CONTENT: this.globalContentAlgorithm.bind(this)
     }
 
@@ -61,5 +62,18 @@ export default class Features extends coreFeatures.dataSource {
         return !!action
             ? personaFeed.map(n => ({ ...n, action }))
             : personaFeed
+    }
+
+    async upcomingEventsAlgorithmWithActionOverride({ action = null, contentChannelId, limit = null } = {}) {
+        const eventItems = await this.context.dataSources.ContentItem.getEvents()
+        const events = take(eventItems, limit)
+
+        return events.map((event, i) => ({
+            id: createGlobalId(`${event.id}${i}`, 'ActionListAction'),
+            title: event.title,
+            relatedNode: { ...event, __type: 'EventContentItem' },
+            image: event.coverImage,
+            action: action || 'READ_EVENT',
+        }))
     }
 }

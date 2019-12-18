@@ -207,7 +207,7 @@ HOME_FEATURES:
           limit: 1
   - title: Upcoming Events
     algorithms: 
-      - type: CONTENT_CHANNEL
+      - type: UPCOMING_EVENTS
         arguments:
           contentChannelId: 42
           limit: 4
