@@ -5,6 +5,7 @@ import {
   find,
   kebabCase,
   toLower,
+  upperCase,
 } from 'lodash'
 
 import { createVideoUrlFromGuid, getIdentifierType } from '../utils'
@@ -42,7 +43,8 @@ export default class ContentItem extends coreContentItem.dataSource {
     if (title === '' || contentChannels.length === 0) return null
 
     const contentItems = await this.request(`ContentChannelItems`)
-      .filterOneOf(contentChannels.map(n => `ContentChannelId eq ${n}`))
+      .filter(contentChannels.map(n => `ContentChannelId eq ${n}`))
+      .andFilter(`toupper(Title) eq '${upperCase(title)}'`)
       .get()
 
     return find(contentItems, (n) =>
