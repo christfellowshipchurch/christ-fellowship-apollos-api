@@ -16,24 +16,41 @@ import { parseRockKeyValuePairs } from '../utils'
 const resolver = {
   EventContentItem: {
     ...coreContentItem.resolver.ContentItem,
-    startDate: (props) =>
-      momentTz.tz(
-        get(props, 'startDateTime', new Date()),
-        ApollosConfig.ROCK.TIMEZONE
-      ),
-    endDate: ({ expireDateTime }) =>
+    startDate: async ({ startDateTime, attributeValues }, args, { dataSources }) =>
+      moment(startDateTime).isValid()
+        ? momentTz.tz(
+          startDateTime,
+          ApollosConfig.ROCK.TIMEZONE
+        ).utc().toISOString()
+        : null,
+    endDate: async ({ expireDateTime, attributeValues }, args, { dataSources }) =>
       moment(expireDateTime).isValid()
         ? momentTz.tz(
           expireDateTime,
           ApollosConfig.ROCK.TIMEZONE
-        ) : null,
+        ).utc().toISOString()
+        : null,
     tags: ({ attributeValues }) =>
       split(get(attributeValues, 'tags.value', ''), ','),
     callsToAction: ({ attributeValues }, args, { dataSources }) =>
       parseRockKeyValuePairs(
         get(attributeValues, 'callsToAction.value', ''),
         'call',
-        'action')
+        'action'),
+    events: async ({ title, attributeValues }, args, { dataSources }) => {
+
+      const scheduleGuids = get(attributeValues, 'schedules.value', null)
+
+      if (scheduleGuids) {
+        const rockScheduleItems = await dataSources.Schedule.getFromIds(split(scheduleGuids, ','))
+
+        const occurrences = await dataSources.Event.parseSchedulesAsEvents(rockScheduleItems)
+
+        return occurrences.sort((a, b) => moment(a.start).diff(moment(b.start)))
+      }
+
+      return []
+    }
   },
   EventScheduleItem: {
     ...coreContentItem.resolver.ContentItem,

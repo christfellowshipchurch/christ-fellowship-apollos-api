@@ -205,7 +205,7 @@ HOME_FEATURES:
         arguments:
           index: 0
           limit: 1
-  - title: Upcoming Events
+  - title: Featured Events
     algorithms: 
       - type: UPCOMING_EVENTS
         arguments:

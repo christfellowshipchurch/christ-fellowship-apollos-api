@@ -31,6 +31,8 @@ export default gql`
 
     tags: [String]
     callsToAction: [CallToAction]
+
+    events: [Event]
   }
 
   type EventScheduleItem implements ContentItem & Node {
