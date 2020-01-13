@@ -2,11 +2,12 @@ import RockApolloDataSource from '@apollosproject/rock-apollo-data-source'
 import ApollosConfig from '@apollosproject/config'
 import ical from 'node-ical'
 import moment from 'moment-timezone'
-import { flattenDeep } from 'lodash'
+import { filter, split, take, drop } from 'lodash'
 import { getIdentifierType } from '../utils'
 
 export default class Schedule extends RockApolloDataSource {
   resource = 'Schedules'
+  expanded = true
 
   getFromId = (id) => this.request()
     .filter(getIdentifierType(id).query)
@@ -17,41 +18,107 @@ export default class Schedule extends RockApolloDataSource {
       .filterOneOf(ids.map(n => getIdentifierType(n).query))
       .get()
 
-  parseiCalendar = async (iCal) => {
-    // Let's grab the iCal content
-    // const iCal = event.schedule.iCalendarContent
-    const iCalEvent = Object.values(await ical.async.parseICS(iCal))
 
-    return flattenDeep(
-      iCalEvent.map((n) => {
-        // Sometimes we have a "recurring rule"
-        if (n.rrule) {
-          // Using the embeded RRule JS library, let's grab all times this event occurs.
-          const { rrule } = n
-          //
-          return rrule
-            .all()
-            .map(o => {
-              const occurance = moment.tz(
-                o,
-                ApollosConfig.ROCK.TIMEZONE
-              )
-              const offset = moment.tz
-                .zone(ApollosConfig.ROCK.TIMEZONE)
-                .utcOffset(occurance)
 
-              return occurance.add(offset, 'minutes').toISOString()
-            })
+  // shorthand for converting a date to a moment
+  // object with Rock's timezone offset
+  momentWithTz = (date, log) => {
+    const originalDate = moment.tz(date, ApollosConfig.ROCK.TIMEZONE)
+    const estDate = moment.tz(date, 'US/Eastern')
+    const mDate = moment.tz(date, 'Etc/GMT+5')
+    const utc = mDate.utc()
 
-          // Rock also likes to throw events inside this rdate property in the iCal string.
-        } else if (n.rdate) {
-          // rdate's aren't supported by the iCal library. Let's parse them ourselves.
-          return n.rdate
-            .split(',') // Take a list of values
-            .map((d) => moment.tz(d, ApollosConfig.ROCK.TIMEZONE).toDate()) // Use moment to parse them into dates
-            .find((d) => d > new Date()) // Now find the one that happens soonest (it's already sorted by earliest to latest)
+    if (log) {
+      const format = 'ddd MMM D | LT Z'
+
+      console.log("\nDate Read Out")
+      console.log('\x1b[36m',
+        "America/New_York\n",
+        `Local: ${originalDate.format(format)}`,
+        `\n UTC: ${originalDate.utc().format(format)}`,
+        `\n ${originalDate.toISOString()}\n`
+      )
+
+      console.log('\x1b[34m',
+        "US/Est\n",
+        `Local ${estDate.format(format)}`,
+        `\n UTC: ${estDate.utc().format(format)}`,
+        `\n ${estDate.toISOString()}\n`
+      )
+
+      console.log('\x1b[31m',
+        "Manual Tz Offset (-0500)\n",
+        `UTC ${mDate.format(format)}`,
+        `\n ${mDate.toISOString()}`
+      )
+
+      console.log('\x1b[30m')
+    }
+
+    return mDate.utc()
+  }
+
+  // shorthand for getting the ISO string of a
+  // date with Rock's timezone offset
+  toISOString = (date) => this.momentWithTz(date).toISOString()
+
+  parseiCalendar = async (iCal, limit = 4) => {
+    const iCalEvents = Object.values(await ical.async.parseICS(iCal))
+
+    // [{ start, end, ical }]
+    // if you map, you'll have to flatten the array
+    // if you forEach, you can just append to an existing array <-----
+    let events = []
+
+    iCalEvents.forEach(n => {
+      // get start, end, and duration
+      // const { start, end } = this.context.dataSources.Event.getDateTime(n)
+      const { start, end } = n
+
+      const mStart = this.momentWithTz(start)
+      const mEnd = this.momentWithTz(end)
+      const duration = moment.duration(mEnd.diff(mStart))
+      const minutes = duration.asMinutes()
+
+      // append the first date to the events array
+      // as an ISO string
+      events.push({ start: this.toISOString(start), end: this.toISOString(end), })
+
+      // Rock stores additional date in the rdate property, so we want to check that for more dates
+      if (n.rdate) {
+        // rdates are comma separated, so we split the string and loop through them all
+        const rdates = split(n.rdate, ',')
+
+        rdates.forEach(rdate => {
+          // using the duration of the first occurrence, we calculate the
+          // end date of this specific occurence and convert to an ISO string
+          // and push it to our array of events
+          events.push({
+            start: this.toISOString(rdate),
+            end: this.momentWithTz(rdate).add(minutes, 'minutes').toISOString()
+          })
+        })
+      }
+
+      // Rock will store repeated events in the rrule property
+      if (n.rrule) {
+        // for repeated events, we only want the very next occurence
+        // based on today's date, so we want to filter the occurences
+        // to only get the top result from that
+        const nextOccurence = filter(
+          n.rrule.all(),
+          date => this.momentWithTz(date.start).diff(moment())
+        )
+
+        // since we only want the most relevant occurence, we
+        // don't really care about the original start/end date
+        return {
+          start: this.toISOString(nextOccurence),
+          end: this.momentWithTz(nextOccurence).add(minutes, 'minutes').toISOString()
         }
-      })
-    )
+      }
+    })
+
+    return events
   }
 }

@@ -12,7 +12,7 @@ export default class Address extends RockApolloDataSource {
             const { id: familyId } = family
 
             try {
-                const { locationId } = await this
+                const location = await this
                     .request(`/GroupLocations`)
                     .filter(`
                         (GroupId eq ${familyId})
@@ -21,19 +21,19 @@ export default class Address extends RockApolloDataSource {
                     `)
                     .first()
 
-                return this.request().filter(`Id eq ${locationId}`).first()
+                if (location) {
+                    const { locationId } = location
+                    return this.request().filter(`Id eq ${locationId}`).first()
+                }
+
+
             } catch (e) {
                 console.log({ e })
                 console.log(`This is likely because the the following family does not have an address associated with it: ${familyId}`)
             }
         }
-
-        console.log("No family found")
         return null
     }
-
-
-    updateByUser = () => null
 
     // TODO : Create this as a Rock Workflow cause there's way too much Rock specific logic to try and ahere to
     updateByUser = async ({ street1, street2, city, state, postalCode }) => {

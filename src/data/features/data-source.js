@@ -65,8 +65,7 @@ export default class Features extends coreFeatures.dataSource {
     }
 
     async upcomingEventsAlgorithmWithActionOverride({ action = null, contentChannelId, limit = null } = {}) {
-        const eventItems = await this.context.dataSources.ContentItem.getEvents()
-        const events = take(eventItems, limit)
+        const events = await this.context.dataSources.ContentItem.getEvents(limit)
 
         return events.map((event, i) => ({
             id: createGlobalId(`${event.id}${i}`, 'ActionListAction'),

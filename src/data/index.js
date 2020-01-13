@@ -25,6 +25,7 @@ import {
   // Campus,
   BinaryFiles,
   // Features,
+  // Event,
 } from '@apollosproject/data-connector-rock'
 import * as Theme from './theme'
 
@@ -55,6 +56,7 @@ import * as Address from './address'
 import * as Workflow from './workflow'
 import * as Schedule from './schedule'
 import * as Features from './features'
+import * as Event from './events'
 
 const data = {
   Followings,
@@ -81,6 +83,7 @@ const data = {
   BinaryFiles,
   Features,
   TwilioNotify,
+  Event,
 
   // Local Types
   DefinedValue,

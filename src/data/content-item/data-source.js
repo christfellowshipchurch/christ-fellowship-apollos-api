@@ -60,7 +60,7 @@ export default class ContentItem extends coreContentItem.dataSource {
       .filterOneOf(ids.map(n => `ContentChannelTypeId eq ${n}`))
       .get()
 
-  getEvents = () => {
+  getEvents = (limit) => {
     const contentChannelTypes = get(ROCK_MAPPINGS, 'CONTENT_ITEM.EventContentItem.ContentChannelTypeId', [])
 
     if (contentChannelTypes.length === 0) {
@@ -72,6 +72,9 @@ export default class ContentItem extends coreContentItem.dataSource {
 
     return this.request(`ContentChannelItems`)
       .filterOneOf(contentChannelTypes.map(n => `ContentChannelTypeId eq ${n}`))
+      .andFilter(this.LIVE_CONTENT())
+      .orderBy('Order')
+      .top(limit)
       .get()
   }
 
@@ -85,3 +88,6 @@ export default class ContentItem extends coreContentItem.dataSource {
     )
   }
 }
+
+
+//ContentChannelItems?loadAttributes=expanded&%24filter=(ContentChannelTypeId eq 22)&%24orderby=StartDateTime asc&%24top=4
