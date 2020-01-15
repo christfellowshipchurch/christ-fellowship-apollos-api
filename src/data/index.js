@@ -94,11 +94,19 @@ const data = {
   Schedule,
 
   // Local Content Items
-  WebsitePagesContentItem,
-  WebsiteContentItem,
-  WebsiteGroupContentItem,
   WebsiteNavigation,
-  WebsiteFeature,
+  WebsitePagesContentItem: {
+    dataSource: WebsitePagesContentItem.dataSource
+  },
+  WebsiteContentItem: {
+    dataSource: WebsiteContentItem.dataSource
+  },
+  WebsiteGroupContentItem: {
+    dataSource: WebsiteGroupContentItem.dataSource
+  },
+  WebsiteFeature: {
+    dataSource: WebsiteFeature.dataSource
+  },
 
   Browse,
   Cache,

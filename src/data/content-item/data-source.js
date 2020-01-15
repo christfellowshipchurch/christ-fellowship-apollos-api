@@ -38,6 +38,8 @@ export default class ContentItem extends coreContentItem.dataSource {
 
   // title pattern should follow: the-article-title
   getByTitle = async (title, mapping) => {
+    console.log({ title })
+
     const contentChannels = get(ROCK_MAPPINGS, mapping, [])
 
     if (title === '' || contentChannels.length === 0) return null
@@ -88,6 +90,3 @@ export default class ContentItem extends coreContentItem.dataSource {
     )
   }
 }
-
-
-//ContentChannelItems?loadAttributes=expanded&%24filter=(ContentChannelTypeId eq 22)&%24orderby=StartDateTime asc&%24top=4

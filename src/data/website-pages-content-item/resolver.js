@@ -6,10 +6,6 @@ import {
 import { parseRockKeyValuePairs } from '../utils'
 
 const resolver = {
-    Query: {
-        getWebsitePageContentByTitle: async (root, { website, title }, context) =>
-            await context.dataSources.WebsitePagesContentItem.getWebsitePageContentByTitle(website, title),
-    },
     WebsitePagesContentItem: {
         ...ContentItem.resolver.ContentItem,
         metaDescription: async ({ attributeValues }) =>
@@ -39,4 +35,5 @@ const resolver = {
     }
 }
 
-export default resolverMerge(resolver, ContentItem)
+// export default resolverMerge(resolver, ContentItem)
+export default resolver

@@ -58,4 +58,5 @@ const resolver = {
     }
 }
 
-export default resolverMerge(resolver, ContentItem)
+// export default resolverMerge(resolver, ContentItem)
+export default resolver
