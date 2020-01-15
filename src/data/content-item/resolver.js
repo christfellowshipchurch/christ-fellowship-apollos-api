@@ -12,17 +12,24 @@ import {
   orderBy,
 } from 'lodash'
 
-import { parseRockKeyValuePairs } from '../utils'
 import * as EventContentItem from '../event-content-item'
+import * as WebsiteContentItem from '../website-content-item'
+import * as WebsiteFeature from '../website-feature'
+import * as WebsiteGroupContentItem from '../website-group-content-item'
+import * as WebsitePagesContentItem from '../website-pages-content-item'
+
+import { parseRockKeyValuePairs } from '../utils'
 
 const { createImageUrlFromGuid } = Utils
-const { ROCK_MAPPINGS } = ApollosConfig
-
 
 const titleResolver = {
   title: ({ title: originalTitle, attributeValues }, { hyphenated }) => {
     // Check for an attribute value called titleOverride
-    const title = get(attributeValues, 'titleOverride.value', originalTitle)
+    const titleOverride = get(attributeValues, 'titleOverride.value', originalTitle)
+    const title = titleOverride !== ''
+      ? titleOverride
+      : originalTitle
+
 
     if (!hyphenated) {
       return title
@@ -67,13 +74,10 @@ const titleResolver = {
 
 const resolverExtensions = {
   ...titleResolver,
-  summary: () => "THIS IS THE SUMMARY",
-  htmlContent: () => "HTML CONTENT",
   tags: ({ attributeValues }) =>
     split(get(attributeValues, 'tags.value', ''), ','),
   icon: ({ attributeValues }) => {
     const parsed = parseRockKeyValuePairs(get(attributeValues, 'icon.value', 'book-open'))
-
     return get(parsed, '[0].key', 'book-open')
   },
   estimatedTime: ({ attributeValues }) =>
@@ -115,6 +119,11 @@ const resolver = {
 
       return sorted
     },
+    getWebsitePageContentByTitle: async (root, { website, title }, context) =>
+      await context.dataSources.WebsitePagesContentItem.getWebsitePageContentByTitle(website, title),
+  },
+  ContentItem: {
+    ...titleResolver,
   },
   DevotionalContentItem: {
     ...resolverExtensions,
@@ -128,7 +137,14 @@ const resolver = {
   MediaContentItem: {
     ...resolverExtensions
   },
-  ...EventContentItem.resolver
+  WeekendContentItem: {
+    ...resolverExtensions
+  },
+  ...EventContentItem.resolver,
+  ...WebsiteContentItem.resolver,
+  ...WebsiteFeature.resolver,
+  ...WebsiteGroupContentItem.resolver,
+  ...WebsitePagesContentItem.resolver,
 }
 
 export default resolverMerge(resolver, coreContentItem)
