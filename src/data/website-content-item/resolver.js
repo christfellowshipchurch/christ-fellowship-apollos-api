@@ -1,15 +1,8 @@
-import { ContentItem, Utils } from '@apollosproject/data-connector-rock'
-import { resolverMerge } from '@apollosproject/server-core'
-import ApollosConfig from '@apollosproject/config'
+import { ContentItem } from '@apollosproject/data-connector-rock'
 import {
     get, toLower, first
 } from 'lodash'
 import { parseRockKeyValuePairs, createVideoUrlFromGuid } from '../utils'
-
-// const createVideoUrlFromGuid = (uri) =>
-//     uri.split('-').length === 5
-//         ? `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`
-//         : Utils.enforceProtocol(uri);
 
 const resolver = {
     WebsiteBlockItem: {
@@ -26,15 +19,6 @@ const resolver = {
             const videos = ContentItem.getVideos(root);
 
             return videos
-
-            return videos.map((video) => {
-                video.sources = video.sources.map((sources) => {
-                    sources.uri = createVideoUrlFromGuid(sources.uri)
-                    return sources;
-                });
-
-                return video;
-            });
         },
         contentLayout: async ({ attributeValues }, args, context) => {
             const definedValueGuid = get(attributeValues, 'contentLayout.value', '');
@@ -69,5 +53,4 @@ const resolver = {
     }
 }
 
-// export default resolverMerge(resolver, ContentItem)
 export default resolver

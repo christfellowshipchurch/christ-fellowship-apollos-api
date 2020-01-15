@@ -1,8 +1,7 @@
 import { ContentItem, Utils } from '@apollosproject/data-connector-rock'
-import { resolverMerge } from '@apollosproject/server-core'
 import ApollosConfig from '@apollosproject/config'
 import {
-    get, lowerCase
+    get,
 } from 'lodash'
 import { parseHexCode } from '../utils'
 
@@ -58,5 +57,4 @@ const resolver = {
     }
 }
 
-// export default resolverMerge(resolver, ContentItem)
 export default resolver

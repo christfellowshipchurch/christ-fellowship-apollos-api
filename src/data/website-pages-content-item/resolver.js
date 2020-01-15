@@ -1,5 +1,4 @@
 import { ContentItem } from '@apollosproject/data-connector-rock';
-import { resolverMerge } from '@apollosproject/server-core';
 import {
     get,
 } from 'lodash'
@@ -35,5 +34,4 @@ const resolver = {
     }
 }
 
-// export default resolverMerge(resolver, ContentItem)
 export default resolver

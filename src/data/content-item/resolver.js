@@ -21,8 +21,6 @@ import * as WebsitePagesContentItem from '../website-pages-content-item'
 import { parseRockKeyValuePairs } from '../utils'
 
 const { createImageUrlFromGuid } = Utils
-const { ROCK_MAPPINGS } = ApollosConfig
-
 
 const titleResolver = {
   title: ({ title: originalTitle, attributeValues }, { hyphenated }) => {
