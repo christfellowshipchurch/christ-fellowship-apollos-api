@@ -27,6 +27,8 @@ export default gql`
     theme: Theme
 
     nextOccurrence: String
+    startDate: String
+    endDate: String
 
     tags: [String]
     callsToAction: [CallToAction]

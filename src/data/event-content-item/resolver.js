@@ -33,6 +33,8 @@ const resolver = {
 
       return moment().toISOString()
     },
+    startDate: ({ startDateTime }) => startDateTime,
+    endDate: ({ expireDateTime }) => expireDateTime,
     tags: ({ attributeValues }) =>
       split(get(attributeValues, 'tags.value', ''), ','),
     callsToAction: ({ attributeValues }, args, { dataSources }) =>
