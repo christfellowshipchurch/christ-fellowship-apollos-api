@@ -83,6 +83,13 @@ const resolver = {
         },
         updateCommunicationPreference: (root, { type, allow }, { dataSources }) =>
             dataSources.Person.updateCommunicationPreference({ type, allow }),
+        updateCommunicationPreferences: async (root, { input }, { dataSources }) => {
+            await Promise.all(input.map(({ type, allow }) =>
+                dataSources.Person.updateCommunicationPreference({ type, allow })
+            ))
+
+            return dataSources.Auth.getCurrentPerson()
+        },
         submitRsvp: (root, { input }, { dataSources }) =>
             dataSources.Person.submitRsvp(input),
         submitEmailCapture: (root, { input }, { dataSources }) =>

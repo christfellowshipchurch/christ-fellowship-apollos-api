@@ -61,12 +61,18 @@ export default gql`
         postalCode: String!
     }
 
+    input UpdateCommunicationPreferenceInput {
+        type: UPDATEABLE_COMMUNICATION_PREFERENCES!, 
+        allow: Boolean!
+    }
+
     extend type Mutation {
         updateProfileField(input: UpdateProfileInput!): Person
         updateProfileFields(input: [UpdateProfileInput]!): Person
         uploadProfileImage(file: Upload!, size: Int!): Person
         updateAddress(address: AddressInput!): Address
         updateCommunicationPreference(type: UPDATEABLE_COMMUNICATION_PREFERENCES!, allow: Boolean!): Person
+        updateCommunicationPreferences(input: [UpdateCommunicationPreferenceInput]!): Person
         submitRsvp(input: [Attribute]!): String
         submitEmailCapture(input: [Attribute]!): String
     }
