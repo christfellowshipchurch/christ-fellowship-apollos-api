@@ -6,7 +6,8 @@ import {
   get,
   has,
   split,
-  flatten
+  flatten,
+  first
 } from 'lodash'
 import moment from 'moment'
 import momentTz from 'moment-timezone'
@@ -16,20 +17,22 @@ import { parseRockKeyValuePairs } from '../utils'
 const resolver = {
   EventContentItem: {
     ...coreContentItem.resolver.ContentItem,
-    startDate: async ({ startDateTime, attributeValues }, args, { dataSources }) =>
-      moment(startDateTime).isValid()
-        ? momentTz.tz(
-          startDateTime,
-          ApollosConfig.ROCK.TIMEZONE
-        ).utc().toISOString()
-        : null,
-    endDate: async ({ expireDateTime, attributeValues }, args, { dataSources }) =>
-      moment(expireDateTime).isValid()
-        ? momentTz.tz(
-          expireDateTime,
-          ApollosConfig.ROCK.TIMEZONE
-        ).utc().toISOString()
-        : null,
+    nextOccurrence: async ({ title, attributeValues }, args, { dataSources }) => {
+      const scheduleGuids = get(attributeValues, 'schedules.value', null)
+
+      if (scheduleGuids) {
+        const rockScheduleItems = await dataSources.Schedule.getFromIds(split(scheduleGuids, ','))
+        const occurrences = await dataSources.Event.parseSchedulesAsEvents(rockScheduleItems)
+
+        return get(
+          occurrences.sort((a, b) => moment(a.start).diff(moment(b.start))),
+          '[0].start',
+          moment().toISOString()
+        )
+      }
+
+      return moment().toISOString()
+    },
     tags: ({ attributeValues }) =>
       split(get(attributeValues, 'tags.value', ''), ','),
     callsToAction: ({ attributeValues }, args, { dataSources }) =>
@@ -38,7 +41,6 @@ const resolver = {
         'call',
         'action'),
     events: async ({ title, attributeValues }, args, { dataSources }) => {
-
       const scheduleGuids = get(attributeValues, 'schedules.value', null)
 
       if (scheduleGuids) {

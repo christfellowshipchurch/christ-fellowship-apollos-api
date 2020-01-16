@@ -2,7 +2,7 @@ import RockApolloDataSource from '@apollosproject/rock-apollo-data-source'
 import ApollosConfig from '@apollosproject/config'
 import ical from 'node-ical'
 import moment from 'moment-timezone'
-import { filter, split, take, drop } from 'lodash'
+import { filter, split, take, drop, sortBy, first } from 'lodash'
 import { getIdentifierType } from '../utils'
 
 export default class Schedule extends RockApolloDataSource {
@@ -103,19 +103,21 @@ export default class Schedule extends RockApolloDataSource {
       // Rock will store repeated events in the rrule property
       if (n.rrule) {
         // for repeated events, we only want the very next occurence
-        // based on today's date, so we want to filter the occurences
-        // to only get the top result from that
-        const nextOccurence = filter(
-          n.rrule.all(),
-          date => this.momentWithTz(date.start).diff(moment())
-        )
+        // based on today's date, so we use the after method of rrule
+        // to get the next occurrence based on the today's date
+        //  
+        // in order to insure that an event will remain visible on the
+        // platform while the event is happening, we offset the time of
+        // 'now' by the duration of the event
+        const nowWithOffset = moment().utc().subtract(minutes, 'minutes').toDate()
+        const rrule = n.rrule.after(nowWithOffset)
 
         // since we only want the most relevant occurence, we
         // don't really care about the original start/end date
-        return {
-          start: this.toISOString(nextOccurence),
-          end: this.momentWithTz(nextOccurence).add(minutes, 'minutes').toISOString()
-        }
+        events.push({
+          start: this.toISOString(rrule),
+          end: this.momentWithTz(rrule).add(minutes, 'minutes').toISOString()
+        })
       }
     })
 
