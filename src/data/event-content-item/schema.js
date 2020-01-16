@@ -26,8 +26,7 @@ export default gql`
     parentChannel: ContentChannel
     theme: Theme
 
-    startDate: String
-    endDate: String
+    nextOccurrence: String
 
     tags: [String]
     callsToAction: [CallToAction]
