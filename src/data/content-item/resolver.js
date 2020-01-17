@@ -2,8 +2,9 @@ import {
   ContentItem as coreContentItem,
   Utils
 } from '@apollosproject/data-connector-rock'
-import ApollosConfig from '@apollosproject/config'
 import { resolverMerge } from '@apollosproject/server-core'
+import Hypher from 'hypher';
+import english from 'hyphenation.en-us';
 import moment from 'moment'
 import {
   get,
@@ -17,10 +18,10 @@ import * as WebsiteContentItem from '../website-content-item'
 import * as WebsiteFeature from '../website-feature'
 import * as WebsiteGroupContentItem from '../website-group-content-item'
 import * as WebsitePagesContentItem from '../website-pages-content-item'
-
 import { parseRockKeyValuePairs } from '../utils'
 
 const { createImageUrlFromGuid } = Utils
+const hypher = new Hypher(english);
 
 const titleResolver = {
   title: ({ title: originalTitle, attributeValues }, { hyphenated }) => {
