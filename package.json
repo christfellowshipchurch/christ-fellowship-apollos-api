@@ -52,6 +52,8 @@
     "dotenv": "6.0.0",
     "express": "^4.17.0",
     "graphql": "0.13.2",
+    "hyphenation.en-us": "^0.2.1",
+    "hypher": "^0.2.5",
     "jest": "^24.7.1",
     "jest-fetch-mock": "^2.1.2",
     "moment": "^2.24.0",

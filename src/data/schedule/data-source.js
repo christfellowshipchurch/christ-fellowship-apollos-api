@@ -26,7 +26,6 @@ export default class Schedule extends RockApolloDataSource {
     const originalDate = moment.tz(date, ApollosConfig.ROCK.TIMEZONE)
     const estDate = moment.tz(date, 'US/Eastern')
     const mDate = moment.tz(date, 'Etc/GMT+5')
-    const utc = mDate.utc()
 
     if (log) {
       const format = 'ddd MMM D | LT Z'
