@@ -7,7 +7,8 @@ import {
   has,
   split,
   flatten,
-  first
+  first,
+  toLower
 } from 'lodash'
 import moment from 'moment'
 import momentTz from 'moment-timezone'
@@ -40,6 +41,8 @@ const resolver = {
         get(attributeValues, 'callsToAction.value', ''),
         'call',
         'action'),
+    openLinksInNewTab: ({ attributeValues }) =>
+      toLower(get(attributeValues, 'openLinksInNewTab.value', 'false')) === 'true',
     events: async ({ title, attributeValues }, args, { dataSources }) => {
       const scheduleGuids = get(attributeValues, 'schedules.value', null)
 
