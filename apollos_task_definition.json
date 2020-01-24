@@ -1,0 +1,83 @@
+{
+    "family": "cf-apollos-api",
+    "executionRoleArn": "arn:aws:iam::516877585062:role/ecsTaskExecutionRole",
+    "networkMode": "bridge",
+    "containerDefinitions": [
+        {
+            "name": "apollos",
+            "image": "516877585062.dkr.ecr.us-east-2.amazonaws.com/cf-ecr-repo:latest",
+            "links": [],
+            "cpu": 8,
+            "memory": 512,
+            "memoryReservation": null,
+            "portMappings": [
+                {
+                    "containerPort": 4000,
+                    "hostPort": 0,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "entryPoint": [],
+            "command": [],
+            "environment": [
+                {
+                  "name": "PORT",
+                  "value": "4000"
+                },
+                {
+                  "name": "ROCK_API",
+                  "value": "https://rock.christfellowshipconference.com"
+                }
+            ],
+            "secrets": [
+                {
+                  "valueFrom": "/conference/BIBLE_API_KEY",
+                  "name": "BIBLE_API_KEY"
+                },
+                {
+                  "valueFrom": "/conference/BIBLE_ID",
+                  "name": "BIBLE_ID"
+                },
+                {
+                  "valueFrom": "/conference/ESV_KEY",
+                  "name": "ESV_KEY"
+                },
+                {
+                  "valueFrom": "/conference/TWILIO_ACCOUNT_SID",
+                  "name": "TWILIO_ACCOUNT_SID"
+                },
+                {
+                  "valueFrom": "/conference/TWILIO_AUTH_TOKEN",
+                  "name": "TWILIO_AUTH_TOKEN"
+                },
+                {
+                  "valueFrom": "/conference/TWILIO_FROM_NUMBER",
+                  "name": "TWILIO_FROM_NUMBER"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "linuxParameters": null,
+            "privileged": null,
+            "readonlyRootFilesystem": null,
+            "interactive": null,
+            "pseudoTerminal": null
+        }
+    ],
+    "volumes": [],
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "EC2"
+    ],
+    "cpu": null,
+    "memory": null,
+    "tags": [
+        {
+            "key": "registeredBy",
+            "value": "github-action"
+        }
+    ],
+    "pidMode": null,
+    "ipcMode": null
+}
