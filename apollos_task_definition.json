@@ -66,6 +66,10 @@
                 {
                   "valueFrom": "/dev/TWILIO_FROM_NUMBER",
                   "name": "TWILIO_FROM_NUMBER"
+                },
+                {
+                  "valueFrom": "/dev/ROCK_TOKEN",
+                  "name": "ROCK_TOKEN"
                 }
             ],
             "mountPoints": [],
