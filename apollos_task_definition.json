@@ -27,32 +27,44 @@
                 },
                 {
                   "name": "ROCK_API",
-                  "value": "https://rock.christfellowshipconference.com"
+                  "value": "https://dev-rock.christfellowship.church"
+                },
+                {
+                  "name": "ROCK_SHOW_INACTIVE_CONTENT",
+                  "value": false
+                },
+                {
+                  "name": "CLOUDFRONT",
+                  "value": "https://cloudfront.christfellowship.church"
                 }
             ],
             "secrets": [
                 {
-                  "valueFrom": "/conference/BIBLE_API_KEY",
+                  "valueFrom": "BIBLE_API_KEY",
                   "name": "BIBLE_API_KEY"
                 },
                 {
-                  "valueFrom": "/conference/BIBLE_ID",
+                  "valueFrom": "BIBLE_ID",
                   "name": "BIBLE_ID"
                 },
                 {
-                  "valueFrom": "/conference/ESV_KEY",
+                  "valueFrom": "ESV_KEY",
                   "name": "ESV_KEY"
                 },
                 {
-                  "valueFrom": "/conference/TWILIO_ACCOUNT_SID",
+                  "valueFrom": "/dev/TWILIO_ACCOUNT_SID",
                   "name": "TWILIO_ACCOUNT_SID"
                 },
                 {
-                  "valueFrom": "/conference/TWILIO_AUTH_TOKEN",
+                  "valueFrom": "/dev/TWILIO_NOTIFY_SID",
+                  "name": "TWILIO_NOTIFY_SID"
+                },
+                {
+                  "valueFrom": "/dev/TWILIO_AUTH_TOKEN",
                   "name": "TWILIO_AUTH_TOKEN"
                 },
                 {
-                  "valueFrom": "/conference/TWILIO_FROM_NUMBER",
+                  "valueFrom": "/dev/TWILIO_FROM_NUMBER",
                   "name": "TWILIO_FROM_NUMBER"
                 }
             ],
