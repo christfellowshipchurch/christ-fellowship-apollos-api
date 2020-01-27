@@ -31,7 +31,7 @@
                 },
                 {
                   "name": "ROCK_SHOW_INACTIVE_CONTENT",
-                  "value": false
+                  "value": "false"
                 },
                 {
                   "name": "CLOUDFRONT",
