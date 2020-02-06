@@ -12,6 +12,12 @@ const resolver = {
 
             return camelCase(get(definedValue, 'value', ''))
         },
+        subtitle: ({ attributeValues }) => get(attributeValues, 'subtitle.value', null),
+        videos: (root, args, { dataSources: { ContentItem } }) => {
+            const videos = ContentItem.getVideos(root);
+
+            return videos
+        },
     }
 }
 
