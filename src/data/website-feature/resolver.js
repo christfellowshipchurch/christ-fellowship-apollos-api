@@ -12,6 +12,7 @@ const resolver = {
 
             return camelCase(get(definedValue, 'value', ''))
         },
+        subtitle: ({ attributeValues }) => get(attributeValues, 'subtitle.value', null)
     }
 }
 

@@ -22,5 +22,7 @@ export default gql`
         theme: Theme
 
         feature: String
+        subtitle: String
+
     }
 `;
