@@ -80,6 +80,16 @@ export default class ContentItem extends coreContentItem.dataSource {
       .get()
   }
 
+  getFeaturedEvents = () => {
+    const contentChannelTypes = get(ROCK_MAPPINGS, 'CONTENT_ITEM.EventContentItem.ContentChannelTypeId', [])
+
+    return this.request()
+      .filterOneOf(contentChannelTypes.map(n => `ContentChannelTypeId eq ${n}`))
+      .andFilter(this.LIVE_CONTENT())
+      .andFilter('Priority gt 0') // featured events have a priority in Rock >0
+      .orderBy('Priority', 'desc')
+  }
+
   getEventByTitle = async (title) => {
     if (title === '') return null
 

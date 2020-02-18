@@ -60,5 +60,6 @@ export default gql`
     getContentItemByTitle(title: String!): ContentItem
     getCategoryByTitle(title: String!): ContentItem
     allEvents: [EventContentItem]
+    featuredEvents: ContentItemsConnection
   }
 `
