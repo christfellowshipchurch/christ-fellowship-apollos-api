@@ -6,6 +6,4 @@ exports[`Defined Value gets a defined value from a custom id 1`] = `null`;
 
 exports[`Defined Value gets a defined value from a valid guid 1`] = `Promise {}`;
 
-exports[`Defined Value gets a defined value from a valid guid or integer id 1`] = `Promise {}`;
-
 exports[`Defined Value gets a defined value from a valid integer id 1`] = `Promise {}`;

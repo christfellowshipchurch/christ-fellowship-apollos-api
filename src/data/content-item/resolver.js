@@ -120,6 +120,11 @@ const resolver = {
 
       return sorted
     },
+    featuredEvents: (root, args, { dataSources }) =>
+      dataSources.ContentItem.paginate({
+        cursor: dataSources.ContentItem.getFeaturedEvents(),
+        args,
+      }),
     getWebsitePageContentByTitle: async (root, { website, title }, context) =>
       await context.dataSources.WebsitePagesContentItem.getWebsitePageContentByTitle(website, title),
   },
