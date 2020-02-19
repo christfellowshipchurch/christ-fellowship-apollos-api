@@ -3,6 +3,7 @@ import gql from 'graphql-tag'
 
 import * as EventContentItem from '../event-content-item'
 import * as WebsiteContentItem from '../website-content-item'
+import * as WebsiteHtmlContentItem from '../website-html-content-item'
 import * as WebsiteFeature from '../website-feature'
 import * as WebsiteGroupContentItem from '../website-group-content-item'
 import * as WebsiteNavigation from '../website-navigation'
@@ -11,6 +12,7 @@ import * as WebsitePagesContentItem from '../website-pages-content-item'
 export default gql`
   ${ContentItem.schema}
   ${EventContentItem.schema}
+  ${WebsiteHtmlContentItem.schema}
   ${WebsiteFeature.schema}
   ${WebsiteGroupContentItem.schema}
   ${WebsitePagesContentItem.schema}
