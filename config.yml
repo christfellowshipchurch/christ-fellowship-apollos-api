@@ -114,6 +114,9 @@ ROCK_MAPPINGS:
     WebsiteBlockItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [15]
+    WebsiteHtmlBlockItem:
+      EntityType: ContentChannelItem
+      ContentChannelTypeId: [25]
     WebsiteGroupItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [16]

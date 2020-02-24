@@ -40,6 +40,7 @@ import * as Browse from './browse'
 // Localized Modules
 import * as WebsitePagesContentItem from './website-pages-content-item'
 import * as WebsiteContentItem from './website-content-item'
+import * as WebsiteHtmlContentItem from './website-html-content-item'
 import * as WebsiteGroupContentItem from './website-group-content-item'
 import * as WebsiteNavigation from './website-navigation'
 import * as WebsiteFeature from './website-feature'
@@ -100,6 +101,9 @@ const data = {
   },
   WebsiteContentItem: {
     dataSource: WebsiteContentItem.dataSource
+  },
+  WebsiteHtmlContentItem: {
+    dataSource: WebsiteHtmlContentItem.dataSource
   },
   WebsiteGroupContentItem: {
     dataSource: WebsiteGroupContentItem.dataSource

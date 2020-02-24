@@ -15,6 +15,7 @@ import {
 
 import * as EventContentItem from '../event-content-item'
 import * as WebsiteContentItem from '../website-content-item'
+import * as WebsiteHtmlContentItem from '../website-html-content-item'
 import * as WebsiteFeature from '../website-feature'
 import * as WebsiteGroupContentItem from '../website-group-content-item'
 import * as WebsitePagesContentItem from '../website-pages-content-item'
@@ -148,6 +149,7 @@ const resolver = {
   },
   ...EventContentItem.resolver,
   ...WebsiteContentItem.resolver,
+  ...WebsiteHtmlContentItem.resolver,
   ...WebsiteFeature.resolver,
   ...WebsiteGroupContentItem.resolver,
   ...WebsitePagesContentItem.resolver,
