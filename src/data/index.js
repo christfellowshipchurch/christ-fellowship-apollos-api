@@ -18,10 +18,10 @@ import {
   // ContentItem,
   // ContentChannel,
   Sharable,
-  // Auth,
+  Auth,
   PersonalDevice,
   Template,
-  // AuthSms,
+  AuthSms,
   // Campus,
   BinaryFiles,
   // Features,
@@ -48,7 +48,6 @@ import * as DefinedValue from './defined-value'
 import * as DefinedValueList from './defined-value-list'
 
 import * as TwilioNotify from './twilio-notify'
-import * as Auth from './auth'
 import * as Campus from './campus'
 import * as Person from './people'
 import * as PhoneNumber from './phone-number'
@@ -65,7 +64,7 @@ const data = {
   Person,
   // Cloudinary,
   Auth,
-  AuthSms: Auth,
+  AuthSms,
   Sms: TwilioNotify,
   LiveStream,
   Theme,
