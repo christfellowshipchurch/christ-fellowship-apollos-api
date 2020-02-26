@@ -54,6 +54,16 @@ export default class Campus extends coreCampus.dataSource {
     throw new Error(`We were unable to find a default campus in Rock. Please check that there is a campus and location set up for the campud id: ${9}`)
   }
 
+  //Reorders getAll campuses to reflect order displayed in Rock
+  getAll = () =>
+    this.request()
+      .filter('IsActive eq true')
+      .orderBy('Order')
+      .expand('Location')
+      .expand('Location/Image')
+      .cache({ ttl: 600 }) // ten minutes
+      .get();
+
   getByName = async (name) => this
     .request()
     .filter(`toupper(Name) eq '${upperCase(name)}'`)
