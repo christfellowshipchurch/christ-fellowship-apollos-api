@@ -33,7 +33,7 @@ name: Deploy to Amazon ECS
 
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy Apollos
     runs-on: ubuntu-latest
 
     steps:
@@ -65,18 +65,18 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-    - name: Fill in the new image ID in the Amazon ECS task definition
+    - name: Dev Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
-        task-definition: apollos_task_definition.json
-        container-name: apollos
+        task-definition: apollos_task_dev.json
+        container-name: dev-apollos
         image: ${{ steps.build-image.outputs.image }}
 
-    - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+    - name: Prod Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: apollos-demo
-        cluster: cf-cluster
-        wait-for-service-stability: true
+        task-definition: apollos_task_prod.json
+        container-name: prod-apollos
+        image: ${{ steps.build-image.outputs.image }}

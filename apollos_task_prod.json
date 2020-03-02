@@ -1,10 +1,10 @@
 {
-    "family": "cf-apollos-api",
+    "family": "cf-apollos-api-prod",
     "executionRoleArn": "arn:aws:iam::516877585062:role/ecsTaskExecutionRole",
     "networkMode": "bridge",
     "containerDefinitions": [
         {
-            "name": "apollos",
+            "name": "prod-apollos",
             "image": "516877585062.dkr.ecr.us-east-2.amazonaws.com/cf-ecr-repo:latest",
             "links": [],
             "cpu": 8,
@@ -27,7 +27,7 @@
                 },
                 {
                   "name": "ROCK_API",
-                  "value": "https://dev-rock.christfellowship.church"
+                  "value": "https://rock.gocf.org"
                 },
                 {
                   "name": "ROCK_SHOW_INACTIVE_CONTENT",
@@ -52,24 +52,28 @@
                   "name": "ESV_KEY"
                 },
                 {
-                  "valueFrom": "/dev/TWILIO_ACCOUNT_SID",
+                  "valueFrom": "/prod/TWILIO_ACCOUNT_SID",
                   "name": "TWILIO_ACCOUNT_SID"
                 },
                 {
-                  "valueFrom": "/dev/TWILIO_NOTIFY_SID",
+                  "valueFrom": "/prod/TWILIO_NOTIFY_SID",
                   "name": "TWILIO_NOTIFY_SID"
                 },
                 {
-                  "valueFrom": "/dev/TWILIO_AUTH_TOKEN",
+                  "valueFrom": "/prod/TWILIO_AUTH_TOKEN",
                   "name": "TWILIO_AUTH_TOKEN"
                 },
                 {
-                  "valueFrom": "/dev/TWILIO_FROM_NUMBER",
+                  "valueFrom": "/prod/TWILIO_FROM_NUMBER",
                   "name": "TWILIO_FROM_NUMBER"
                 },
                 {
-                  "valueFrom": "/dev/ROCK_TOKEN",
+                  "valueFrom": "/prod/ROCK_TOKEN",
                   "name": "ROCK_TOKEN"
+                },
+                {
+                  "valueFrom": "/prod/ONE_SIGNAL_REST_KEY",
+                  "name": "ONE_SIGNAL_REST_KEY"
                 }
             ],
             "mountPoints": [],
