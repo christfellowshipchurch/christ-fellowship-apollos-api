@@ -1,5 +1,5 @@
 {
-    "family": "cf-apollos-api",
+    "family": "cf-apollos-api-dev",
     "executionRoleArn": "arn:aws:iam::516877585062:role/ecsTaskExecutionRole",
     "networkMode": "bridge",
     "containerDefinitions": [

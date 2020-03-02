@@ -79,7 +79,7 @@ jobs:
         task-definition: ${{ steps.task-def-dev.outputs.task-definition }}
         service: dev-apollos
         cluster: apollos
-        wait-for-service-stability: true
+        wait-for-service-stability: false
 
     - name: Prod Amazon ECS task definition
       id: task-def-prod
