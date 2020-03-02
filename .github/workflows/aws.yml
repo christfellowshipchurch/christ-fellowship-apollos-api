@@ -73,6 +73,14 @@ jobs:
         container-name: dev-apollos
         image: ${{ steps.build-image.outputs.image }}
 
+    - name: Dev Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def-dev.outputs.task-definition }}
+        service: dev-apollos
+        cluster: apollos
+        wait-for-service-stability: true
+
     - name: Prod Amazon ECS task definition
       id: task-def-prod
       uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -80,3 +88,11 @@ jobs:
         task-definition: apollos_task_prod.json
         container-name: prod-apollos
         image: ${{ steps.build-image.outputs.image }}
+
+    - name: Prod Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def-prod.outputs.task-definition }}
+        service: prod-apollos
+        cluster: apollos
+        wait-for-service-stability: true
