@@ -10,16 +10,16 @@
 APP:
   # This variable is used for generating deep links.
   # It should match whatver is in your Info.plist `CFBundleURLTypes`
-  DEEP_LINK_HOST: apolloschurchapp
+  DEEP_LINK_HOST: ChristFellowship
   ROOT_API_URL: ${ROOT_URL}
 ROCK:
   API_URL: ${ROCK_API}/api
   API_TOKEN: ${ROCK_TOKEN}
   IMAGE_URL: ${CLOUDFRONT}/GetImage.ashx
   FILE_URL: ${CLOUDFRONT}/GetFile.ashx
-  SHARE_URL: https://apollosrock.newspring.cc
+  SHARE_URL: https://christfellowship.church
   # This should match the timezone of the Rock server
-  TIMEZONE: "America/New_York"
+  TIMEZONE: "Etc/GMT+5"
   DEEP_LINK_HOST: 
   ROOT_API_URL: ${ROOT_URL}
   JOBS_USERNAME: ${JOBS_USERNAME}
@@ -27,12 +27,12 @@ ROCK:
   USE_PLUGIN: true
   SHOW_INACTIVE_CONTENT: ${ROCK_SHOW_INACTIVE_CONTENT}
 ONE_SIGNAL:
-  APP_ID: b6e75a77-003f-4466-95ca-82cc5cdc407b
+  APP_ID: 7ab9baa8-8f28-41b9-b258-37662276aea4
   REST_KEY: ${ONE_SIGNAL_REST_KEY}
 CHURCH_ONLINE:
-  URL: https://apollos.churchonline.org/api/v1/
+  URL: https://live.gochristfellowship.com/api/v1/
   MEDIA_URLS: []
-  WEB_VIEW_URL: https://apollos.churchonline.org/
+  WEB_VIEW_URL: https://live.gochristfellowship.com/
 ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
   API_KEY: ${ALGOLIA_API_KEY}
