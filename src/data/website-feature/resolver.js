@@ -2,16 +2,14 @@ import { ContentItem } from '@apollosproject/data-connector-rock'
 import {
     get, camelCase
 } from 'lodash'
+import {
+    parseRockKeyValuePairs
+} from '../utils'
 
 const resolver = {
     WebsiteFeature: {
         ...ContentItem.resolver.ContentItem,
-        feature: async ({ attributeValues }, args, context) => {
-            const definedValueGuid = get(attributeValues, 'feature.value', '')
-            const definedValue = await context.dataSources.DefinedValue.getDefinedValueByIdentifier(definedValueGuid)
-
-            return camelCase(get(definedValue, 'value', ''))
-        },
+        feature: ({ attributeValues }, args, context) => get(attributeValues, 'feature.value', ''),
         subtitle: ({ attributeValues }) => get(attributeValues, 'subtitle.value', null)
     }
 }

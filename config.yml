@@ -10,16 +10,19 @@
 APP:
   # This variable is used for generating deep links.
   # It should match whatver is in your Info.plist `CFBundleURLTypes`
-  DEEP_LINK_HOST: apolloschurchapp
+  DEEP_LINK_HOST: ChristFellowship
   ROOT_API_URL: ${ROOT_URL}
 ROCK:
   API_URL: ${ROCK_API}/api
   API_TOKEN: ${ROCK_TOKEN}
-  IMAGE_URL: ${CLOUDFRONT}/GetImage.ashx
-  FILE_URL: ${CLOUDFRONT}/GetFile.ashx
-  SHARE_URL: https://apollosrock.newspring.cc
+  # TODO : use this when Cloudfront is ready
+  # IMAGE_URL: ${CLOUDFRONT}/GetImage.ashx
+  # FILE_URL: ${CLOUDFRONT}/GetFile.ashx
+  IMAGE_URL: ${ROCK_API}/GetImage.ashx
+  FILE_URL: ${ROCK_API}/GetFile.ashx
+  SHARE_URL: https://christfellowship.church
   # This should match the timezone of the Rock server
-  TIMEZONE: "America/New_York"
+  TIMEZONE: "Etc/GMT+5"
   DEEP_LINK_HOST: 
   ROOT_API_URL: ${ROOT_URL}
   JOBS_USERNAME: ${JOBS_USERNAME}
@@ -27,12 +30,12 @@ ROCK:
   USE_PLUGIN: true
   SHOW_INACTIVE_CONTENT: ${ROCK_SHOW_INACTIVE_CONTENT}
 ONE_SIGNAL:
-  APP_ID: b6e75a77-003f-4466-95ca-82cc5cdc407b
+  APP_ID: 7ab9baa8-8f28-41b9-b258-37662276aea4
   REST_KEY: ${ONE_SIGNAL_REST_KEY}
 CHURCH_ONLINE:
-  URL: https://apollos.churchonline.org/api/v1/
+  URL: https://live.gochristfellowship.com/api/v1/
   MEDIA_URLS: []
-  WEB_VIEW_URL: https://apollos.churchonline.org/
+  WEB_VIEW_URL: https://live.gochristfellowship.com/
 ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
   API_KEY: ${ALGOLIA_API_KEY}
@@ -87,10 +90,8 @@ ROCK_MAPPINGS:
       # When resolving "ContentSeriesContentItem" look in rock for a "ContentChannelItem"
       EntityType: ContentChannelItem
       # Used to define the subset of content channels types that use this specific type.
-      ContentChannelTypeId: [5, 6]
     DevotionalContentItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [3]
     MediaContentItem:
       EntityType: ContentChannelItem
     UniversalContentItem:
@@ -99,13 +100,7 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
     ContentItem:
       EntityType: ContentChannelItem
-    # DO NOT remove the ContentChannelTypeId from EventContentItem
-    # It's being used inside of the getEventByTitle dataSource method
-    #   for querying Events
     EventContentItem:
-      EntityType: ContentChannelItem
-      ContentChannelTypeId: [22]
-    EventScheduleItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [23]
     WebsitePagesContentItem:
@@ -116,60 +111,59 @@ ROCK_MAPPINGS:
       ContentChannelTypeId: [15]
     WebsiteHtmlBlockItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [25]
+      ContentChannelTypeId: [26]
     WebsiteGroupItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [16]
+      ContentChannelTypeId: [20]
     WebsiteFeature:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [20]
+      ContentChannelTypeId: [21]
 
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews
-    PersonaId: 434
+    PersonaId: 537
 
   # Apollos will pull these content channels and expose them in the app on the discover screen.
   DISCOVER_CONTENT_CHANNEL_IDS:
-    - 40
+    - 42
 
   # Apollos will pull these content channels and expose them as events.
   EVENTS_CONTENT_CHANNEL_IDS:
-    - 42
+    - 47
 
   # Apollos will pull content items from these channels and expose them on the user feed
   # However, it will not expose the channel itself.
   FEED_CONTENT_CHANNEL_IDS:
-    - 37
-    - 42
+    - 43 # Article and Blogs
+    - 60 # Resources
 
   CAMPUS_FAQ_CONTENT_CHANNEL_IDS:
-    - 47
+    - 61
 
   # Apollos will pull content items from these channels
   # This will NOT add these Content Channels to the app.
   #   See DISCOVER_CONTENT_CHANNEL_IDS and FEED_CONTENT_CHANNEL_IDS for App
   BROWSE_CONTENT_CHANNEL_IDS:
-    - 37
+    - 43 # Article and Blogs
+    - 60 # Resources
 
   # Apollos will pull content items as categories from these channels
   # This will NOT add these Content Channels to the app.
   #   See DISCOVER_CONTENT_CHANNEL_IDS and FEED_CONTENT_CHANNEL_IDS for App
   CATEGORY_CONTENT_CHANNEL_IDS:
-    - 38
+    - 44
 
   # Apollos will pull content items from these channels and expose them on a website
   # However, it will not expose the channel itself.
   WEBSITE_CONTENT_CHANNEL_IDS:
-    # Content Channels to be used for the Wordpress Migration Website
-    WORDPRESS_MIGRATION:
-      - 23
+    # Content Channels that contain pages for the External Marketing website
     EXTERNAL_MARKETING:
-      - 33
+      - 54
 
   CAMPAIGN_CHANNEL_IDS:
     - 11
 
-  ANNOUNCEMENTS_CHANNEL_ID: 46
+  ANNOUNCEMENTS_CHANNEL_ID: 45
 
   # List of Id's associated with important/commonly used Defined Types
   # (primarily used by the Defined Value List data type)
