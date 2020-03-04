@@ -15,8 +15,11 @@ APP:
 ROCK:
   API_URL: ${ROCK_API}/api
   API_TOKEN: ${ROCK_TOKEN}
-  IMAGE_URL: ${CLOUDFRONT}/GetImage.ashx
-  FILE_URL: ${CLOUDFRONT}/GetFile.ashx
+  # TODO : use this when Cloudfront is ready
+  # IMAGE_URL: ${CLOUDFRONT}/GetImage.ashx
+  # FILE_URL: ${CLOUDFRONT}/GetFile.ashx
+  IMAGE_URL: ${ROCK_API}/GetImage.ashx
+  FILE_URL: ${ROCK_API}/GetFile.ashx
   SHARE_URL: https://christfellowship.church
   # This should match the timezone of the Rock server
   TIMEZONE: "Etc/GMT+5"
@@ -87,10 +90,8 @@ ROCK_MAPPINGS:
       # When resolving "ContentSeriesContentItem" look in rock for a "ContentChannelItem"
       EntityType: ContentChannelItem
       # Used to define the subset of content channels types that use this specific type.
-      ContentChannelTypeId: [5, 6]
     DevotionalContentItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [3]
     MediaContentItem:
       EntityType: ContentChannelItem
     UniversalContentItem:
@@ -99,35 +100,32 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
     ContentItem:
       EntityType: ContentChannelItem
-    # DO NOT remove the ContentChannelTypeId from EventContentItem
-    # It's being used inside of the getEventByTitle dataSource method
-    #   for querying Events
     EventContentItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [47]
+      ContentChannelTypeId: [23]
     WebsitePagesContentItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [54]
+      ContentChannelTypeId: [14]
     WebsiteBlockItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [51]
+      ContentChannelTypeId: [15]
     WebsiteHtmlBlockItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [59]
+      ContentChannelTypeId: [26]
     WebsiteGroupItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [56]
+      ContentChannelTypeId: [20]
     WebsiteFeature:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [52]
+      ContentChannelTypeId: [21]
 
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews
-    PersonaId: 434
+    PersonaId: 537
 
   # Apollos will pull these content channels and expose them in the app on the discover screen.
   DISCOVER_CONTENT_CHANNEL_IDS:
-    - 40
+    - 42
 
   # Apollos will pull these content channels and expose them as events.
   EVENTS_CONTENT_CHANNEL_IDS:
@@ -146,7 +144,8 @@ ROCK_MAPPINGS:
   # This will NOT add these Content Channels to the app.
   #   See DISCOVER_CONTENT_CHANNEL_IDS and FEED_CONTENT_CHANNEL_IDS for App
   BROWSE_CONTENT_CHANNEL_IDS:
-    - 37
+    - 43 # Article and Blogs
+    - 60 # Resources
 
   # Apollos will pull content items as categories from these channels
   # This will NOT add these Content Channels to the app.
