@@ -45,7 +45,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     if (title === '' || contentChannels.length === 0) return null
 
     const contentItems = await this.request(`ContentChannelItems`)
-      .filter(contentChannels.map(n => `ContentChannelId eq ${n}`))
+      .filterOneOf(contentChannels.map(n => `ContentChannelId eq ${n}`))
       .andFilter(`toupper(Title) eq '${upperCase(title)}'`)
       .get()
 

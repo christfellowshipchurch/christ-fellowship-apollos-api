@@ -25,12 +25,7 @@ const resolver = {
                 get(attributeValues, 'twitterProtocols.value', ''),
                 'content', 'name'
             ),
-        icon: async ({ attributeValues }, args, { dataSources }) => {
-            const definedValueGuid = get(attributeValues, 'icon.value', '')
-            const definedValue = await dataSources.DefinedValue.getDefinedValueByIdentifier(definedValueGuid)
-
-            return get(definedValue, 'value', '')
-        }
+        icon: ({ attributeValues }, args, { dataSources }) => get(attributeValues, 'icon.value', '')
     }
 }
 

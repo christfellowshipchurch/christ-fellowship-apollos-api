@@ -37,32 +37,6 @@ export default gql`
 
     events: [Event]
   }
-
-  type EventScheduleItem implements ContentItem & Node {
-    id: ID!
-    title(hyphenated: Boolean): String
-    coverImage: ImageMedia
-    images: [ImageMedia]
-    videos: [VideoMedia]
-    audios: [AudioMedia]
-    htmlContent: String
-    summary: String
-    childContentItemsConnection(
-      first: Int
-      after: String
-    ): ContentItemsConnection
-    siblingContentItemsConnection(
-      first: Int
-      after: String
-    ): ContentItemsConnection
-    parentChannel: ContentChannel
-    theme: Theme
-
-
-    dates: [String]
-    campuses: [Campus]
-    location: String
-  }
 `
 
 

@@ -23,36 +23,7 @@ export default class Schedule extends RockApolloDataSource {
   // shorthand for converting a date to a moment
   // object with Rock's timezone offset
   momentWithTz = (date, log) => {
-    const originalDate = moment.tz(date, ApollosConfig.ROCK.TIMEZONE)
-    const estDate = moment.tz(date, 'US/Eastern')
-    const mDate = moment.tz(date, 'Etc/GMT+5')
-
-    if (log) {
-      const format = 'ddd MMM D | LT Z'
-
-      console.log("\nDate Read Out")
-      console.log('\x1b[36m',
-        "America/New_York\n",
-        `Local: ${originalDate.format(format)}`,
-        `\n UTC: ${originalDate.utc().format(format)}`,
-        `\n ${originalDate.toISOString()}\n`
-      )
-
-      console.log('\x1b[34m',
-        "US/Est\n",
-        `Local ${estDate.format(format)}`,
-        `\n UTC: ${estDate.utc().format(format)}`,
-        `\n ${estDate.toISOString()}\n`
-      )
-
-      console.log('\x1b[31m',
-        "Manual Tz Offset (-0500)\n",
-        `UTC ${mDate.format(format)}`,
-        `\n ${mDate.toISOString()}`
-      )
-
-      console.log('\x1b[30m')
-    }
+    const mDate = moment.tz(date, ApollosConfig.ROCK.TIMEZONE)
 
     return mDate.utc()
   }
