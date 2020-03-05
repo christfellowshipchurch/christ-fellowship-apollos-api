@@ -15,11 +15,8 @@ APP:
 ROCK:
   API_URL: ${ROCK_API}/api
   API_TOKEN: ${ROCK_TOKEN}
-  # TODO : use this when Cloudfront is ready
-  # IMAGE_URL: ${CLOUDFRONT}/GetImage.ashx
-  # FILE_URL: ${CLOUDFRONT}/GetFile.ashx
-  IMAGE_URL: ${ROCK_API}/GetImage.ashx
-  FILE_URL: ${ROCK_API}/GetFile.ashx
+  IMAGE_URL: ${CLOUDFRONT}/GetImage.ashx
+  FILE_URL: ${CLOUDFRONT}/GetFile.ashx
   SHARE_URL: https://christfellowship.church
   # This should match the timezone of the Rock server
   TIMEZONE: "Etc/GMT+5"
