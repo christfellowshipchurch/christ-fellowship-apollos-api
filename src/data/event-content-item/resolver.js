@@ -45,6 +45,8 @@ const resolver = {
         'action'),
     openLinksInNewTab: ({ attributeValues }) =>
       toLower(get(attributeValues, 'openLinksInNewTab.value', 'false')) === 'true',
+    hideLabel: ({ attributeValues }) =>
+      toLower(get(attributeValues, 'hideLabel.value', 'false')) === 'true',
     events: async ({ title, attributeValues }, args, { dataSources }) => {
       const scheduleGuids = get(attributeValues, 'schedules.value', null)
 

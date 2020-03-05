@@ -33,6 +33,7 @@ export default gql`
     tags: [String]
     callsToAction: [CallToAction]
     openLinksInNewTab: Boolean
+    hideLabel: Boolean
 
     events: [Event]
   }
