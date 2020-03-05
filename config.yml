@@ -15,7 +15,6 @@ APP:
 ROCK:
   API_URL: ${ROCK_API}/api
   API_TOKEN: ${ROCK_TOKEN}
-  # TODO : use this when Cloudfront is ready
   IMAGE_URL: ${CLOUDFRONT}/GetImage.ashx
   FILE_URL: ${CLOUDFRONT}/GetFile.ashx
   SHARE_URL: https://christfellowship.church
