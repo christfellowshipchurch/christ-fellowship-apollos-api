@@ -1,7 +1,7 @@
 import {
   Campus as coreCampus,
 } from '@apollosproject/data-connector-rock'
-import { get, upperCase } from 'lodash'
+import { get, upperCase, split } from 'lodash'
 import { getIdentifierType } from '../utils'
 
 export default class Campus extends coreCampus.dataSource {
@@ -77,8 +77,34 @@ export default class Campus extends coreCampus.dataSource {
     .filter(getIdentifierType(id).query)
     .first()
 
+  getFromId = (id) =>
+    this.request()
+      .filter(getIdentifierType(id).query)
+      .expand('Location')
+      .expand('Location/Image')
+      .first();
+
+  // Returns an array of campuses from either an Int Id or Guid
   getFromIds = (ids) =>
     this.request()
       .filterOneOf(ids.map(n => getIdentifierType(n).query))
       .get()
+
+  // Returns an array of Schedules for the given campus id
+  getServiceSchedulesById = async (id) => {
+    // Campus object
+    const campus = await this.getFromId(id)
+    // String of guids separated by ','
+    const scheduleGuids = get(campus, 'attributeValues.weekendServiceSchedules.value', '');
+
+    if (scheduleGuids && scheduleGuids !== '') {
+      // Split our string by ',' to get an array of Guid str
+      const scheduleGuidsArray = split(scheduleGuids, ',')
+      if (scheduleGuidsArray.length) {
+        return this.context.dataSources.Schedule.getFromIds(scheduleGuidsArray)
+      }
+    }
+
+    return []
+  }
 }
