@@ -48,29 +48,41 @@ const resolver = {
     hideLabel: ({ attributeValues }) =>
       toLower(get(attributeValues, 'hideLabel.value', 'false')) === 'true',
     events: async ({ title, attributeValues }, args, { dataSources }) => {
+      // If a CMS user has selected 1 or more campuses to use for this event,
+      // we want to OVERRIDE any schedule attached to the event and use the 
+      // campus weekend service times instead
+      const campusGuids = get(attributeValues, 'weekendServices.value', null)
 
-      let scheduleGuids
+      if (campusGuids && campusGuids !== '') {
+        // Returns an array of arrays 
+        // [ [ {schedule}, {schedule}, {schedule} ], [ {schedule}, {schedule}, {schedule} ] ]
+        // This means we have to flatten the array before we can pass it into the schedule
+        // parser
+        const campusSchedules = await Promise.all(
+          split(campusGuids, ',').map(async guid => {
+            const schedules = await dataSources.Campus.getServiceSchedulesById(guid)
 
-      //If Campus Weekend Services is selected from Rock it will use those schedule 
-      // items, otherwise it will use the schedule items that are set from the 
-      // Event Item
-
-      if (get(attributeValues, 'weekendServices.value', null)){
-        const campusGuids = get(attributeValues, 'weekendServices.value', null)
-        const rockCampusItems = await dataSources.Campus.getFromIds(split(campusGuids, ','))
-        
-        scheduleGuids = get(rockCampusItems, '[0].attributeValues.weekendServiceSchedules.value', null)
-      } 
-      else {
-        scheduleGuids = get(attributeValues, 'schedules.value', null)
-      }
-     
-      if (scheduleGuids) {
-        const rockScheduleItems = await dataSources.Schedule.getFromIds(split(scheduleGuids, ','))
-
-        const occurrences = await dataSources.Event.parseSchedulesAsEvents(rockScheduleItems)
+            return schedules.map(schedule => ({
+              ...schedule,
+              attributeValues: {
+                campuses: {
+                  value: guid
+                }
+              }
+            }))
+          })
+        )
+        const occurrences = await dataSources.Event.parseSchedulesAsEvents(flatten(campusSchedules))
 
         return occurrences.sort((a, b) => moment(a.start).diff(moment(b.start)))
+      } else {
+        const scheduleGuids = get(attributeValues, 'schedules.value', null)
+        if (scheduleGuids && scheduleGuids !== '') {
+          const rockScheduleItems = await dataSources.Schedule.getFromIds(split(scheduleGuids, ','))
+          const occurrences = await dataSources.Event.parseSchedulesAsEvents(rockScheduleItems)
+
+          return occurrences.sort((a, b) => moment(a.start).diff(moment(b.start)))
+        }
       }
 
       return []
