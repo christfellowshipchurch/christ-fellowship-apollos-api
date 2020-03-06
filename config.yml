@@ -133,6 +133,7 @@ ROCK_MAPPINGS:
   FEED_CONTENT_CHANNEL_IDS:
     - 43 # Article and Blogs
     - 60 # Resources
+    - 63 # Sermons
 
   CAMPUS_FAQ_CONTENT_CHANNEL_IDS:
     - 61
@@ -143,6 +144,7 @@ ROCK_MAPPINGS:
   BROWSE_CONTENT_CHANNEL_IDS:
     - 43 # Article and Blogs
     - 60 # Resources
+    - 63 # Sermons
 
   # Apollos will pull content items as categories from these channels
   # This will NOT add these Content Channels to the app.
