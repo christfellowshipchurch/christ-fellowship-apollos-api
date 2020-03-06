@@ -160,7 +160,7 @@ ROCK_MAPPINGS:
   CAMPAIGN_CHANNEL_IDS:
     - 11
 
-  ANNOUNCEMENTS_CHANNEL_ID: 45
+  ANNOUNCEMENTS_CHANNEL_ID: 50
 
   # List of Id's associated with important/commonly used Defined Types
   # (primarily used by the Defined Value List data type)
@@ -203,14 +203,14 @@ HOME_FEATURES:
     algorithms: 
       - type: UPCOMING_EVENTS
         arguments:
-          contentChannelId: 42
+          contentChannelId: 47
           limit: 4
           action: READ_EVENT
   - title: Latest Content
     algorithms:
       - type: CONTENT_CHANNEL
         arguments:
-          contentChannelId: 48
+          contentChannelId: 62
           limit: 5
           action: VIEW_CHILDREN
   - title: FOR YOU
