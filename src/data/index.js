@@ -58,6 +58,8 @@ import * as Schedule from './schedule'
 import * as Features from './features'
 import * as Event from './events'
 
+import * as AdditionalEndpoint from './additional-endpoints'
+
 const data = {
   Followings,
   ContentChannel,
@@ -113,6 +115,8 @@ const data = {
 
   Browse,
   Cache,
+
+  AdditionalEndpoint,
 }
 
 const {
