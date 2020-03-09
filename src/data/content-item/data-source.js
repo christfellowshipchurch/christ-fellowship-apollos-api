@@ -33,13 +33,11 @@ export default class ContentItem extends coreContentItem.dataSource {
       sources: attributeValues[key].value
         ? [{ uri: createVideoUrlFromGuid(attributeValues[key].value) }]
         : [],
-    }));
+    })).filter(video => video.sources.length > 0 && !video.sources.find(source => source.uri === ''));
   }
 
   // title pattern should follow: the-article-title
   getByTitle = async (title, mapping) => {
-    console.log({ title })
-
     const contentChannels = get(ROCK_MAPPINGS, mapping, [])
 
     if (title === '' || contentChannels.length === 0) return null
