@@ -1,6 +1,9 @@
+import moreLinkJson from './moreTab.json'
+
 const resolver = {
   Query: {
-    privacyPolicyUrl: () => "https://beta.christfellowship.church/privacy-policy"
+    privacyPolicyUrl: () => "https://beta.christfellowship.church/privacy-policy",
+    moreLinks: () => moreLinkJson
   },
 }
 
