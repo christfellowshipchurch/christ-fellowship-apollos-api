@@ -87,7 +87,7 @@ const resolverExtensions = {
   publishDate: ({ startDateTime }) =>
     moment(startDateTime).toISOString(),
   author: async ({ attributeValues }, args, { dataSources }) => {
-    if (has(attributeValues, 'author.value')) {
+    if (get(attributeValues, 'author.value', null)) {
       const { id } = await dataSources.Person.getFromAliasId(attributeValues.author.value)
 
       const person = await dataSources.Person.getFromId(id)
