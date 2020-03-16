@@ -4,6 +4,7 @@ import {
 import {
     get,
     take,
+    filter
 } from 'lodash'
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
@@ -65,9 +66,10 @@ export default class Features extends coreFeatures.dataSource {
     }
 
     async upcomingEventsAlgorithmWithActionOverride({ action = null, contentChannelId, limit = null } = {}) {
-        const events = await this.context.dataSources.ContentItem.getEvents(limit)
-
-        return events.map((event, i) => ({
+        const events = await this.context.dataSources.ContentItem.getEvents()
+        const filteredEvents = filter(events, ['priority', 1])
+        
+        return filteredEvents.map((event, i) => ({
             id: createGlobalId(`${event.id}${i}`, 'ActionListAction'),
             title: event.title,
             relatedNode: { ...event, __type: 'EventContentItem' },
