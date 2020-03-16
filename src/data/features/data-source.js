@@ -3,7 +3,6 @@ import {
 } from '@apollosproject/data-connector-rock'
 import {
     get,
-    take,
     filter
 } from 'lodash'
 import ApollosConfig from '@apollosproject/config'
@@ -45,7 +44,7 @@ export default class Features extends coreFeatures.dataSource {
             subtitle: get(item, 'contentChannel.name'),
             relatedNode: { ...item, __type: ContentItem.resolveType(item) },
             image: ContentItem.getCoverImage(item),
-            action: 'READ_GLOBAL_CONTENT',
+            action: 'READ_GLOBAL_CONTENT'
         }))
     }
 
@@ -68,13 +67,19 @@ export default class Features extends coreFeatures.dataSource {
     async upcomingEventsAlgorithmWithActionOverride({ action = null, contentChannelId, limit = null } = {}) {
         const events = await this.context.dataSources.ContentItem.getEvents()
         const filteredEvents = filter(events, (n => n.priority > 0))
-        
-        return filteredEvents.map((event, i) => ({
-            id: createGlobalId(`${event.id}${i}`, 'ActionListAction'),
-            title: event.title,
-            relatedNode: { ...event, __type: 'EventContentItem' },
-            image: event.coverImage,
-            action: action || 'READ_EVENT',
-        }))
+
+        return filteredEvents.map((event, i) => {
+
+            return {
+                id: createGlobalId(`${event.id}${i}`, 'ActionListAction'),
+                title: event.title,
+                relatedNode: { ...event, __type: 'EventContentItem'},
+                image: event.coverImage,
+                action: action || 'READ_EVENT',
+                hideLabel: toLower(get(attributeValues, 'hideLabel.value', 'false')) === 'true'
+            }
+            
+        })
     }
+
 }

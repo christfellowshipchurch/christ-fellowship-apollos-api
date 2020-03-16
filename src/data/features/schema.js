@@ -20,6 +20,7 @@ export default gql`
         image: ImageMedia
         relatedNode: Node
         action: ACTION_FEATURE_ACTION
+        hideLabel: String
     }
 
     type ActionListFeature implements Feature & Node {
