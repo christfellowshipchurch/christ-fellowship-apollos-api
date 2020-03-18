@@ -14,6 +14,7 @@ import {
 } from 'lodash'
 
 import * as EventContentItem from '../event-content-item'
+import * as LinkContentItem from '../link-content-item'
 import * as WebsiteContentItem from '../website-content-item'
 import * as WebsiteHtmlContentItem from '../website-html-content-item'
 import * as WebsiteFeature from '../website-feature'
@@ -148,6 +149,7 @@ const resolver = {
     ...resolverExtensions
   },
   ...EventContentItem.resolver,
+  ...LinkContentItem.resolver,
   ...WebsiteContentItem.resolver,
   ...WebsiteHtmlContentItem.resolver,
   ...WebsiteFeature.resolver,

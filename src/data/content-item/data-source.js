@@ -15,6 +15,34 @@ const { ROCK_MAPPINGS } = ApollosConfig
 export default class ContentItem extends coreContentItem.dataSource {
   expanded = true
 
+  resolveType(props) {
+    const {
+      attributeValues,
+      attributes,
+    } = props
+
+    if (this.hasRedirect({ attributeValues, attributes })) {
+      return 'LinkContentItem'
+    }
+
+    return super.resolveType(props)
+  }
+
+  attributeIsRedirect = ({ key, attributeValues, attributes }) =>
+    key.toLowerCase().includes('redirect') &&
+    typeof attributeValues[key].value === 'string' &&
+    attributeValues[key].value.startsWith('http') && // looks like a url
+    attributeValues[key].value !== ""; // is not empty
+
+  hasRedirect = ({ attributeValues, attributes }) =>
+    Object.keys(attributes).filter((key) =>
+      this.attributeIsRedirect({
+        key,
+        attributeValues,
+        attributes,
+      })
+    ).length;
+
   formatTitleAsUrl = (title) => kebabCase(toLower(title))
 
   getVideos = ({ attributeValues, attributes }) => {
