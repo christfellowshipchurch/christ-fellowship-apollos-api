@@ -31,7 +31,8 @@ ONE_SIGNAL:
   REST_KEY: ${ONE_SIGNAL_REST_KEY}
 CHURCH_ONLINE:
   URL: https://live.gochristfellowship.com/api/v1/
-  MEDIA_URLS: [https://christfellow2-lh.akamaihd.net/i/christfellow_1@144364/master.m3u8]
+  # MEDIA_URLS: [https://christfellow2-lh.akamaihd.net/i/christfellow_1@144364/master.m3u8]
+  MEDIA_URLS: [http://link.theplatform.com/s/IfSiAC/bD1fN9vCet4B?mbr=true@144364/master.m3u8]
   WEB_VIEW_URL: https://live.gochristfellowship.com/
 ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
@@ -201,13 +202,6 @@ HOME_FEATURES:
         arguments:
           index: 0
           limit: 1
-  - title: Featured Events
-    algorithms: 
-      - type: UPCOMING_EVENTS
-        arguments:
-          contentChannelId: 47
-          limit: 4
-          action: READ_EVENT
   - title: Latest Content
     algorithms:
       - type: CONTENT_CHANNEL
@@ -215,17 +209,45 @@ HOME_FEATURES:
           contentChannelId: 62
           limit: 5
           action: VIEW_CHILDREN
-  - title: FOR YOU
-    algorithms:
-      - type: PERSONA_FEED
-        arguments:
-          action: VIEW_CHILDREN
   - title: GLOBAL ITEM
     algorithms:
       - type: GLOBAL_CONTENT
         arguments:
           index: 1
           limit: 1
+
+# HOME_FEATURES:
+#   - title: GLOBAL ITEM
+#     algorithms:
+#       - type: GLOBAL_CONTENT
+#         arguments:
+#           index: 0
+#           limit: 1
+#   - title: Featured Events
+#     algorithms: 
+#       - type: UPCOMING_EVENTS
+#         arguments:
+#           contentChannelId: 47
+#           limit: 4
+#           action: READ_EVENT
+#   - title: Latest Content
+#     algorithms:
+#       - type: CONTENT_CHANNEL
+#         arguments:
+#           contentChannelId: 62
+#           limit: 5
+#           action: VIEW_CHILDREN
+#   - title: FOR YOU
+#     algorithms:
+#       - type: PERSONA_FEED
+#         arguments:
+#           action: VIEW_CHILDREN
+#   - title: GLOBAL ITEM
+#     algorithms:
+#       - type: GLOBAL_CONTENT
+#         arguments:
+#           index: 1
+#           limit: 1
 
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
