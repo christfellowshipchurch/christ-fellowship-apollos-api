@@ -201,7 +201,6 @@ HOME_FEATURES:
       - type: GLOBAL_CONTENT
         arguments:
           index: 0
-          limit: 1
   - title: Latest Content
     algorithms:
       - type: CONTENT_CHANNEL
@@ -209,12 +208,6 @@ HOME_FEATURES:
           contentChannelId: 62
           limit: 5
           action: VIEW_CHILDREN
-  - title: GLOBAL ITEM
-    algorithms:
-      - type: GLOBAL_CONTENT
-        arguments:
-          index: 1
-          limit: 1
 
 # HOME_FEATURES:
 #   - title: GLOBAL ITEM
