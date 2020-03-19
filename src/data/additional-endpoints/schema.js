@@ -16,5 +16,6 @@ export default gql`
   extend type Query { 
     privacyPolicyUrl: String
     moreLinks: [AppLinks]
+    websiteBanner: CallToAction
   }
 `

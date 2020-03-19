@@ -1,3 +1,6 @@
+import { get } from 'lodash'
+import { parseRockKeyValuePairs } from '../utils'
+
 const moreLinkJson = [
   {
     "name": "Get Involved",
@@ -50,7 +53,17 @@ const moreLinkJson = [
 const resolver = {
   Query: {
     privacyPolicyUrl: () => "https://beta.christfellowship.church/privacy-policy",
-    moreLinks: () => moreLinkJson
+    moreLinks: () => moreLinkJson,
+    websiteBanner: async (root, args, { dataSources }) => {
+      const contentChannel = await dataSources.WebsiteNavigation.getFromId(54) // Digital Platform Website Pages
+      const attributeValue = get(contentChannel, 'attributeValues.websiteBanner.value')
+      const callsToAction = parseRockKeyValuePairs(
+        attributeValue,
+        'call', 'action'
+      )
+
+      return get(callsToAction, "[0]", null)
+    }
   },
 }
 
