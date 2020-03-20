@@ -2,7 +2,7 @@ import { ContentItem } from '@apollosproject/data-connector-rock'
 import gql from 'graphql-tag'
 
 export default gql`
-  type LinkContentItem implements ContentItem & Node {
+  type InformationalContentItem implements ContentItem & Node {
     id: ID!
     title(hyphenated: Boolean): String
     coverImage: ImageMedia
@@ -21,13 +21,10 @@ export default gql`
     ): ContentItemsConnection
     parentChannel: ContentChannel
     theme: Theme
-    sharing: SharableContentItem
-    isLiked: Boolean @cacheControl(maxAge: 0)
-    likedCount: Int @cacheControl(maxAge: 0)
 
     tags: [String]
     redirectUrl: String
-    openLinksInNewTab: Boolean
+    callsToAction: [CallToAction]
   }
 `
 

@@ -11,9 +11,14 @@ import momentTz from 'moment-timezone'
 import { parseRockKeyValuePairs } from '../utils'
 
 const resolver = {
-  LinkContentItem: {
+  InformationalContentItem: {
     ...coreContentItem.resolver.ContentItem,
-    redirectUrl: ({ attributeValues }) => get(attributeValues, 'redirectUrl.value', '')
+    redirectUrl: ({ attributeValues }) => get(attributeValues, 'redirectUrl.value', ''),
+    callsToAction: ({ attributeValues }, args, { dataSources }) =>
+      parseRockKeyValuePairs(
+        get(attributeValues, 'callsToAction.value', ''),
+        'call',
+        'action'),
   },
 }
 
