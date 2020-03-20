@@ -1,8 +1,6 @@
 import { get } from 'lodash'
 import { parseRockKeyValuePairs } from '../utils'
 
-//commment
-
 const moreLinkJson = [
   {
     "name": "Get Involved",
