@@ -24,6 +24,7 @@ export default gql`
 
     tags: [String]
     redirectUrl: String
+    callsToAction: [CallToAction]
   }
 `
 

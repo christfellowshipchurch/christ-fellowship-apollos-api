@@ -13,7 +13,12 @@ import { parseRockKeyValuePairs } from '../utils'
 const resolver = {
   InformationalContentItem: {
     ...coreContentItem.resolver.ContentItem,
-    redirectUrl: ({ attributeValues }) => get(attributeValues, 'redirectUrl.value', '')
+    redirectUrl: ({ attributeValues }) => get(attributeValues, 'redirectUrl.value', ''),
+    callsToAction: ({ attributeValues }, args, { dataSources }) =>
+      parseRockKeyValuePairs(
+        get(attributeValues, 'callsToAction.value', ''),
+        'call',
+        'action'),
   },
 }
 

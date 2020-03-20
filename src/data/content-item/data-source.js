@@ -21,9 +21,9 @@ export default class ContentItem extends coreContentItem.dataSource {
       attributes,
     } = props
 
-    if (this.hasRedirect({ attributeValues, attributes })) {
-      return 'LinkContentItem'
-    }
+    // if (this.hasRedirect({ attributeValues, attributes })) {
+    //   return 'LinkContentItem'
+    // }
 
     return super.resolveType(props)
   }
@@ -35,6 +35,21 @@ export default class ContentItem extends coreContentItem.dataSource {
     attributeValues[key].value !== ""; // is not empty
 
   hasRedirect = ({ attributeValues, attributes }) =>
+    Object.keys(attributes).filter((key) =>
+      this.attributeIsRedirect({
+        key,
+        attributeValues,
+        attributes,
+      })
+    ).length;
+
+  attributeIsCallToAction = ({ key, attributeValues, attributes }) =>
+    (key.toLowerCase().includes('call') &&
+      key.toLowerCase().includes('action')) &&
+    typeof attributeValues[key].value === 'string' &&
+    attributeValues[key].value !== ""; // is not empty
+
+  hasCallToAction = ({ attributeValues, attributes }) =>
     Object.keys(attributes).filter((key) =>
       this.attributeIsRedirect({
         key,
