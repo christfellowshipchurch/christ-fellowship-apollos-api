@@ -74,7 +74,7 @@
         {
           "valueFrom": "/prod/ONE_SIGNAL_REST_KEY",
           "name": "ONE_SIGNAL_REST_KEY"
-        },
+        }
       ],
       "mountPoints": [],
       "volumesFrom": [],
