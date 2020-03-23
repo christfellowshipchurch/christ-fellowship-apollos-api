@@ -3,7 +3,6 @@ import {
 } from '@apollosproject/data-connector-rock'
 import {
     get,
-    take,
 } from 'lodash'
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
@@ -11,6 +10,7 @@ import { createGlobalId } from '@apollosproject/server-core'
 const { ROCK_MAPPINGS } = ApollosConfig
 
 export default class Features extends coreFeatures.dataSource {
+    expanded = true
     // Names of Action Algoritms mapping to the functions that create the actions.
     ACTION_ALGORITHIMS = {
         // We need to make sure `this` refers to the class, not the `ACTION_ALGORITHIMS` object.
@@ -18,7 +18,39 @@ export default class Features extends coreFeatures.dataSource {
         CONTENT_CHANNEL: this.contentChannelAlgorithmWithActionOverride.bind(this),
         SERMON_CHILDREN: this.sermonChildrenAlgorithm.bind(this),
         UPCOMING_EVENTS: this.upcomingEventsAlgorithmWithActionOverride.bind(this),
-        GLOBAL_CONTENT: this.globalContentAlgorithm.bind(this)
+        GLOBAL_CONTENT: this.globalContentAlgorithm.bind(this),
+        ROCK_DYNAMIC_FEED: this.rockDynamicFeed.bind(this)
+    }
+
+    async rockDynamicFeed({ contentChannelId = null }) {
+        if (!contentChannelId) {
+            return []
+        }
+
+        const { ContentItem } = this.context.dataSources;
+        const contentChannelItems = await this.request('ContentChannelItems')
+            .filter(`ContentChannelId eq ${contentChannelId}`)
+            .andFilter(ContentItem.LIVE_CONTENT())
+            .cache({ ttl: 60 })
+            .orderBy('Order', 'asc')
+            .get()
+
+        const actions = await Promise.all(contentChannelItems.map(async (item, i) => {
+            const action = get(item, 'attributeValues.action.value', '')
+
+            if (!action || action === '' || !item.id) return null
+
+            return {
+                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                title: item.title,
+                subtitle: get(item, 'contentChannel.name'),
+                relatedNode: { ...item, __type: ContentItem.resolveType(item) },
+                image: ContentItem.getCoverImage(item),
+                action,
+            }
+        }))
+
+        return actions
     }
 
     async globalContentAlgorithm({ index = 0, limit = null } = {}) {
