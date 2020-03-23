@@ -19,7 +19,8 @@ ROCK:
   FILE_URL: ${CLOUDFRONT}/GetFile.ashx
   SHARE_URL: https://christfellowship.church
   # This should match the timezone of the Rock server
-  TIMEZONE: "Etc/GMT+5"
+  # TIMEZONE: "Etc/GMT+5"
+  TIMEZONE: "America/New_York"
   DEEP_LINK_HOST: 
   ROOT_API_URL: ${ROOT_URL}
   JOBS_USERNAME: ${JOBS_USERNAME}
@@ -199,18 +200,11 @@ ROCK_MAPPINGS:
 # TODO : @caleb "I would like to not have to manually put the index in the GLOBAL_CONTENT feature"
 # NOTE : GLOBAL_CONTENT uses a 0 based index
 HOME_FEATURES:
-  - title: GLOBAL ITEM
+  - title: Dynamic Rock Feed
     algorithms:
-      - type: GLOBAL_CONTENT
+      - type: ROCK_DYNAMIC_FEED
         arguments:
-          index: 0
-  - title: Latest Content
-    algorithms:
-      - type: CONTENT_CHANNEL
-        arguments:
-          contentChannelId: 62
-          limit: 5
-          action: VIEW_CHILDREN
+          contentChannelId: 64
 
 # HOME_FEATURES:
 #   - title: GLOBAL ITEM
