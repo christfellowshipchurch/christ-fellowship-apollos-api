@@ -140,4 +140,11 @@ export default class ContentItem extends coreContentItem.dataSource {
       this.formatTitleAsUrl(get(n, 'title', '')) === this.formatTitleAsUrl(title)
     )
   }
+
+  byContentChannelId = (id) =>
+    this.request()
+      .filter(`ContentChannelId eq ${id}`)
+      .andFilter(this.LIVE_CONTENT())
+      .cache({ ttl: 60 })
+      .orderBy('Order');
 }
