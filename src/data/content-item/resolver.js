@@ -13,6 +13,8 @@ import {
   orderBy,
 } from 'lodash'
 
+import sanitizeHtml from '../sanitize-html'
+
 import * as EventContentItem from '../event-content-item'
 import * as InformationalContentItem from '../informational-content-item'
 import * as WebsiteContentItem from '../website-content-item'
@@ -73,6 +75,7 @@ const titleResolver = {
       )
       .join(' ')
   },
+  htmlContent: ({ content }) => sanitizeHtml(content),
 }
 
 const resolverExtensions = {
