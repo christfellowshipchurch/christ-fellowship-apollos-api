@@ -14,6 +14,7 @@ import moment from 'moment'
 import momentTz from 'moment-timezone'
 
 import { parseRockKeyValuePairs } from '../utils'
+import sanitizeHtml from '../sanitize-html'
 
 const resolver = {
   EventContentItem: {
@@ -86,7 +87,8 @@ const resolver = {
       }
 
       return []
-    }
+    },
+    htmlContent: ({ content }) => sanitizeHtml(content),
   },
 }
 
