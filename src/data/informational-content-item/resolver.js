@@ -10,6 +10,8 @@ import momentTz from 'moment-timezone'
 
 import { parseRockKeyValuePairs } from '../utils'
 
+import sanitizeHtml from '../sanitize-html'
+
 const resolver = {
   InformationalContentItem: {
     ...coreContentItem.resolver.ContentItem,
@@ -19,6 +21,7 @@ const resolver = {
         get(attributeValues, 'callsToAction.value', ''),
         'call',
         'action'),
+    htmlContent: ({ content }) => sanitizeHtml(content),
   },
 }
 
