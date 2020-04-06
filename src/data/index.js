@@ -58,6 +58,7 @@ import * as Schedule from './schedule'
 import * as Features from './features'
 import * as Event from './events'
 
+import * as Metadata from './metadata'
 import * as AdditionalEndpoint from './additional-endpoints'
 
 const data = {
@@ -117,6 +118,7 @@ const data = {
   Cache,
 
   AdditionalEndpoint,
+  Metadata
 }
 
 const {
