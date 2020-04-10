@@ -44,6 +44,6 @@ export const getIdentifierType = (identifier) => {
   for the video file */
 // export const createVideoUrlFromGuid = (uri) => uri
 export const createVideoUrlFromGuid = (uri) =>
-  uri.split('-').length === 5
-    ? `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`
-    : Utils.enforceProtocol(uri)
+  uri.startsWith('http')
+    ? Utils.enforceProtocol(uri)
+    : `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`
