@@ -8,7 +8,7 @@ const moreLinkJson = [
       {
         "name": "Community",
         "icon": "users",
-        "uri": "https://beta.christfellowship.church/community-finder",
+        "uri": "https://christfellowship.church/items/get-stronger-challenge-c3cee8219292873b20ecd2b654500aee",
         "openInApp": true
       },
       {
@@ -31,19 +31,25 @@ const moreLinkJson = [
       {
         "name": "About Christ Fellowship",
         "icon": "",
-        "uri": "https://beta.christfellowship.church/about",
+        "uri": "https://christfellowship.church/about",
         "openInApp": true
       },
       {
         "name": "Church Locations",
         "icon": "",
-        "uri": "https://beta.christfellowship.church/locations",
+        "uri": "https://christfellowship.church/locations",
         "openInApp": true
       },
       {
         "name": "Contact Us",
         "icon": "",
-        "uri": "https://gochristfellowship.com/new-here/contact-us",
+        "uri": "https://rock.gocf.org/contactus",
+        "openInApp": true
+      },
+      {
+        "name": "Online Store",
+        "icon": "",
+        "uri": "https://resource.gochristfellowship.com/",
         "openInApp": true
       }
     ]
@@ -52,7 +58,7 @@ const moreLinkJson = [
 
 const resolver = {
   Query: {
-    privacyPolicyUrl: () => "https://beta.christfellowship.church/privacy-policy",
+    privacyPolicyUrl: () => "https://christfellowship.church/privacy-policy",
     moreLinks: () => moreLinkJson,
     websiteBanner: async (root, args, { dataSources }) => {
       const contentChannel = await dataSources.WebsiteNavigation.getFromId(54) // Digital Platform Website Pages
