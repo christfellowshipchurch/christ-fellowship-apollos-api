@@ -15,10 +15,12 @@ import momentTz from 'moment-timezone'
 
 import { parseRockKeyValuePairs } from '../utils'
 import sanitizeHtml from '../sanitize-html'
+import { sharingResolver } from '../content-item/resolver'
 
 const resolver = {
   EventContentItem: {
     ...coreContentItem.resolver.ContentItem,
+    ...sharingResolver,
     nextOccurrence: async ({ title, attributeValues }, args, { dataSources }) => {
       const scheduleGuids = get(attributeValues, 'schedules.value', null)
 
@@ -89,6 +91,11 @@ const resolver = {
       return []
     },
     htmlContent: ({ content }) => sanitizeHtml(content),
+    sharing: (root, args, { dataSources: { ContentItem } }, { parentType }) => ({
+      url: ContentItem.generateShareUrl(root, parentType),
+      title: 'Share via ...',
+      message: ContentItem.generateShareMessage(root),
+    }),
   },
 }
 

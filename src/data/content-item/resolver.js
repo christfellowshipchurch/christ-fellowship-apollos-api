@@ -80,6 +80,11 @@ const titleResolver = {
 
 const resolverExtensions = {
   ...titleResolver,
+  sharing: (root, args, { dataSources: { ContentItem } }, { parentType }) => ({
+    url: ContentItem.generateShareUrl(root, parentType),
+    title: 'Share via ...',
+    message: ContentItem.generateShareMessage(root),
+  }),
   tags: ({ attributeValues }) =>
     split(get(attributeValues, 'tags.value', ''), ','),
   icon: ({ attributeValues }) => {

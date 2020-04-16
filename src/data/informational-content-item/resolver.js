@@ -5,8 +5,6 @@ import {
 import {
   get,
 } from 'lodash'
-import moment from 'moment'
-import momentTz from 'moment-timezone'
 
 import { parseRockKeyValuePairs } from '../utils'
 
@@ -22,6 +20,11 @@ const resolver = {
         'call',
         'action'),
     htmlContent: ({ content }) => sanitizeHtml(content),
+    sharing: (root, args, { dataSources: { ContentItem } }, { parentType }) => ({
+      url: ContentItem.generateShareUrl(root, parentType),
+      title: 'Share via ...',
+      message: ContentItem.generateShareMessage(root),
+    }),
   },
 }
 
