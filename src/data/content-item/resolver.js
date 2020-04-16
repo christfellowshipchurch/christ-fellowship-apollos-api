@@ -130,6 +130,11 @@ const resolver = {
         cursor: dataSources.ContentItem.getFeaturedEvents(),
         args,
       }),
+    sermons: (root, args, { dataSources }) =>
+      dataSources.ContentItem.paginate({
+        cursor: dataSources.ContentItem.getSermonFeed(),
+        args,
+      }),
     getWebsitePageContentByTitle: async (root, { website, title }, context) =>
       await context.dataSources.WebsitePagesContentItem.getWebsitePageContentByTitle(website, title),
   },

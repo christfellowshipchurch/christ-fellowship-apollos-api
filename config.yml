@@ -168,6 +168,7 @@ ROCK_MAPPINGS:
     - 11
 
   ANNOUNCEMENTS_CHANNEL_ID: 50
+  SERMON_CHANNEL_ID: 63
 
   # List of Id's associated with important/commonly used Defined Types
   # (primarily used by the Defined Value List data type)
@@ -191,7 +192,6 @@ ROCK_MAPPINGS:
     EMAIL_CAPTURE: 236
     PASSWORD_RESET_EMAIL: 327
     ADDRESS_UPDATE: 328
-  SERMON_CHANNEL_ID: 5
 
   SERVING_GROUP_TYPE_ID: 23
   COMMUNITY_GROUP_TYPE_ID: 25

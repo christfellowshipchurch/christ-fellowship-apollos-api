@@ -64,5 +64,6 @@ export default gql`
     getCategoryByTitle(title: String!): ContentItem
     allEvents: [EventContentItem]
     featuredEvents: ContentItemsConnection
+    sermons(first: Int, after: String): ContentItemsConnection
   }
 `
