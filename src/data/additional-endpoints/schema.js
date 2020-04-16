@@ -16,6 +16,8 @@ export default gql`
   extend type Query { 
     privacyPolicyUrl: String
     moreLinks: [AppLinks]
+    profileLinks: [AppLink]
     websiteBanner: CallToAction
+    genderOptions: [String]
   }
 `

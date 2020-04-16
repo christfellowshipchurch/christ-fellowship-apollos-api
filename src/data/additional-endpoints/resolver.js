@@ -2,51 +2,89 @@ import { get } from 'lodash'
 import { parseRockKeyValuePairs } from '../utils'
 
 const moreLinkJson = [
-  {
-    "name": "Get Involved",
-    "links": [
-      {
-        "name": "Community",
-        "icon": "users",
-        "uri": "https://beta.christfellowship.church/community-finder",
-        "openInApp": true
-      },
-      {
-        "name": "Serve",
-        "icon": "handshake",
-        "uri": "https://rock.gocf.org/dreamteam",
-        "openInApp": true
-      },
-      {
-        "name": "Give",
-        "icon": "envelope-open-dollar",
-        "uri": "https://pushpay.com/g/christfellowship",
-        "openInApp": false
-      }
-    ]
-  },
+  // {
+  //   "name": "Get Involved",
+  //   "links": [
+  //     {
+  //       "name": "Community",
+  //       "icon": "users",
+  //       "uri": "https://beta.christfellowship.church/community-finder",
+  //       "openInApp": true
+  //     },
+  //     {
+  //       "name": "Serve",
+  //       "icon": "handshake",
+  //       "uri": "https://rock.gocf.org/dreamteam",
+  //       "openInApp": true
+  //     },
+  //     {
+  //       "name": "Give",
+  //       "icon": "envelope-open-dollar",
+  //       "uri": "https://pushpay.com/g/christfellowship",
+  //       "openInApp": false
+  //     }
+  //   ]
+  // },
   {
     "name": "Our Church",
     "links": [
       {
-        "name": "About Christ Fellowship",
-        "icon": "",
-        "uri": "https://beta.christfellowship.church/about",
-        "openInApp": true
-      },
-      {
         "name": "Church Locations",
-        "icon": "",
+        "icon": "building",
         "uri": "https://beta.christfellowship.church/locations",
         "openInApp": true
       },
       {
+        "name": "About",
+        "icon": "information",
+        "uri": "https://beta.christfellowship.church/about",
+        "openInApp": true
+      },
+      {
         "name": "Contact Us",
-        "icon": "",
+        "icon": "text",
         "uri": "https://gochristfellowship.com/new-here/contact-us",
         "openInApp": true
       }
     ]
+  },
+  {
+    name: 'App Info',
+    links: [
+      {
+        name: 'Terms & Conditions',
+        icon: 'list',
+        uri: 'https://christfellowship.church/terms-of-use',
+        openInApp: true,
+      },
+      {
+        name: 'Privacy Policy',
+        icon: 'lock',
+        uri: 'https://christfellowship.church/privacy-policy',
+        openInApp: true,
+      },
+    ],
+  }
+]
+
+const profileLinkJson = [
+  {
+    "name": "Connect",
+    "icon": "users",
+    "uri": "https://beta.christfellowship.church/community-finder",
+    "openInApp": true
+  },
+  {
+    "name": "Serve",
+    "icon": "handshake",
+    "uri": "https://rock.gocf.org/dreamteam",
+    "openInApp": true
+  },
+  {
+    "name": "Give",
+    "icon": "envelope-open-dollar",
+    "uri": "https://pushpay.com/g/christfellowship",
+    "openInApp": false
   }
 ]
 
@@ -54,6 +92,7 @@ const resolver = {
   Query: {
     privacyPolicyUrl: () => "https://beta.christfellowship.church/privacy-policy",
     moreLinks: () => moreLinkJson,
+    profileLinks: () => profileLinkJson,
     websiteBanner: async (root, args, { dataSources }) => {
       const contentChannel = await dataSources.WebsiteNavigation.getFromId(54) // Digital Platform Website Pages
       const attributeValue = get(contentChannel, 'attributeValues.websiteBanner.value')
@@ -63,7 +102,8 @@ const resolver = {
       )
 
       return get(callsToAction, "[0]", null)
-    }
+    },
+    genderOptions: () => ['Male', 'Female']
   },
 }
 

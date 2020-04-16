@@ -14,5 +14,7 @@ export default gql`
     extend type Query {
         getAddressByPerson: Address
         getStatesList: DefinedValueList
+            @deprecated(reason: "Use 'statesList' instead.")
+        stateOptions: [String]
     }
 `

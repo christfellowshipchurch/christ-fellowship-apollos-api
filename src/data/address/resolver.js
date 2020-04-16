@@ -19,7 +19,14 @@ const resolver = {
         getStatesList: (root, args, { dataSources }) =>
             dataSources.DefinedValueList.getByIdentifier(
                 get(ApollosConfig, 'ROCK_MAPPINGS.DEFINED_TYPES.STATES')
+            ),
+        stateOptions: async (root, args, { dataSources }) => {
+            const { definedValues } = await dataSources.DefinedValueList.getByIdentifier(
+                get(ApollosConfig, 'ROCK_MAPPINGS.DEFINED_TYPES.STATES')
             )
+
+            return definedValues.map(definedValue => definedValue.value)
+        }
     }
 }
 
