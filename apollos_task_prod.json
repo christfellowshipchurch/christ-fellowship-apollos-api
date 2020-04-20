@@ -36,6 +36,10 @@
         {
           "name": "CLOUDFRONT",
           "value": "https://cloudfront.christfellowship.church"
+        },
+        {
+          "name": "NODE_ENV",
+          "value": "production"
         }
       ],
       "secrets": [

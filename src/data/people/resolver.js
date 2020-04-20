@@ -88,7 +88,7 @@ const resolver = {
                 dataSources.Person.updateCommunicationPreference({ type, allow })
             ))
 
-            return dataSources.Auth.getCurrentPerson()
+            return await dataSources.Auth.getCurrentPerson()
         },
         submitRsvp: (root, { input }, { dataSources }) =>
             dataSources.Person.submitRsvp(input),

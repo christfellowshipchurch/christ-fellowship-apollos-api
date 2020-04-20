@@ -180,7 +180,7 @@ export default class Person extends corePerson.dataSource {
                     EmailPreference: allow ? 0 : 2
                 })
 
-                return currentPerson
+                return this.context.dataSources.Auth.getCurrentPerson()
         }
     }
 
