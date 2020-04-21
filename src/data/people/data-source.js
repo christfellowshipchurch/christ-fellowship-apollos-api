@@ -164,24 +164,28 @@ export default class Person extends corePerson.dataSource {
     }
 
     updateCommunicationPreference = async ({ type, allow }) => {
-        switch (type) {
-            case 'SMS':
-                try {
-                    await this.context.dataSources.PhoneNumber.updateEnableSMS(allow)
-                } catch (e) {
-                    throw new Error(e)
-                }
+        const currentPerson = await this.context.dataSources.Auth.getCurrentPerson()
 
-                return this.context.dataSources.Auth.getCurrentPerson()
-            case 'Email':
-                const currentPerson = await this.context.dataSources.Auth.getCurrentPerson()
+        if (currentPerson.id) {
+            switch (type) {
+                case 'SMS':
+                    try {
+                        await this.context.dataSources.PhoneNumber.updateEnableSMS(allow)
+                    } catch (e) {
+                        throw new Error(e)
+                    }
 
-                await this.patch(`/People/${currentPerson.id}`, {
-                    EmailPreference: allow ? 0 : 2
-                })
+                    return this.context.dataSources.Auth.getCurrentPerson()
+                case 'Email':
+                    await this.patch(`/People/${currentPerson.id}`, {
+                        EmailPreference: allow ? 0 : 2
+                    })
 
-                return this.context.dataSources.Auth.getCurrentPerson()
+                    return this.context.dataSources.Auth.getCurrentPerson()
+            }
         }
+
+        console.error("You must be logged in to update your communication preference")
     }
 
     getSpouseByUser = async () => {
