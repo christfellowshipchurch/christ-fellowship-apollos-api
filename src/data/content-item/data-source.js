@@ -154,8 +154,6 @@ export default class ContentItem extends coreContentItem.dataSource {
     const typename = resolvedId[0]
     const id = resolvedId[1]
 
-    console.log({ resolvedId })
-
     switch (typename) {
       case "EventContentItem":
         return `${ROCK.SHARE_URL}/events/${this.formatTitleAsUrl(title)}`;
