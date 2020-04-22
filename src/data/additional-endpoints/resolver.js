@@ -71,7 +71,7 @@ const profileLinkJson = [
   {
     "name": "Connect",
     "icon": "users",
-    "uri": "https://beta.christfellowship.church/community-finder",
+    "uri": "https://rock.christfellowship.church/connect",
     "openInApp": true
   },
   {
