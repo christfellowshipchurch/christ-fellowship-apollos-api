@@ -4,7 +4,7 @@ import { createApolloServerConfig } from '@apollosproject/server-core'
 
 import * as Analytics from '@apollosproject/data-connector-analytics'
 import * as Scripture from '@apollosproject/data-connector-bible'
-import * as LiveStream from '@apollosproject/data-connector-church-online'
+// import * as LiveStream from '@apollosproject/data-connector-church-online'
 import * as Cloudinary from '@apollosproject/data-connector-cloudinary'
 import * as OneSignal from '@apollosproject/data-connector-onesignal'
 import * as Pass from '@apollosproject/data-connector-passes'
@@ -35,6 +35,7 @@ import * as OneSignalWithRock from './oneSignalWithRock'
 
 import * as ContentChannel from './content-channel'
 import * as ContentItem from './content-item'
+import * as LiveStream from './live-stream'
 import * as Browse from './browse'
 
 // Localized Modules

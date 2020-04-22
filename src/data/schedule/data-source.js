@@ -2,8 +2,9 @@ import RockApolloDataSource from '@apollosproject/rock-apollo-data-source'
 import ApollosConfig from '@apollosproject/config'
 import ical from 'node-ical'
 import moment from 'moment-timezone'
-import { filter, split, take, drop, sortBy, first } from 'lodash'
+import { filter, split, flatten, first } from 'lodash'
 import { getIdentifierType } from '../utils'
+import { AssistantFallbackActionsInstance } from 'twilio/lib/rest/preview/understand/assistant/assistantFallbackActions'
 
 export default class Schedule extends RockApolloDataSource {
   resource = 'Schedules'
@@ -18,7 +19,30 @@ export default class Schedule extends RockApolloDataSource {
       .filterOneOf(ids.map(n => getIdentifierType(n).query))
       .get()
 
+  getOccurrences = async (id) => {
+    if (id) {
+      const schedule = await this.getFromId(id)
+      if (schedule) {
+        // getFromId returns an array
+        const occurrences = await this.parseiCalendar(first(schedule).iCalendarContent)
+        const filteredOccurrences = filter(occurrences, ({ end }) => {
+          return this.momentWithTz(end).isAfter(moment())
+        })
 
+        return filteredOccurrences.sort((a, b) => this.momentWithTz(a).diff(this.momentWithTz(b)))
+      }
+    }
+
+    return null
+  }
+
+  getOccurrencesFromIds = async (ids) => {
+    const nextOccurrences = await Promise.all(
+      ids.map(id => this.getOccurrences(id))
+    )
+
+    return flatten(nextOccurrences)
+  }
 
   // shorthand for converting a date to a moment
   // object with Rock's timezone offset
@@ -52,7 +76,7 @@ export default class Schedule extends RockApolloDataSource {
 
       // append the first date to the events array
       // as an ISO string
-      events.push({ start: this.toISOString(start), end: this.toISOString(end), })
+      events.push({ start: this.toISOString(start), end: this.toISOString(end) })
 
       // Rock stores additional date in the rdate property, so we want to check that for more dates
       if (n.rdate) {

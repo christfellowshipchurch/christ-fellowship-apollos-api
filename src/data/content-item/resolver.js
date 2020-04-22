@@ -121,15 +121,8 @@ const resolver = {
       dataSources.ContentItem.getCategoryByTitle(title),
     getEventContentByTitle: async (root, { title }, { dataSources }) =>
       dataSources.ContentItem.getEventByTitle(title),
-    allEvents: async (root, args, { dataSources }) => {
-      const events = await dataSources.ContentItem.getEvents()
-      const sorted = orderBy(events,
-        (n) => moment(n.startDateTime).format('YYYYMMDD'),
-        ['asc']
-      )
-
-      return sorted
-    },
+    allEvents: async (root, args, { dataSources }) =>
+      dataSources.ContentItem.getEvents(),
     featuredEvents: (root, args, { dataSources }) =>
       dataSources.ContentItem.paginate({
         cursor: dataSources.ContentItem.getFeaturedEvents(),
