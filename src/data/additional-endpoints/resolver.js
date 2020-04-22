@@ -77,7 +77,7 @@ const profileLinkJson = [
   {
     "name": "Serve",
     "icon": "handshake",
-    "uri": "https://rock.gocf.org/dreamteam",
+    "uri": "https://rock.christfellowship.church/page/2057",
     "openInApp": true
   },
   {
