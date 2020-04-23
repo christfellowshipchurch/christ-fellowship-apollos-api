@@ -32,7 +32,7 @@ const moreLinkJson = [
         "name": "Church Locations",
         "icon": "building",
         "uri": "https://beta.christfellowship.church/locations",
-        "openInApp": true
+        "openInApp": true,
       },
       {
         "name": "About",
@@ -72,23 +72,41 @@ const profileLinkJson = [
     "name": "Connect",
     "icon": "users",
     "uri": "https://rock.christfellowship.church/connect",
-    "openInApp": true
+    "openInApp": true,
+    "theme": {
+      "colors": {
+        "primary": "#00aeef"
+      }
+    }
   },
   {
     "name": "Serve",
     "icon": "handshake",
     "uri": "https://rock.christfellowship.church/page/2057",
-    "openInApp": true
+    "openInApp": true,
+    "theme": {
+      "colors": {
+        "primary": "#d52158"
+      }
+    }
   },
   {
     "name": "Give",
     "icon": "envelope-open-dollar",
     "uri": "https://pushpay.com/g/christfellowship",
-    "openInApp": false
+    "openInApp": false,
+    "theme": {
+      "colors": {
+        "primary": "#1ec27f"
+      }
+    }
   }
 ]
 
 const resolver = {
+  AppLink: {
+    theme: ({ theme }) => theme
+  },
   Query: {
     privacyPolicyUrl: () => "https://beta.christfellowship.church/privacy-policy",
     moreLinks: () => moreLinkJson,

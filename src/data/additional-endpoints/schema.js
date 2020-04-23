@@ -6,7 +6,8 @@ export default gql`
     uri: String
     icon: String
     openInApp: Boolean
-  }  
+    theme: Theme
+  }
 
   type AppLinks {
     name: String!
