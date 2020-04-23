@@ -78,6 +78,10 @@
         {
           "valueFrom": "/prod/ONE_SIGNAL_REST_KEY",
           "name": "ONE_SIGNAL_REST_KEY"
+        },
+        {
+          "valueFrom": "/prod/REDIS_URL",
+          "name": "REDIS_URL"
         }
       ],
       "mountPoints": [],
