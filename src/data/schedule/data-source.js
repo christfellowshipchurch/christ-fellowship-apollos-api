@@ -4,7 +4,6 @@ import ical from 'node-ical'
 import moment from 'moment-timezone'
 import { filter, split, flatten, first } from 'lodash'
 import { getIdentifierType } from '../utils'
-import { AssistantFallbackActionsInstance } from 'twilio/lib/rest/preview/understand/assistant/assistantFallbackActions'
 
 export default class Schedule extends RockApolloDataSource {
   resource = 'Schedules'
@@ -47,7 +46,10 @@ export default class Schedule extends RockApolloDataSource {
   // shorthand for converting a date to a moment
   // object with Rock's timezone offset
   momentWithTz = (date, log) => {
-    const mDate = moment.tz(date, ApollosConfig.ROCK.TIMEZONE)
+    const dateTimeStr = `${moment(date).format('YYYY-MM-DD HH:mm A')} +4000`
+    const mDate = moment(dateTimeStr)
+
+    console.log({ dateTimeStr, mDate: mDate.format() })
 
     return mDate.utc()
   }
