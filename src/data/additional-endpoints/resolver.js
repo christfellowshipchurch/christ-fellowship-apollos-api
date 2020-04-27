@@ -31,13 +31,13 @@ const moreLinkJson = [
       {
         "name": "Church Locations",
         "icon": "building",
-        "uri": "https://beta.christfellowship.church/locations",
+        "uri": "https://christfellowship.church/locations",
         "openInApp": true,
       },
       {
         "name": "About",
         "icon": "information",
-        "uri": "https://beta.christfellowship.church/about",
+        "uri": "https://christfellowship.church/about",
         "openInApp": true
       },
       {
@@ -114,7 +114,7 @@ const resolver = {
     theme: ({ theme }) => theme
   },
   Query: {
-    privacyPolicyUrl: () => "https://beta.christfellowship.church/privacy-policy",
+    privacyPolicyUrl: () => "https://christfellowship.church/privacy-policy",
     moreLinks: () => moreLinkJson,
     profileLinks: () => profileLinkJson,
     websiteBanner: async (root, args, { dataSources }) => {
