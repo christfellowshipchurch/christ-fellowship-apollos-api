@@ -4,7 +4,7 @@ import {
 } from '@apollosproject/data-connector-rock'
 import ApollosConfig from '@apollosproject/config'
 import { resolverMerge } from '@apollosproject/server-core'
-import { get, remove, lowerCase, head } from 'lodash'
+import { get, remove, toLower, head, camelCase } from 'lodash'
 import moment from 'moment'
 import sanitizeHtml from '@apollosproject/data-connector-rock/lib/sanitize-html'
 
@@ -90,13 +90,15 @@ const resolver = {
       const person = await dataSources.Person.getFromAliasId(leaderPersonAliasId)
       const { firstName, lastName, photo: { guid } } = person
 
+      const formattedEmail = `${camelCase(firstName)}.${camelCase(lastName)}@christfellowship.church`
+
       return {
         firstName,
         lastName,
         photo: {
           uri: createImageUrlFromGuid(guid)
         },
-        email: `${lowerCase(firstName)}.${lowerCase(lastName)}@christfellowship.church`
+        email: toLower(formattedEmail)
       }
     },
   },
