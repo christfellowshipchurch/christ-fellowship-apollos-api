@@ -2,29 +2,6 @@ import { get } from 'lodash'
 import { parseRockKeyValuePairs } from '../utils'
 
 const moreLinkJson = [
-  // {
-  //   "name": "Get Involved",
-  //   "links": [
-  //     {
-  //       "name": "Community",
-  //       "icon": "users",
-  //       "uri": "https://beta.christfellowship.church/community-finder",
-  //       "openInApp": true
-  //     },
-  //     {
-  //       "name": "Serve",
-  //       "icon": "handshake",
-  //       "uri": "https://rock.gocf.org/dreamteam",
-  //       "openInApp": true
-  //     },
-  //     {
-  //       "name": "Give",
-  //       "icon": "envelope-open-dollar",
-  //       "uri": "https://pushpay.com/g/christfellowship",
-  //       "openInApp": false
-  //     }
-  //   ]
-  // },
   {
     "name": "Our Church",
     "links": [
@@ -88,7 +65,7 @@ const profileLinkJson = [
   {
     "name": "Serve",
     "icon": "handshake",
-    "uri": "https://rock.christfellowship.church/page/2057",
+    "uri": "https://rock.christfellowship.church/dreamteam",
     "openInApp": true,
     "theme": {
       "colors": {
