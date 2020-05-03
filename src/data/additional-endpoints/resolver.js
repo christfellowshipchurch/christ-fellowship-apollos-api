@@ -54,7 +54,7 @@ const profileLinkJson = [
   {
     "name": "Connect",
     "icon": "users",
-    "uri": "https://rock.christfellowship.church/connect",
+    "uri": "https://cf.church/stronger",
     "openInApp": true,
     "theme": {
       "colors": {
