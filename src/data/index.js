@@ -8,7 +8,7 @@ import * as Scripture from '@apollosproject/data-connector-bible'
 import * as Cloudinary from '@apollosproject/data-connector-cloudinary'
 import * as OneSignal from '@apollosproject/data-connector-onesignal'
 import * as Pass from '@apollosproject/data-connector-passes'
-import * as Cache from '@apollosproject/data-connector-redis-cache';
+// import * as Cache from '@apollosproject/data-connector-redis-cache';
 import * as Sms from '@apollosproject/data-connector-twilio'
 import {
   Followings,
@@ -33,6 +33,7 @@ import * as Theme from './theme'
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
 import * as OneSignalWithRock from './oneSignalWithRock'
 
+import * as Cache from './redis-cache';
 import * as ContentChannel from './content-channel'
 import * as ContentItem from './content-item'
 import * as LiveStream from './live-stream'
@@ -56,7 +57,7 @@ import * as PhoneNumber from './phone-number'
 import * as Address from './address'
 import * as Workflow from './workflow'
 import * as Schedule from './schedule'
-import * as Features from './features'
+import * as Feature from './features'
 import * as Event from './events'
 
 import * as Metadata from './metadata'
@@ -85,7 +86,7 @@ const data = {
   Template,
   Campus,
   BinaryFiles,
-  Features,
+  Feature,
   TwilioNotify,
   Event,
 
