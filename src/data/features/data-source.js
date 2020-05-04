@@ -1,5 +1,5 @@
 import {
-    Features as coreFeatures,
+    Feature as coreFeatures,
 } from '@apollosproject/data-connector-rock'
 import {
     get,
@@ -9,7 +9,7 @@ import { createGlobalId } from '@apollosproject/server-core'
 
 const { ROCK_MAPPINGS } = ApollosConfig
 
-export default class Features extends coreFeatures.dataSource {
+export default class Feature extends coreFeatures.dataSource {
     expanded = true
     // Names of Action Algoritms mapping to the functions that create the actions.
     ACTION_ALGORITHIMS = {
