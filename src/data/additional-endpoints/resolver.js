@@ -22,6 +22,12 @@ const moreLinkJson = [
         "icon": "text",
         "uri": "https://gochristfellowship.com/new-here/contact-us",
         "openInApp": true
+      },
+      {
+        "name": "Shop Online",
+        "icon": "arrow-back",
+        "uri": "https://cf.church/shop",
+        "openInApp": false
       }
     ]
   },
