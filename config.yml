@@ -183,6 +183,12 @@ ROCK_MAPPINGS:
     SALVATION_DATE: "Arena-15-139"
     BAPTISM_DATE: "BaptismDate"
     ETHNICITY: "Ethnicity"
+  CONNECTION_STATUS:
+    FIRST_CONNECTION:
+      KEY: "Arena-15-135"
+    ORIGINAL_ENTRY:
+      KEY: "Arena-15-64"
+      VALUE: "65c8d8f1-491a-4335-bbdc-845ebc2887ab"
 
   LOCATION_TYPES:
     HOME_ADDRESS: 19

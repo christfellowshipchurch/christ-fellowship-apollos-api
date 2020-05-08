@@ -11,6 +11,7 @@ import {
 } from 'lodash'
 import ApollosConfig from '@apollosproject/config'
 import moment from 'moment'
+import momentTz from 'moment-timezone'
 import {
     getIdentifierType
 } from '../utils'
@@ -51,6 +52,54 @@ export default class Person extends corePerson.dataSource {
         }
         // Otherwise, return null.
         return null;
+    }
+
+    updateFirstConnection = async (id) => {
+        const person = await this.getFromId(id)
+        const FIRST_CONNECTION_KEY = get(ApollosConfig, 'ROCK_MAPPINGS.CONNECTION_STATUS.FIRST_CONNECTION.KEY', '')
+        const ORIGINAL_ENTRY_KEY = get(ApollosConfig, 'ROCK_MAPPINGS.CONNECTION_STATUS.ORIGINAL_ENTRY.KEY', '')
+        const ORIGINAL_ENTRY_VALUE = get(ApollosConfig, 'ROCK_MAPPINGS.CONNECTION_STATUS.ORIGINAL_ENTRY.VALUE', '')
+
+        // only run if we have an attribute key for first connection
+        if (FIRST_CONNECTION_KEY && FIRST_CONNECTION_KEY !== '') {
+            const firstConnection = get(person, `attributeValues.${FIRST_CONNECTION_KEY}.value`, '')
+            if (!firstConnection || firstConnection === '') {
+                // Since we don't have a first connection, we can assume this
+                //  a new person created from the app
+                // Rock stores dates as a formatted string without the timezone
+                //  information on it. While this may not be best practice, we
+                //  want to remain consistent in the data that we send to Rock
+                //  to not break any internal Rock systems
+                const formattedDate = momentTz()
+                    .tz(get(ApollosConfig, 'ROCK.TIMEZONE', ''))
+                    .format('YYYY-MM-DDTHH:mm:ss.SSS0000')
+
+                try {
+                    this.post(`/People/AttributeValue/${id}?attributeKey=${FIRST_CONNECTION_KEY}&attributeValue=${formattedDate}`)
+                } catch (e) {
+                    console.error('There was an error adding a First Connection', { e })
+                }
+            }
+        }
+
+        // only run if we have an attribute key and value for original entry
+        if (ORIGINAL_ENTRY_KEY && ORIGINAL_ENTRY_KEY !== ''
+            && ORIGINAL_ENTRY_VALUE && ORIGINAL_ENTRY_VALUE !== ''
+        ) {
+            const originalEntry = get(person, `attributeValues.${ORIGINAL_ENTRY_KEY}.value`, '')
+            if (!originalEntry || originalEntry === '') {
+                // Since we don't have an original entry, we can assume this
+                //  a new person created from the app
+                // This value is a Guid for a defined type, so we need to pull
+                //  this value from our config file
+
+                try {
+                    this.post(`/People/AttributeValue/${id}?attributeKey=${ORIGINAL_ENTRY_KEY}&attributeValue=${ORIGINAL_ENTRY_VALUE}`)
+                } catch (e) {
+                    console.error('There was an error adding an Original Entry Source', { e })
+                }
+            }
+        }
     }
 
     parseDateAsBirthday = (date) => {
