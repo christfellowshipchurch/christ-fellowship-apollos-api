@@ -18,7 +18,7 @@ import {
   // ContentItem,
   // ContentChannel,
   Sharable,
-  Auth,
+  // Auth,
   PersonalDevice,
   Template,
   AuthSms,
@@ -33,6 +33,7 @@ import * as Theme from './theme'
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
 import * as OneSignalWithRock from './oneSignalWithRock'
 
+import * as Auth from './auth'
 import * as Cache from './redis-cache';
 import * as ContentChannel from './content-channel'
 import * as ContentItem from './content-item'
