@@ -7,7 +7,7 @@ import { resolverMerge } from '@apollosproject/server-core'
 const resolver = {
     Mutation: {
         requestEmailLoginPin: (root, args, { dataSources }) =>
-            dataSources.Auth.requestEmailPin(),
+            dataSources.Auth.requestEmailPin(args),
         changePasswordWithPin: (root, { email, pin, newPassword }, { dataSources }) =>
             dataSources.Auth.changePasswordWithPin({ email, pin, newPassword }),
     }

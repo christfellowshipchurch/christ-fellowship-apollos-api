@@ -5,7 +5,7 @@ export default gql`
     ${authSchema}
 
     extend type Mutation {
-        requestEmailLoginPin: Boolean
+        requestEmailLoginPin(email: String!): Boolean
         changePasswordWithPin(email: String!, pin: String!, newPassword: String!): Authentication
     }
 `

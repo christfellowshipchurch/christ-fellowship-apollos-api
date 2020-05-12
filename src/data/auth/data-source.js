@@ -16,15 +16,30 @@ export default class AuthDataSource extends CoreAuth.dataSource {
         return personId
     };
 
-    requestEmailPin = async () => {
+    requestEmailPin = async ({ email }) => {
         const { AuthSms, Workflow } = this.context.dataSources
         const { pin, password } = AuthSms.generateSmsPinAndPassword()
 
         try {
-            await this.changePassword({ password })
+            const { id, personId } = await this.request('/UserLogins')
+                .filter(`UserName eq '${email}'`)
+                .first();
 
-            const currentUser = await this.getCurrentPerson();
-            const { email } = currentUser;
+            if (id) {
+                await this.delete(`/UserLogins/${id}`);
+            }
+            await this.createUserLogin({
+                personId,
+                email,
+                password,
+            });
+
+            this.authenticate({
+                identity: email,
+                password,
+            });
+
+
 
             Workflow.trigger({
                 id: get(ROCK_MAPPINGS, 'WORKFLOW_IDS.PASSWORD_RESET_EMAIL'),
