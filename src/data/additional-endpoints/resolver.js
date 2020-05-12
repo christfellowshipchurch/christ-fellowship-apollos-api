@@ -98,7 +98,7 @@ const resolver = {
   },
   Query: {
     privacyPolicyUrl: () => "https://christfellowship.church/privacy-policy",
-    passwordResetUrl: () => "https://christfellowship.church/login/forgot",
+    passwordResetUrl: () => "https://beta.christfellowship.church/login/forgot",
     moreLinks: () => moreLinkJson,
     profileLinks: () => profileLinkJson,
     websiteBanner: async (root, args, { dataSources }) => {
