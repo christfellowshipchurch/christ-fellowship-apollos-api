@@ -9,22 +9,35 @@ import {
   upperCase,
 } from 'lodash'
 
-import { createVideoUrlFromGuid, getIdentifierType } from '../utils'
+import { createVideoUrlFromGuid } from '../utils'
 
 const { ROCK_MAPPINGS, ROCK } = ApollosConfig
 
 export default class ContentItem extends coreContentItem.dataSource {
   expanded = true
 
+  CORE_LIVE_CONTENT = this.LIVE_CONTENT
+
+  LIVE_CONTENT = () => {
+    // If we're in a staging environment, we want to
+    //  return null so that no filter is applied over
+    //  the content querying.
+    // If we're not in a staging environment, we want
+    //  to apply the standard LIVE_CONTENT filter based
+    //  on the config.yml settings
+
+    if (process.env.NODE_ENV === 'stage') {
+      return null
+    }
+
+    return this.CORE_LIVE_CONTENT()
+  }
+
   resolveType(props) {
     const {
       attributeValues,
       attributes,
     } = props
-
-    // if (this.hasRedirect({ attributeValues, attributes })) {
-    //   return 'LinkContentItem'
-    // }
 
     return super.resolveType(props)
   }

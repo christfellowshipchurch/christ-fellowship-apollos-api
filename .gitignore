@@ -79,3 +79,6 @@ storyLoader.js
 # compiled code
 
 **/lib
+
+# Jetbrains project files
+.idea
