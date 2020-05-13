@@ -1,99 +1,111 @@
 {
-    "family": "cf-apollos-api-dev",
-    "executionRoleArn": "arn:aws:iam::516877585062:role/ecsTaskExecutionRole",
-    "networkMode": "bridge",
-    "containerDefinitions": [
+  "family": "cf-apollos-api-dev",
+  "executionRoleArn": "arn:aws:iam::516877585062:role/ecsTaskExecutionRole",
+  "networkMode": "bridge",
+  "containerDefinitions": [
+    {
+      "name": "dev-apollos",
+      "image": "516877585062.dkr.ecr.us-east-2.amazonaws.com/cf-ecr-repo:latest",
+      "links": [],
+      "cpu": 8,
+      "memory": 512,
+      "memoryReservation": null,
+      "portMappings": [
         {
-            "name": "dev-apollos",
-            "image": "516877585062.dkr.ecr.us-east-2.amazonaws.com/cf-ecr-repo:latest",
-            "links": [],
-            "cpu": 8,
-            "memory": 512,
-            "memoryReservation": null,
-            "portMappings": [
-                {
-                    "containerPort": 4000,
-                    "hostPort": 0,
-                    "protocol": "tcp"
-                }
-            ],
-            "essential": true,
-            "entryPoint": [],
-            "command": [],
-            "environment": [
-                {
-                  "name": "PORT",
-                  "value": "4000"
-                },
-                {
-                  "name": "ROCK_API",
-                  "value": "https://dev-rock.christfellowship.church"
-                },
-                {
-                  "name": "ROCK_SHOW_INACTIVE_CONTENT",
-                  "value": "false"
-                },
-                {
-                  "name": "CLOUDFRONT",
-                  "value": "https://cloudfront.christfellowship.church"
-                }
-            ],
-            "secrets": [
-                {
-                  "valueFrom": "BIBLE_API_KEY",
-                  "name": "BIBLE_API_KEY"
-                },
-                {
-                  "valueFrom": "BIBLE_ID",
-                  "name": "BIBLE_ID"
-                },
-                {
-                  "valueFrom": "ESV_KEY",
-                  "name": "ESV_KEY"
-                },
-                {
-                  "valueFrom": "/dev/TWILIO_ACCOUNT_SID",
-                  "name": "TWILIO_ACCOUNT_SID"
-                },
-                {
-                  "valueFrom": "/dev/TWILIO_NOTIFY_SID",
-                  "name": "TWILIO_NOTIFY_SID"
-                },
-                {
-                  "valueFrom": "/dev/TWILIO_AUTH_TOKEN",
-                  "name": "TWILIO_AUTH_TOKEN"
-                },
-                {
-                  "valueFrom": "/dev/TWILIO_FROM_NUMBER",
-                  "name": "TWILIO_FROM_NUMBER"
-                },
-                {
-                  "valueFrom": "/dev/ROCK_TOKEN",
-                  "name": "ROCK_TOKEN"
-                }
-            ],
-            "mountPoints": [],
-            "volumesFrom": [],
-            "linuxParameters": null,
-            "privileged": null,
-            "readonlyRootFilesystem": null,
-            "interactive": null,
-            "pseudoTerminal": null
+          "containerPort": 4000,
+          "hostPort": 0,
+          "protocol": "tcp"
         }
-    ],
-    "volumes": [],
-    "placementConstraints": [],
-    "requiresCompatibilities": [
-        "EC2"
-    ],
-    "cpu": null,
-    "memory": null,
-    "tags": [
+      ],
+      "essential": true,
+      "entryPoint": [],
+      "command": [],
+      "environment": [
         {
-            "key": "registeredBy",
-            "value": "github-action"
+          "name": "PORT",
+          "value": "4000"
+        },
+        {
+          "name": "ROCK_API",
+          "value": "https://rock.gocf.org"
+        },
+        {
+          "name": "ROCK_SHOW_INACTIVE_CONTENT",
+          "value": "false"
+        },
+        {
+          "name": "CLOUDFRONT",
+          "value": "https://cloudfront.christfellowship.church"
+        },
+        {
+          "name": "NODE_ENV",
+          "value": "production"
         }
-    ],
-    "pidMode": null,
-    "ipcMode": null
+      ],
+      "secrets": [
+        {
+          "valueFrom": "BIBLE_API_KEY",
+          "name": "BIBLE_API_KEY"
+        },
+        {
+          "valueFrom": "BIBLE_ID",
+          "name": "BIBLE_ID"
+        },
+        {
+          "valueFrom": "ESV_KEY",
+          "name": "ESV_KEY"
+        },
+        {
+          "valueFrom": "/prod/TWILIO_ACCOUNT_SID",
+          "name": "TWILIO_ACCOUNT_SID"
+        },
+        {
+          "valueFrom": "/prod/TWILIO_NOTIFY_SID",
+          "name": "TWILIO_NOTIFY_SID"
+        },
+        {
+          "valueFrom": "/prod/TWILIO_AUTH_TOKEN",
+          "name": "TWILIO_AUTH_TOKEN"
+        },
+        {
+          "valueFrom": "/prod/TWILIO_FROM_NUMBER",
+          "name": "TWILIO_FROM_NUMBER"
+        },
+        {
+          "valueFrom": "/prod/ROCK_TOKEN",
+          "name": "ROCK_TOKEN"
+        },
+        {
+          "valueFrom": "/prod/ONE_SIGNAL_REST_KEY",
+          "name": "ONE_SIGNAL_REST_KEY"
+        },
+        {
+          "valueFrom": "/prod/REDIS_URL",
+          "name": "REDIS_URL"
+        }
+      ],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "linuxParameters": null,
+      "privileged": null,
+      "readonlyRootFilesystem": null,
+      "interactive": null,
+      "pseudoTerminal": null
+    }
+  ],
+  "volumes": [],
+  "placementConstraints": [],
+  "requiresCompatibilities": [
+    "EC2"
+  ],
+  "cpu": null,
+  "memory": null,
+  "tags": [
+    {
+      "key": "registeredBy",
+      "value": "github-action"
+    }
+  ],
+  "pidMode": null,
+  "ipcMode": null
 }
