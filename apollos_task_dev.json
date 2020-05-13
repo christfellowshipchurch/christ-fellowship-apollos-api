@@ -39,7 +39,7 @@
         },
         {
           "name": "NODE_ENV",
-          "value": "production"
+          "value": "stage"
         }
       ],
       "secrets": [
