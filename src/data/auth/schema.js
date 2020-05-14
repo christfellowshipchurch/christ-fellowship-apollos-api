@@ -8,4 +8,8 @@ export default gql`
         requestEmailLoginPin(email: String!): Boolean
         changePasswordWithPin(email: String!, pin: String!, newPassword: String!): Authentication
     }
+
+    extend type Query {
+        canAccessExperimentalFeatures: Boolean
+    }
 `

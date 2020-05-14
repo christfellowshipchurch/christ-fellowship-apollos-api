@@ -212,6 +212,11 @@ HOME_FEATURES:
         arguments:
           contentChannelId: 64
 
+FEATURE_FLAGS:
+  LIVE_STREAM_UI:
+    securityGroupId: 1014843
+    status: "LIVE"
+
 # HOME_FEATURES:
 #   - title: GLOBAL ITEM
 #     algorithms:

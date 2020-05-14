@@ -63,6 +63,7 @@ import * as Event from './events'
 
 import * as Metadata from './metadata'
 import * as AdditionalEndpoint from './additional-endpoints'
+import * as Flag from './flag'
 
 const data = {
   Followings,
@@ -98,6 +99,7 @@ const data = {
   Address,
   Workflow,
   Schedule,
+  Flag,
 
   // Local Content Items
   WebsiteNavigation,
