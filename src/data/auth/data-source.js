@@ -69,21 +69,26 @@ export default class AuthDataSource extends CoreAuth.dataSource {
     }
 
     isInSecurityGroup = async (securityGroupId) => {
-        // We need both a security group id as well a person id
-        //  but there's no reason to request the current person
-        //  if we don't have a security id. It's ugly, but it 
-        //  works.
-        if (!securityGroupId) return false
+        try {
+            // We need both a security group id as well a person id
+            //  but there's no reason to request the current person
+            //  if we don't have a security id. It's ugly, but it 
+            //  works.
+            if (!securityGroupId) return false
 
-        const { id: personId } = await this.getCurrentPerson()
+            const { id: personId } = await this.getCurrentPerson()
 
-        if (!personId) return false
+            if (!personId) return false
 
-        const groupMembers = await this.request('/GroupMembers')
-            .filter(`GroupId eq ${securityGroupId}`)
-            .andFilter(`PersonId eq ${personId}`)
-            .get()
+            const groupMembers = await this.request('/GroupMembers')
+                .filter(`GroupId eq ${securityGroupId}`)
+                .andFilter(`PersonId eq ${personId}`)
+                .get()
 
-        return groupMembers.length > 0
+            return groupMembers.length > 0
+        } catch (e) {
+            return false
+        }
+
     }
 }
