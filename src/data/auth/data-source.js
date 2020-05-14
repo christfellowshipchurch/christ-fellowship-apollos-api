@@ -56,7 +56,7 @@ export default class AuthDataSource extends CoreAuth.dataSource {
     }
 
     changePasswordWithPin = async ({ email, pin, newPassword }) => {
-        const { AuthSms, Workflow } = this.context.dataSources
+        const { AuthSms } = this.context.dataSources
         const hashedPin = AuthSms.hashPassword({ pin })
 
         try {
@@ -66,5 +66,24 @@ export default class AuthDataSource extends CoreAuth.dataSource {
             console.log({ e })
             return new AuthenticationError("The pin you entered was incorrect.")
         }
+    }
+
+    isInSecurityGroup = async (securityGroupId) => {
+        // We need both a security group id as well a person id
+        //  but there's no reason to request the current person
+        //  if we don't have a security id. It's ugly, but it 
+        //  works.
+        if (!securityGroupId) return false
+
+        const { id: personId } = await this.getCurrentPerson()
+
+        if (!personId) return false
+
+        const groupMembers = await this.request('/GroupMembers')
+            .filter(`GroupId eq ${securityGroupId}`)
+            .andFilter(`PersonId eq ${personId}`)
+            .get()
+
+        return groupMembers.length > 0
     }
 }

@@ -10,6 +10,10 @@ const resolver = {
             dataSources.Auth.requestEmailPin(args),
         changePasswordWithPin: (root, { email, pin, newPassword }, { dataSources }) =>
             dataSources.Auth.changePasswordWithPin({ email, pin, newPassword }),
+    },
+    Query: {
+        canAccessExperimentalFeatures: async (root, args, { dataSources }) =>
+            dataSources.Auth.isInSecurityGroup(ApollosConfig.ROCK_MAPPINGS.SECURITY_GROUPS.EXPERIMENTAL_FEATURES),
     }
 }
 
