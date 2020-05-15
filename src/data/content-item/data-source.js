@@ -26,7 +26,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     //  to apply the standard LIVE_CONTENT filter based
     //  on the config.yml settings
 
-    if (process.env.NODE_ENV === 'stage') {
+    if (process.env.CONTENT === 'stage') {
       return null
     }
 

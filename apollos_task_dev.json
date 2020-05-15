@@ -38,7 +38,7 @@
           "value": "https://cloudfront.christfellowship.church"
         },
         {
-          "name": "NODE_ENV",
+          "name": "CONTENT",
           "value": "stage"
         }
       ],
