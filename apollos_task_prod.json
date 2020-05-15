@@ -40,6 +40,10 @@
         {
           "name": "NODE_ENV",
           "value": "production"
+        },
+        {
+          "name": "CONTENT",
+          "value": "production"
         }
       ],
       "secrets": [
