@@ -9,7 +9,13 @@ export default class AuthDataSource extends CoreAuth.dataSource {
     coreCreateUserProfile = this.createUserProfile
 
     createUserProfile = async (props) => {
-        const personId = await this.coreCreateUserProfile(props)
+        // In order to get Rock's duplicate record system
+        //  to trigger, we need to mark the record as
+        //  "pending" which is the status id: 5
+        const personId = await this.coreCreateUserProfile({
+            ...props,
+            RecordStatusValueId: 5
+        })
 
         this.context.dataSources.Person.updateFirstConnection(personId)
 
