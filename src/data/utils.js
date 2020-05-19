@@ -1,5 +1,9 @@
 import ApollosConfig from '@apollosproject/config'
+import {
+  createGlobalId,
+} from '@apollosproject/server-core'
 import { Utils } from '@apollosproject/data-connector-rock'
+import { get, last } from 'lodash'
 
 /*
  Splits up a Rock Key Value paired string where | splits pairs and ^ splits key and value
@@ -47,3 +51,41 @@ export const createVideoUrlFromGuid = (uri) =>
   uri.startsWith('http')
     ? Utils.enforceProtocol(uri)
     : `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`
+
+/*
+  Accepts a string url that is read and determined if a deep link can be
+  generated for it. If it can, an updated url will be created and returned
+  back to the client.
+
+  NOTE: it is assumed that the client requesting this update is a mobile app
+        so that a deep link url can be created. Web apps should not use this */
+const appLinkTag = (strings, id) => `christfellowship://c/ContentSingle?itemId=${strings[0]}${id}`
+export const generateAppLinkFromUrl = async (uri, context) => {
+  const url = new URL(uri)
+  const host = url.host
+
+  if (host === "christfellowship.church") {
+    // Remove the first instance of / (/content/title-${itemId}) so that our array
+    //  after the split is ['content', 'title-${itemId}']
+    const pathParts = url.pathname.replace('/', '').split('/')
+
+    if (pathParts.length > 1) {
+      const id = last(pathParts[1].split('-'))
+      switch (pathParts[0]) {
+        case 'content':
+          return appLinkTag`UniversalContentItem:${id}`
+        case 'items':
+          return appLinkTag`InformationalContentItem:${id}`
+        case 'events':
+          const { dataSources } = context
+          const contentItem = await dataSources.ContentItem.getEventByTitle(pathParts[1])
+          const id = get(contentItem, 'id')
+          if (id) {
+            return appLinkTag`EventContentItem:${createGlobalId(id)}`
+          }
+      }
+    }
+  }
+
+  return uri
+}

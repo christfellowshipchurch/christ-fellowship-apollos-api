@@ -1,5 +1,5 @@
 import { get } from 'lodash'
-import { parseRockKeyValuePairs } from '../utils'
+import { parseRockKeyValuePairs, generateAppLinkFromUrl } from '../utils'
 
 const moreLinkJson = [
   {
@@ -111,7 +111,8 @@ const resolver = {
 
       return get(callsToAction, "[0]", null)
     },
-    genderOptions: () => ['Male', 'Female']
+    genderOptions: () => ['Male', 'Female'],
+    generateAppLinkFromUrl: (root, { url }, context) => generateAppLinkFromUrl(url, context)
   },
 }
 
