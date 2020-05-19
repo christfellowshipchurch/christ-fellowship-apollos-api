@@ -79,9 +79,9 @@ export const generateAppLinkFromUrl = async (uri, context) => {
         case 'events':
           const { dataSources } = context
           const contentItem = await dataSources.ContentItem.getEventByTitle(pathParts[1])
-          const id = get(contentItem, 'id')
-          if (id) {
-            return appLinkTag`EventContentItem:${createGlobalId(id)}`
+          const eventId = get(contentItem, 'id')
+          if (eventId) {
+            return appLinkTag`EventContentItem:${createGlobalId(eventId)}`
           }
       }
     }

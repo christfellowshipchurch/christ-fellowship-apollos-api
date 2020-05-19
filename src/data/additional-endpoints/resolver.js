@@ -112,7 +112,7 @@ const resolver = {
       return get(callsToAction, "[0]", null)
     },
     genderOptions: () => ['Male', 'Female'],
-    generateAppLinkFromUrl: (root, { url }, context) => generateAppLinkFromUrl(url, context)
+    inAppLink: async (root, { url }, context) => generateAppLinkFromUrl(url, context)
   },
 }
 
