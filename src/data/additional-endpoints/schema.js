@@ -21,5 +21,6 @@ export default gql`
     profileLinks: [AppLink]
     websiteBanner: CallToAction
     genderOptions: [String]
+    inAppLink(url:String!): String
   }
 `
