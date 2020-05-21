@@ -85,6 +85,10 @@ export const generateAppLinkFromUrl = async (uri, context) => {
           }
       }
     }
+  } else if (host === "pushpay.com") {
+    url.search = `mobileApp=external&${url.search}`
+
+    return url.href
   }
 
   return uri
