@@ -1,3 +1,4 @@
+import URL from 'url';
 import ApollosConfig from '@apollosproject/config'
 import {
   createGlobalId,
@@ -61,13 +62,15 @@ export const createVideoUrlFromGuid = (uri) =>
         so that a deep link url can be created. Web apps should not use this */
 const appLinkTag = (strings, id) => `christfellowship://c/ContentSingle?itemId=${strings[0]}${id}`
 export const generateAppLinkFromUrl = async (uri, context) => {
-  const url = new URL(uri)
-  const host = url.host
+  const parsedUrl = URL.parse(uri)
+  const host = parsedUrl.host
+
+  console.log({ parsedUrl })
 
   if (host === "christfellowship.church") {
     // Remove the first instance of / (/content/title-${itemId}) so that our array
     //  after the split is ['content', 'title-${itemId}']
-    const pathParts = url.pathname.replace('/', '').split('/')
+    const pathParts = parsedUrl.pathname.replace('/', '').split('/')
 
     if (pathParts.length > 1) {
       const id = last(pathParts[1].split('-'))
@@ -86,9 +89,7 @@ export const generateAppLinkFromUrl = async (uri, context) => {
       }
     }
   } else if (host === "pushpay.com") {
-    url.search = `mobileApp=external&${url.search}`
-
-    return url.href
+    return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}?mobileApp=external&${parsedUrl.query}`
   }
 
   return uri
