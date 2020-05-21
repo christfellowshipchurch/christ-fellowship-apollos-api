@@ -1,6 +1,7 @@
 import {
   Campus as coreCampus,
 } from '@apollosproject/data-connector-rock'
+import ApollosConfig from '@apollosproject/config'
 import { get, upperCase, split } from 'lodash'
 import { getIdentifierType } from '../utils'
 
@@ -21,28 +22,23 @@ export default class Campus extends coreCampus.dataSource {
       return family.campus
     }
 
-    // TODO : move the default campus into the Apollos Config
+    const defaultCampusId = ApollosConfig.ROCK_MAPPINGS.DEFAULT_CAMPUS_ID
 
     // MARK : This approach defaults a family with no campus to the Church Online
     //          campus by updating the family record
     try {
-      console.log(`Updating family id ${family.id} with default campus id ${9}`)
-      const familyPatch = await this.patch(`/Groups/${family.id}`, { CampusId: 9 })
-
-      if (familyPatch) {
-        this.getForPerson({ personId })
-      }
-
+      console.log(`Updating family id ${family.id} with default campus id ${defaultCampusId}`)
+      this.patch(`/Groups/${family.id}`, { CampusId: defaultCampusId })
     } catch (e) {
-      console.log('Could not patch family with a new campus', { e })
+      console.log(`Could not patch family with a new campus: ${defaultCampusId}`, e)
     }
 
     // MARK : This approach defaults a family with no campus to display the Church Online
     //          campus, but does not change or update the family record
-    console.log(`Failed to patch family ${family.id} with default campus ${9}. `)
+    console.log(`Family ${family.id} has no campus, so we are return default campus: ${defaultCampusId}`)
 
     // TODO : recator this, .expand('Location') is not working for some reason on the Campuses endpoint
-    let defaultCampus = await this.request(`/Campuses/${9}`).get()
+    let defaultCampus = await this.request(`/Campuses/${defaultCampusId}`).get()
     const location = await this.request(`/Locations/${get(defaultCampus, 'locationId', '')}`).get()
 
     if (defaultCampus && location) {
