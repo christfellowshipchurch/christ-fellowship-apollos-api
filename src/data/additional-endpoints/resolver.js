@@ -49,7 +49,7 @@ const moreLinkJson = [
       {
         name: 'Send Feedback',
         icon: 'warning',
-        uri: 'https://docs.google.com/forms/d/e/1FAIpQLSdvpBqRt1AyA8xv_vgKzNsrllsmeyJHP5ryEAht0QTC2T2ypg/viewform?usp=sf_link',
+        uri: 'https://form.jotform.com/201343828801148',
         openInApp: true,
       },
     ],
