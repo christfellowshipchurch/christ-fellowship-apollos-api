@@ -3,6 +3,7 @@ import gql from 'graphql-tag'
 
 export default gql`
   extend type Query {
-    getBrowseFilters: [ContentChannel]
+    getBrowseFilters: [ContentChannel] @deprecated(reason: "Use browseFilters instead")
+    browseFilters: [ContentItem]
   }
 `
