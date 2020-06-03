@@ -40,6 +40,10 @@ ALGOLIA:
   API_KEY: ${ALGOLIA_API_KEY}
   # TODO: should we support multiple indices? how?
   SEARCH_INDEX: ${ALGOLIA_SEARCH_INDEX}
+  CONFIGURATION:
+    searchableAttributes:
+      - title
+      - unordered(summary)
 TWILIO:
   NOTIFY_SID: ${TWILIO_NOTIFY_SID}
   ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
@@ -137,6 +141,7 @@ ROCK_MAPPINGS:
   # However, it will not expose the channel itself.
   FEED_CONTENT_CHANNEL_IDS:
     - 43 # Article and Blogs
+    - 45 # Informational Items
     - 60 # Resources
     - 63 # Sermons
 
