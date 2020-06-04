@@ -13,5 +13,7 @@ import {
 const { ROCK_MAPPINGS } = ApollosConfig
 
 export default class Browse extends RockApolloDataSource {
-
+  getContentFilters = () => this.context.dataSources.ContentItem.byContentChannelIds(
+    ApollosConfig.ROCK_MAPPINGS.DISCOVER_CONTENT_CHANNEL_IDS
+  ).get()
 }

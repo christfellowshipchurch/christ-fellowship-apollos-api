@@ -8,6 +8,7 @@ import * as Scripture from '@apollosproject/data-connector-bible'
 import * as Cloudinary from '@apollosproject/data-connector-cloudinary'
 import * as OneSignal from '@apollosproject/data-connector-onesignal'
 import * as Pass from '@apollosproject/data-connector-passes'
+import * as Search from '@apollosproject/data-connector-algolia-search';
 // import * as Cache from '@apollosproject/data-connector-redis-cache';
 import * as Sms from '@apollosproject/data-connector-twilio'
 import {
@@ -85,6 +86,7 @@ const data = {
   PersonalDevice,
   OneSignalWithRock,
   Pass,
+  Search,
   Template,
   Campus,
   BinaryFiles,
