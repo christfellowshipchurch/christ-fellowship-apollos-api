@@ -1,4 +1,7 @@
-import { resolver, schema, jobs } from '@apollosproject/data-connector-algolia-search';
+import * as CoreSearch from '@apollosproject/data-connector-algolia-search';
 
-export { resolver, jobs, schema };
+export const resolver = CoreSearch.resolver
+export const schema = CoreSearch.schema
+export const jobs = CoreSearch.jobs
+
 export { default as dataSource } from './data-source';

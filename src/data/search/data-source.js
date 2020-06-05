@@ -1,5 +1,25 @@
 import { dataSource as CoreSource } from '@apollosproject/data-connector-algolia-search'
-import ApollosConfig from '@apollosproject/config'
+import { graphql } from 'graphql';
+import removeWords from 'remove-words';
+import sanitizeHtml from 'sanitize-html';
+import { keys } from 'lodash'
+
+const cleanHtmlContentForIndex = (htmlContent) => {
+  const cleanedHtml = sanitizeHtml(data.node.htmlContent, {
+    allowedTags: [],
+    allowedAttributes: {}
+  })
+  const words = removeWords(cleanedHtml, false)
+  const wordCounts = {};
+
+  for (var i = 0; i < words.length; i++)
+    wordCounts["_" + words[i]] = (wordCounts["_" + words[i].replace(' ', '')] || 0) + 1;
+
+  return keys(wordCounts)
+    .sort((a, b) => wordCounts[b] - wordCounts[a])
+    .map(w => w.replace('_', ''))
+    .join(' ')
+}
 
 export default class Search extends CoreSource {
 
@@ -25,6 +45,9 @@ export default class Search extends CoreSource {
       this.context
     );
 
-    return data.node;
+    return {
+      ...data.node,
+      htmlContent: cleanHtmlContentForIndex(data.node.htmlContent)
+    };
   }
 }
