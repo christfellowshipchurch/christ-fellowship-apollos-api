@@ -44,6 +44,10 @@
         {
           "name": "CONTENT",
           "value": "production"
+        },
+        {
+          "name": "ALGOLIA_SEARCH_INDEX",
+          "value": "prod_ContentItems"
         }
       ],
       "secrets": [
@@ -86,6 +90,14 @@
         {
           "valueFrom": "/prod/REDIS_URL",
           "name": "REDIS_URL"
+        },
+        {
+          "valueFrom": "/prod/ALGOLIA_APP_ID",
+          "name": "ALGOLIA_APP_ID"
+        },
+        {
+          "valueFrom": "/prod/ALGOLIA_API_KEY",
+          "name": "ALGOLIA_API_KEY"
         }
       ],
       "mountPoints": [],
