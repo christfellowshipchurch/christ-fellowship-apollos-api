@@ -88,9 +88,8 @@ const resolver = {
     },
     pastor: async ({ leaderPersonAliasId }, args, { dataSources }) => {
       const person = await dataSources.Person.getFromAliasId(leaderPersonAliasId)
-      const { firstName, lastName, photo: { guid } } = person
 
-      const formattedEmail = `${camelCase(firstName)}.${camelCase(lastName)}@christfellowship.church`
+      const { firstName, lastName, photo: { guid }, email } = person
 
       return {
         firstName,
@@ -98,7 +97,7 @@ const resolver = {
         photo: {
           uri: createImageUrlFromGuid(guid)
         },
-        email: toLower(formattedEmail)
+        email
       }
     },
   },
