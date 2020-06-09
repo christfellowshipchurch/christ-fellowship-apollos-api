@@ -8,7 +8,7 @@ import {
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
 
-const { ROCK_MAPPINGS } = ApollosConfig
+const { ROCK_MAPPINGS, FEATURE_FLAGS } = ApollosConfig
 
 export default class Feature extends coreFeatures.dataSource {
     expanded = true
@@ -28,6 +28,7 @@ export default class Feature extends coreFeatures.dataSource {
             return []
         }
 
+        const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === "LIVE"
         const { ContentItem, Person } = this.context.dataSources;
         const contentChannelItems = await this.request('ContentChannelItems')
             .filter(`ContentChannelId eq ${contentChannelId}`)
@@ -37,10 +38,12 @@ export default class Feature extends coreFeatures.dataSource {
             .get()
         let personas = []
 
-        try {
-            personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
-        } catch (e) {
-            console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
+        if (usePersonas) {
+            try {
+                personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
+            } catch (e) {
+                console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
+            }
         }
 
         const actions = contentChannelItems.map((item, i) => {
