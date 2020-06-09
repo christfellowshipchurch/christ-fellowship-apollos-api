@@ -3,6 +3,7 @@ import {
 } from '@apollosproject/data-connector-rock'
 import {
     get,
+    split
 } from 'lodash'
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
@@ -27,18 +28,37 @@ export default class Feature extends coreFeatures.dataSource {
             return []
         }
 
-        const { ContentItem } = this.context.dataSources;
+        const { ContentItem, Person } = this.context.dataSources;
         const contentChannelItems = await this.request('ContentChannelItems')
             .filter(`ContentChannelId eq ${contentChannelId}`)
             .andFilter(ContentItem.LIVE_CONTENT())
             .cache({ ttl: 60 })
             .orderBy('Order', 'asc')
             .get()
+        let personas = []
 
-        const actions = await Promise.all(contentChannelItems.map(async (item, i) => {
+        try {
+            personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
+        } catch (e) {
+            console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
+        }
+
+        const actions = contentChannelItems.map((item, i) => {
             const action = get(item, 'attributeValues.action.value', '')
 
             if (!action || action === '' || !item.id) return null
+            const securityDataViews = split(
+                get(item, 'attributeValues.securityDataViews.value', ''),
+                ','
+            ).filter(dv => !!dv)
+
+            if (securityDataViews.length > 0) {
+                const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
+                if (userInSecurityDataViews.length === 0) {
+                    console.log("User does not have access to this item")
+                    return null
+                }
+            }
 
             return {
                 id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
@@ -48,7 +68,7 @@ export default class Feature extends coreFeatures.dataSource {
                 image: ContentItem.getCoverImage(item),
                 action,
             }
-        }))
+        })
 
         return actions
     }
