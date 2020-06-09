@@ -223,7 +223,7 @@ FEATURE_FLAGS:
     securityGroupId: 1014843
     status: "LIVE"
   ROCK_DYNAMIC_FEED_WITH_PERSONAS:
-    status: "DISABLE"
+    status: "LIVE"
 
 # HOME_FEATURES:
 #   - title: GLOBAL ITEM

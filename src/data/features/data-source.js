@@ -73,7 +73,7 @@ export default class Feature extends coreFeatures.dataSource {
             }
         })
 
-        return actions
+        return actions.filter(action => !!action)
     }
 
     async globalContentAlgorithm({ index = 0, limit = null } = {}) {
