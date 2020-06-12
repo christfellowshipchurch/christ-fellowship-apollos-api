@@ -89,7 +89,7 @@ const resolver = {
     pastor: async ({ leaderPersonAliasId }, args, { dataSources }) => {
       const person = await dataSources.Person.getFromAliasId(leaderPersonAliasId)
 
-      const { firstName, lastName, photo: { guid }, email } = person
+      const { nickName: firstName, lastName, photo: { guid }, email } = person
 
       return {
         firstName,
