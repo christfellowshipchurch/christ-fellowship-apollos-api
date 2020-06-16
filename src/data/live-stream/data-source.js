@@ -53,15 +53,32 @@ export default class LiveStream extends scheduleDataSource {
     // it easier to access this data in the return object
     const liveStreamContentItemsWithNextOccurrences = await Promise.all(liveStreamContentItems.map(async contentItem => {
       const schedules = split(get(contentItem, 'attributeValues.schedules.value', ''), ',')
-      const nextOccurences = await Schedule.getOccurrencesFromIds(schedules)
+      const nextOccurrences = await Schedule.getOccurrencesFromIds(schedules)
 
-      return { ...contentItem, nextOccurences }
+      // Find any existing offsets for each schedule
+      const scheduleItems = await Schedule.getFromIds(schedules)
+      const startTimeOffsets = scheduleItems.map(
+        schedule => get(schedule, 'checkInStartOffsetMinutes') 
+          ? schedule.checkInStartOffsetMinutes
+          : 0
+      )
+
+      // add offSets to nextOccurrences objects
+      const nextOccurrencesWithOffset = nextOccurrences.map((occurrence, i) => {
+        return ({
+          ...occurrence,
+          //subtract offset from start time
+          start: moment(occurrence.start).subtract(startTimeOffsets[i], 'm').toISOString()
+        })
+      })
+
+      return { ...contentItem, nextOccurrencesWithOffset }
     }))
 
     // Check the schedule on each event to see
     // if it's currently live
     const currentlyLiveContentItems = filter(liveStreamContentItemsWithNextOccurrences,
-      ({ nextOccurences }) => find(nextOccurences, occurrence => moment().isBetween(occurrence.start, occurrence.end)))
+      ({ nextOccurrencesWithOffset }) => find(nextOccurrencesWithOffset, occurrence => moment().isBetween(occurence.start, occurrence.end)))
 
     // Create the Live Stream object from the Content Items
     // that are currently live and return active Live Streams
