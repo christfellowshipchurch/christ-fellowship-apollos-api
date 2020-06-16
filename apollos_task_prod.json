@@ -47,7 +47,7 @@
         },
         {
           "name": "ALGOLIA_SEARCH_INDEX",
-          "value": "prod_ContentItems"
+          "value": "ContentItems"
         }
       ],
       "secrets": [

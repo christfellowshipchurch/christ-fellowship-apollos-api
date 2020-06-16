@@ -39,10 +39,11 @@ ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
   API_KEY: ${ALGOLIA_API_KEY}
   # TODO: should we support multiple indices? how?
-  SEARCH_INDEX: ${ALGOLIA_SEARCH_INDEX}
+  SEARCH_INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX}
   CONFIGURATION:
     searchableAttributes:
       - title
+      - htmlContent
       - unordered(summary)
 TWILIO:
   NOTIFY_SID: ${TWILIO_NOTIFY_SID}
