@@ -2,11 +2,13 @@ import { dataSource as CoreSource } from '@apollosproject/data-connector-algolia
 import { graphql } from 'graphql';
 import removeWords from 'remove-words';
 import sanitizeHtml from 'sanitize-html';
-import { keys } from 'lodash'
+import {
+  createGlobalId,
+} from '@apollosproject/server-core';
 
 const cleanHtmlContentForIndex = (htmlContent) => {
   // Strip all html tags
-  const cleanedHtml = sanitizeHtml(data.node.htmlContent, {
+  const cleanedHtml = sanitizeHtml(htmlContent, {
     allowedTags: [],
     allowedAttributes: {}
   })
