@@ -35,7 +35,17 @@ export default class LiveStream extends scheduleDataSource {
     };
   }
 
-  async getLiveStreams() {
+  async getLiveStreamContentItems() {
+    const { Cache } = this.context.dataSources;
+    const cachedKey = `${process.env.CONTENT}_liveStreamContentItems`
+    const cachedValue = await Cache.get({
+      key: cachedKey,
+    });
+
+    if (cachedValue) {
+      return cachedValue;
+    }
+
     // Get Events
     const { ContentItem, Schedule } = this.context.dataSources;
     const eventContentItems = await ContentItem.getEvents()
@@ -58,9 +68,23 @@ export default class LiveStream extends scheduleDataSource {
       return { ...contentItem, nextOccurences }
     }))
 
+    if (liveStreamContentItemsWithNextOccurrences != null) {
+      Cache.set({
+        key: cachedKey,
+        data: liveStreamContentItemsWithNextOccurrences,
+        expiresIn: 60 // one minute cache 
+      });
+    }
+
+    return liveStreamContentItemsWithNextOccurrences;
+  }
+
+  async getLiveStreams() {
+    const liveStreamContentItems = await this.getLiveStreamContentItems()
+
     // Check the schedule on each event to see
     // if it's currently live
-    const currentlyLiveContentItems = filter(liveStreamContentItemsWithNextOccurrences,
+    const currentlyLiveContentItems = filter(liveStreamContentItems,
       ({ nextOccurences }) => find(nextOccurences, occurrence => moment().isBetween(occurrence.start, occurrence.end)))
 
     // Create the Live Stream object from the Content Items
