@@ -98,6 +98,14 @@
         {
           "valueFrom": "/prod/ALGOLIA_API_KEY",
           "name": "ALGOLIA_API_KEY"
+        },
+        {
+          "valueFrom": "/prod/JOBS_USERNAME",
+          "name": "JOBS_USERNAME"
+        },
+        {
+          "valueFrom": "/prod/JOBS_PASSWORD",
+          "name": "JOBS_PASSWORD"
         }
       ],
       "mountPoints": [],

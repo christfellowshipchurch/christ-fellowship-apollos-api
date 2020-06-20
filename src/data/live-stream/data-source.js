@@ -35,7 +35,17 @@ export default class LiveStream extends scheduleDataSource {
     };
   }
 
-  async getLiveStreams() {
+  async getLiveStreamContentItems() {
+    const { Cache } = this.context.dataSources;
+    const cachedKey = `${process.env.CONTENT}_liveStreamContentItems`
+    const cachedValue = await Cache.get({
+      key: cachedKey,
+    });
+
+    if (cachedValue) {
+      return cachedValue;
+    }
+
     // Get Events
     const { ContentItem, Schedule } = this.context.dataSources;
     const eventContentItems = await ContentItem.getEvents()
@@ -55,30 +65,27 @@ export default class LiveStream extends scheduleDataSource {
       const schedules = split(get(contentItem, 'attributeValues.schedules.value', ''), ',')
       const nextOccurrences = await Schedule.getOccurrencesFromIds(schedules)
 
-      // Find any existing offsets for each schedule
-      const scheduleItems = await Schedule.getFromIds(schedules)
-      const startTimeOffsets = scheduleItems.map(
-        schedule => get(schedule, 'checkInStartOffsetMinutes') 
-          ? schedule.checkInStartOffsetMinutes
-          : 0
-      )
-
-      // add offSets to nextOccurrences objects
-      const nextOccurrencesWithOffset = nextOccurrences.map((occurrence, i) => {
-        return ({
-          ...occurrence,
-          //subtract offset from start time
-          start: moment(occurrence.start).subtract(startTimeOffsets[i], 'm').toISOString()
-        })
-      })
-
-      return { ...contentItem, nextOccurrencesWithOffset }
+      return { ...contentItem, nextOccurrences }
     }))
+
+    if (liveStreamContentItemsWithNextOccurrences != null) {
+      Cache.set({
+        key: cachedKey,
+        data: liveStreamContentItemsWithNextOccurrences,
+        expiresIn: 60 // one minute cache 
+      });
+    }
+
+    return liveStreamContentItemsWithNextOccurrences;
+  }
+
+  async getLiveStreams() {
+    const liveStreamContentItems = await this.getLiveStreamContentItems()
 
     // Check the schedule on each event to see
     // if it's currently live
-    const currentlyLiveContentItems = filter(liveStreamContentItemsWithNextOccurrences,
-      ({ nextOccurrencesWithOffset }) => find(nextOccurrencesWithOffset, occurrence => moment().isBetween(occurence.start, occurrence.end)))
+    const currentlyLiveContentItems = filter(liveStreamContentItems,
+      ({ nextOccurences }) => find(nextOccurences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end)))
 
     // Create the Live Stream object from the Content Items
     // that are currently live and return active Live Streams
