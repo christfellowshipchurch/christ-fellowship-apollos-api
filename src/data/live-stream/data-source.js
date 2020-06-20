@@ -85,7 +85,9 @@ export default class LiveStream extends scheduleDataSource {
     // Check the schedule on each event to see
     // if it's currently live
     const currentlyLiveContentItems = filter(liveStreamContentItems,
-      ({ nextOccurences }) => find(nextOccurences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end)))
+      ({ nextOccurrences }) =>
+        find(nextOccurrences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end))
+    )
 
     // Create the Live Stream object from the Content Items
     // that are currently live and return active Live Streams
