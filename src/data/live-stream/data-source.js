@@ -63,9 +63,9 @@ export default class LiveStream extends scheduleDataSource {
     // it easier to access this data in the return object
     const liveStreamContentItemsWithNextOccurrences = await Promise.all(liveStreamContentItems.map(async contentItem => {
       const schedules = split(get(contentItem, 'attributeValues.schedules.value', ''), ',')
-      const nextOccurences = await Schedule.getOccurrencesFromIds(schedules)
+      const nextOccurrences = await Schedule.getOccurrencesFromIds(schedules)
 
-      return { ...contentItem, nextOccurences }
+      return { ...contentItem, nextOccurrences }
     }))
 
     if (liveStreamContentItemsWithNextOccurrences != null) {
@@ -85,7 +85,7 @@ export default class LiveStream extends scheduleDataSource {
     // Check the schedule on each event to see
     // if it's currently live
     const currentlyLiveContentItems = filter(liveStreamContentItems,
-      ({ nextOccurences }) => find(nextOccurences, occurrence => moment().isBetween(occurrence.start, occurrence.end)))
+      ({ nextOccurences }) => find(nextOccurences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end)))
 
     // Create the Live Stream object from the Content Items
     // that are currently live and return active Live Streams
