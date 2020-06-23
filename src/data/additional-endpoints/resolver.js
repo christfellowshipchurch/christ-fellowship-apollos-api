@@ -75,7 +75,7 @@ const moreLinkJson = [
 
 const profileLinkJson = [
   {
-    "name": "Connect",
+    "name": "Groups",
     "icon": "users",
     "uri": "https://cf.church/stronger",
     "openInApp": true,
