@@ -2,7 +2,7 @@ import {
   Campus as coreCampus,
 } from '@apollosproject/data-connector-rock'
 import ApollosConfig from '@apollosproject/config'
-import { get, upperCase, split } from 'lodash'
+import { get, toUpper, split } from 'lodash'
 import { getIdentifierType } from '../utils'
 
 export default class Campus extends coreCampus.dataSource {
@@ -62,7 +62,7 @@ export default class Campus extends coreCampus.dataSource {
 
   getByName = async (name) => this
     .request()
-    .filter(`toupper(Name) eq '${upperCase(name)}'`)
+    .filter(`toupper(Name) eq '${toUpper(name)}'`)
     .expand('Location')
     .expand('Location/Image')
     .cache({ ttl: 600 }) // ten minutes
