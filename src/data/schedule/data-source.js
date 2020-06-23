@@ -2,9 +2,8 @@ import RockApolloDataSource from '@apollosproject/rock-apollo-data-source'
 import ApollosConfig from '@apollosproject/config'
 import ical from 'node-ical'
 import moment from 'moment-timezone'
-import { filter, split, flatten, first } from 'lodash'
+import { filter, split, flatten, first, get } from 'lodash'
 import { getIdentifierType } from '../utils'
-import { AssistantFallbackActionsInstance } from 'twilio/lib/rest/preview/understand/assistant/assistantFallbackActions'
 
 export default class Schedule extends RockApolloDataSource {
   resource = 'Schedules'
@@ -21,15 +20,25 @@ export default class Schedule extends RockApolloDataSource {
 
   getOccurrences = async (id) => {
     if (id) {
-      const schedule = await this.getFromId(id)
+      // getFromId returns an array with 1 result, so we
+      // just need to grab the first
+      const scheduleArr = await this.getFromId(id)
+      const schedule = first(scheduleArr)
       if (schedule) {
-        // getFromId returns an array
-        const occurrences = await this.parseiCalendar(first(schedule).iCalendarContent)
+        const occurrences = await this.parseiCalendar(schedule.iCalendarContent)
         const filteredOccurrences = filter(occurrences, ({ end }) => {
           return this.momentWithTz(end).isAfter(moment())
         })
 
-        return filteredOccurrences.sort((a, b) => this.momentWithTz(a).diff(this.momentWithTz(b)))
+        // Rock schedules include an offset in minutes, so we want to pass
+        // that along for the objects that need to take offsets into account
+        const startOffset = get(schedule, 'checkInStartOffsetMinutes', 0)
+        return filteredOccurrences
+          .map(o => ({
+            ...o,
+            startWithOffset: moment(o.start).subtract(startOffset, 'm').toISOString()
+          }))
+          .sort((a, b) => this.momentWithTz(a).diff(this.momentWithTz(b)))
       }
     }
 

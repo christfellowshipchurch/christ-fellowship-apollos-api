@@ -18,17 +18,34 @@ const moreLinkJson = [
         "openInApp": true
       },
       {
-        "name": "Contact Us",
-        "icon": "text",
-        "uri": "https://gochristfellowship.com/new-here/contact-us",
-        "openInApp": true
-      },
-      {
         "name": "Shop Online",
         "icon": "arrow-back",
         "uri": "https://cf.church/shop",
         "openInApp": false
       }
+    ]
+  },
+  {
+    "name": "Contact",
+    "links": [
+      {
+        "name": "Contact Us",
+        "icon": "text",
+        "uri": "https://rock.gocf.org/contactus",
+        "openInApp": true
+      },
+      {
+        "name": "New Here? Start Here!",
+        "icon": "text",
+        "uri": "https://rock.gocf.org/connect",
+        "openInApp": true
+      },
+      {
+        "name": "Submit a Prayer Request",
+        "icon": "pray",
+        "uri": "https://rock.gocf.org/RequestPrayer",
+        "openInApp": true
+      },
     ]
   },
   {

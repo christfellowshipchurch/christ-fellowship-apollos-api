@@ -35,7 +35,17 @@ export default class LiveStream extends scheduleDataSource {
     };
   }
 
-  async getLiveStreams() {
+  async getLiveStreamContentItems() {
+    const { Cache } = this.context.dataSources;
+    const cachedKey = `${process.env.CONTENT}_liveStreamContentItems`
+    const cachedValue = await Cache.get({
+      key: cachedKey,
+    });
+
+    if (cachedValue) {
+      return cachedValue;
+    }
+
     // Get Events
     const { ContentItem, Schedule } = this.context.dataSources;
     const eventContentItems = await ContentItem.getEvents()
@@ -53,15 +63,31 @@ export default class LiveStream extends scheduleDataSource {
     // it easier to access this data in the return object
     const liveStreamContentItemsWithNextOccurrences = await Promise.all(liveStreamContentItems.map(async contentItem => {
       const schedules = split(get(contentItem, 'attributeValues.schedules.value', ''), ',')
-      const nextOccurences = await Schedule.getOccurrencesFromIds(schedules)
+      const nextOccurrences = await Schedule.getOccurrencesFromIds(schedules)
 
-      return { ...contentItem, nextOccurences }
+      return { ...contentItem, nextOccurrences }
     }))
+
+    if (liveStreamContentItemsWithNextOccurrences != null) {
+      Cache.set({
+        key: cachedKey,
+        data: liveStreamContentItemsWithNextOccurrences,
+        expiresIn: 60 // one minute cache 
+      });
+    }
+
+    return liveStreamContentItemsWithNextOccurrences;
+  }
+
+  async getLiveStreams() {
+    const liveStreamContentItems = await this.getLiveStreamContentItems()
 
     // Check the schedule on each event to see
     // if it's currently live
-    const currentlyLiveContentItems = filter(liveStreamContentItemsWithNextOccurrences,
-      ({ nextOccurences }) => find(nextOccurences, occurrence => moment().isBetween(occurrence.start, occurrence.end)))
+    const currentlyLiveContentItems = filter(liveStreamContentItems,
+      ({ nextOccurrences }) =>
+        find(nextOccurrences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end))
+    )
 
     // Create the Live Stream object from the Content Items
     // that are currently live and return active Live Streams
