@@ -35,7 +35,7 @@ const moreLinkJson = [
         "openInApp": true
       },
       {
-        "name": "New Here? Start Here!",
+        "name": "Connect Card",
         "icon": "text",
         "uri": "https://rock.gocf.org/connect",
         "openInApp": true
