@@ -8,7 +8,7 @@ import * as Scripture from '@apollosproject/data-connector-bible'
 import * as Cloudinary from '@apollosproject/data-connector-cloudinary'
 import * as OneSignal from '@apollosproject/data-connector-onesignal'
 import * as Pass from '@apollosproject/data-connector-passes'
-import * as Search from '@apollosproject/data-connector-algolia-search';
+// import * as Search from '@apollosproject/data-connector-algolia-search';
 // import * as Cache from '@apollosproject/data-connector-redis-cache';
 import * as Sms from '@apollosproject/data-connector-twilio'
 import {
@@ -35,11 +35,12 @@ import * as Theme from './theme'
 import * as OneSignalWithRock from './oneSignalWithRock'
 
 import * as Auth from './auth'
+import * as Browse from './browse'
 import * as Cache from './redis-cache';
 import * as ContentChannel from './content-channel'
 import * as ContentItem from './content-item'
 import * as LiveStream from './live-stream'
-import * as Browse from './browse'
+import * as Search from './search'
 
 // Localized Modules
 import * as WebsitePagesContentItem from './website-pages-content-item'

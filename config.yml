@@ -12,6 +12,8 @@ APP:
   # It should match whatver is in your Info.plist `CFBundleURLTypes`
   DEEP_LINK_HOST: ChristFellowship
   ROOT_API_URL: ${ROOT_URL}
+  JOBS_USERNAME: ${JOBS_USERNAME}
+  JOBS_PASSWORD: ${JOBS_PASSWORD}
 ROCK:
   API_URL: ${ROCK_API}/api
   API_TOKEN: ${ROCK_TOKEN}
@@ -23,8 +25,6 @@ ROCK:
   TIMEZONE: "America/New_York"
   DEEP_LINK_HOST: 
   ROOT_API_URL: ${ROOT_URL}
-  JOBS_USERNAME: ${JOBS_USERNAME}
-  JOBS_PASSWORD: ${JOBS_PASSWORD}
   USE_PLUGIN: true
   SHOW_INACTIVE_CONTENT: ${ROCK_SHOW_INACTIVE_CONTENT}
 ONE_SIGNAL:
@@ -39,10 +39,11 @@ ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
   API_KEY: ${ALGOLIA_API_KEY}
   # TODO: should we support multiple indices? how?
-  SEARCH_INDEX: ${ALGOLIA_SEARCH_INDEX}
+  SEARCH_INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX}
   CONFIGURATION:
     searchableAttributes:
       - title
+      - htmlContent
       - unordered(summary)
 TWILIO:
   NOTIFY_SID: ${TWILIO_NOTIFY_SID}
@@ -221,6 +222,8 @@ HOME_FEATURES:
 FEATURE_FLAGS:
   LIVE_STREAM_UI:
     securityGroupId: 1014843
+    status: "LIVE"
+  ROCK_DYNAMIC_FEED_WITH_PERSONAS:
     status: "LIVE"
 
 # HOME_FEATURES:
