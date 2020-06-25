@@ -6,7 +6,8 @@ export default gql`
     uri: String
     icon: String
     openInApp: Boolean
-  }  
+    theme: Theme
+  }
 
   type AppLinks {
     name: String!
@@ -15,9 +16,11 @@ export default gql`
 
   extend type Query { 
     privacyPolicyUrl: String
+    passwordResetUrl: String
     moreLinks: [AppLinks]
     profileLinks: [AppLink]
     websiteBanner: CallToAction
     genderOptions: [String]
+    inAppLink(url:String!): String
   }
 `

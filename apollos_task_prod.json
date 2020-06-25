@@ -36,6 +36,18 @@
         {
           "name": "CLOUDFRONT",
           "value": "https://cloudfront.christfellowship.church"
+        },
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "CONTENT",
+          "value": "production"
+        },
+        {
+          "name": "ALGOLIA_SEARCH_INDEX",
+          "value": "ContentItems"
         }
       ],
       "secrets": [
@@ -74,6 +86,26 @@
         {
           "valueFrom": "/prod/ONE_SIGNAL_REST_KEY",
           "name": "ONE_SIGNAL_REST_KEY"
+        },
+        {
+          "valueFrom": "/prod/REDIS_URL",
+          "name": "REDIS_URL"
+        },
+        {
+          "valueFrom": "/prod/ALGOLIA_APP_ID",
+          "name": "ALGOLIA_APP_ID"
+        },
+        {
+          "valueFrom": "/prod/ALGOLIA_API_KEY",
+          "name": "ALGOLIA_API_KEY"
+        },
+        {
+          "valueFrom": "/prod/JOBS_USERNAME",
+          "name": "JOBS_USERNAME"
+        },
+        {
+          "valueFrom": "/prod/JOBS_PASSWORD",
+          "name": "JOBS_PASSWORD"
         }
       ],
       "mountPoints": [],

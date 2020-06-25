@@ -1,5 +1,6 @@
 import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock'
 import ApollosConfig from '@apollosproject/config'
+import { createGlobalId } from '@apollosproject/server-core'
 import {
   get,
   find,
@@ -8,22 +9,35 @@ import {
   upperCase,
 } from 'lodash'
 
-import { createVideoUrlFromGuid, getIdentifierType } from '../utils'
+import { createVideoUrlFromGuid } from '../utils'
 
-const { ROCK_MAPPINGS } = ApollosConfig
+const { ROCK_MAPPINGS, ROCK } = ApollosConfig
 
 export default class ContentItem extends coreContentItem.dataSource {
   expanded = true
+
+  CORE_LIVE_CONTENT = this.LIVE_CONTENT
+
+  LIVE_CONTENT = () => {
+    // If we're in a staging environment, we want to
+    //  return null so that no filter is applied over
+    //  the content querying.
+    // If we're not in a staging environment, we want
+    //  to apply the standard LIVE_CONTENT filter based
+    //  on the config.yml settings
+
+    if (process.env.CONTENT === 'stage') {
+      return null
+    }
+
+    return this.CORE_LIVE_CONTENT()
+  }
 
   resolveType(props) {
     const {
       attributeValues,
       attributes,
     } = props
-
-    // if (this.hasRedirect({ attributeValues, attributes })) {
-    //   return 'LinkContentItem'
-    // }
 
     return super.resolveType(props)
   }
@@ -147,4 +161,28 @@ export default class ContentItem extends coreContentItem.dataSource {
       .andFilter(this.LIVE_CONTENT())
       .cache({ ttl: 60 })
       .orderBy('Order');
+
+  generateShareUrl = ({ id: rockId, title }, parentType) => {
+    const resolvedId = createGlobalId(rockId, parentType).split(":")
+    const typename = resolvedId[0]
+    const id = resolvedId[1]
+
+    switch (typename) {
+      case "EventContentItem":
+        return `${ROCK.SHARE_URL}/events/${this.formatTitleAsUrl(title)}`;
+      case "InformationalContentItem":
+        return `${ROCK.SHARE_URL}/items/${id}`;
+      default:
+        return `${ROCK.SHARE_URL}/content/${id}`;
+    }
+  }
+
+  generateShareMessage = (root) => {
+    const { title } = root
+    const customMessage = get(root, 'attributeValues.shareMessage.value', '')
+
+    if (customMessage && customMessage !== "") return customMessage
+
+    return `${title} - ${this.createSummary(root)}`
+  }
 }

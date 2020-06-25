@@ -1,15 +1,16 @@
 import {
-    Features as coreFeatures,
+    Feature as coreFeatures,
 } from '@apollosproject/data-connector-rock'
 import {
     get,
+    split
 } from 'lodash'
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
 
-const { ROCK_MAPPINGS } = ApollosConfig
+const { ROCK_MAPPINGS, FEATURE_FLAGS } = ApollosConfig
 
-export default class Features extends coreFeatures.dataSource {
+export default class Feature extends coreFeatures.dataSource {
     expanded = true
     // Names of Action Algoritms mapping to the functions that create the actions.
     ACTION_ALGORITHIMS = {
@@ -27,18 +28,40 @@ export default class Features extends coreFeatures.dataSource {
             return []
         }
 
-        const { ContentItem } = this.context.dataSources;
+        const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === "LIVE"
+        const { ContentItem, Person } = this.context.dataSources;
         const contentChannelItems = await this.request('ContentChannelItems')
             .filter(`ContentChannelId eq ${contentChannelId}`)
             .andFilter(ContentItem.LIVE_CONTENT())
             .cache({ ttl: 60 })
             .orderBy('Order', 'asc')
             .get()
+        let personas = []
 
-        const actions = await Promise.all(contentChannelItems.map(async (item, i) => {
+        if (usePersonas) {
+            try {
+                personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
+            } catch (e) {
+                console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
+            }
+        }
+
+        const actions = contentChannelItems.map((item, i) => {
             const action = get(item, 'attributeValues.action.value', '')
 
             if (!action || action === '' || !item.id) return null
+            const securityDataViews = split(
+                get(item, 'attributeValues.securityDataViews.value', ''),
+                ','
+            ).filter(dv => !!dv)
+
+            if (securityDataViews.length > 0) {
+                const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
+                if (userInSecurityDataViews.length === 0) {
+                    console.log("User does not have access to this item")
+                    return null
+                }
+            }
 
             return {
                 id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
@@ -48,9 +71,9 @@ export default class Features extends coreFeatures.dataSource {
                 image: ContentItem.getCoverImage(item),
                 action,
             }
-        }))
+        })
 
-        return actions
+        return actions.filter(action => !!action)
     }
 
     async globalContentAlgorithm({ index = 0, limit = null } = {}) {

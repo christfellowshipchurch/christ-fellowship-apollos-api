@@ -2,7 +2,7 @@ import RockApolloDataSource from '@apollosproject/rock-apollo-data-source'
 import ApollosConfig from '@apollosproject/config'
 import ical from 'node-ical'
 import moment from 'moment-timezone'
-import { filter, split, take, drop, sortBy, first } from 'lodash'
+import { filter, split, flatten, first, get } from 'lodash'
 import { getIdentifierType } from '../utils'
 
 export default class Schedule extends RockApolloDataSource {
@@ -18,7 +18,40 @@ export default class Schedule extends RockApolloDataSource {
       .filterOneOf(ids.map(n => getIdentifierType(n).query))
       .get()
 
+  getOccurrences = async (id) => {
+    if (id) {
+      // getFromId returns an array with 1 result, so we
+      // just need to grab the first
+      const scheduleArr = await this.getFromId(id)
+      const schedule = first(scheduleArr)
+      if (schedule) {
+        const occurrences = await this.parseiCalendar(schedule.iCalendarContent)
+        const filteredOccurrences = filter(occurrences, ({ end }) => {
+          return this.momentWithTz(end).isAfter(moment())
+        })
 
+        // Rock schedules include an offset in minutes, so we want to pass
+        // that along for the objects that need to take offsets into account
+        const startOffset = get(schedule, 'checkInStartOffsetMinutes', 0)
+        return filteredOccurrences
+          .map(o => ({
+            ...o,
+            startWithOffset: moment(o.start).subtract(startOffset, 'm').toISOString()
+          }))
+          .sort((a, b) => this.momentWithTz(a).diff(this.momentWithTz(b)))
+      }
+    }
+
+    return null
+  }
+
+  getOccurrencesFromIds = async (ids) => {
+    const nextOccurrences = await Promise.all(
+      ids.map(id => this.getOccurrences(id))
+    )
+
+    return flatten(nextOccurrences)
+  }
 
   // shorthand for converting a date to a moment
   // object with Rock's timezone offset
@@ -52,7 +85,7 @@ export default class Schedule extends RockApolloDataSource {
 
       // append the first date to the events array
       // as an ISO string
-      events.push({ start: this.toISOString(start), end: this.toISOString(end), })
+      events.push({ start: this.toISOString(start), end: this.toISOString(end) })
 
       // Rock stores additional date in the rdate property, so we want to check that for more dates
       if (n.rdate) {

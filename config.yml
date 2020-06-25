@@ -12,6 +12,8 @@ APP:
   # It should match whatver is in your Info.plist `CFBundleURLTypes`
   DEEP_LINK_HOST: ChristFellowship
   ROOT_API_URL: ${ROOT_URL}
+  JOBS_USERNAME: ${JOBS_USERNAME}
+  JOBS_PASSWORD: ${JOBS_PASSWORD}
 ROCK:
   API_URL: ${ROCK_API}/api
   API_TOKEN: ${ROCK_TOKEN}
@@ -23,8 +25,6 @@ ROCK:
   TIMEZONE: "America/New_York"
   DEEP_LINK_HOST: 
   ROOT_API_URL: ${ROOT_URL}
-  JOBS_USERNAME: ${JOBS_USERNAME}
-  JOBS_PASSWORD: ${JOBS_PASSWORD}
   USE_PLUGIN: true
   SHOW_INACTIVE_CONTENT: ${ROCK_SHOW_INACTIVE_CONTENT}
 ONE_SIGNAL:
@@ -39,7 +39,12 @@ ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
   API_KEY: ${ALGOLIA_API_KEY}
   # TODO: should we support multiple indices? how?
-  SEARCH_INDEX: test_ContentItems
+  SEARCH_INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX}
+  CONFIGURATION:
+    searchableAttributes:
+      - title
+      - htmlContent
+      - unordered(summary)
 TWILIO:
   NOTIFY_SID: ${TWILIO_NOTIFY_SID}
   ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
@@ -137,6 +142,7 @@ ROCK_MAPPINGS:
   # However, it will not expose the channel itself.
   FEED_CONTENT_CHANNEL_IDS:
     - 43 # Article and Blogs
+    - 45 # Informational Items
     - 60 # Resources
     - 63 # Sermons
 
@@ -183,6 +189,12 @@ ROCK_MAPPINGS:
     SALVATION_DATE: "Arena-15-139"
     BAPTISM_DATE: "BaptismDate"
     ETHNICITY: "Ethnicity"
+  CONNECTION_STATUS:
+    FIRST_CONNECTION:
+      KEY: "Arena-15-135"
+    ORIGINAL_ENTRY:
+      KEY: "Arena-15-64"
+      VALUE: "65c8d8f1-491a-4335-bbdc-845ebc2887ab"
 
   LOCATION_TYPES:
     HOME_ADDRESS: 19
@@ -196,6 +208,7 @@ ROCK_MAPPINGS:
   SERVING_GROUP_TYPE_ID: 23
   COMMUNITY_GROUP_TYPE_ID: 25
   FAMILY_GROUP_TYPE_ID: 10
+  DEFAULT_CAMPUS_ID: 9
 
 # TODO : @caleb "I would like to not have to manually put the index in the GLOBAL_CONTENT feature"
 # NOTE : GLOBAL_CONTENT uses a 0 based index
@@ -205,6 +218,13 @@ HOME_FEATURES:
       - type: ROCK_DYNAMIC_FEED
         arguments:
           contentChannelId: 64
+
+FEATURE_FLAGS:
+  LIVE_STREAM_UI:
+    securityGroupId: 1014843
+    status: "LIVE"
+  ROCK_DYNAMIC_FEED_WITH_PERSONAS:
+    status: "LIVE"
 
 # HOME_FEATURES:
 #   - title: GLOBAL ITEM

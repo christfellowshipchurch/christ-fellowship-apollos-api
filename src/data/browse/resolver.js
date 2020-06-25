@@ -5,6 +5,8 @@ const resolver = {
   Query: {
     getBrowseFilters: (root, args, context) =>
       context.dataSources.ContentChannel.getRootChannels(),
+    browseFilters: (root, args, context) =>
+      context.dataSources.Browse.getContentFilters(),
   }
 }
 

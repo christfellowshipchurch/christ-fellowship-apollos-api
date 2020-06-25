@@ -4,11 +4,12 @@ import { createApolloServerConfig } from '@apollosproject/server-core'
 
 import * as Analytics from '@apollosproject/data-connector-analytics'
 import * as Scripture from '@apollosproject/data-connector-bible'
-import * as LiveStream from '@apollosproject/data-connector-church-online'
+// import * as LiveStream from '@apollosproject/data-connector-church-online'
 import * as Cloudinary from '@apollosproject/data-connector-cloudinary'
 import * as OneSignal from '@apollosproject/data-connector-onesignal'
 import * as Pass from '@apollosproject/data-connector-passes'
-import * as Cache from '@apollosproject/data-connector-redis-cache';
+// import * as Search from '@apollosproject/data-connector-algolia-search';
+// import * as Cache from '@apollosproject/data-connector-redis-cache';
 import * as Sms from '@apollosproject/data-connector-twilio'
 import {
   Followings,
@@ -18,7 +19,7 @@ import {
   // ContentItem,
   // ContentChannel,
   Sharable,
-  Auth,
+  // Auth,
   PersonalDevice,
   Template,
   AuthSms,
@@ -33,9 +34,13 @@ import * as Theme from './theme'
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
 import * as OneSignalWithRock from './oneSignalWithRock'
 
+import * as Auth from './auth'
+import * as Browse from './browse'
+import * as Cache from './redis-cache';
 import * as ContentChannel from './content-channel'
 import * as ContentItem from './content-item'
-import * as Browse from './browse'
+import * as LiveStream from './live-stream'
+import * as Search from './search'
 
 // Localized Modules
 import * as WebsitePagesContentItem from './website-pages-content-item'
@@ -55,11 +60,12 @@ import * as PhoneNumber from './phone-number'
 import * as Address from './address'
 import * as Workflow from './workflow'
 import * as Schedule from './schedule'
-import * as Features from './features'
+import * as Feature from './features'
 import * as Event from './events'
 
 import * as Metadata from './metadata'
 import * as AdditionalEndpoint from './additional-endpoints'
+import * as Flag from './flag'
 
 const data = {
   Followings,
@@ -81,10 +87,11 @@ const data = {
   PersonalDevice,
   OneSignalWithRock,
   Pass,
+  Search,
   Template,
   Campus,
   BinaryFiles,
-  Features,
+  Feature,
   TwilioNotify,
   Event,
 
@@ -95,6 +102,7 @@ const data = {
   Address,
   Workflow,
   Schedule,
+  Flag,
 
   // Local Content Items
   WebsiteNavigation,

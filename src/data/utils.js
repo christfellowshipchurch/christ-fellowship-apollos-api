@@ -1,5 +1,10 @@
+import URL from 'url';
 import ApollosConfig from '@apollosproject/config'
+import {
+  createGlobalId,
+} from '@apollosproject/server-core'
 import { Utils } from '@apollosproject/data-connector-rock'
+import { get, last, dropRight } from 'lodash'
 
 /*
  Splits up a Rock Key Value paired string where | splits pairs and ^ splits key and value
@@ -47,3 +52,48 @@ export const createVideoUrlFromGuid = (uri) =>
   uri.startsWith('http')
     ? Utils.enforceProtocol(uri)
     : `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`
+
+/*
+  Accepts a string url that is read and determined if a deep link can be
+  generated for it. If it can, an updated url will be created and returned
+  back to the client.
+
+  NOTE: it is assumed that the client requesting this update is a mobile app
+        so that a deep link url can be created. Web apps should not use this */
+const contentSingleTag = (strings, id) => `christfellowship://c/ContentSingle?itemId=${strings[0]}${id}`
+const contentFeedTag = (strings, id) => `christfellowship://c/ContentFeed?itemId=${strings[0]}${id}&nested=true`
+export const generateAppLinkFromUrl = async (uri, context) => {
+  const parsedUrl = URL.parse(uri)
+  const host = parsedUrl.host
+
+  if (host === "christfellowship.church") {
+    // Remove the first instance of / (/content/title-${itemId}) so that our array
+    //  after the split is ['content', 'title-${itemId}']
+    const pathParts = parsedUrl.pathname.replace('/', '').split('/')
+
+    if (pathParts.length > 1) {
+      // For Content Single
+      const pathWithoutId = dropRight(pathParts)
+      const id = last(last(pathParts).split('-'))
+      switch (pathWithoutId.join('/')) {
+        case 'content':
+          return contentSingleTag`UniversalContentItem:${id}`
+        case 'items':
+          return contentSingleTag`InformationalContentItem:${id}`
+        case 'events':
+          const { dataSources } = context
+          const contentItem = await dataSources.ContentItem.getEventByTitle(pathParts[1])
+          const eventId = get(contentItem, 'id')
+          if (eventId) {
+            return contentSingleTag`${createGlobalId(eventId, 'EventContentItem')}`
+          }
+        case 'content/collection':
+          return contentFeedTag`UniversalContentItem:${id}`
+      }
+    }
+  } else if (host === "pushpay.com") {
+    return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}?mobileApp=external&${parsedUrl.query || ''}`
+  }
+
+  return uri
+}

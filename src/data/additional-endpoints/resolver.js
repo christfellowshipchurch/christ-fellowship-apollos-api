@@ -1,51 +1,51 @@
 import { get } from 'lodash'
-import { parseRockKeyValuePairs } from '../utils'
+import { parseRockKeyValuePairs, generateAppLinkFromUrl } from '../utils'
 
 const moreLinkJson = [
-  // {
-  //   "name": "Get Involved",
-  //   "links": [
-  //     {
-  //       "name": "Community",
-  //       "icon": "users",
-  //       "uri": "https://beta.christfellowship.church/community-finder",
-  //       "openInApp": true
-  //     },
-  //     {
-  //       "name": "Serve",
-  //       "icon": "handshake",
-  //       "uri": "https://rock.gocf.org/dreamteam",
-  //       "openInApp": true
-  //     },
-  //     {
-  //       "name": "Give",
-  //       "icon": "envelope-open-dollar",
-  //       "uri": "https://pushpay.com/g/christfellowship",
-  //       "openInApp": false
-  //     }
-  //   ]
-  // },
   {
     "name": "Our Church",
     "links": [
       {
         "name": "Church Locations",
         "icon": "building",
-        "uri": "https://beta.christfellowship.church/locations",
-        "openInApp": true
+        "uri": "https://christfellowship.church/locations",
+        "openInApp": true,
       },
       {
         "name": "About",
         "icon": "information",
-        "uri": "https://beta.christfellowship.church/about",
+        "uri": "https://christfellowship.church/about",
         "openInApp": true
       },
       {
+        "name": "Shop Online",
+        "icon": "arrow-back",
+        "uri": "https://cf.church/shop",
+        "openInApp": false
+      }
+    ]
+  },
+  {
+    "name": "Contact",
+    "links": [
+      {
         "name": "Contact Us",
         "icon": "text",
-        "uri": "https://gochristfellowship.com/new-here/contact-us",
+        "uri": "https://rock.gocf.org/contactus",
         "openInApp": true
-      }
+      },
+      {
+        "name": "Connect Card",
+        "icon": "text",
+        "uri": "https://rock.gocf.org/connect",
+        "openInApp": true
+      },
+      {
+        "name": "Submit a Prayer Request",
+        "icon": "pray",
+        "uri": "https://rock.gocf.org/RequestPrayer",
+        "openInApp": true
+      },
     ]
   },
   {
@@ -63,34 +63,59 @@ const moreLinkJson = [
         uri: 'https://christfellowship.church/privacy-policy',
         openInApp: true,
       },
+      {
+        name: 'Send Feedback',
+        icon: 'warning',
+        uri: 'https://form.jotform.com/201343828801148',
+        openInApp: true,
+      },
     ],
   }
 ]
 
 const profileLinkJson = [
   {
-    "name": "Connect",
+    "name": "Groups",
     "icon": "users",
-    "uri": "https://beta.christfellowship.church/community-finder",
-    "openInApp": true
+    "uri": "https://cf.church/stronger",
+    "openInApp": true,
+    "theme": {
+      "colors": {
+        "primary": "#00aeef"
+      }
+    }
   },
   {
     "name": "Serve",
     "icon": "handshake",
-    "uri": "https://rock.gocf.org/dreamteam",
-    "openInApp": true
+    "uri": "https://rock.christfellowship.church/dreamteam",
+    "openInApp": true,
+    "theme": {
+      "colors": {
+        "primary": "#d52158"
+      }
+    }
   },
   {
     "name": "Give",
     "icon": "envelope-open-dollar",
     "uri": "https://pushpay.com/g/christfellowship",
-    "openInApp": false
+    "openInApp": false,
+    "theme": {
+      "colors": {
+        "primary": "#1ec27f"
+      }
+    }
   }
 ]
 
 const resolver = {
+  AppLink: {
+    theme: ({ theme }) => theme
+  },
   Query: {
-    privacyPolicyUrl: () => "https://beta.christfellowship.church/privacy-policy",
+    privacyPolicyUrl: () => "https://christfellowship.church/privacy-policy",
+    passwordResetUrl: () => "https://christfellowship.church/login/forgot",
     moreLinks: () => moreLinkJson,
     profileLinks: () => profileLinkJson,
     websiteBanner: async (root, args, { dataSources }) => {
@@ -103,7 +128,8 @@ const resolver = {
 
       return get(callsToAction, "[0]", null)
     },
-    genderOptions: () => ['Male', 'Female']
+    genderOptions: () => ['Male', 'Female'],
+    inAppLink: (root, { url }, context) => generateAppLinkFromUrl(url, context)
   },
 }
 

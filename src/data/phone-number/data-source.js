@@ -53,19 +53,21 @@ export default class PhoneNumber extends RockApolloDataSource {
   }
 
   getByUser = async () => {
-    const { id } = await this.context.dataSources.Auth.getCurrentPerson()
+    const currentPerson = await this.context.dataSources.Auth.getCurrentPerson()
 
-    if (!id) throw new Error('Invalid credentials')
+    if (!currentPerson.id) throw new Error('Invalid credentials')
 
     return this.request()
-      .filter(`(PersonId eq ${id}) and (NumberTypeValueId eq ${numberTypeValueIdMap.mobile})`)
+      .filter(`(PersonId eq ${currentPerson.id}) and (NumberTypeValueId eq ${numberTypeValueIdMap.mobile})`)
       .first()
   }
 
   updateEnableSMS = async (allow) => {
-    const { id } = await this.getByUser()
+    const phoneNumber = await this.getByUser()
 
-    return this.patch(`/PhoneNumbers/${id}`, {
+    if (!phoneNumber.id) return { IsMessagingEnabled: false }
+
+    return this.patch(`/PhoneNumbers/${phoneNumber.id}`, {
       IsMessagingEnabled: allow
     })
   }
