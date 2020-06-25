@@ -11,4 +11,8 @@ export default gql`
     extend type EventContentItem {
         checkin: CheckInable
     }
+
+    extend type Mutation {
+        checkInCurrentUser(id: ID!): CheckInable
+    }
 `

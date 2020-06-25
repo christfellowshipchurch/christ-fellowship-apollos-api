@@ -1,14 +1,70 @@
-import RockApolloDataSource from '@apollosproject/rock-apollo-data-source'
+import { RESTDataSource } from 'apollo-datasource-rest';
 import ApollosConfig from '@apollosproject/config'
+import { parseGlobalId } from '@apollosproject/server-core'
 import { first } from 'lodash'
+import moment from 'moment-timezone'
 import { getIdentifierType } from '../utils'
 
-const { ROCK_CONSTANTS } = ApollosConfig;
+const { ROCK_CONSTANTS, ROCK_MAPPINGS } = ApollosConfig;
 
-export default class Checkinable extends RockApolloDataSource {
+export default class Checkinable extends RESTDataSource {
+
+    // In order to trigger a Rock Webhook, we need to just hit the base
+    // rock url without the `/api` appended. For this, we are going to 
+    // set the baseUrl to just that. For any other API requests that need
+    // to happen in this datasource, just remember to prefix your request with `/api`
+    get baseURL() {
+        return process.env.ROCK_API;
+    }
+
+    mostRecentCheckIn = async (rockPersonId, rockGroupId) => {
+        const mostRecent = await this.get(`/Webhooks/Lava.ashx/checkin/latest?personId=${rockPersonId}&groupId=${rockGroupId}`)
+
+        if (mostRecent && mostRecent.DidAttend) {
+            const m = moment.tz(mostRecent.CheckedInDate, ApollosConfig.ROCK.TIMEZONE)
+            // something is happening right now where moment tz is not properly
+            // parsing the times of schedules. Every time that is recorded in Rock
+            // is set to 4 hours ahead of it's real time in order to counter this.
+            // We need to do the same for the incoming CheckInDate, or else we will
+            // never have check in available for anyone.
+            const offset = 60 * 4
+
+            return m.clone().utcOffset(offset).utc().format()
+        }
+
+        return null
+    }
+
+    mostRecentCheckInForCurrentPerson = async (rockGroupId) => {
+        try {
+            const { id } = this.context.dataSources.Auth.getCurrentPerson()
+
+            return this.mostRecentCheckIn(id, rockGroupId)
+        } catch (e) {
+            console.log("User is not logged in. Skipping check in check")
+        }
+
+        return null
+    }
+
+    checkInCurrentUser = async (id) => {
+        const { Group, Workflow, Auth } = this.context.dataSources
+        const globalId = parseGlobalId(id)
+        const { guid } = await Group.getFromId(globalId.id)
+
+        // return null
+        const currentUser = await Auth.getCurrentPerson()
+
+        const workflowResponse = await Workflow.trigger({
+            id: ROCK_MAPPINGS.WORKFLOW_IDS.CHECK_IN,
+            attributes: { personId: currentUser.id, group: guid }
+        })
+
+        console.log({ workflowResponse })
+    }
 
     getByContentItem = async (id) => {
-        const { ContentItem, Cache } = this.context.dataSources;
+        const { ContentItem } = this.context.dataSources;
         // Get the content item from the ID passed in
         const contentItem = await ContentItem.getFromId(id);
 
@@ -26,10 +82,14 @@ export default class Checkinable extends RockApolloDataSource {
             // access.
             // const groupValue = attributeValues[groupKey].value
             // TODO : remove this when done testing
-            const groupValue = 766112
+            const groupValue = 803446
             const identifier = getIdentifierType(groupValue)
             switch (identifier.type) {
                 case 'int':
+
+                    const mostRecentOccurrenc = await this.mostRecentCheckIn(207268, identifier.value)
+
+                    console.log({ mostRecentOccurrenc })
                     return {
                         id: identifier.value,
                         title: 'Check In',
@@ -37,28 +97,10 @@ export default class Checkinable extends RockApolloDataSource {
                         isCheckedIn: false
                     }
                 case 'guid':
-                    // just for testing
-                    const cachedKey = `groupId_${groupValue}`
-                    const cachedValue = await Cache.get({
-                        key: cachedKey,
-                    });
+                    const { id } = await this.context.dataSources.Group.getFromId(identifier.value)
+                    const mostRecentOccurrence = await this.mostRecentCheckIn(207268, id)
 
-                    if (cachedValue) {
-                        return cachedValue;
-                    }
-
-                    // Rock returns results as an array, so we want to grab the first 
-                    // before we deconstruct to get the id
-                    const group = await this.request(`Groups`).filter(identifier.query).get()
-                    const { id } = first(group)
-
-                    if (id) {
-                        Cache.set({
-                            key: cachedKey,
-                            data: id,
-                            expiresIn: 60 * 60 * 24 // 24 hour cache
-                        });
-                    }
+                    console.log({ mostRecentOccurrence })
 
                     return {
                         id,
