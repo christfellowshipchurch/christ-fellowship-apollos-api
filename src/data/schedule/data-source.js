@@ -66,7 +66,20 @@ export default class Schedule extends RockApolloDataSource {
   toISOString = (date) => moment.utc(date).toISOString()
 
   parseiCalendar = async (iCal, limit = 4) => {
-    const iCalEvents = Object.values(await ical.async.parseICS(iCal))
+    // Before parsing the iCal object, we need to find and replace the start and end data/time
+    // with one that specifies the current timezone of the event
+    //
+    // Rock returns a DTSTART/DTEND in the following format: DTSTART:20200419T171500
+    // which is ambiguous to the time zone, so node-ical will pick the local one
+    // node-ical wants time zone specified in the following manner: DTSTART;TZID=America/New_York:20200419T171500
+    // which we have to do manually
+    const iCalStart = iCal.match(/DTSTART:(\w+)/s);
+    const iCalEnd = iCal.match(/DTEND:(\w+)/s);
+    const iCalAdjusted = iCal
+      .replace(iCalStart[0], `DTSTART;TZID=${ApollosConfig.ROCK.TIMEZONE}:${iCalStart[1]}`)
+      .replace(iCalEnd[0], `DTEND;TZID=${ApollosConfig.ROCK.TIMEZONE}:${iCalEnd[1]}`)
+
+    const iCalEvents = Object.values(await ical.async.parseICS(iCalAdjusted))
 
     // [{ start, end, ical }]
     // if you map, you'll have to flatten the array
