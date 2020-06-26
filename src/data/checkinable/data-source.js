@@ -7,6 +7,8 @@ import { getIdentifierType } from '../utils'
 
 const { ROCK_CONSTANTS, ROCK_MAPPINGS } = ApollosConfig;
 
+import { currentUserCanUseFeature } from '../flag'
+
 export default class Checkinable extends RESTDataSource {
 
     // In order to trigger a Rock Webhook, we need to just hit the base
@@ -42,8 +44,6 @@ export default class Checkinable extends RESTDataSource {
             try {
                 const { id } = await this.context.dataSources.Auth.getCurrentPerson()
 
-                console.log({ rockGroupId, id })
-
                 return this.mostRecentCheckIn(id, rockGroupId)
             } catch (e) {
                 console.log("User is not logged in. Skipping check in check")
@@ -76,6 +76,14 @@ export default class Checkinable extends RESTDataSource {
     }
 
     getByContentItem = async (id) => {
+        try {
+            const featureStatus = await currentUserCanUseFeature("CHECK_IN")
+
+            if (featureStatus !== "LIVE") return null
+        } catch (e) {
+            return null
+        }
+
         const { ContentItem } = this.context.dataSources;
         // Get the content item from the ID passed in
         const contentItem = await ContentItem.getFromId(id);
@@ -99,8 +107,6 @@ export default class Checkinable extends RESTDataSource {
                     case 'int':
 
                         const mostRecentOccurrenc = await this.mostRecentCheckIn(207268, identifier.value)
-
-                        console.log({ mostRecentOccurrenc })
                         return {
                             id: identifier.value,
                             isCheckedIn: false

@@ -30,8 +30,6 @@ export default class Workflow extends RockApolloDataSource {
                 ampersand = '&'
             })
 
-            console.log({ id, queryString })
-
             const workflowResponse = await this.post(
                 `/Workflows/WorkflowEntry/${id}?${queryString}`
             )
