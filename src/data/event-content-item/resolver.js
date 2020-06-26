@@ -96,6 +96,8 @@ const resolver = {
       title: 'Share via ...',
       message: ContentItem.generateShareMessage(root),
     }),
+    checkin: ({ id }, args, { dataSources: { CheckInable } }, { parentType }) =>
+      CheckInable.getByContentItem(id)
   },
 }
 
