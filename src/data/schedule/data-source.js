@@ -63,7 +63,7 @@ export default class Schedule extends RockApolloDataSource {
 
   // shorthand for getting the ISO string of a
   // date with Rock's timezone offset
-  toISOString = (date) => this.momentWithTz(date).toISOString()
+  toISOString = (date) => moment.utc(date).toISOString()
 
   parseiCalendar = async (iCal, limit = 4) => {
     const iCalEvents = Object.values(await ical.async.parseICS(iCal))
@@ -78,8 +78,8 @@ export default class Schedule extends RockApolloDataSource {
       // const { start, end } = this.context.dataSources.Event.getDateTime(n)
       const { start, end } = n
 
-      const mStart = this.momentWithTz(start)
-      const mEnd = this.momentWithTz(end)
+      const mStart = moment.utc(start)
+      const mEnd = moment.utc(end)
       const duration = moment.duration(mEnd.diff(mStart))
       const minutes = duration.asMinutes()
 
@@ -98,7 +98,7 @@ export default class Schedule extends RockApolloDataSource {
           // and push it to our array of events
           events.push({
             start: this.toISOString(rdate),
-            end: this.momentWithTz(rdate).add(minutes, 'minutes').toISOString()
+            end: moment.utc(rdate).add(minutes, 'minutes').toISOString()
           })
         })
       }
@@ -119,7 +119,7 @@ export default class Schedule extends RockApolloDataSource {
         // don't really care about the original start/end date
         events.push({
           start: this.toISOString(rrule),
-          end: this.momentWithTz(rrule).add(minutes, 'minutes').toISOString()
+          end: moment.utc(rrule).add(minutes, 'minutes').toISOString()
         })
       }
     })
