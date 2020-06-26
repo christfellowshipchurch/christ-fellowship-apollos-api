@@ -27,7 +27,7 @@ export default class Schedule extends RockApolloDataSource {
       if (schedule) {
         const occurrences = await this.parseiCalendar(schedule.iCalendarContent)
         const filteredOccurrences = filter(occurrences, ({ end }) => {
-          return this.momentWithTz(end).isAfter(moment())
+          return moment.utc(end).isAfter(moment())
         })
 
         // Rock schedules include an offset in minutes, so we want to pass
@@ -38,7 +38,7 @@ export default class Schedule extends RockApolloDataSource {
             ...o,
             startWithOffset: moment(o.start).subtract(startOffset, 'm').toISOString()
           }))
-          .sort((a, b) => this.momentWithTz(a).diff(this.momentWithTz(b)))
+          .sort((a, b) => moment.utc(a).diff(moment.utc(b)))
       }
     }
 
