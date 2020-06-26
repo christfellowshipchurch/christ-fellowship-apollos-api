@@ -18,30 +18,36 @@ export default class Checkinable extends RESTDataSource {
     }
 
     mostRecentCheckIn = async (rockPersonId, rockGroupId) => {
-        const mostRecent = await this.get(`/Webhooks/Lava.ashx/checkin/latest?personId=${rockPersonId}&groupId=${rockGroupId}`)
+        if (rockPersonId && rockGroupId) {
+            const mostRecent = await this.get(`/Webhooks/Lava.ashx/checkin/latest?personId=${rockPersonId}&groupId=${rockGroupId}`)
 
-        if (mostRecent && mostRecent.DidAttend) {
-            const m = moment.tz(mostRecent.CheckedInDate, ApollosConfig.ROCK.TIMEZONE)
-            // something is happening right now where moment tz is not properly
-            // parsing the times of schedules. Every time that is recorded in Rock
-            // is set to 4 hours ahead of it's real time in order to counter this.
-            // We need to do the same for the incoming CheckInDate, or else we will
-            // never have check in available for anyone.
-            const offset = 60 * 4
+            if (mostRecent && mostRecent.DidAttend) {
+                const m = moment.tz(mostRecent.CheckedInDate, ApollosConfig.ROCK.TIMEZONE)
+                // something is happening right now where moment tz is not properly
+                // parsing the times of schedules. Every time that is recorded in Rock
+                // is set to 4 hours ahead of it's real time in order to counter this.
+                // We need to do the same for the incoming CheckInDate, or else we will
+                // never have check in available for anyone.
+                const offset = 60 * 4
 
-            return m.clone().utcOffset(offset).utc().format()
+                return m.clone().utcOffset(offset).utc().format()
+            }
         }
 
         return null
     }
 
     mostRecentCheckInForCurrentPerson = async (rockGroupId) => {
-        try {
-            const { id } = this.context.dataSources.Auth.getCurrentPerson()
+        if (rockGroupId) {
+            try {
+                const { id } = await this.context.dataSources.Auth.getCurrentPerson()
 
-            return this.mostRecentCheckIn(id, rockGroupId)
-        } catch (e) {
-            console.log("User is not logged in. Skipping check in check")
+                console.log({ rockGroupId, id })
+
+                return this.mostRecentCheckIn(id, rockGroupId)
+            } catch (e) {
+                console.log("User is not logged in. Skipping check in check")
+            }
         }
 
         return null
@@ -49,18 +55,24 @@ export default class Checkinable extends RESTDataSource {
 
     checkInCurrentUser = async (id) => {
         const { Group, Workflow, Auth } = this.context.dataSources
-        const globalId = parseGlobalId(id)
-        const { guid } = await Group.getFromId(globalId.id)
-
-        // return null
+        const { guid } = await Group.getFromId(id)
         const currentUser = await Auth.getCurrentPerson()
 
-        const workflowResponse = await Workflow.trigger({
-            id: ROCK_MAPPINGS.WORKFLOW_IDS.CHECK_IN,
-            attributes: { personId: currentUser.id, group: guid }
-        })
+        try {
+            const workflowResponse = await Workflow.trigger({
+                id: ROCK_MAPPINGS.WORKFLOW_IDS.CHECK_IN,
+                attributes: { personId: currentUser.id, group: guid }
+            })
 
-        console.log({ workflowResponse })
+            if (workflowResponse.status !== "Failed") {
+                return { id }
+            }
+        } catch (e) {
+            console.log(e)
+        }
+
+        return null
+
     }
 
     getByContentItem = async (id) => {
@@ -75,42 +87,36 @@ export default class Checkinable extends RESTDataSource {
             key.toLowerCase().includes('group')
             && attributes[key].fieldTypeId === ROCK_CONSTANTS.GROUP)
 
-        if (groupKey && groupKey !== '' || true) {
+        if (groupKey && groupKey !== '') {
             // The workflow in Rock requires an integer id, so if
             // the attribute value we get is a guid, we need to get
             // the id from Rock and cache the value in Redis for later
             // access.
-            // const groupValue = attributeValues[groupKey].value
-            // TODO : remove this when done testing
-            const groupValue = 803446
-            const identifier = getIdentifierType(groupValue)
-            switch (identifier.type) {
-                case 'int':
+            const groupValue = attributeValues[groupKey].value
+            if (groupValue && groupValue !== '') {
+                const identifier = getIdentifierType(groupValue)
+                switch (identifier.type) {
+                    case 'int':
 
-                    const mostRecentOccurrenc = await this.mostRecentCheckIn(207268, identifier.value)
+                        const mostRecentOccurrenc = await this.mostRecentCheckIn(207268, identifier.value)
 
-                    console.log({ mostRecentOccurrenc })
-                    return {
-                        id: identifier.value,
-                        title: 'Check In',
-                        message: "Let us know you're here!",
-                        isCheckedIn: false
-                    }
-                case 'guid':
-                    const { id } = await this.context.dataSources.Group.getFromId(identifier.value)
-                    const mostRecentOccurrence = await this.mostRecentCheckIn(207268, id)
+                        console.log({ mostRecentOccurrenc })
+                        return {
+                            id: identifier.value,
+                            isCheckedIn: false
+                        }
+                    case 'guid':
+                        const { id } = await this.context.dataSources.Group.getFromId(identifier.value)
+                        const mostRecentOccurrence = await this.mostRecentCheckIn(207268, id)
 
-                    console.log({ mostRecentOccurrence })
+                        return {
+                            id,
+                            isCheckedIn: false
+                        }
 
-                    return {
-                        id,
-                        title: 'Check In',
-                        message: "Let us know you're here!",
-                        isCheckedIn: false
-                    }
-
-                default:
-                    break;
+                    default:
+                        break;
+                }
             }
         }
 
