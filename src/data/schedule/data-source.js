@@ -27,7 +27,7 @@ export default class Schedule extends RockApolloDataSource {
       if (schedule) {
         const occurrences = await this.parseiCalendar(schedule.iCalendarContent)
         const filteredOccurrences = filter(occurrences, ({ end }) => {
-          return this.momentWithTz(end).isAfter(moment())
+          return moment.utc(end).isAfter(moment())
         })
 
         // Rock schedules include an offset in minutes, so we want to pass
@@ -38,7 +38,7 @@ export default class Schedule extends RockApolloDataSource {
             ...o,
             startWithOffset: moment(o.start).subtract(startOffset, 'm').toISOString()
           }))
-          .sort((a, b) => this.momentWithTz(a).diff(this.momentWithTz(b)))
+          .sort((a, b) => moment.utc(a).diff(moment.utc(b)))
       }
     }
 
@@ -63,10 +63,23 @@ export default class Schedule extends RockApolloDataSource {
 
   // shorthand for getting the ISO string of a
   // date with Rock's timezone offset
-  toISOString = (date) => this.momentWithTz(date).toISOString()
+  toISOString = (date) => moment.utc(date).toISOString()
 
   parseiCalendar = async (iCal, limit = 4) => {
-    const iCalEvents = Object.values(await ical.async.parseICS(iCal))
+    // Before parsing the iCal object, we need to find and replace the start and end data/time
+    // with one that specifies the current timezone of the event
+    //
+    // Rock returns a DTSTART/DTEND in the following format: DTSTART:20200419T171500
+    // which is ambiguous to the time zone, so node-ical will pick the local one
+    // node-ical wants time zone specified in the following manner: DTSTART;TZID=America/New_York:20200419T171500
+    // which we have to do manually
+    const iCalStart = iCal.match(/DTSTART:(\w+)/s);
+    const iCalEnd = iCal.match(/DTEND:(\w+)/s);
+    const iCalAdjusted = iCal
+      .replace(iCalStart[0], `DTSTART;TZID=${ApollosConfig.ROCK.TIMEZONE}:${iCalStart[1]}`)
+      .replace(iCalEnd[0], `DTEND;TZID=${ApollosConfig.ROCK.TIMEZONE}:${iCalEnd[1]}`)
+
+    const iCalEvents = Object.values(await ical.async.parseICS(iCalAdjusted))
 
     // [{ start, end, ical }]
     // if you map, you'll have to flatten the array
@@ -78,8 +91,8 @@ export default class Schedule extends RockApolloDataSource {
       // const { start, end } = this.context.dataSources.Event.getDateTime(n)
       const { start, end } = n
 
-      const mStart = this.momentWithTz(start)
-      const mEnd = this.momentWithTz(end)
+      const mStart = moment.utc(start)
+      const mEnd = moment.utc(end)
       const duration = moment.duration(mEnd.diff(mStart))
       const minutes = duration.asMinutes()
 
@@ -98,7 +111,7 @@ export default class Schedule extends RockApolloDataSource {
           // and push it to our array of events
           events.push({
             start: this.toISOString(rdate),
-            end: this.momentWithTz(rdate).add(minutes, 'minutes').toISOString()
+            end: moment.utc(rdate).add(minutes, 'minutes').toISOString()
           })
         })
       }
@@ -119,7 +132,7 @@ export default class Schedule extends RockApolloDataSource {
         // don't really care about the original start/end date
         events.push({
           start: this.toISOString(rrule),
-          end: this.momentWithTz(rrule).add(minutes, 'minutes').toISOString()
+          end: moment.utc(rrule).add(minutes, 'minutes').toISOString()
         })
       }
     })
