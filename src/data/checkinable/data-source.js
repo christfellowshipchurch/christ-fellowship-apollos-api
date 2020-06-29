@@ -7,8 +7,6 @@ import { getIdentifierType } from '../utils'
 
 const { ROCK_CONSTANTS, ROCK_MAPPINGS } = ApollosConfig;
 
-import { currentUserCanUseFeature } from '../flag'
-
 export default class Checkinable extends RESTDataSource {
 
     // In order to trigger a Rock Webhook, we need to just hit the base
@@ -76,15 +74,19 @@ export default class Checkinable extends RESTDataSource {
     }
 
     getByContentItem = async (id) => {
+        const { ContentItem, Flag } = this.context.dataSources;
+
         try {
-            const featureStatus = await currentUserCanUseFeature("CHECK_IN")
+            const featureStatus = await Flag.currentUserCanUseFeature("CHECK_IN")
+
+            console.log({ featureStatus })
 
             if (featureStatus !== "LIVE") return null
         } catch (e) {
+            console.log(e)
             return null
         }
 
-        const { ContentItem } = this.context.dataSources;
         // Get the content item from the ID passed in
         const contentItem = await ContentItem.getFromId(id);
 
