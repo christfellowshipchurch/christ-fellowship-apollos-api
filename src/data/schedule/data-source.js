@@ -143,8 +143,17 @@ export default class Schedule extends RockApolloDataSource {
 
   timeIsInSchedules = async ({ ids, time }) => {
     const times = await this.getOccurrencesFromIds(ids)
-    const { startWithOffset, end } = first(times)
+    const nextTime = first(times)
 
-    return moment(time).isBetween(moment(startWithOffset), moment(end))
+    if (nextTime) {
+      const start = get(nextTime, 'startWithOffset')
+      const end = get(nextTime, 'end')
+
+      if (start && end) {
+        return moment(time).isBetween(moment(start), moment(end))
+      }
+    }
+
+    return false
   }
 }
