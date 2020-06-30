@@ -67,7 +67,7 @@ export default class Checkinable extends RESTDataSource {
             console.log(e)
         }
 
-        return null
+        return { id, isCheckedIn: false }
 
     }
 
