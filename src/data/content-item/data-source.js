@@ -165,8 +165,6 @@ export default class ContentItem extends coreContentItem.dataSource {
       }
     }
 
-    console.log({ personas })
-
     return eventItems
       .map(event => {
         const securityDataViews = split(
