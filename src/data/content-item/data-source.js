@@ -7,11 +7,12 @@ import {
   kebabCase,
   toLower,
   upperCase,
+  split
 } from 'lodash'
 
 import { createVideoUrlFromGuid } from '../utils'
 
-const { ROCK_MAPPINGS, ROCK } = ApollosConfig
+const { ROCK_MAPPINGS, ROCK, FEATURE_FLAGS } = ApollosConfig
 
 export default class ContentItem extends coreContentItem.dataSource {
   expanded = true
@@ -99,6 +100,8 @@ export default class ContentItem extends coreContentItem.dataSource {
 
     if (title === '' || contentChannels.length === 0) return null
 
+    console.log({ title })
+
     const contentItems = await this.request(`ContentChannelItems`)
       .filterOneOf(contentChannels.map(n => `ContentChannelId eq ${n}`))
       .andFilter(`toupper(Title) eq '${upperCase(title)}'`)
@@ -117,7 +120,8 @@ export default class ContentItem extends coreContentItem.dataSource {
       .filterOneOf(ids.map(n => `ContentChannelTypeId eq ${n}`))
       .get()
 
-  getEvents = (limit) => {
+  getEvents = async (limit) => {
+    const { Person } = this.context.dataSources
     const contentChannelTypes = get(ROCK_MAPPINGS, 'CONTENT_ITEM.EventContentItem.ContentChannelTypeId', [])
 
     if (contentChannelTypes.length === 0) {
@@ -127,12 +131,60 @@ export default class ContentItem extends coreContentItem.dataSource {
       return null
     }
 
-    return this.request(`ContentChannelItems`)
-      .filterOneOf(contentChannelTypes.map(n => `ContentChannelTypeId eq ${n}`))
-      .andFilter(this.LIVE_CONTENT())
-      .orderBy('Order')
-      .top(limit)
-      .get()
+    const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === "LIVE"
+    let personas = []
+    if (usePersonas) {
+      try {
+        personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
+      } catch (e) {
+        console.log("Events: Unable to retrieve personas for user.")
+        console.log(e)
+      }
+    }
+
+    const { Cache } = this.context.dataSources;
+    const cachedKey = `${process.env.CONTENT}_eventContentItems`
+    let eventItems = await Cache.get({
+      key: cachedKey,
+    });
+
+    if (!eventItems) {
+      eventItems = await this.request(`ContentChannelItems`)
+        .filterOneOf(contentChannelTypes.map(n => `ContentChannelTypeId eq ${n}`))
+        .andFilter(this.LIVE_CONTENT())
+        .orderBy('Order')
+        .top(limit)
+        .get()
+
+      if (eventItems != null) {
+        Cache.set({
+          key: cachedKey,
+          data: eventItems,
+          expiresIn: 60 * 5 // 5 minute cache 
+        });
+      }
+    }
+
+    console.log({ personas })
+
+    return eventItems
+      .map(event => {
+        const securityDataViews = split(
+          get(event, 'attributeValues.securityDataViews.value', ''),
+          ','
+        ).filter(dv => !!dv)
+
+        if (securityDataViews.length > 0) {
+          const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
+          if (userInSecurityDataViews.length === 0) {
+            console.log("User does not have access to this item")
+            return null
+          }
+        }
+
+        return event
+      })
+      .filter(event => !!event)
   }
 
   getFeaturedEvents = () => {
