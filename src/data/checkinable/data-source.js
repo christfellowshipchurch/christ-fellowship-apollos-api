@@ -36,7 +36,6 @@ export default class Checkinable extends RESTDataSource {
     }
 
     mostRecentCheckInForCurrentPerson = async (rockGroupId) => {
-        console.log({ rockGroupId })
         if (rockGroupId) {
             try {
                 const { id } = await this.context.dataSources.Auth.getCurrentPerson()
@@ -62,7 +61,7 @@ export default class Checkinable extends RESTDataSource {
             })
 
             if (workflowResponse.status !== "Failed") {
-                return { id }
+                return { id, isCheckedIn: true }
             }
         } catch (e) {
             console.log(e)
