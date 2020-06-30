@@ -23,6 +23,7 @@ export default class Schedule extends RockApolloDataSource {
       // getFromId returns an array with 1 result, so we
       // just need to grab the first
       const scheduleArr = await this.getFromId(id)
+
       const schedule = first(scheduleArr)
       if (schedule) {
         const occurrences = await this.parseiCalendar(schedule.iCalendarContent)
@@ -138,5 +139,12 @@ export default class Schedule extends RockApolloDataSource {
     })
 
     return events
+  }
+
+  timeIsInSchedules = async ({ ids, time }) => {
+    const times = await this.getOccurrencesFromIds(ids)
+    const { startWithOffset, end } = first(times)
+
+    return moment(time).isBetween(moment(startWithOffset), moment(end))
   }
 }

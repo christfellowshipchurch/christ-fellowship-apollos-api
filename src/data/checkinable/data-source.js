@@ -7,8 +7,6 @@ import { getIdentifierType } from '../utils'
 
 const { ROCK_CONSTANTS, ROCK_MAPPINGS } = ApollosConfig;
 
-import { currentUserCanUseFeature } from '../flag'
-
 export default class Checkinable extends RESTDataSource {
 
     // In order to trigger a Rock Webhook, we need to just hit the base
@@ -21,18 +19,16 @@ export default class Checkinable extends RESTDataSource {
 
     mostRecentCheckIn = async (rockPersonId, rockGroupId) => {
         if (rockPersonId && rockGroupId) {
-            const mostRecent = await this.get(`/Webhooks/Lava.ashx/checkin/latest?personId=${rockPersonId}&groupId=${rockGroupId}`)
+            try {
+                const mostRecent = await this.get(`/Webhooks/Lava.ashx/checkin/latest?personId=${rockPersonId}&groupId=${rockGroupId}`)
 
-            if (mostRecent && mostRecent.DidAttend) {
-                const m = moment.tz(mostRecent.CheckedInDate, ApollosConfig.ROCK.TIMEZONE)
-                // something is happening right now where moment tz is not properly
-                // parsing the times of schedules. Every time that is recorded in Rock
-                // is set to 4 hours ahead of it's real time in order to counter this.
-                // We need to do the same for the incoming CheckInDate, or else we will
-                // never have check in available for anyone.
-                const offset = 60 * 4
+                if (mostRecent && mostRecent.DidAttend) {
+                    const m = moment.tz(mostRecent.CheckedInDate, ApollosConfig.ROCK.TIMEZONE)
 
-                return m.clone().utcOffset(offset).utc().format()
+                    return m.utc().format()
+                }
+            } catch (e) {
+                console.log(e)
             }
         }
 
@@ -40,6 +36,7 @@ export default class Checkinable extends RESTDataSource {
     }
 
     mostRecentCheckInForCurrentPerson = async (rockGroupId) => {
+        console.log({ rockGroupId })
         if (rockGroupId) {
             try {
                 const { id } = await this.context.dataSources.Auth.getCurrentPerson()
@@ -75,16 +72,31 @@ export default class Checkinable extends RESTDataSource {
 
     }
 
-    getByContentItem = async (id) => {
-        try {
-            const featureStatus = await currentUserCanUseFeature("CHECK_IN")
+    isCheckedInBySchedule = async ({ scheduleIds, groupId }) => {
+        const { Schedule } = this.context.dataSources;
+        const mostRecentCheckIn = await this.mostRecentCheckInForCurrentPerson(groupId)
 
+        if (mostRecentCheckIn) {
+            return await Schedule.timeIsInSchedules({
+                ids: scheduleIds,
+                time: mostRecentCheckIn
+            })
+        }
+
+        return false
+    }
+
+    getByContentItem = async (id) => {
+        const { ContentItem, Flag, Group, Schedule } = this.context.dataSources;
+
+        try {
+            const featureStatus = await Flag.currentUserCanUseFeature("CHECK_IN")
             if (featureStatus !== "LIVE") return null
         } catch (e) {
+            console.log(e)
             return null
         }
 
-        const { ContentItem } = this.context.dataSources;
         // Get the content item from the ID passed in
         const contentItem = await ContentItem.getFromId(id);
 
@@ -94,6 +106,10 @@ export default class Checkinable extends RESTDataSource {
         const groupKey = Object.keys(attributes).find(key =>
             key.toLowerCase().includes('group')
             && attributes[key].fieldTypeId === ROCK_CONSTANTS.GROUP)
+        const scheduleKey = Object.keys(attributes).find(key =>
+            key.toLowerCase().includes('schedule')
+            && (attributes[key].fieldTypeId === ROCK_CONSTANTS.SCHEDULES
+                || attributes[key].fieldTypeId === ROCK_CONSTANTS.SCHEDULE))
 
         if (groupKey && groupKey !== '') {
             // The workflow in Rock requires an integer id, so if
@@ -101,25 +117,39 @@ export default class Checkinable extends RESTDataSource {
             // the id from Rock and cache the value in Redis for later
             // access.
             const groupValue = attributeValues[groupKey].value
+            const scheduleIds = attributeValues[scheduleKey].value
+
             if (groupValue && groupValue !== '') {
+                // At this point, we want to check and make sure that we should even
+                // be offering check in. We want want to check if `now` falls within
+                // a time of the schedules on the content item
+                const showSchedule = await Schedule.timeIsInSchedules({
+                    ids: scheduleIds.split(','),
+                    time: moment().toISOString()
+                })
+
+                if (!showSchedule) return null
+
                 const identifier = getIdentifierType(groupValue)
+
                 switch (identifier.type) {
                     case 'int':
-
-                        const mostRecentOccurrenc = await this.mostRecentCheckIn(207268, identifier.value)
                         return {
                             id: identifier.value,
-                            isCheckedIn: false
+                            isCheckedIn: await this.isCheckedInBySchedule({
+                                groupId: identifier.value,
+                                scheduleIds: scheduleIds.split(",")
+                            })
                         }
                     case 'guid':
-                        const { id } = await this.context.dataSources.Group.getFromId(identifier.value)
-                        const mostRecentOccurrence = await this.mostRecentCheckIn(207268, id)
-
+                        const { id } = await Group.getFromId(identifier.value)
                         return {
                             id,
-                            isCheckedIn: false
+                            isCheckedIn: await this.isCheckedInBySchedule({
+                                groupId: id,
+                                scheduleIds: scheduleIds.split(",")
+                            })
                         }
-
                     default:
                         break;
                 }

@@ -228,7 +228,7 @@ FEATURE_FLAGS:
     status: "LIVE"
   CHECK_IN:
     securityGroupId: 1014843
-    status: "DISABLED"
+    status: "LIVE"
 
 # HOME_FEATURES:
 #   - title: GLOBAL ITEM

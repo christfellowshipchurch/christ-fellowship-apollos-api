@@ -8,20 +8,16 @@ const resolver = {
         __resolveType: ({ __typename }) => __typename,
         id: ({ id }, args, context, { parentType }) =>
             createGlobalId(id, parentType.name),
-        title: async ({ id }, args, { dataSources }) => {
-            const isCheckedIn = await dataSources.CheckInable.mostRecentCheckInForCurrentPerson(id)
-
+        title: async ({ id, isCheckedIn }, args, { dataSources }) => {
             return isCheckedIn ? "Checked In" : "Check In"
         },
         message: ({ isCheckedIn }) => isCheckedIn ? "Thank you for checking in!" : "Let us know you're here",
-        isCheckedIn: async ({ id, isCheckedIn }, args, { dataSources }) => {
+        isCheckedIn: async ({ isCheckedIn }) => {
             const flag = get(ApollosConfig, 'FEATURE_FLAGS.CHECK_IN.status', null)
 
             if (!flag || flag !== 'LIVE') return false
 
-            const mrci = await dataSources.CheckInable.mostRecentCheckInForCurrentPerson(id)
-
-            return !!mrci
+            return isCheckedIn
         },
     },
     Mutation: {
