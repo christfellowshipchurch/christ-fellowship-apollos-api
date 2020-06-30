@@ -123,6 +123,7 @@ export default class Checkinable extends RESTDataSource {
                 // At this point, we want to check and make sure that we should even
                 // be offering check in. We want want to check if `now` falls within
                 // a time of the schedules on the content item
+                //
                 const showSchedule = await Schedule.timeIsInSchedules({
                     ids: scheduleIds.split(','),
                     time: moment().toISOString()
