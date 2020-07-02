@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Group data sources gets a map of group type IDs 1`] = `
+Array [
+  23,
+  25,
+  10,
+  31,
+  92,
+]
+`;

@@ -1,16 +1,16 @@
-import { gql } from 'apollo-server'
+import { gql } from 'apollo-server';
 
-import { createApolloServerConfig } from '@apollosproject/server-core'
+import { createApolloServerConfig } from '@apollosproject/server-core';
 
-import * as Analytics from '@apollosproject/data-connector-analytics'
-import * as Scripture from '@apollosproject/data-connector-bible'
+import * as Analytics from '@apollosproject/data-connector-analytics';
+import * as Scripture from '@apollosproject/data-connector-bible';
 // import * as LiveStream from '@apollosproject/data-connector-church-online'
-import * as Cloudinary from '@apollosproject/data-connector-cloudinary'
-import * as OneSignal from '@apollosproject/data-connector-onesignal'
-import * as Pass from '@apollosproject/data-connector-passes'
+import * as Cloudinary from '@apollosproject/data-connector-cloudinary';
+import * as OneSignal from '@apollosproject/data-connector-onesignal';
+import * as Pass from '@apollosproject/data-connector-passes';
 // import * as Search from '@apollosproject/data-connector-algolia-search';
 // import * as Cache from '@apollosproject/data-connector-redis-cache';
-import * as Sms from '@apollosproject/data-connector-twilio'
+import * as Sms from '@apollosproject/data-connector-twilio';
 import {
   Followings,
   Interactions,
@@ -24,50 +24,53 @@ import {
   Template,
   AuthSms,
   // Campus,
+  // Group,
   BinaryFiles,
   // Features,
   // Event,
-} from '@apollosproject/data-connector-rock'
-import * as Theme from './theme'
+} from '@apollosproject/data-connector-rock';
+import * as Theme from './theme';
 
 // This module is used to attach Rock User updating to the OneSignal module.
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
-import * as OneSignalWithRock from './oneSignalWithRock'
+import * as OneSignalWithRock from './oneSignalWithRock';
 
-import * as Auth from './auth'
-import * as Browse from './browse'
+import * as Auth from './auth';
+import * as Browse from './browse';
 import * as Cache from './redis-cache';
-import * as ContentChannel from './content-channel'
-import * as ContentItem from './content-item'
-import * as LiveStream from './live-stream'
-import * as Search from './search'
-import * as CheckInable from './checkinable'
-import * as Group from './group'
+import * as ContentChannel from './content-channel';
+import * as ContentItem from './content-item';
+import * as LiveStream from './live-stream';
+import * as Search from './search';
+import * as CheckInable from './checkinable';
+import * as CheckInableGroup from './checkInableGroup';
 
 // Localized Modules
-import * as WebsitePagesContentItem from './website-pages-content-item'
-import * as WebsiteContentItem from './website-content-item'
-import * as WebsiteHtmlContentItem from './website-html-content-item'
-import * as WebsiteGroupContentItem from './website-group-content-item'
-import * as WebsiteNavigation from './website-navigation'
-import * as WebsiteFeature from './website-feature'
+import * as WebsitePagesContentItem from './website-pages-content-item';
+import * as WebsiteContentItem from './website-content-item';
+import * as WebsiteHtmlContentItem from './website-html-content-item';
+import * as WebsiteGroupContentItem from './website-group-content-item';
+import * as WebsiteNavigation from './website-navigation';
+import * as WebsiteFeature from './website-feature';
 
-import * as DefinedValue from './defined-value'
-import * as DefinedValueList from './defined-value-list'
+import * as DefinedValue from './defined-value';
+import * as DefinedValueList from './defined-value-list';
 
-import * as TwilioNotify from './twilio-notify'
-import * as Campus from './campus'
-import * as Person from './people'
-import * as PhoneNumber from './phone-number'
-import * as Address from './address'
-import * as Workflow from './workflow'
-import * as Schedule from './schedule'
-import * as Feature from './features'
-import * as Event from './events'
+import * as TwilioNotify from './twilio-notify';
+import * as Campus from './campus';
+import * as Person from './people';
+import * as Group from './groups';
 
-import * as Metadata from './metadata'
-import * as AdditionalEndpoint from './additional-endpoints'
-import * as Flag from './flag'
+import * as PhoneNumber from './phone-number';
+import * as Address from './address';
+import * as Workflow from './workflow';
+import * as Schedule from './schedule';
+import * as Feature from './features';
+import * as Event from './events';
+
+import * as Metadata from './metadata';
+import * as AdditionalEndpoint from './additional-endpoints';
+import * as Flag from './flag';
 
 const data = {
   Followings,
@@ -92,6 +95,7 @@ const data = {
   Search,
   Template,
   Campus,
+  Group,
   BinaryFiles,
   Feature,
   TwilioNotify,
@@ -106,32 +110,32 @@ const data = {
   Schedule,
   Flag,
   CheckInable,
-  Group,
+  CheckInableGroup,
 
   // Local Content Items
   WebsiteNavigation,
   WebsitePagesContentItem: {
-    dataSource: WebsitePagesContentItem.dataSource
+    dataSource: WebsitePagesContentItem.dataSource,
   },
   WebsiteContentItem: {
-    dataSource: WebsiteContentItem.dataSource
+    dataSource: WebsiteContentItem.dataSource,
   },
   WebsiteHtmlContentItem: {
-    dataSource: WebsiteHtmlContentItem.dataSource
+    dataSource: WebsiteHtmlContentItem.dataSource,
   },
   WebsiteGroupContentItem: {
-    dataSource: WebsiteGroupContentItem.dataSource
+    dataSource: WebsiteGroupContentItem.dataSource,
   },
   WebsiteFeature: {
-    dataSource: WebsiteFeature.dataSource
+    dataSource: WebsiteFeature.dataSource,
   },
 
   Browse,
   Cache,
 
   AdditionalEndpoint,
-  Metadata
-}
+  Metadata,
+};
 
 const {
   dataSources,
@@ -140,7 +144,7 @@ const {
   context,
   applyServerMiddleware,
   setupJobs,
-} = createApolloServerConfig(data)
+} = createApolloServerConfig(data);
 
 export {
   dataSources,
@@ -149,7 +153,7 @@ export {
   context,
   applyServerMiddleware,
   setupJobs,
-}
+};
 
 // the upload Scalar is added
 export const testSchema = [
@@ -157,4 +161,4 @@ export const testSchema = [
     scalar Upload
   `,
   ...schema,
-]
+];
