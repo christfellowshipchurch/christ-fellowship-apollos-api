@@ -5,6 +5,8 @@ const resolver = {
   Group: {
     title: ({ name }, args, { dataSources }) => name,
     summary: ({ description }, args, { dataSources }) => description,
+    schedule: ({ scheduleId }, args, { dataSources }) =>
+      dataSources.Group.getScheduleFromId(scheduleId),
   },
 };
 

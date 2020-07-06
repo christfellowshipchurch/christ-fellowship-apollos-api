@@ -16,6 +16,7 @@ export const groupSchema = gql`
     summary: String
     leaders: [Person]
     members: [Person]
+    schedule: String
   }
 
   extend type Person {
