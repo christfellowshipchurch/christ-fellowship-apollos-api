@@ -27,6 +27,7 @@ import {
   BinaryFiles,
   // Features,
   // Event,
+  // PrayerRequest
 } from '@apollosproject/data-connector-rock'
 import * as Theme from './theme'
 
@@ -43,6 +44,7 @@ import * as LiveStream from './live-stream'
 import * as Search from './search'
 import * as CheckInable from './checkinable'
 import * as Group from './group'
+import * as PrayerRequest from './prayer-request'
 
 // Localized Modules
 import * as WebsitePagesContentItem from './website-pages-content-item'
@@ -96,6 +98,7 @@ const data = {
   Feature,
   TwilioNotify,
   Event,
+  PrayerRequest,
 
   // Local Types
   DefinedValue,
