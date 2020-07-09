@@ -10,7 +10,7 @@ const resolver = {
 
             return Feature.createPrayerListFeature({
                 algorithms: [],
-                title: "Daily Prayer",
+                title: "",
                 subtitle: "",
                 isCard: false
             })
