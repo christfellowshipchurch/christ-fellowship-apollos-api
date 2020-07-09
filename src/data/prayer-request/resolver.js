@@ -9,8 +9,8 @@ const resolver = {
             const { Feature } = dataSources
 
             return Feature.createPrayerListFeature({
-                algorithms: [],
-                title: "",
+                algorithms: ["DAILY_PRAYER"],
+                title: "Daily Prayer",
                 subtitle: "",
                 isCard: false
             })

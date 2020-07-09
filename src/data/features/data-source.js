@@ -20,7 +20,8 @@ export default class Feature extends coreFeatures.dataSource {
         SERMON_CHILDREN: this.sermonChildrenAlgorithm.bind(this),
         UPCOMING_EVENTS: this.upcomingEventsAlgorithmWithActionOverride.bind(this),
         GLOBAL_CONTENT: this.globalContentAlgorithm.bind(this),
-        ROCK_DYNAMIC_FEED: this.rockDynamicFeed.bind(this)
+        ROCK_DYNAMIC_FEED: this.rockDynamicFeed.bind(this),
+        DAILY_PRAYER: this.dailyPrayerAlgorithm.bind(this)
     }
 
     async rockDynamicFeed({ contentChannelId = null }) {
