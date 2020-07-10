@@ -227,12 +227,12 @@ HOME_HEADER_FEATURES:
     isCard: false
     type: PrayerList
     title: Daily Prayer
-  - title: Announcements
-    type: ActionList
-    algorithms:
-      - type: CONTENT_CHANNEL
-        arguments:
-          contentChannelId: 43
+  # - title: Announcements
+  #   type: ActionList
+  #   algorithms:
+  #     - type: CONTENT_CHANNEL
+  #       arguments:
+  #         contentChannelId: 43
 
 FEATURE_FLAGS:
   LIVE_STREAM_UI:

@@ -161,7 +161,6 @@ export default class Feature extends coreFeatures.dataSource {
     async getHomeHeaderFeedFeatures() {
         return Promise.all(
             get(ApollosConfig, 'HOME_HEADER_FEATURES', []).map((featureConfig) => {
-                console.log({ featureConfig })
                 switch (featureConfig.type) {
                     case 'PrayerList':
                         return this.createPrayerListFeature(featureConfig);

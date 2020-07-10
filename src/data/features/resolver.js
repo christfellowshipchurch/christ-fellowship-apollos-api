@@ -5,10 +5,8 @@ import ApollosConfig from '@apollosproject/config'
 
 const resolver = {
     Query: {
-        userHeaderFeatures: (root, args, { dataSources: { Feature } }) => {
-            console.log("QUERY")
-            return Feature.getHomeHeaderFeedFeatures()
-        }
+        userHeaderFeatures: (root, args, { dataSources: { Feature } }) =>
+            Feature.getHomeHeaderFeedFeatures()
     }
 }
 
