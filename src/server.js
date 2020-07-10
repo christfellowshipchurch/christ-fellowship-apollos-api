@@ -23,12 +23,12 @@ const extensions = isDev ? [() => new RockLoggingExtension()] : [];
 const cacheOptions = isDev
   ? {}
   : {
-      cacheControl: {
-        stripFormattedExtensions: false,
-        calculateHttpHeaders: true,
-        defaultMaxAge: 600,
-      },
-    };
+    cacheControl: {
+      stripFormattedExtensions: false,
+      calculateHttpHeaders: true,
+      defaultMaxAge: 600,
+    },
+  };
 
 const { ENGINE } = ApollosConfig;
 
@@ -36,7 +36,10 @@ const apolloServer = new ApolloServer({
   typeDefs: schema,
   resolvers,
   dataSources,
-  context,
+  context: ({ req, res, ...args }) => ({
+    ...context({ req, res, ...args }),
+    clientVersion: req.headers['apollographql-client-version'],
+  }),
   introspection: true,
   extensions,
   formatError: (error) => {

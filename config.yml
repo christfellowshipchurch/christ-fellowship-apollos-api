@@ -220,6 +220,9 @@ HOME_FEATURES:
         arguments:
           contentChannelId: 64
 
+ROCK_DYNAMIC_HOME_FEATURES:
+  contentChannelId: 64
+
 HOME_HEADER_FEATURES:
   - algorithms: [ALL_LIVE_CONTENT]
     type: LiveContentList

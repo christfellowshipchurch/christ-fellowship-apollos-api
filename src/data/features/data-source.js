@@ -27,59 +27,6 @@ export default class Feature extends coreFeatures.dataSource {
         ALL_LIVE_CONTENT: this.allLiveStreamAlgorithm.bind(this)
     }
 
-    async legacyRockDynamicFeed({ contentChannelId = null }) {
-        if (!contentChannelId) {
-            return []
-        }
-
-        const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === "LIVE"
-        const { ContentItem, Person } = this.context.dataSources;
-        const contentChannelItems = await this.request('ContentChannelItems')
-            .filter(`ContentChannelId eq ${contentChannelId}`)
-            .andFilter(ContentItem.LIVE_CONTENT())
-            .cache({ ttl: 60 })
-            .orderBy('Order', 'asc')
-            .get()
-        let personas = []
-
-        if (usePersonas) {
-            try {
-                personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
-            } catch (e) {
-                console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
-            }
-        }
-
-        const actions = contentChannelItems.map((item, i) => {
-            const action = get(item, 'attributeValues.action.value', '')
-
-            if (!action || action === '' || !item.id) return null
-            const securityDataViews = split(
-                get(item, 'attributeValues.securityDataViews.value', ''),
-                ','
-            ).filter(dv => !!dv)
-
-            if (securityDataViews.length > 0) {
-                const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
-                if (userInSecurityDataViews.length === 0) {
-                    console.log("User does not have access to this item")
-                    return null
-                }
-            }
-
-            return {
-                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
-                title: item.title,
-                subtitle: get(item, 'contentChannel.name'),
-                relatedNode: { ...item, __type: ContentItem.resolveType(item) },
-                image: ContentItem.getCoverImage(item),
-                action,
-            }
-        })
-
-        return actions.filter(action => !!action)
-    }
-
     async rockDynamicFeed({ contentChannelId = null }) {
         if (!contentChannelId) {
             return []
@@ -209,6 +156,10 @@ export default class Feature extends coreFeatures.dataSource {
         const { LiveStream } = this.context.dataSources;
         const liveStreams = await LiveStream.getLiveStreams();
         return liveStreams;
+    }
+
+    async getRockFeedFeatures() {
+        // TODO : map home feed features from Content Channel in Rock
     }
 
     async getHomeHeaderFeedFeatures() {
