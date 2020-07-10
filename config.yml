@@ -244,7 +244,8 @@ FEATURE_FLAGS:
     securityGroupId: 1014843
     status: "LIVE"
   HOME_HEADER:
-    securityGroupId: 1014843
+    # TODO : add this back when done testing
+    # securityGroupId: 1014843
     status: "LIVE"
 
 # HOME_FEATURES:
