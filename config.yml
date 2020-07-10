@@ -220,6 +220,15 @@ HOME_FEATURES:
         arguments:
           contentChannelId: 64
 
+HOME_HEADER_FEATURES:
+  - algorithms: [DAILY_PRAYER]
+    isCard: false
+    type: PrayerList
+    title: Daily Prayer
+  # - algorithms: [LIVE_CONTENT]
+  #   subtitle: Continue
+  #   type: HorizontalCardList
+
 FEATURE_FLAGS:
   LIVE_STREAM_UI:
     securityGroupId: 1014843
@@ -227,6 +236,9 @@ FEATURE_FLAGS:
   ROCK_DYNAMIC_FEED_WITH_PERSONAS:
     status: "LIVE"
   CHECK_IN:
+    securityGroupId: 1014843
+    status: "LIVE"
+  HOME_HEADER:
     securityGroupId: 1014843
     status: "LIVE"
 

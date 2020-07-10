@@ -12,8 +12,11 @@ const { ROCK_MAPPINGS, FEATURE_FLAGS } = ApollosConfig
 
 export default class Feature extends coreFeatures.dataSource {
     expanded = true
+
     // Names of Action Algoritms mapping to the functions that create the actions.
+    baseAlgorithms = this.ACTION_ALGORITHIMS;
     ACTION_ALGORITHIMS = {
+        ...this.baseAlgorithms,
         // We need to make sure `this` refers to the class, not the `ACTION_ALGORITHIMS` object.
         PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride.bind(this),
         CONTENT_CHANNEL: this.contentChannelAlgorithmWithActionOverride.bind(this),
@@ -129,5 +132,22 @@ export default class Feature extends coreFeatures.dataSource {
             image: event.coverImage,
             action: action || 'READ_EVENT',
         }))
+    }
+
+    async getHomeHeaderFeedFeatures() {
+        console.log("HELLO THERE")
+        return Promise.all(
+            get(ApollosConfig, 'HOME_HEADER_FEATURES', []).map((featureConfig) => {
+                console.log({ featureConfig })
+                switch (featureConfig.type) {
+                    case 'PrayerList':
+                        return this.createPrayerListFeature(featureConfig);
+                    case 'LiveContentList':
+                    default:
+                        // Currently, we do not support a default value
+                        return {}
+                }
+            })
+        );
     }
 }

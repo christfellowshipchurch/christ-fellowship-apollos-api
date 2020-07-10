@@ -86,6 +86,12 @@ export default gql`
         scriptures: [Scripture]
     }
 
+    type LiveStreamListFeature implements Feature & Node {
+        id: ID!
+        order: Int
+        liveStreams: [LiveStream]
+    }
+
     extend type WeekendContentItem {
         features: [Feature]
     }
@@ -96,5 +102,6 @@ export default gql`
     
     extend type Query {
         userFeedFeatures: [Feature] @cacheControl(maxAge: 0)
+        userHeaderFeatures: [Feature] @cacheControl(maxAge: 0)
     }
 `
