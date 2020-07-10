@@ -23,7 +23,8 @@ export default class Feature extends coreFeatures.dataSource {
         SERMON_CHILDREN: this.sermonChildrenAlgorithm.bind(this),
         UPCOMING_EVENTS: this.upcomingEventsAlgorithmWithActionOverride.bind(this),
         GLOBAL_CONTENT: this.globalContentAlgorithm.bind(this),
-        ROCK_DYNAMIC_FEED: this.rockDynamicFeed.bind(this)
+        ROCK_DYNAMIC_FEED: this.rockDynamicFeed.bind(this),
+        ALL_LIVE_CONTENT: this.allLiveStreamAlgorithm.bind(this)
     }
 
     async rockDynamicFeed({ contentChannelId = null }) {
@@ -134,8 +135,30 @@ export default class Feature extends coreFeatures.dataSource {
         }))
     }
 
+    async createLiveContentListFeature({ algorithms }) {
+        const liveStreams = () => this.runAlgorithms({ algorithms });
+        return {
+            // The Feature ID is based on all of the action ids, added together.
+            // This is naive, and could be improved.
+            id: this.createFeatureId({
+                type: 'liveStreams',
+                args: {
+                    algorithms,
+                },
+            }),
+            liveStreams,
+            // Typename is required so GQL knows specifically what Feature is being created
+            __typename: 'LiveStreamListFeature',
+        };
+    }
+
+    async allLiveStreamAlgorithm() {
+        const { LiveStream } = this.context.dataSources;
+        const liveStreams = await LiveStream.getLiveStreams();
+        return liveStreams;
+    }
+
     async getHomeHeaderFeedFeatures() {
-        console.log("HELLO THERE")
         return Promise.all(
             get(ApollosConfig, 'HOME_HEADER_FEATURES', []).map((featureConfig) => {
                 console.log({ featureConfig })
@@ -143,9 +166,11 @@ export default class Feature extends coreFeatures.dataSource {
                     case 'PrayerList':
                         return this.createPrayerListFeature(featureConfig);
                     case 'LiveContentList':
+                        return this.createLiveContentListFeature(featureConfig);
+                    case 'ActionList':
                     default:
-                        // Currently, we do not support a default value
-                        return {}
+                        // Action list was the default in 1.3.0 and prior.
+                        return this.createActionListFeature(featureConfig);
                 }
             })
         );
