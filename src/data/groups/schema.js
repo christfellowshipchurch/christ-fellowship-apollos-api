@@ -13,6 +13,7 @@ export const groupSchema = gql`
     id: ID!
     name: String
     title: String
+    groupType: String
     summary: String
     leaders: [Person]
     members: [Person]

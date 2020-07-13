@@ -54,4 +54,9 @@ export default class Group extends baseGroup.dataSource {
     const schedule = await this.request('Schedules').find(id).get();
     return schedule.friendlyScheduleText;
   };
+
+  getGroupTypeFromId = async (id) => {
+    const groupType = await this.request('GroupTypes').find(id).get();
+    return groupType.name;
+  };
 }

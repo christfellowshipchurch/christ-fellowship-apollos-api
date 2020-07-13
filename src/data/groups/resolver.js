@@ -7,6 +7,8 @@ const resolver = {
     summary: ({ description }, args, { dataSources }) => description,
     schedule: ({ scheduleId }, args, { dataSources }) =>
       dataSources.Group.getScheduleFromId(scheduleId),
+    groupType: ({ groupTypeId }, args, { dataSources }) =>
+      dataSources.Group.getGroupTypeFromId(groupTypeId),
   },
 };
 
