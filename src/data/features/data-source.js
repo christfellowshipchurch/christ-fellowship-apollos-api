@@ -15,17 +15,23 @@ export default class Feature extends coreFeatures.dataSource {
 
     // Names of Action Algoritms mapping to the functions that create the actions.
     baseAlgorithms = this.ACTION_ALGORITHIMS;
-    ACTION_ALGORITHIMS = {
+    ACTION_ALGORITHIMS = Object.entries({
         ...this.baseAlgorithms,
         // We need to make sure `this` refers to the class, not the `ACTION_ALGORITHIMS` object.
-        PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride.bind(this),
-        CONTENT_CHANNEL: this.contentChannelAlgorithmWithActionOverride.bind(this),
-        SERMON_CHILDREN: this.sermonChildrenAlgorithm.bind(this),
-        UPCOMING_EVENTS: this.upcomingEventsAlgorithmWithActionOverride.bind(this),
-        GLOBAL_CONTENT: this.globalContentAlgorithm.bind(this),
-        ROCK_DYNAMIC_FEED: this.rockDynamicFeed.bind(this),
-        ALL_LIVE_CONTENT: this.allLiveStreamAlgorithm.bind(this)
-    }
+        PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride,
+        CONTENT_CHANNEL: this.contentChannelAlgorithmWithActionOverride,
+        SERMON_CHILDREN: this.sermonChildrenAlgorithm,
+        UPCOMING_EVENTS: this.upcomingEventsAlgorithmWithActionOverride,
+        GLOBAL_CONTENT: this.globalContentAlgorithm,
+        ROCK_DYNAMIC_FEED: this.rockDynamicFeed,
+        ALL_LIVE_CONTENT: this.allLiveStreamContentAlgorithm,
+        CONTENT_CHILDREN: this.contentChildrenAlgorithm,
+    }).reduce((accum, [key, value]) => {
+        // convenciance code to make sure all methods are bound to the Features dataSource
+        // eslint-disable-next-line
+        accum[key] = value.bind(this);
+        return accum;
+    }, {})
 
     async rockDynamicFeed({ contentChannelId = null }) {
         if (!contentChannelId) {
@@ -152,14 +158,73 @@ export default class Feature extends coreFeatures.dataSource {
         };
     }
 
-    async allLiveStreamAlgorithm() {
+    async allLiveStreamContentAlgorithm() {
         const { LiveStream } = this.context.dataSources;
         const liveStreams = await LiveStream.getLiveStreams();
         return liveStreams;
     }
 
-    async getRockFeedFeatures() {
-        // TODO : map home feed features from Content Channel in Rock
+    async contentChildrenAlgorithm({ contentChannelItemId, limit = 10 }) {
+        const { ContentItem } = this.context.dataSources;
+        const cursor = (await ContentItem.getCursorByParentContentItemId(
+            contentChannelItemId
+        )).expand('ContentChannel');
+        const items = limit ? await cursor.top(limit).get() : await cursor.get();
+
+        return items.map((item, i) => ({
+            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+            title: item.title,
+            subtitle: ContentItem.createSummary(item),
+            relatedNode: { ...item, __type: ContentItem.resolveType(item) },
+            image: ContentItem.getCoverImage(item),
+            action: 'READ_CONTENT',
+            summary: ContentItem.createSummary(item),
+        }));
+    }
+
+    async getRockFeedFeatures({ contentChannelId }) {
+        const { ContentItem } = this.context.dataSources;
+        const contentChannelItems = await this.request('ContentChannelItems')
+            .filter(`ContentChannelId eq ${contentChannelId}`)
+            .andFilter(ContentItem.LIVE_CONTENT())
+            .cache({ ttl: 60 })
+            .orderBy('Order', 'asc')
+            .get()
+
+        return Promise.all(
+            contentChannelItems.map((item) => {
+                const action = get(item, 'attributeValues.action.value', '')
+
+                switch (action) { // TODO : support multiple algorithms from Rock
+                    case 'VIEW_CHILDREN': // deprecated, old action
+                    case 'HeroList':
+                        return this.createHeroListFeature({
+                            algorithms: [{
+                                type: "CONTENT_CHILDREN",
+                                arguments: {
+                                    contentChannelItemId: item.id
+                                }
+                            }],
+                            title: item.title,
+                            subtitle: ContentItem.createSummary(item),
+                        })
+                    case 'READ_GLOBAL_CONTENT': // deprecated, old action
+                    case 'VerticalCardList':
+                    default:
+                        // VerticalCardList with the CONTENT_CHILDREN as default
+                        return this.createVerticalCardListFeature({
+                            algorithms: [{
+                                type: "CONTENT_CHILDREN",
+                                arguments: {
+                                    contentChannelItemId: item.id
+                                }
+                            }],
+                            title: item.title,
+                            subtitle: ContentItem.createSummary(item),
+                        });
+                }
+            })
+        );
     }
 
     async getHomeHeaderFeedFeatures() {
