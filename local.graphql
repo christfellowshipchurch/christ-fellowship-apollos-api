@@ -179,6 +179,13 @@ type CardListItem {
   action: ACTION_FEATURE_ACTION
 }
 
+type CheckInable implements Node {
+  id: ID!
+  title: String
+  message: String
+  isCheckedIn: Boolean
+}
+
 """A rgb color string"""
 scalar Color
 
@@ -327,6 +334,7 @@ type EventContentItem implements ContentItem & Node {
   isLiked: Boolean
   likedCount: Int
   sharing: SharableContentItem
+  checkin: CheckInable
 }
 
 interface Feature {
@@ -348,16 +356,27 @@ enum GENDER {
 type Group implements Node {
   id: ID!
   name: String
+  title: String
+  groupType: String
+  summary: String
   leaders: [Person]
   members: [Person]
+  schedule: String
 }
 
 enum GROUP_TYPE {
-  Serving
-  Community
-  Family
   Adult
+  CFE
   Freedom
+  GetStronger
+  HubMarriage
+  HubStudies
+  MarriageStudies
+  Students
+  Studies
+  TableGetStronger
+  TableStudies
+  YoungAdults
 }
 
 type HeroListFeature implements Feature & Node {
@@ -519,6 +538,7 @@ type Mutation {
   trackEvent(input: AnalyticsTrackInput!): AnalyticsResult
   updateUserPushSettings(input: PushSettingsInput!): Person
   updateUserCampus(campusId: String!): Person
+  checkInCurrentUser(id: ID!): CheckInable
 }
 
 interface Node {

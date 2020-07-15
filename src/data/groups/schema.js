@@ -2,11 +2,18 @@ import gql from 'graphql-tag';
 
 export const groupSchema = gql`
   enum GROUP_TYPE {
-    Serving
-    Community
-    Family
     Adult
+    CFE
     Freedom
+    GetStronger
+    HubMarriage
+    HubStudies
+    MarriageStudies
+    Students
+    Studies
+    TableGetStronger
+    TableStudies
+    YoungAdults
   }
 
   type Group implements Node {
