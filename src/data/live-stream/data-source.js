@@ -65,7 +65,10 @@ export default class LiveStream extends scheduleDataSource {
       const schedules = split(get(contentItem, 'attributeValues.schedules.value', ''), ',')
       const nextOccurrences = await Schedule.getOccurrencesFromIds(schedules)
 
-      return { ...contentItem, nextOccurrences }
+      return {
+        ...contentItem,
+        nextOccurrences: nextOccurrences.filter(o => !!o)
+      }
     }))
 
     if (liveStreamContentItemsWithNextOccurrences != null) {
@@ -81,6 +84,8 @@ export default class LiveStream extends scheduleDataSource {
 
   async getLiveStreams() {
     const liveStreamContentItems = await this.getLiveStreamContentItems()
+
+    // console.log({ liveStreamContentItems })
 
     // Check the schedule on each event to see
     // if it's currently live
