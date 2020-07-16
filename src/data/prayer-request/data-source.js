@@ -15,5 +15,4 @@ export default class PrayerRequest extends corePrayerRequest.dataSource {
         return requestBuilder
             .andFilter(`CategoryId eq ${ROCK_MAPPINGS.GENERAL_PRAYER_CATEGORY_ID}`)
     }
-
 }
