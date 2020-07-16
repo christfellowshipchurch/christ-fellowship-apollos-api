@@ -187,6 +187,10 @@ export default class Feature extends coreFeatures.dataSource {
     }
 
     async getRockFeedFeatures({ contentChannelId }) {
+        if (!contentChannelId) {
+            return []
+        }
+
         const { ContentItem } = this.context.dataSources;
         const contentChannelItems = await this.request('ContentChannelItems')
             .filter(`ContentChannelId eq ${contentChannelId}`)
@@ -195,8 +199,36 @@ export default class Feature extends coreFeatures.dataSource {
             .orderBy('Order', 'asc')
             .get()
 
+        // TODO : remove when this is merged [https://github.com/ApollosProject/apollos-plugin/pull/2]
+        const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === "LIVE"
+        let personas = []
+        if (usePersonas) {
+            try {
+                personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
+            } catch (e) {
+                console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
+            }
+        }
+        const filteredContentChannelItems = contentChannelItems.filter(item => {
+            // TODO : remove when this is merged [https://github.com/ApollosProject/apollos-plugin/pull/2]
+            const securityDataViews = split(
+                get(item, 'attributeValues.securityDataViews.value', ''),
+                ','
+            ).filter(dv => !!dv)
+
+            if (securityDataViews.length > 0) {
+                const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
+                if (userInSecurityDataViews.length === 0) {
+                    console.log("User does not have access to this item")
+                    return false
+                }
+            }
+
+            return true
+        })
+
         return Promise.all(
-            contentChannelItems.map((item) => {
+            filteredContentChannelItems.map((item) => {
                 const action = get(item, 'attributeValues.action.value', '')
 
                 switch (action) { // TODO : support multiple algorithms from Rock

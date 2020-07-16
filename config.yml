@@ -211,6 +211,7 @@ ROCK_MAPPINGS:
   FAMILY_GROUP_TYPE_ID: 10
   DEFAULT_CAMPUS_ID: 9
   HOME_FEATURES_CHANNEL_ID: 64
+  GENERAL_PRAYER_CATEGORY_ID: 580
 
 # TODO : @caleb "I would like to not have to manually put the index in the GLOBAL_CONTENT feature"
 # NOTE : GLOBAL_CONTENT uses a 0 based index
