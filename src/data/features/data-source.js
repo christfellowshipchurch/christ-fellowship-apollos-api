@@ -143,6 +143,7 @@ export default class Feature extends coreFeatures.dataSource {
 
     async createLiveStreamListFeature({ algorithms, title, subtitle }) {
         const liveStreams = () => this.runAlgorithms({ algorithms });
+
         return {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
