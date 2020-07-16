@@ -141,17 +141,21 @@ export default class Feature extends coreFeatures.dataSource {
         }))
     }
 
-    async createLiveContentListFeature({ algorithms }) {
+    async createLiveStreamListFeature({ algorithms, title, subtitle }) {
         const liveStreams = () => this.runAlgorithms({ algorithms });
         return {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
             id: this.createFeatureId({
-                type: 'liveStreams',
+                type: 'LiveStreamListFeature',
                 args: {
                     algorithms,
+                    title,
+                    subtitle
                 },
             }),
+            title,
+            subtitle,
             liveStreams,
             // Typename is required so GQL knows specifically what Feature is being created
             __typename: 'LiveStreamListFeature',
@@ -234,7 +238,7 @@ export default class Feature extends coreFeatures.dataSource {
                     case 'PrayerList':
                         return this.createPrayerListFeature(featureConfig);
                     case 'LiveContentList':
-                        return this.createLiveContentListFeature(featureConfig);
+                        return this.createLiveStreamListFeature(featureConfig);
                     case 'ActionList':
                     default:
                         // Action list was the default in 1.3.0 and prior.

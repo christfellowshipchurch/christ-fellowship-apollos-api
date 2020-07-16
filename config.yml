@@ -224,6 +224,7 @@ HOME_FEATURES:
 HOME_HEADER_FEATURES:
   - algorithms: [ALL_LIVE_CONTENT]
     type: LiveContentList
+    title: Live Now
   - algorithms: [DAILY_PRAYER]
     isCard: false
     type: PrayerList

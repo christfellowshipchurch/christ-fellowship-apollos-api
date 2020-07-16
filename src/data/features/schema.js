@@ -12,6 +12,8 @@ export default gql`
     type LiveStreamListFeature implements Feature & Node {
         id: ID!
         order: Int
+        title: String
+        subtitle: String
         liveStreams: [LiveStream]
     }
     
