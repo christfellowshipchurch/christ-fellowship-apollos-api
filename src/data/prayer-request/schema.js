@@ -1,13 +1,3 @@
-import {
-    prayerSchema as corePrayerSchema
-} from '@apollosproject/data-schema';
-import gql from 'graphql-tag'
+import { prayerSchema } from '@apollosproject/data-schema'
 
-
-export default gql`
-    ${corePrayerSchema}
-
-    extend type Query {
-        dailyPrayers: PrayerListFeature
-    }
-`
+export default prayerSchema
