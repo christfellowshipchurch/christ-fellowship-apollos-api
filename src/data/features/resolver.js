@@ -12,16 +12,16 @@ const resolver = {
         //
         // TODO : deprecate this once we get at least 80-90% adpotion of the new version
         userFeedFeatures: async (root, args, { clientVersion, dataSources: { Feature } }) => {
-            console.log({ clientVersion })
-
             return clientVersion && (clientVersion.startsWith("5.0") || clientVersion.startsWith("5.1") || clientVersion.startsWith("web-1."))
                 ? Feature.getHomeFeedFeatures()
                 : Feature.getRockFeedFeatures({
                     contentChannelId: ROCK_MAPPINGS.HOME_FEATURES_CHANNEL_ID
                 })
         },
-        userHeaderFeatures: (root, args, { dataSources: { Feature, Flag } }) => {
-            if (Flag.currentUserCanUseFeature("HOME_HEADER")) {
+        userHeaderFeatures: async (root, args, { dataSources: { Feature, Flag } }) => {
+            const status = await Flag.currentUserCanUseFeature("HOME_HEADER")
+
+            if (status === "LIVE") {
                 return Feature.getHomeHeaderFeedFeatures()
             }
 
