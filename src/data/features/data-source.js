@@ -219,11 +219,6 @@ export default class Feature extends coreFeatures.dataSource {
                 ','
             ).filter(dv => !!dv)
 
-            console.log({
-                title: item.title,
-                av: item.attributeValues
-            })
-
             if (securityDataViews.length > 0) {
                 const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
                 if (userInSecurityDataViews.length === 0) {
