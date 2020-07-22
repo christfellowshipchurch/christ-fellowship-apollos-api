@@ -192,7 +192,7 @@ export default class Feature extends coreFeatures.dataSource {
             return []
         }
 
-        const { ContentItem } = this.context.dataSources;
+        const { ContentItem, Person } = this.context.dataSources;
         const contentChannelItems = await this.request('ContentChannelItems')
             .filter(`ContentChannelId eq ${contentChannelId}`)
             .andFilter(ContentItem.LIVE_CONTENT())
