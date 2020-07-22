@@ -230,12 +230,6 @@ HOME_HEADER_FEATURES:
     isCard: false
     type: PrayerList
     title: Daily Prayer
-  # - title: Announcements
-  #   type: ActionList
-  #   algorithms:
-  #     - type: CONTENT_CHANNEL
-  #       arguments:
-  #         contentChannelId: 43
 
 FEATURE_FLAGS:
   LIVE_STREAM_UI:
@@ -251,38 +245,26 @@ FEATURE_FLAGS:
     # securityGroupId: 1014843
     status: "LIVE"
 
-# HOME_FEATURES:
-#   - title: GLOBAL ITEM
-#     algorithms:
-#       - type: GLOBAL_CONTENT
-#         arguments:
-#           index: 0
-#           limit: 1
-#   - title: Featured Events
-#     algorithms: 
-#       - type: UPCOMING_EVENTS
-#         arguments:
-#           contentChannelId: 47
-#           limit: 4
-#           action: READ_EVENT
-#   - title: Latest Content
-#     algorithms:
-#       - type: CONTENT_CHANNEL
-#         arguments:
-#           contentChannelId: 62
-#           limit: 5
-#           action: VIEW_CHILDREN
-#   - title: FOR YOU
-#     algorithms:
-#       - type: PERSONA_FEED
-#         arguments:
-#           action: VIEW_CHILDREN
-#   - title: GLOBAL ITEM
-#     algorithms:
-#       - type: GLOBAL_CONTENT
-#         arguments:
-#           index: 1
-#           limit: 1
+PAGE_BUILDER:
+  locations:
+    contentChannelId: 72
+    buildingBlocks:
+      - type: ContentBlockFeature
+        display: BACKGROUND_IMAGE
+        fields: [title, coverImage]
+      - type: ContentBlockFeature
+        fields: [content]
+      - type: CampusContentFeature
+        attributeKey: campus
+      - type: ContentGridFeature
+        primaryAction:
+          title: Learn More
+          action: VIEW_MORE
+        algorithms:
+          - type: MATRIX_ITEMS
+            arguments:
+              attributeKey: contentBlocks
+
 
 NOTIFICATIONS:
   PRAYING: 'Your church family is praying for you right now. Thanks for sharing your request with us!'

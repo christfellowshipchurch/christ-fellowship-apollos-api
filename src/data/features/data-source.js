@@ -192,13 +192,15 @@ export default class Feature extends coreFeatures.dataSource {
             return []
         }
 
-        const { ContentItem } = this.context.dataSources;
+        const { ContentItem, Person } = this.context.dataSources;
         const contentChannelItems = await this.request('ContentChannelItems')
             .filter(`ContentChannelId eq ${contentChannelId}`)
             .andFilter(ContentItem.LIVE_CONTENT())
             .cache({ ttl: 60 })
             .orderBy('Order', 'asc')
             .get()
+
+        console.log({ contentChannelItems })
 
         // TODO : remove when this is merged [https://github.com/ApollosProject/apollos-plugin/pull/2]
         const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === "LIVE"
@@ -208,14 +210,23 @@ export default class Feature extends coreFeatures.dataSource {
                 personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
             } catch (e) {
                 console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
+                console.log({ e })
             }
         }
+
+        console.log({ personas })
+
         const filteredContentChannelItems = contentChannelItems.filter(item => {
             // TODO : remove when this is merged [https://github.com/ApollosProject/apollos-plugin/pull/2]
             const securityDataViews = split(
                 get(item, 'attributeValues.securityDataViews.value', ''),
                 ','
             ).filter(dv => !!dv)
+
+            console.log({
+                title: item.title,
+                av: item.attributeValues
+            })
 
             if (securityDataViews.length > 0) {
                 const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
