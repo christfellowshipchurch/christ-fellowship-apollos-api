@@ -200,8 +200,6 @@ export default class Feature extends coreFeatures.dataSource {
             .orderBy('Order', 'asc')
             .get()
 
-        console.log({ contentChannelItems })
-
         // TODO : remove when this is merged [https://github.com/ApollosProject/apollos-plugin/pull/2]
         const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === "LIVE"
         let personas = []
@@ -213,8 +211,6 @@ export default class Feature extends coreFeatures.dataSource {
                 console.log({ e })
             }
         }
-
-        console.log({ personas })
 
         const filteredContentChannelItems = contentChannelItems.filter(item => {
             // TODO : remove when this is merged [https://github.com/ApollosProject/apollos-plugin/pull/2]
