@@ -24,6 +24,7 @@ export const groupSchema = gql`
     summary: String
     leaders: [Person]
     members: [Person]
+    avatars: [String]
     schedule: String
     coverImage: ImageMedia
   }
