@@ -251,7 +251,7 @@ PAGE_BUILDER:
     buildingBlocks:
       - type: ContentBlockFeature
         display: BACKGROUND_IMAGE
-        fields: [title, coverImage]
+        fields: [title, image]
       - type: ContentBlockFeature
         fields: [content]
       - type: CampusContentFeature

@@ -59,15 +59,26 @@ export default class PageBuilder extends Feature.dataSource {
 
     async createContentBlockFeature({
         contentChannelItem,
-        fields = ['title', 'content'],
+        fields = ['title', 'content', 'image'],
         display,
     }) {
+        const { ContentItem } = this.context.dataSources
         let content = {}
 
         /** Check the Content Channel Item for the fields that we are looking to
          *  pass back into this specific ContentBlockFeature
          */
         fields.forEach(field => content[field] = get(contentChannelItem, field))
+
+        /** Image is not a field inside of the Content Channel Item that we can
+         *  super easily reference, so we'll just need to manually check for that
+         *  field and then run the `getCoverImage` method from the ContentItem dataSource
+         */
+        const image = fields.includes('image')
+            ? await ContentItem.getCoverImage(contentChannelItem)
+            : null
+
+        console.log({ fields, image, includes: fields.includes('image') })
 
         return {
             id: this.createPageBuilderFeatureId({
@@ -77,7 +88,10 @@ export default class PageBuilder extends Feature.dataSource {
                     ...content
                 },
             }),
-            content,
+            content: {
+                ...content,
+                image
+            },
             display,
             __typename: "ContentBlockFeature"
         }
@@ -171,7 +185,7 @@ export default class PageBuilder extends Feature.dataSource {
             const { contentChannelId } = configuration
             const requestBase = 'ContentChannelItems/GetByAttributeValue'
             const attributeKey = get(configuration, 'queryAttribute', 'url')
-            const contentChannelItems = await this.request(`${requestBase}?attributeKey=${attributeKey}&value=${page}&loadAttributes=simple`)
+            const contentChannelItems = await this.request(`${requestBase}?attributeKey=${attributeKey}&value=${page}&loadAttributes=expanded`)
                 .filter(`ContentChannelId eq ${contentChannelId}`)
                 .get()
             const contentChannelItem = first(contentChannelItems)
