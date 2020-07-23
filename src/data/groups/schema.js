@@ -25,6 +25,7 @@ export const groupSchema = gql`
     leaders: [Person]
     members: [Person]
     schedule: String
+    coverImage: ImageMedia
   }
 
   extend type Person {

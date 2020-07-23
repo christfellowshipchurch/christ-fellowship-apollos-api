@@ -9,6 +9,9 @@ const resolver = {
       dataSources.Group.getScheduleFromId(scheduleId),
     groupType: ({ groupTypeId }, args, { dataSources }) =>
       dataSources.Group.getGroupTypeFromId(groupTypeId),
+    coverImage: (root, args, { dataSources: { ContentItem } }) => {
+      ContentItem.getCoverImage(root);
+    },
   },
 };
 
