@@ -78,8 +78,6 @@ export default class PageBuilder extends Feature.dataSource {
             ? await ContentItem.getCoverImage(contentChannelItem)
             : null
 
-        console.log({ fields, image, includes: fields.includes('image') })
-
         return {
             id: this.createPageBuilderFeatureId({
                 type: 'ContentBlockFeature',
