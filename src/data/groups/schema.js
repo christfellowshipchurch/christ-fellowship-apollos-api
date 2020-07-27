@@ -16,6 +16,12 @@ export const groupSchema = gql`
     YoungAdults
   }
 
+  type Resource {
+    title: String
+    url: String
+    contentChannelItem: String
+  }
+
   type Group implements Node {
     id: ID!
     name: String
@@ -27,6 +33,7 @@ export const groupSchema = gql`
     avatars: [String]
     schedule: String
     coverImage: ImageMedia
+    groupResources: [Resource]
   }
 
   extend type Person {

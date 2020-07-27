@@ -1,9 +1,17 @@
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
-
+import { get, mapValues } from 'lodash';
+import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
 
 export default class Group extends baseGroup.dataSource {
+  getMatrixItemsFromId = async (id) =>
+    id
+      ? this.request('/AttributeMatrixItems')
+          .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+          .get()
+      : [];
+
   groupTypeMap = {
     Adult: ROCK_MAPPINGS.ADULT_GROUP_TYPE_ID,
     CFE: ROCK_MAPPINGS.CFE_JOURNEY_EXPERIENCE_GROUP_TYPE_ID,
@@ -65,5 +73,27 @@ export default class Group extends baseGroup.dataSource {
   getGroupTypeFromId = async (id) => {
     const groupType = await this.request('GroupTypes').find(id).get();
     return groupType.name;
+  };
+
+  getResources = async ({ attributeValues }) => {
+    const matrixAttributeValue = get(attributeValues, 'resources.value', '');
+
+    const items = await this.getMatrixItemsFromId(matrixAttributeValue);
+    const values = items.map((item) => item.attributeValues);
+    const mappedValues = values.map((attribute) =>
+      mapValues(attribute, (o) => o.value)
+    );
+    return mappedValues;
+  };
+
+  getAvatars = async (id) => {
+    const members = await this.getMembers(id);
+    let avatars = [];
+    members.map((member) =>
+      member.photo.guid
+        ? avatars.push(createImageUrlFromGuid(member.photo.guid))
+        : null
+    );
+    return avatars;
   };
 }
