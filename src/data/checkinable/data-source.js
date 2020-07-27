@@ -125,7 +125,7 @@ export default class Checkinable extends RESTDataSource {
                 //
                 const showSchedule = await Schedule.timeIsInSchedules({
                     ids: scheduleIds.split(','),
-                    time: moment().toISOString()
+                    time: moment().utc().toISOString()
                 })
 
                 if (!showSchedule) return null
