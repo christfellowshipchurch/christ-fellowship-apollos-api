@@ -1,8 +1,10 @@
-import { Group as baseGroup } from '@apollosproject/data-connector-rock';
+import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
 import { get, mapValues } from 'lodash';
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
+
+const { createImageUrlFromGuid } = Utils;
 
 export default class Group extends baseGroup.dataSource {
   getMatrixItemsFromId = async (id) =>
