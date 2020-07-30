@@ -101,12 +101,7 @@ const resolverExtensions = {
 
       const person = await dataSources.Person.getFromId(id)
 
-      return {
-        ...person,
-        photo: {
-          url: createImageUrlFromGuid(get(person, 'photo.guid', ''))
-        }
-      }
+      return person
     }
 
     return null

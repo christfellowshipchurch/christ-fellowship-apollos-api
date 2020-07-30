@@ -5,10 +5,11 @@ import { get, filter, find } from 'lodash'
 import { Utils } from '@apollosproject/data-connector-rock'
 
 
-const { enforceCurrentUser } = Utils
+const { enforceCurrentUser, createImageUrlFromGuid } = Utils
 
 const resolver = {
     Person: {
+        photo: ({ photo: { guid } }) => (guid ? { uri: createImageUrlFromGuid(guid) } : null),
         phoneNumber: enforceCurrentUser(async ({ id }, args, { dataSources }) => {
             const phoneNumber = await dataSources.PhoneNumber.getByUser()
 
