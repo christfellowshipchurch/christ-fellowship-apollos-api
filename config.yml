@@ -249,6 +249,11 @@ PAGE_BUILDER:
   locations:
     contentChannelId: 72
     buildingBlocks:
+      - type: MetadataFeature
+        algorithms: 
+          - type: CAMPUS_META
+            arguments:
+              attributeKey: campus
       - type: ContentBlockFeature
         display: BACKGROUND_IMAGE
         fields: [title, image]

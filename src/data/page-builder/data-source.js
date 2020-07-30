@@ -12,7 +12,8 @@ export default class PageBuilder extends Feature.dataSource {
 
     // Names of Action Algoritms mapping to the functions that create the actions.
     ACTION_ALGORITHIMS = Object.entries({
-        MATRIX_ITEMS: this.matrixItemsFromContentChannelItemAlgorithm
+        MATRIX_ITEMS: this.matrixItemsFromContentChannelItemAlgorithm,
+        CAMPUS_META: this.campusMetaFromContentChannelItemAlgorithm,
     }).reduce((accum, [key, value]) => {
         // convenciance code to make sure all methods are bound to the PageBuilder dataSource
         // eslint-disable-next-line
@@ -26,7 +27,7 @@ export default class PageBuilder extends Feature.dataSource {
         subtitle,
         primaryAction
     }) {
-        const cards = () => this.runAlgorithms({ algorithms });
+        const blocks = () => this.runAlgorithms({ algorithms });
         return {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
@@ -39,7 +40,7 @@ export default class PageBuilder extends Feature.dataSource {
                     primaryAction
                 },
             }),
-            cards,
+            blocks,
             title,
             subtitle,
             // Typename is required so GQL knows specifically what Feature is being created
@@ -55,6 +56,33 @@ export default class PageBuilder extends Feature.dataSource {
         const attributeValues = items.map(item => item.attributeValues)
 
         return attributeValues.map(attribute => mapValues(attribute, o => o.value))
+    }
+
+    async campusMetaFromContentChannelItemAlgorithm({ attributeKey, contentChannelItem }) {
+        // PRE FORMAT ALL CONTENT
+        // Assumes attributeKey represents a Campus Id
+        const { Campus } = this.context.dataSources
+        const campusIdAttributeValue = get(contentChannelItem, `attributeValues.${attributeKey}.value`)
+
+        const items = await Campus.getFromId(campusIdAttributeValue)
+
+        // TODO : get the campus image, description, and 
+
+        const description = `Christ Fellowship Church in ${city}. Led by ${campus - pastor} and Todd and Julie Mullins. We meet every ${days - of - week} for a time of worship and teaching from the Bible.`
+
+        // MANUALLY CREATED META TAGS
+        // Assumes attributeKey represents a Defined Value Id (for meta tags)
+        const { DefinedValue, Metadata } = this.context.dataSources
+
+        const definedValue = {} // get defined value
+        return Metadata.parseDefinedValue(definedValue)
+
+        // map the defined value to an array of [ { name, content } ]
+
+        return [
+            { name: "description", content: "my description" },
+            { name: "keywords", content: "My,Keywords" }
+        ]
     }
 
     async createContentBlockFeature({
@@ -153,6 +181,34 @@ export default class PageBuilder extends Feature.dataSource {
         }
     }
 
+    async createMetadataFeature({
+        contentChannelItem,
+        algorithms
+    }) {
+        const meta = () => this.runAlgorithms({
+            algorithms: algorithms.map(a => ({
+                ...a,
+                arguments: {
+                    ...a.arguments,
+                    contentChannelItem
+                }
+            }))
+        });
+
+        return {
+            id: this.createPageBuilderFeatureId({
+                type: 'MetadataFeature',
+                args: {
+                    contentChannelItemId: contentChannelItem.id,
+                    algorithms
+                },
+            }),
+            title: `Christ Fellowship Church - ${get(contentChannelItem, 'title')}`,
+            meta,
+            __typename: "MetadataFeature"
+        }
+    }
+
     async buildForUrl(url) {
         /** Parse the URL and get the pathname */
         const parsedUrl = URL.parse(url)
@@ -192,6 +248,8 @@ export default class PageBuilder extends Feature.dataSource {
                 return Promise.all(configuration.buildingBlocks.map(blockConfig => {
                     const configWithContentChannelItem = { ...blockConfig, contentChannelItem }
                     switch (configWithContentChannelItem.type) {
+                        case "MetadataFeature":
+                            return this.createMetadataFeature(configWithContentChannelItem)
                         case "ContentGridFeature":
                             return this.createContentGridFeature(configWithContentChannelItem)
                         case "CampusContentFeature":

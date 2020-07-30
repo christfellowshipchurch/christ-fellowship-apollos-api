@@ -19,10 +19,12 @@ export default class Metadata extends definedValueDataDataSource {
     const attributeValues = get(definedValue, 'attributeValues')
 
     if (attributeValues) {
+      const description = get(definedValue, 'description', '')
       const keywords = get(attributeValues, 'keywords.value', '').replace(/\|/g, ',')
       const tags = get(attributeValues, 'tags.value', '')
 
       return [
+        { name: "description", content: description },
         { name: "keywords", content: keywords },
         ...(parseRockKeyValuePairs(tags, 'content', 'name'))
       ].filter(obj => obj.content !== '')

@@ -57,6 +57,14 @@ export default gql`
         action: PageBuilderAction
     }
 
+    type MetadataFeature implements PageBuilderFeature & Node {
+        id: ID!
+        order: Int
+
+        title: String
+        meta: [Metadata]
+    }
+
     extend type Query {
         pageBuilderFeatures(url: String!): [PageBuilderFeature]
     }
