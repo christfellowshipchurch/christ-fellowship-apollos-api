@@ -208,8 +208,10 @@ export default class Feature extends coreFeatures.dataSource {
                 personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
             } catch (e) {
                 console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
+                console.log({ e })
             }
         }
+
         const filteredContentChannelItems = contentChannelItems.filter(item => {
             // TODO : remove when this is merged [https://github.com/ApollosProject/apollos-plugin/pull/2]
             const securityDataViews = split(
