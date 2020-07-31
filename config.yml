@@ -253,7 +253,7 @@ PAGE_BUILDER:
         algorithms: 
           - type: CAMPUS_META
             arguments:
-              attributeKey: campus
+              attributeKey: metadata
       - type: ContentBlockFeature
         display: BACKGROUND_IMAGE
         fields: [title, image]

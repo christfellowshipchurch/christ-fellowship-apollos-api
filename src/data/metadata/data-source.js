@@ -20,7 +20,18 @@ export default class Metadata extends definedValueDataDataSource {
 
     if (attributeValues) {
       const description = get(definedValue, 'description', '')
-      const keywords = get(attributeValues, 'keywords.value', '').replace(/\|/g, ',')
+      let keywords = get(attributeValues, 'keywords.value', '').replace(/\|/g, ',')
+
+      /** Rock will return the collection of keywords as "Key|Word|""
+       *  in which there is a trailing `|` at the end of the string.
+       *  
+       *  When we replace the `|` with `,` it ends up giving us an extra
+       *  trailing `,` that we remove below
+       */
+      if (keywords.charAt(keywords.length - 1) === ',') {
+        keywords = keywords.slice(0, -1)
+      }
+
       const tags = get(attributeValues, 'tags.value', '')
 
       return [

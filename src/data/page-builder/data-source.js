@@ -61,30 +61,17 @@ export default class PageBuilder extends Feature.dataSource {
     }
 
     async campusMetaFromContentChannelItemAlgorithm({ attributeKey, contentChannelItem }) {
-        // PRE FORMAT ALL CONTENT
-        // Assumes attributeKey represents a Campus Id
-        const { Campus } = this.context.dataSources
-        const campusIdAttributeValue = get(contentChannelItem, `attributeValues.${attributeKey}.value`)
 
-        const items = await Campus.getFromId(campusIdAttributeValue)
+        const definedValueGuid = get(contentChannelItem, `attributeValues.${attributeKey}.value`)
+        if (definedValueGuid && definedValueGuid !== '') {
+            const { DefinedValue, Metadata } = this.context.dataSources
 
-        // TODO : get the campus image, description, and 
+            const definedValue = await DefinedValue.getByIdentifier(definedValueGuid)
 
-        const description = `Christ Fellowship Church in ${city}. Led by ${campus - pastor} and Todd and Julie Mullins. We meet every ${days - of - week} for a time of worship and teaching from the Bible.`
+            return Metadata.parseDefinedValue(definedValue)
+        }
 
-        // MANUALLY CREATED META TAGS
-        // Assumes attributeKey represents a Defined Value Id (for meta tags)
-        const { DefinedValue, Metadata } = this.context.dataSources
-
-        const definedValue = {} // get defined value
-        return Metadata.parseDefinedValue(definedValue)
-
-        // map the defined value to an array of [ { name, content } ]
-
-        return [
-            { name: "description", content: "my description" },
-            { name: "keywords", content: "My,Keywords" }
-        ]
+        return []
     }
 
     async createContentBlockFeature({
@@ -198,15 +185,6 @@ export default class PageBuilder extends Feature.dataSource {
             }))
         });
 
-        const definedValueGuid = get(contentChannelItem, 'attributeValues.metadata.value')
-        if (definedValueGuid && definedValueGuid !== '') {
-            const definedValue = await this.context.dataSources.DefinedValue.getByIdentifier(definedValueGuid)
-            const metadata = this.context.dataSources.Metadata.parseDefinedValue(definedValue)
-            console.log(metadata)
-            return metadata
-        }
-
-
         return {
             id: this.createPageBuilderFeatureId({
                 type: 'MetadataFeature',
@@ -215,7 +193,7 @@ export default class PageBuilder extends Feature.dataSource {
                     algorithms
                 },
             }),
-            meta: metadata,
+            meta,
             __typename: "MetadataFeature"
         }
     }
