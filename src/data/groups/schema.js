@@ -22,6 +22,22 @@ export const groupSchema = gql`
     contentChannelItem: String
   }
 
+  type DateTime {
+    start: String
+    end: String
+  }
+
+  type Schedule {
+    id: ID!
+    name: String
+    description: String
+    friendlyScheduleText: String
+    weeklyTimeOfDay: String
+    weeklyDayOfWeek: Int
+    iCalendarContent: String
+    isActive: Boolean
+  }
+
   type Group implements Node {
     id: ID!
     name: String
@@ -31,9 +47,10 @@ export const groupSchema = gql`
     leaders: [Person]
     members: [Person]
     avatars: [String]
-    schedule: String
+    schedule: Schedule
     coverImage: ImageMedia
     groupResources: [Resource]
+    dateTime: DateTime
   }
 
   extend type Person {

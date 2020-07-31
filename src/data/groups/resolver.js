@@ -15,6 +15,8 @@ const resolver = {
       dataSources.Group.getAvatars(id),
     groupResources: (root, args, { dataSources }) =>
       dataSources.Group.getResources(root),
+    dateTime: ({ scheduleId }, args, { dataSources }) =>
+      dataSources.Group.getDateTimeFromId(scheduleId),
   },
 };
 

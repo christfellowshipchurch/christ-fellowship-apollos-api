@@ -1,6 +1,7 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
-import { get, mapValues } from 'lodash';
+import { get, mapValues, isNull } from 'lodash';
+import moment from 'moment';
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
 
@@ -69,7 +70,7 @@ export default class Group extends baseGroup.dataSource {
 
   getScheduleFromId = async (id) => {
     const schedule = await this.request('Schedules').find(id).get();
-    return schedule.friendlyScheduleText;
+    return schedule;
   };
 
   getGroupTypeFromId = async (id) => {
@@ -97,5 +98,40 @@ export default class Group extends baseGroup.dataSource {
         : null
     );
     return avatars;
+  };
+
+  getDateTimeFromiCalendarContent = async (schedule) => {
+    if (!schedule || !schedule.iCalendarContent) {
+      return { start: null, end: null };
+    }
+
+    const iCal = schedule.iCalendarContent;
+    const dateTimes = iCal.match(/DTEND:(\w+).*DTSTART:(\w+)/s);
+
+    return {
+      start: moment(dateTimes[2]).utc().format(),
+      end: moment(dateTimes[1]).utc().format(),
+    };
+  };
+
+  getDateTimeFromId = async (id) => {
+    const schedule = await this.getScheduleFromId(id);
+    const { iCalendarContent, weeklyDayOfWeek, weeklyTimeOfDay } = schedule;
+    if (iCalendarContent !== '') {
+      return await this.getDateTimeFromiCalendarContent(schedule);
+    } else if (weeklyDayOfWeek !== null && weeklyTimeOfDay) {
+      const proto = Object.getPrototypeOf(moment());
+      proto.setTime = function (time) {
+        const [hour, minute, seconds] = time.split(':');
+        return this.set({ hour, minute, seconds });
+      };
+      const time = moment()
+        .weekday(weeklyDayOfWeek)
+        .setTime(weeklyTimeOfDay)
+        .utc()
+        .format();
+      return { start: time, end: time };
+    }
+    return { start: null, end: null };
   };
 }
