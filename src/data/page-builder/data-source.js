@@ -1,7 +1,9 @@
 import { Feature } from '@apollosproject/data-connector-rock'
 import ApollosConfig from '@apollosproject/config'
-import { get, dropRight, last, first, mapValues } from 'lodash'
+import { get, dropRight, last, first, mapValues, flatten } from 'lodash'
 import URL from 'url';
+
+import { getIdentifierType } from '../utils'
 
 const { PAGE_BUILDER } = ApollosConfig
 
@@ -185,6 +187,7 @@ export default class PageBuilder extends Feature.dataSource {
         contentChannelItem,
         algorithms
     }) {
+
         const meta = () => this.runAlgorithms({
             algorithms: algorithms.map(a => ({
                 ...a,
@@ -195,6 +198,15 @@ export default class PageBuilder extends Feature.dataSource {
             }))
         });
 
+        const definedValueGuid = get(contentChannelItem, 'attributeValues.metadata.value')
+        if (definedValueGuid && definedValueGuid !== '') {
+            const definedValue = await this.context.dataSources.DefinedValue.getByIdentifier(definedValueGuid)
+            const metadata = this.context.dataSources.Metadata.parseDefinedValue(definedValue)
+            console.log(metadata)
+            return metadata
+        }
+
+
         return {
             id: this.createPageBuilderFeatureId({
                 type: 'MetadataFeature',
@@ -203,8 +215,7 @@ export default class PageBuilder extends Feature.dataSource {
                     algorithms
                 },
             }),
-            title: `Christ Fellowship Church - ${get(contentChannelItem, 'title')}`,
-            meta,
+            meta: metadata,
             __typename: "MetadataFeature"
         }
     }
