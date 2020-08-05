@@ -1,9 +1,9 @@
-import { dataSource as CoreSource } from '@apollosproject/data-connector-algolia-search'
+import { dataSource as CoreDataSource } from '@apollosproject/data-connector-algolia-search';
 import { graphql } from 'graphql';
-import { take } from 'lodash'
+import { take, get } from 'lodash';
 import sanitizeHtml from 'sanitize-html';
-import keywordExtractor from 'keyword-extractor'
-import sizeof from 'object-sizeof'
+import keywordExtractor from 'keyword-extractor';
+import sizeof from 'object-sizeof';
 import {
   createGlobalId,
 } from '@apollosproject/server-core';
@@ -57,11 +57,30 @@ const processObjectSize = (obj) => {
   }
 }
 
-export default class Search extends CoreSource {
+export default class Search extends CoreDataSource {
+
+  async updateContentItemIndex(id) {
+    // Resolve the Content Item
+    const { ContentItem } = this.context.dataSources
+    const item = await ContentItem.getFromId(id)
+    const hideFromSearch = get(item, "attributeValues.hideFromSearch.value", "false").toLowerCase()
+
+    if (hideFromSearch === "true") { // Delete the item if it should not be included in Search
+      const type = await this.resolveContentItem(item);
+      this.index.deleteObject(createGlobalId(item.id, type))
+    } else { // Index the item with Algolia as a default
+      const indexableItem = await this.mapItemToAlgolia(item)
+      this.addObjects([indexableItem])
+    }
+  }
+
+  resolveContentItem(item) {
+    const { ContentItem } = this.context.dataSources;
+    return ContentItem.resolveType(item);
+  }
 
   async mapItemToAlgolia(item) {
-    const { ContentItem } = this.context.dataSources;
-    const type = await ContentItem.resolveType(item);
+    const type = await this.resolveContentItem(item);
 
     const { data } = await graphql(
       this.context.schema,

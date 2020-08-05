@@ -66,6 +66,10 @@ const deleteJobs = () => {
 // deleteJobs();
 
 const createJobs = ({ getContext, queues }) => {
+  // disabling jobs entirely
+  deleteJobs()
+  return
+
   const FullIndexQueue = queues.add('algolia-full-index-queue', queueOpts);
   const DeltaIndexQueue = queues.add('algolia-delta-index-queue', queueOpts);
 
