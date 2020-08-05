@@ -17,6 +17,8 @@ const resolver = {
       dataSources.Group.getResources(root),
     dateTime: ({ scheduleId }, args, { dataSources }) =>
       dataSources.Group.getDateTimeFromId(scheduleId),
+    zoom: (root, args, { dataSources }) =>
+      dataSources.Group.getGroupZoomParams(root),
   },
 };
 

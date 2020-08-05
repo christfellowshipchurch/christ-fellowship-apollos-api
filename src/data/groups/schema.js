@@ -38,6 +38,12 @@ export const groupSchema = gql`
     isActive: Boolean
   }
 
+  type ZoomParams {
+    link: String
+    meetingId: String
+    passcode: String
+  }
+
   type Group implements Node {
     id: ID!
     name: String
@@ -51,6 +57,7 @@ export const groupSchema = gql`
     coverImage: ImageMedia
     groupResources: [Resource]
     dateTime: DateTime
+    zoom: ZoomParams
   }
 
   extend type Person {

@@ -134,4 +134,17 @@ export default class Group extends baseGroup.dataSource {
     }
     return { start: null, end: null };
   };
+
+  getGroupZoomParams = ({ attributeValues }) => {
+    const zoomLink = get(attributeValues, 'zoom.value', '');
+    if (zoomLink != '') {
+      const regexParams = zoomLink.match(/j\/(\d+)\?pwd=(\w+)/);
+      return {
+        link: zoomLink,
+        meetingId: regexParams[1],
+        passcode: regexParams[2],
+      };
+    }
+    return null;
+  };
 }
