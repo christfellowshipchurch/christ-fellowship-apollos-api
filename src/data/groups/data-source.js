@@ -138,11 +138,13 @@ export default class Group extends baseGroup.dataSource {
   getGroupZoomParams = ({ attributeValues }) => {
     const zoomLink = get(attributeValues, 'zoom.value', '');
     if (zoomLink != '') {
-      const regexParams = zoomLink.match(/j\/(\d+)\?pwd=(\w+)/);
+      const regexMeetingId = zoomLink.match(/j\/(\d+)/);
+      const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
+      const passcode = isNull(regexPasscode) ? null : regexPasscode[1];
       return {
         link: zoomLink,
-        meetingId: regexParams[1],
-        passcode: regexParams[2],
+        meetingId: regexMeetingId[1],
+        passcode,
       };
     }
     return null;
