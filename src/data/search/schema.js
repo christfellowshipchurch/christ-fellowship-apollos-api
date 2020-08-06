@@ -10,6 +10,6 @@ export default gql`
     }
 
     extend type Mutation {
-        indexContentItem(id: String, action: INDEX_ACTION, key: String): Boolean
+        indexContentItem(id: String, action: INDEX_ACTION, key: String): String
     }
 `
