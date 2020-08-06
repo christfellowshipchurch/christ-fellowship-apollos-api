@@ -106,6 +106,10 @@
         {
           "valueFrom": "/prod/JOBS_PASSWORD",
           "name": "JOBS_PASSWORD"
+        },
+        {
+          "valueFrom": "/prod/APOLLOS_SECRET",
+          "name": "APOLLOS_SECRET"
         }
       ],
       "mountPoints": [],
