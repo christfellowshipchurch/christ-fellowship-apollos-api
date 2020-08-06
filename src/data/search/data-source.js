@@ -59,6 +59,22 @@ const processObjectSize = (obj) => {
 
 export default class Search extends CoreDataSource {
 
+  async indexAllGeneralContent() {
+    const { ContentItem } = this.context.dataSources
+
+    const contentItems = await ContentItem
+      .request()
+      .filterOneOf([43, 45, 60, 63].map(n => `ContentChannelId eq ${n}`))
+      .andFilter(ContentItem.byActive())
+      .get()
+
+    const indexableItems = await Promise.all(
+      contentItems.map((item) => this.mapItemToAlgolia(item))
+    );
+
+    this.addObjects(indexableItems);
+  }
+
   async updateContentItemIndex(id) {
     // Resolve the Content Item
     const { ContentItem } = this.context.dataSources
