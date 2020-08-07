@@ -9,9 +9,12 @@ const { enforceCurrentUser, createImageUrlFromGuid } = Utils
 
 const resolver = {
     Person: {
-        photo: ({ photo: { guid } }) => (guid
-            ? { uri: createImageUrlFromGuid(guid) }
-            : { uri: "https://cloudfront.christfellowship.church/GetImage.ashx?guid=0ad7f78a-1e6b-46ad-a8be-baa0dbaaba8e" }),
+        photo: (root) => {
+            const guid = get(root, 'photo.guid')
+            return (guid && guid !== ''
+                ? { uri: createImageUrlFromGuid(guid) }
+                : { uri: "https://cloudfront.christfellowship.church/GetImage.ashx?guid=0ad7f78a-1e6b-46ad-a8be-baa0dbaaba8e" })
+        },
         phoneNumber: enforceCurrentUser(async ({ id }, args, { dataSources }) => {
             const phoneNumber = await dataSources.PhoneNumber.getByUser()
 
