@@ -1,12 +1,14 @@
 import { dataSource as CoreDataSource } from '@apollosproject/data-connector-algolia-search';
+import { createGlobalId } from '@apollosproject/server-core';
+import ApollosConfig from '@apollosproject/config'
 import { graphql } from 'graphql';
 import { take, get } from 'lodash';
 import sanitizeHtml from 'sanitize-html';
 import keywordExtractor from 'keyword-extractor';
 import sizeof from 'object-sizeof';
-import {
-  createGlobalId,
-} from '@apollosproject/server-core';
+import momentTz from 'moment-timezone'
+
+const { ROCK } = ApollosConfig
 
 const MAX_SIZE = 10000 // bytes
 
@@ -83,11 +85,23 @@ export default class Search extends CoreDataSource {
 
     if (hideFromSearch === "true") { // Delete the item if it should not be included in Search
       const type = await this.resolveContentItem(item);
-      this.index.deleteObject(createGlobalId(item.id, type))
-    } else { // Index the item with Algolia as a default
-      const indexableItem = await this.mapItemToAlgolia(item)
-      this.addObjects([indexableItem])
+      return this.index.deleteObject(createGlobalId(item.id, type))
     }
+
+    const { startDateTime } = item
+
+    if (startDateTime && startDateTime !== '') {
+      const mStartDateTime = momentTz(startDateTime).tz(ROCK.TIMEZONE)
+      if (mStartDateTime.isValid() && mStartDateTime.isAfter(momentTz())) {
+        console.log("SET A JOB")
+
+        console.log(this)
+      }
+    }
+
+    const indexableItem = await this.mapItemToAlgolia(item)
+
+    // return this.addObjects([indexableItem])
   }
 
   resolveContentItem(item) {
