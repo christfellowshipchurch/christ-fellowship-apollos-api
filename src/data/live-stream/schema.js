@@ -4,6 +4,10 @@ import gql from 'graphql-tag'
 export default gql`
     ${liveSchema}
 
+    extend type LiveStream {
+        callsToAction: [CallToAction]
+    }
+
     type FloatLeftLiveStream {
         start: String
         isLive: Boolean

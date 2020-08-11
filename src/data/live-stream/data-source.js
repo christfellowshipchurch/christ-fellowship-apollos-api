@@ -3,6 +3,7 @@ import { dataSource as scheduleDataSource } from '../schedule'
 import moment from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
 
+
 export default class LiveStream extends scheduleDataSource {
   resource = 'LiveStream';
 
@@ -85,8 +86,6 @@ export default class LiveStream extends scheduleDataSource {
   async getLiveStreams() {
     const liveStreamContentItems = await this.getLiveStreamContentItems()
 
-    // console.log({ liveStreamContentItems })
-
     // Check the schedule on each event to see
     // if it's currently live
     const currentlyLiveContentItems = filter(liveStreamContentItems,
@@ -96,7 +95,25 @@ export default class LiveStream extends scheduleDataSource {
 
     // Create the Live Stream object from the Content Items
     // that are currently live and return active Live Streams
-    return currentlyLiveContentItems.map(contentItem => {
+    return currentlyLiveContentItems.map(async contentItem => {
+
+      // These are our LiveStream Calls to Action
+      // Here we use the matrix items in Rock in case we want to add 
+      // other attirbutes like images to these items down the road. 
+
+      // First we grab the guid and matrix items
+      const callsToActionGuid = get(contentItem, 'attributeValues.liveStreamCallstoAction.value', null)
+      const callsToActionMatrixItems = await this.context.dataSources.MatrixItem.getItemsFromId(callsToActionGuid)
+      
+      // then we map the values into the correctly shaped objects
+      const callsToAction = callsToActionMatrixItems.map(item => {
+        const { call, action } = item.attributeValues
+        return {
+          call: call.value,
+          action: action.value
+        }
+      })
+
       return ({
         isLive: true,
         eventStartTime: null, // TODO
@@ -104,7 +121,8 @@ export default class LiveStream extends scheduleDataSource {
           sources: [{ uri: get(contentItem, 'attributeValues.liveStreamUri.value', '') }]
         },
         webViewUrl: get(contentItem, 'attributeValues.liveStreamUri.value', ''),
-        contentItem
+        contentItem,
+        callsToAction
       })
     })
   }
