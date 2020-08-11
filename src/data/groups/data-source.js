@@ -1,5 +1,6 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
+import { createGlobalId } from '@apollosproject/server-core';
 import { get, mapValues, isNull } from 'lodash';
 import moment from 'moment';
 import { getIdentifierType } from '../utils';
@@ -78,11 +79,32 @@ export default class Group extends baseGroup.dataSource {
     return groupType.name;
   };
 
+  getContentChannelItem = (id) =>
+    this.request('ContentChannelItems')
+      .filter(getIdentifierType(id).query)
+      .first();
+
   getResources = async ({ attributeValues }) => {
     const matrixAttributeValue = get(attributeValues, 'resources.value', '');
 
     const items = await this.getMatrixItemsFromId(matrixAttributeValue);
-    const values = items.map((item) => item.attributeValues);
+    const values = await Promise.all(
+      items.map(async (item) => {
+        if (item.attributeValues.contentChannelItem.value !== '') {
+          const contentItem = await this.getContentChannelItem(
+            item.attributeValues.contentChannelItem.value
+          );
+          const contentItemApollosId = createGlobalId(
+            contentItem.id,
+            'UniversalContentItem'
+          );
+
+          item.attributeValues.contentChannelItem.value = contentItemApollosId;
+          return item.attributeValues;
+        }
+        return item.attributeValues;
+      })
+    );
     const mappedValues = values.map((attribute) =>
       mapValues(attribute, (o) => o.value)
     );
