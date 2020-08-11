@@ -129,7 +129,8 @@ export default class Search extends CoreDataSource {
   }
 
   async updateContentItemIndex(id) {
-    const log = (msg) => console.log(`\n\x1b[35m${msg}\x1b[30m\n`)
+    // const log = (msg) => console.log(`\n\x1b[35m${msg}\x1b[30m\n`)
+    const log = (msg) => console.log(`\n*** Search Index Log ***\n${msg}\n\n`)
     /** Resolve the Content Item */
     const { ContentItem } = this.context.dataSources
     const item = await ContentItem.getFromId(id)
