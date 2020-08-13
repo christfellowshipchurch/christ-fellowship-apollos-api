@@ -12,11 +12,36 @@ const resolver = {
         //
         // TODO : deprecate this once we get at least 80-90% adpotion of the new version
         userFeedFeatures: async (root, args, { clientVersion, dataSources: { Feature } }) => {
+            const seriesContentChannelConfig = {
+                algorithms: [{
+                    type: "CONTENT_CHANNEL",
+                    arguments: {
+                        contentChannelId: 73
+                    }
+                }],
+                type: "VerticalCardListFeature",
+                title: "Series"
+            }
+            const seriesFeatureConfig = {
+                algorithms: ["SERIES_IN_PROGRESS"],
+                type: "HorizontalCardList",
+                title: "Up next for you"
+            }
+
+            const seriesChannelFeature = await Feature.createVerticalCardListFeature(seriesContentChannelConfig)
+            const upNextFeature = await Feature.createHorizontalCardListFeature(seriesFeatureConfig)
+
+            const rockFeed = await Feature.getRockFeedFeatures({
+                contentChannelId: ROCK_MAPPINGS.HOME_FEATURES_CHANNEL_ID
+            })
+
             return clientVersion && (clientVersion.startsWith("5.0") || clientVersion.startsWith("5.1") || clientVersion.startsWith("web-1."))
                 ? Feature.getHomeFeedFeatures()
-                : Feature.getRockFeedFeatures({
-                    contentChannelId: ROCK_MAPPINGS.HOME_FEATURES_CHANNEL_ID
-                })
+                : [
+                    seriesChannelFeature,
+                    upNextFeature,
+                    ...rockFeed
+                ]
         },
         userHeaderFeatures: async (root, args, { dataSources: { Feature, Flag } }) => {
             const status = await Flag.currentUserCanUseFeature("HOME_HEADER")
