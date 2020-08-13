@@ -90,6 +90,7 @@ export default class Group extends baseGroup.dataSource {
     const items = await this.getMatrixItemsFromId(matrixAttributeValue);
     const values = await Promise.all(
       items.map(async (item) => {
+        // If a resource is a contentChannelItem parse guid into apollos id and set it as the value
         if (item.attributeValues.contentChannelItem.value !== '') {
           const contentItem = await this.getContentChannelItem(
             item.attributeValues.contentChannelItem.value
@@ -139,6 +140,8 @@ export default class Group extends baseGroup.dataSource {
   getDateTimeFromId = async (id) => {
     const schedule = await this.getScheduleFromId(id);
     const { iCalendarContent, weeklyDayOfWeek, weeklyTimeOfDay } = schedule;
+
+    // Use iCalendarContent if it exists else use weeklyDayOfWeek and weeklyTimeOfDay to create a start and end time for schedules.
     if (iCalendarContent !== '') {
       return await this.getDateTimeFromiCalendarContent(schedule);
     } else if (weeklyDayOfWeek !== null && weeklyTimeOfDay) {
@@ -152,6 +155,14 @@ export default class Group extends baseGroup.dataSource {
         .setTime(weeklyTimeOfDay)
         .utc()
         .format();
+
+      // Adjust start/end date to be next meeting date.
+      const isAfter = moment().isAfter(time);
+      if (isAfter) {
+        const nextMeetingTime = moment(time).add(7, 'd').utc().format();
+        return { start: nextMeetingTime, end: nextMeetingTime };
+      }
+
       return { start: time, end: time };
     }
     return { start: null, end: null };
@@ -160,6 +171,7 @@ export default class Group extends baseGroup.dataSource {
   getGroupZoomParams = ({ attributeValues }) => {
     const zoomLink = get(attributeValues, 'zoom.value', '');
     if (zoomLink != '') {
+      // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
       const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
       const passcode = isNull(regexPasscode) ? null : regexPasscode[1];
