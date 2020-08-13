@@ -141,7 +141,6 @@ export default class Search extends CoreDataSource {
     /** Delete the item if it should not be included in Search */
     if (hideFromSearch === "true") {
       const type = await this.resolveContentItem(item);
-      return
       return this.index.deleteObject(createGlobalId(item.id, type))
     }
 
@@ -164,6 +163,9 @@ export default class Search extends CoreDataSource {
      */
     if (startDateTime && startDateTime !== '') {
       const mStartDateTime = momentTz(startDateTime).tz(ROCK.TIMEZONE)
+
+      log(`${momentTz().format()} : ${item.title} has a start date of ${mStartDateTime.format()}`)
+
       if (mStartDateTime.isValid() && mStartDateTime.isAfter(momentTz())) {
         /** Set up the options for the bull job.
          * 
