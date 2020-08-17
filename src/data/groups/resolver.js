@@ -17,8 +17,10 @@ const resolver = {
       dataSources.Group.getResources(root),
     dateTime: ({ scheduleId }, args, { dataSources }) =>
       dataSources.Group.getDateTimeFromId(scheduleId),
-    zoom: (root, args, { dataSources }) =>
-      dataSources.Group.getGroupZoomParams(root),
+    videoCall: (root, args, { dataSources }) =>
+      dataSources.Group.getGroupVideoCallParams(root),
+    parentVideoCall: (root, args, { dataSources }) =>
+      dataSources.Group.getGroupParentVideoCallParams(root),
   },
 };
 

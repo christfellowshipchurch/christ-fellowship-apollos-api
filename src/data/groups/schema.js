@@ -38,7 +38,7 @@ export const groupSchema = gql`
     isActive: Boolean
   }
 
-  type ZoomParams {
+  type VideoCallParams {
     link: String
     meetingId: String
     passcode: String
@@ -57,7 +57,8 @@ export const groupSchema = gql`
     coverImage: ImageMedia
     groupResources: [Resource]
     dateTime: DateTime
-    zoom: ZoomParams
+    videoCall: VideoCallParams
+    parentVideoCall: VideoCallParams
   }
 
   extend type Person {

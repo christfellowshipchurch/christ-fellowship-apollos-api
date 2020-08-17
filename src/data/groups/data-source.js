@@ -168,8 +168,25 @@ export default class Group extends baseGroup.dataSource {
     return { start: null, end: null };
   };
 
-  getGroupZoomParams = ({ attributeValues }) => {
+  getGroupVideoCallParams = ({ attributeValues }) => {
     const zoomLink = get(attributeValues, 'zoom.value', '');
+    if (zoomLink != '') {
+      // Parse Zoom Meeting links that have ids and/or passwords.
+      const regexMeetingId = zoomLink.match(/j\/(\d+)/);
+      const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
+      const passcode = isNull(regexPasscode) ? null : regexPasscode[1];
+      return {
+        link: zoomLink,
+        meetingId: regexMeetingId[1],
+        passcode,
+      };
+    }
+    return null;
+  };
+
+  getGroupParentVideoCallParams = async ({ parentGroupId }) => {
+    const groupParent = await this.request('Groups').find(parentGroupId).get();
+    const zoomLink = get(groupParent, 'attributeValues.zoom.value', '');
     if (zoomLink != '') {
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
