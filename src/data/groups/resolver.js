@@ -13,6 +13,9 @@ const resolver = {
       ContentItem.getCoverImage(root),
     avatars: ({ id }, args, { dataSources }) =>
       dataSources.Group.getAvatars(id),
+    phoneNumbers: ({ id }, args, { dataSources }) => {
+      return dataSources.Group.groupPhoneNumbers(id);
+    },
     groupResources: (root, args, { dataSources }) =>
       dataSources.Group.getResources(root),
     dateTime: ({ scheduleId }, args, { dataSources }) =>

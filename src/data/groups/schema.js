@@ -53,6 +53,7 @@ export const groupSchema = gql`
     leaders: [Person]
     members: [Person]
     avatars: [String]
+    phoneNumbers: [String]
     schedule: Schedule
     coverImage: ImageMedia
     groupResources: [Resource]

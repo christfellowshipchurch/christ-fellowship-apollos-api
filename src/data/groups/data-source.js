@@ -1,7 +1,7 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
-import { get, mapValues, isNull } from 'lodash';
+import { get, mapValues, isNull, filter } from 'lodash';
 import moment from 'moment';
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
@@ -84,6 +84,11 @@ export default class Group extends baseGroup.dataSource {
       .filter(getIdentifierType(id).query)
       .first();
 
+  getPhoneNumbers = (id) =>
+    this.request('PhoneNumbers')
+      .filter(`(PersonId eq ${id}) and (IsMessagingEnabled eq true)`)
+      .first();
+
   getResources = async ({ attributeValues }) => {
     const matrixAttributeValue = get(attributeValues, 'resources.value', '');
 
@@ -121,6 +126,20 @@ export default class Group extends baseGroup.dataSource {
         : null
     );
     return avatars;
+  };
+
+  groupPhoneNumbers = async (id) => {
+    const members = await this.getMembers(id);
+    const { Auth } = this.context.dataSources;
+    const currentPerson = await Auth.getCurrentPerson();
+    const filteredMembers = filter(members, (o) => o.id !== currentPerson.id);
+    return Promise.all(
+      filteredMembers.map(({ id }) => this.getPhoneNumbers(id))
+    ).then((values) => {
+      const numbers = [];
+      values.map((o) => (o && o.number ? numbers.push(o.number) : null));
+      return numbers;
+    });
   };
 
   getDateTimeFromiCalendarContent = async (schedule) => {
