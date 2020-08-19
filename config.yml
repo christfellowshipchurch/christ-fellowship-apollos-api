@@ -236,6 +236,9 @@ FEATURE_FLAGS:
   LIVE_STREAM_UI:
     securityGroupId: 1014843
     status: "LIVE"
+  NOTIFICATION_CENTER:
+    securityGroupId: 1014843
+    status: "LIVE"
   ROCK_DYNAMIC_FEED_WITH_PERSONAS:
     status: "LIVE"
   CHECK_IN:
