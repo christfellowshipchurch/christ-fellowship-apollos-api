@@ -1,7 +1,7 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
-import { get, mapValues, isNull, filter } from 'lodash';
+import { get, mapValues, isNull, filter, head } from 'lodash';
 import moment from 'moment';
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
@@ -119,8 +119,13 @@ export default class Group extends baseGroup.dataSource {
 
   getAvatars = async (id) => {
     const members = await this.getMembers(id);
+    const leaders = await this.getLeaders(id);
+    const firstLeader = head(leaders);
+    const filteredMembers = firstLeader
+      ? filter(members, (o) => o.id !== firstLeader.id)
+      : members;
     let avatars = [];
-    members.map((member) =>
+    filteredMembers.map((member) =>
       member.photo.guid
         ? avatars.push(createImageUrlFromGuid(member.photo.guid))
         : null
@@ -130,8 +135,7 @@ export default class Group extends baseGroup.dataSource {
 
   groupPhoneNumbers = async (id) => {
     const members = await this.getMembers(id);
-    const { Auth } = this.context.dataSources;
-    const currentPerson = await Auth.getCurrentPerson();
+    const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
     const filteredMembers = filter(members, (o) => o.id !== currentPerson.id);
     return Promise.all(
       filteredMembers.map(({ id }) => this.getPhoneNumbers(id))
