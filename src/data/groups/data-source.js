@@ -28,10 +28,7 @@ export default class Group extends baseGroup.dataSource {
 
     // Get the actual group data for the groups above.
     const groups = await Promise.all(
-      groupAssociations.map(
-        ({ groupId: id }) =>
-          console.log("HEEEEEYYYYYYYY", id) || this.getFromId(id)
-      )
+      groupAssociations.map(({ groupId: id }) => this.getFromId(id))
     );
 
     // Filter the groups to make sure we only pull those that are
