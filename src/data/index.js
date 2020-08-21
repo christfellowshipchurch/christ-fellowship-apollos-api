@@ -43,7 +43,6 @@ import * as ContentItem from './content-item';
 import * as LiveStream from './live-stream';
 import * as Search from './search';
 import * as CheckInable from './checkinable';
-import * as CheckInableGroup from './checkInableGroup';
 
 // Localized Modules
 import * as WebsitePagesContentItem from './website-pages-content-item';
@@ -110,7 +109,6 @@ const data = {
   Schedule,
   Flag,
   CheckInable,
-  CheckInableGroup,
 
   // Local Content Items
   WebsiteNavigation,
