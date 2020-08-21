@@ -1,17 +1,58 @@
-import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
-import ApollosConfig from '@apollosproject/config';
-import { createGlobalId } from '@apollosproject/server-core';
-import { get, mapValues, isNull, filter, head } from 'lodash';
-import moment from 'moment';
-import { getIdentifierType } from '../utils';
+import { Group as baseGroup, Utils } from "@apollosproject/data-connector-rock";
+import ApollosConfig from "@apollosproject/config";
+import { createGlobalId } from "@apollosproject/server-core";
+import { get, mapValues, isNull, filter, head } from "lodash";
+import moment from "moment";
+import { getIdentifierType } from "../utils";
 const { ROCK_MAPPINGS } = ApollosConfig;
 
 const { createImageUrlFromGuid } = Utils;
 
 export default class Group extends baseGroup.dataSource {
+  getFromId = (id) =>
+    this.request().filter(`Id eq ${id}`).expand("Members").first();
+
+  getByPerson = async ({ personId, type = null, asLeader = false }) => {
+    // Get the active groups that the person is a member of.
+    // Conditionally filter that list of groups on whether or not your
+    // role in that group is that of "Leader".
+    const groupAssociations = await this.request("GroupMembers")
+      .expand("GroupRole")
+      .filter(
+        `PersonId eq ${personId} ${
+          asLeader ? " and GroupRole/IsLeader eq true" : ""
+        }`
+      )
+      .andFilter(`GroupMemberStatus ne 'Inactive'`)
+      .get();
+
+    // Get the actual group data for the groups above.
+    const groups = await Promise.all(
+      groupAssociations.map(
+        ({ groupId: id }) =>
+          console.log("HEEEEEYYYYYYYY", id) || this.getFromId(id)
+      )
+    );
+
+    // Filter the groups to make sure we only pull those that are
+    // active and NOT archived
+    const filteredGroups = await Promise.all(
+      groups.filter(
+        (group) => group.isActive === true && group.isArchived === false
+      )
+    );
+
+    // Remove the groups that aren't of the types we want and return.
+    return filteredGroups.filter(({ groupTypeId }) =>
+      type
+        ? groupTypeId === this.groupTypeMap[type]
+        : Object.values(this.groupTypeMap).includes(groupTypeId)
+    );
+  };
+
   getMatrixItemsFromId = async (id) =>
     id
-      ? this.request('/AttributeMatrixItems')
+      ? this.request("/AttributeMatrixItems")
           .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
           .get()
       : [];
@@ -33,76 +74,40 @@ export default class Group extends baseGroup.dataSource {
 
   getGroupTypeIds = () => Object.values(this.groupTypeMap);
 
-  getByPerson = async ({ personId, type = null, asLeader = false }) => {
-    // Get the active groups that the person is a member of.
-    // Conditionally filter that list of groups on whether or not your
-    // role in that group is that of "Leader".
-
-    const groupAssociations = await this.request('GroupMembers')
-      .expand('GroupRole')
-      .filter(
-        `PersonId eq ${personId} ${
-          asLeader ? ' and GroupRole/IsLeader eq true' : ''
-        }`
-      )
-      .andFilter(`GroupMemberStatus ne 'Inactive'`)
-      .get();
-
-    // Get the actual group data for the groups above.
-    const groups = await Promise.all(
-      groupAssociations.map(({ groupId }) => this.getFromId({ id: groupId }))
-    );
-
-    // Filter the groups to make sure we only pull those that are
-    // active and NOT archived
-    const filteredGroups = await Promise.all(
-      groups.filter(
-        (group) => group.isActive === true && group.isArchived === false
-      )
-    );
-
-    // Remove the groups that aren't of the types we want and return.
-    return filteredGroups.filter(({ groupTypeId }) =>
-      type
-        ? groupTypeId === this.groupTypeMap[type]
-        : Object.values(this.groupTypeMap).includes(groupTypeId)
-    );
-  };
-
   getScheduleFromId = async (id) => {
-    const schedule = await this.request('Schedules').find(id).get();
+    const schedule = await this.request("Schedules").find(id).get();
     return schedule;
   };
 
   getGroupTypeFromId = async (id) => {
-    const groupType = await this.request('GroupTypes').find(id).get();
+    const groupType = await this.request("GroupTypes").find(id).get();
     return groupType.name;
   };
 
   getContentChannelItem = (id) =>
-    this.request('ContentChannelItems')
+    this.request("ContentChannelItems")
       .filter(getIdentifierType(id).query)
       .first();
 
   getPhoneNumbers = (id) =>
-    this.request('PhoneNumbers')
+    this.request("PhoneNumbers")
       .filter(`(PersonId eq ${id}) and (IsMessagingEnabled eq true)`)
       .first();
 
   getResources = async ({ attributeValues }) => {
-    const matrixAttributeValue = get(attributeValues, 'resources.value', '');
+    const matrixAttributeValue = get(attributeValues, "resources.value", "");
 
     const items = await this.getMatrixItemsFromId(matrixAttributeValue);
     const values = await Promise.all(
       items.map(async (item) => {
         // If a resource is a contentChannelItem parse guid into apollos id and set it as the value
-        if (item.attributeValues.contentChannelItem.value !== '') {
+        if (item.attributeValues.contentChannelItem.value !== "") {
           const contentItem = await this.getContentChannelItem(
             item.attributeValues.contentChannelItem.value
           );
           const contentItemApollosId = createGlobalId(
             contentItem.id,
-            'UniversalContentItem'
+            "UniversalContentItem"
           );
 
           item.attributeValues.contentChannelItem.value = contentItemApollosId;
@@ -165,12 +170,12 @@ export default class Group extends baseGroup.dataSource {
     const { iCalendarContent, weeklyDayOfWeek, weeklyTimeOfDay } = schedule;
 
     // Use iCalendarContent if it exists else use weeklyDayOfWeek and weeklyTimeOfDay to create a start and end time for schedules.
-    if (iCalendarContent !== '') {
+    if (iCalendarContent !== "") {
       return await this.getDateTimeFromiCalendarContent(schedule);
     } else if (weeklyDayOfWeek !== null && weeklyTimeOfDay) {
       const proto = Object.getPrototypeOf(moment());
       proto.setTime = function (time) {
-        const [hour, minute, seconds] = time.split(':');
+        const [hour, minute, seconds] = time.split(":");
         return this.set({ hour, minute, seconds });
       };
       const time = moment()
@@ -182,7 +187,7 @@ export default class Group extends baseGroup.dataSource {
       // Adjust start/end date to be next meeting date.
       const isAfter = moment().isAfter(time);
       if (isAfter) {
-        const nextMeetingTime = moment(time).add(7, 'd').utc().format();
+        const nextMeetingTime = moment(time).add(7, "d").utc().format();
         return { start: nextMeetingTime, end: nextMeetingTime };
       }
 
@@ -192,8 +197,8 @@ export default class Group extends baseGroup.dataSource {
   };
 
   getGroupVideoCallParams = ({ attributeValues }) => {
-    const zoomLink = get(attributeValues, 'zoom.value', '');
-    if (zoomLink != '') {
+    const zoomLink = get(attributeValues, "zoom.value", "");
+    if (zoomLink != "") {
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
       const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
@@ -208,9 +213,9 @@ export default class Group extends baseGroup.dataSource {
   };
 
   getGroupParentVideoCallParams = async ({ parentGroupId }) => {
-    const groupParent = await this.request('Groups').find(parentGroupId).get();
-    const zoomLink = get(groupParent, 'attributeValues.zoom.value', '');
-    if (zoomLink != '') {
+    const groupParent = await this.request("Groups").find(parentGroupId).get();
+    const zoomLink = get(groupParent, "attributeValues.zoom.value", "");
+    if (zoomLink != "") {
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
       const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
