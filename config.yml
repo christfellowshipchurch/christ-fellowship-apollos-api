@@ -182,6 +182,7 @@ ROCK_MAPPINGS:
   DEFINED_TYPES:
     ETHNICITY: 277
     STATES: 28
+    NOTIFICATION_CENTER: 355
 
   # List of attribute keys for Profile information
   # when migrating from Arena to Rock, the Arena keys were kept

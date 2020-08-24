@@ -52,6 +52,7 @@ import * as Flag from './flag'
 import * as Group from './group'
 import * as LiveStream from './live-stream'
 import * as MatrixItem from './matrix-item'
+import * as Message from './message'
 import * as Metadata from './metadata'
 import * as PageBuilder from './page-builder'
 import * as Person from './people'
@@ -91,6 +92,7 @@ const data = {
   Interactions,
   LiveStream,
   MatrixItem,
+  Message,
   Metadata,
   OneSignal,
   OneSignalWithRock,
