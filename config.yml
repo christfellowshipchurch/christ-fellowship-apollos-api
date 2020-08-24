@@ -182,6 +182,7 @@ ROCK_MAPPINGS:
   DEFINED_TYPES:
     ETHNICITY: 277
     STATES: 28
+    NOTIFICATION_CENTER: 355
 
   # List of attribute keys for Profile information
   # when migrating from Arena to Rock, the Arena keys were kept
@@ -237,7 +238,7 @@ FEATURE_FLAGS:
     securityGroupId: 1014843
     status: "LIVE"
   NOTIFICATION_CENTER:
-    securityGroupId: 1014843
+    securityGroupId: 1014843 # CFDP Experimental Features
     status: "LIVE"
   ROCK_DYNAMIC_FEED_WITH_PERSONAS:
     status: "LIVE"
