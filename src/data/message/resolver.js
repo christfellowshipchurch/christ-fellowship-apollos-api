@@ -12,12 +12,8 @@ const resolver = {
   Message: {
     id: ({ id }, args, context, { parentType }) =>
       createGlobalId(id, parentType.name),
-    title: ({ attributeValues, ...props }, args, context) => {
-      console.log({ attributeValues })
-      console.log({ props })
-
-      return get(attributeValues, 'title.value', '')
-    },
+    title: ({ attributeValues }, args, context) =>
+      get(attributeValues, 'title.value', ''),
     subtitle: ({ attributeValues }, args, context) =>
       get(attributeValues, 'subtitle.value', ''),
     body: ({ attributeValues }, args, context) =>

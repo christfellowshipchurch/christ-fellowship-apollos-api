@@ -26,6 +26,9 @@ export default gql`
   }
 
   extend type Query { 
-    notificationCenter: MessagesConnection
+    notificationCenter(
+      first: Int
+      after: String
+    ): MessagesConnection
   }
 `
