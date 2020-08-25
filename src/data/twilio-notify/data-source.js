@@ -29,8 +29,6 @@ export default class TwilioNotify extends RESTDataSource {
     }
 
     async updatePushSettings({ enabled, bindingType, address }) {
-        console.log("Updating Push Settings", { enabled, bindingType, address })
-
         // Gets current person from Auth
         const currentUser = await this.context.dataSources.Auth.getCurrentPerson()
 
@@ -65,10 +63,8 @@ export default class TwilioNotify extends RESTDataSource {
 
     sendPushNotification({ title, body, identity = null }) {
         if (identity && identity !== '') {
-            console.log(`Sending push notification to ${identity}`, { title, body })
             return this.sendPushNotificationToIdentity({ title, body, identity })
         } else {
-            console.log(`Sending push notification to all users`, { title, body })
             return this.twilio.notify
                 .services(NOTIFY_SID)
                 .bindings

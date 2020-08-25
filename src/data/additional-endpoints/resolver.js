@@ -77,7 +77,7 @@ const profileLinkJson = [
   {
     "name": "Groups",
     "icon": "users",
-    "uri": "https://cf.church/stronger",
+    "uri": "https://rock.gocf.org/groups",
     "openInApp": true,
     "theme": {
       "colors": {

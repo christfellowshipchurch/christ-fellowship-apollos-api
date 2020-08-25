@@ -28,6 +28,7 @@ import {
   BinaryFiles,
   // Features,
   // Event,
+  // PrayerRequest
 } from '@apollosproject/data-connector-rock';
 import * as Theme from './theme';
 
@@ -35,104 +36,99 @@ import * as Theme from './theme';
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
 import * as OneSignalWithRock from './oneSignalWithRock';
 
+import * as AdditionalEndpoint from './additional-endpoints';
+import * as Address from './address';
 import * as Auth from './auth';
 import * as Browse from './browse';
 import * as Cache from './redis-cache';
+import * as Campus from './campus';
+import * as CheckInable from './checkinable';
 import * as ContentChannel from './content-channel';
 import * as ContentItem from './content-item';
-import * as LiveStream from './live-stream';
-import * as Search from './search';
-import * as CheckInable from './checkinable';
-
-// Localized Modules
-import * as WebsitePagesContentItem from './website-pages-content-item';
-import * as WebsiteContentItem from './website-content-item';
-import * as WebsiteHtmlContentItem from './website-html-content-item';
-import * as WebsiteGroupContentItem from './website-group-content-item';
-import * as WebsiteNavigation from './website-navigation';
-import * as WebsiteFeature from './website-feature';
-
 import * as DefinedValue from './defined-value';
 import * as DefinedValueList from './defined-value-list';
-
-import * as TwilioNotify from './twilio-notify';
-import * as Campus from './campus';
-import * as Person from './people';
-import * as Group from './groups';
-
-import * as PhoneNumber from './phone-number';
-import * as Address from './address';
-import * as Workflow from './workflow';
-import * as Schedule from './schedule';
-import * as Feature from './features';
 import * as Event from './events';
-
-import * as Metadata from './metadata';
-import * as AdditionalEndpoint from './additional-endpoints';
+import * as Feature from './features';
 import * as Flag from './flag';
+import * as Group from './group';
+import * as LiveStream from './live-stream';
+import * as MatrixItem from './matrix-item';
+import * as Message from './message';
+import * as Metadata from './metadata';
+import * as PageBuilder from './page-builder';
+import * as Person from './people';
+import * as PhoneNumber from './phone-number';
+import * as PrayerRequest from './prayer-request';
+import * as Schedule from './schedule';
+import * as Search from './search';
+import * as TwilioNotify from './twilio-notify';
+import * as WebsiteContentItem from './website-content-item';
+import * as WebsiteFeature from './website-feature';
+import * as WebsiteGroupContentItem from './website-group-content-item';
+import * as WebsiteHtmlContentItem from './website-html-content-item';
+import * as WebsiteNavigation from './website-navigation';
+import * as WebsitePagesContentItem from './website-pages-content-item';
+import * as Workflow from './workflow';
 
 const data = {
-  Followings,
-  ContentChannel,
-  ContentItem,
-  Person,
-  // Cloudinary,
+  AdditionalEndpoint,
+  Address,
+  Analytics,
   Auth,
   AuthSms,
-  Sms: TwilioNotify,
-  LiveStream,
-  Theme,
-  Scripture,
-  Interactions,
-  RockConstants,
-  Sharable,
-  Analytics,
-  OneSignal,
-  PersonalDevice,
-  OneSignalWithRock,
-  Pass,
-  Search,
-  Template,
-  Campus,
-  Group,
   BinaryFiles,
-  Feature,
-  TwilioNotify,
-  Event,
-
-  // Local Types
+  Browse,
+  Cache,
+  Campus,
+  CheckInable,
+  ContentChannel,
+  ContentItem,
   DefinedValue,
   DefinedValueList,
-  PhoneNumber,
-  Address,
-  Workflow,
-  Schedule,
+  Event,
+  Feature,
   Flag,
-  CheckInable,
-
-  // Local Content Items
-  WebsiteNavigation,
-  WebsitePagesContentItem: {
-    dataSource: WebsitePagesContentItem.dataSource,
-  },
+  Followings,
+  Group,
+  Interactions,
+  LiveStream,
+  MatrixItem,
+  Message,
+  Metadata,
+  OneSignal,
+  OneSignalWithRock,
+  PageBuilder,
+  Pass,
+  Person,
+  PersonalDevice,
+  PhoneNumber,
+  PrayerRequest,
+  RockConstants,
+  Schedule,
+  Scripture,
+  Search,
+  Sharable,
+  Sms: TwilioNotify,
+  Template,
+  Theme,
+  TwilioNotify,
   WebsiteContentItem: {
     dataSource: WebsiteContentItem.dataSource,
-  },
-  WebsiteHtmlContentItem: {
-    dataSource: WebsiteHtmlContentItem.dataSource,
-  },
-  WebsiteGroupContentItem: {
-    dataSource: WebsiteGroupContentItem.dataSource,
   },
   WebsiteFeature: {
     dataSource: WebsiteFeature.dataSource,
   },
-
-  Browse,
-  Cache,
-
-  AdditionalEndpoint,
-  Metadata,
+  WebsiteGroupContentItem: {
+    dataSource: WebsiteGroupContentItem.dataSource,
+  },
+  WebsiteHtmlContentItem: {
+    dataSource: WebsiteHtmlContentItem.dataSource,
+  },
+  WebsiteNavigation,
+  WebsitePagesContentItem: {
+    dataSource: WebsitePagesContentItem.dataSource,
+  },
+  Workflow,
 };
 
 const {

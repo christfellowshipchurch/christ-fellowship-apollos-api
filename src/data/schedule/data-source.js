@@ -51,7 +51,7 @@ export default class Schedule extends RockApolloDataSource {
       ids.map(id => this.getOccurrences(id))
     )
 
-    return flatten(nextOccurrences)
+    return flatten(nextOccurrences).sort((a, b) => moment(a.startWithOffset).diff(moment(b.startWithOffset)))
   }
 
   // shorthand for converting a date to a moment
