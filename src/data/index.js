@@ -50,7 +50,7 @@ import * as DefinedValueList from './defined-value-list';
 import * as Event from './events';
 import * as Feature from './features';
 import * as Flag from './flag';
-import * as Group from './group';
+import * as Group from './groups';
 import * as LiveStream from './live-stream';
 import * as MatrixItem from './matrix-item';
 import * as Message from './message';
