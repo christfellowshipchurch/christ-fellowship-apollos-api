@@ -60,6 +60,7 @@ import * as PhoneNumber from './phone-number'
 import * as PrayerRequest from './prayer-request'
 import * as Schedule from './schedule'
 import * as Search from './search'
+import * as StreamChat from './stream-chat'
 import * as TwilioNotify from './twilio-notify'
 import * as WebsiteContentItem from './website-content-item'
 import * as WebsiteFeature from './website-feature'
@@ -108,6 +109,7 @@ const data = {
   Search,
   Sharable,
   Sms: TwilioNotify,
+  StreamChat,
   Template,
   Theme,
   TwilioNotify,
