@@ -22,10 +22,10 @@ if (CHAT_SECRET && CHAT_API_KEY && !chatClient) {
 }
 
 export default class StreamChat extends RESTDataSource {
-  generateUserToken = async (currentPerson) => {
+  generateUserToken = (currentPerson) => {
     const globalId = createGlobalId(currentPerson.id, "AuthenticatedUser");
     const userId = globalId.split(":")[1];
 
-    return await chatClient.createToken(userId);
+    return chatClient.createToken(userId);
   };
 }
