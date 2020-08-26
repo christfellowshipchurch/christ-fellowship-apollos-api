@@ -18,8 +18,7 @@ const resolver = {
                 return null;
             }
 
-            const { id: currentUserId } = await Auth.getCurrentPerson();
-            return StreamChat.generateUserToken(currentUserId);
+            return StreamChat.generateUserToken(id);
         },
     },
     Query: {
