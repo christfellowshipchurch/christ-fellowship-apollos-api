@@ -66,6 +66,10 @@ export const groupSchema = gql`
     groups(type: GROUP_TYPE, asLeader: Boolean): [Group]
     isGroupLeader: Boolean
   }
+
+  extend type Mutation {
+    addMemberAttendance(id: ID!): Group
+  }
 `;
 
 export default groupSchema;

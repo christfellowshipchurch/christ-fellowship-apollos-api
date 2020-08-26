@@ -1,5 +1,5 @@
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
-import { resolverMerge } from '@apollosproject/server-core';
+import { resolverMerge, parseGlobalId } from '@apollosproject/server-core';
 
 const resolver = {
   Group: {
@@ -24,6 +24,18 @@ const resolver = {
       dataSources.Group.getGroupVideoCallParams(root),
     parentVideoCall: (root, args, { dataSources }) =>
       dataSources.Group.getGroupParentVideoCallParams(root),
+  },
+  Mutation: {
+    addMemberAttendance: async (root, { id }, { dataSources }) => {
+      const globalId = parseGlobalId(id);
+      try {
+        return dataSources.Group.addMemberAttendance(globalId.id);
+      } catch (e) {
+        console.log({ e });
+      }
+
+      return null;
+    },
   },
 };
 

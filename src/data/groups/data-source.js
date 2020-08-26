@@ -3,6 +3,7 @@ import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
 import { get, mapValues, isNull, filter, head } from 'lodash';
 import moment from 'moment';
+import momentTz from 'moment-timezone';
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
 
@@ -37,6 +38,39 @@ export default class Group extends baseGroup.dataSource {
     }
 
     return group;
+  };
+
+  addMemberAttendance = async (id) => {
+    const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
+
+    const { scheduleId, campusId } = await this.request('Groups')
+      .filter(`Id eq ${id}`)
+      .first();
+    const { locationId } = await this.request('Campuses')
+      .filter(`Id eq ${campusId}`)
+      .first();
+    const { start } = await this.getDateTimeFromId(scheduleId);
+    const occurrenceDate = momentTz
+      .tz(start, ApollosConfig.ROCK.TIMEZONE)
+      .format('l LT');
+    try {
+      console.log('Adding current user to attendance');
+      await this.put(
+        `/Attendances/AddAttendance`,
+        {},
+        {
+          params: {
+            groupId: id,
+            locationId,
+            scheduleId,
+            occurrenceDate,
+            personId: currentPerson.id,
+          },
+        }
+      );
+    } catch (e) {
+      console.log(`Could not take attendance for current user`, e);
+    }
   };
 
   getByPerson = async ({ personId, type = null, asLeader = false }) => {
