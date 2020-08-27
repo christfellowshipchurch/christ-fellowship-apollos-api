@@ -243,7 +243,8 @@ export default class Group extends baseGroup.dataSource {
         .format();
 
       // Adjust start/end date to be next meeting date.
-      const isAfter = moment().isAfter(time);
+      const endOfMeetingDay = moment(time).endOf('day').utc().format();
+      const isAfter = moment().isAfter(endOfMeetingDay);
       if (isAfter) {
         const nextMeetingTime = moment(time).add(7, 'd').utc().format();
         return { start: nextMeetingTime, end: nextMeetingTime };
