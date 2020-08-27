@@ -46,7 +46,6 @@ export const groupSchema = gql`
 
   type Group implements Node {
     id: ID!
-    name: String
     title: String
     groupType: String
     summary: String
