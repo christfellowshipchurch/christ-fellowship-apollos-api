@@ -4,6 +4,10 @@ import { prayerSchema } from '@apollosproject/data-schema'
 export default gql`
     ${prayerSchema}
 
+    extend type PrayerRequest {
+        requestedDate: String
+    }
+
     input PrayerRequestsConnectionInput {
         first: Int
         after: String
@@ -23,6 +27,7 @@ export default gql`
     extend type Query {
         currentUserPrayerRequests(
             first: Int
+            after: String
         ): PrayerRequestsConnection
     }
 `
