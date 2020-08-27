@@ -54,6 +54,19 @@ export default class Group extends baseGroup.dataSource {
       .tz(start, ApollosConfig.ROCK.TIMEZONE)
       .format('l LT');
     try {
+      console.log('Creating Group Occurrence');
+      await this.post(
+        `/AttendanceOccurrences/CreateGroupOccurrence`,
+        {},
+        {
+          params: {
+            groupId: id,
+            locationId,
+            scheduleId,
+            occurrenceDate,
+          },
+        }
+      );
       console.log('Adding current user to attendance');
       await this.put(
         `/Attendances/AddAttendance`,
