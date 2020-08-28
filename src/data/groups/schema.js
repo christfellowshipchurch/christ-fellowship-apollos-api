@@ -46,19 +46,20 @@ export const groupSchema = gql`
 
   type Group implements Node {
     id: ID!
-    title: String
+    allowMessages: String
+    avatars: [String]
+    coverImage: ImageMedia
+    dateTime: DateTime
+    groupResources: [Resource]
     groupType: String
-    summary: String
     leaders: [Person]
     members: [Person]
-    avatars: [String]
+    parentVideoCall: VideoCallParams
     phoneNumbers: [String]
     schedule: Schedule
-    coverImage: ImageMedia
-    groupResources: [Resource]
-    dateTime: DateTime
+    summary: String
+    title: String
     videoCall: VideoCallParams
-    parentVideoCall: VideoCallParams
   }
 
   extend type Person {
