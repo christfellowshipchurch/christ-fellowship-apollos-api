@@ -20,6 +20,6 @@ export default gql`
 
     extend type AuthenticatedUser {
         streamChatToken: String
-        streamChatRole(id: ID): CHAT_ROLES
+        streamChatRole(id: ID!): CHAT_ROLES
     }
 `

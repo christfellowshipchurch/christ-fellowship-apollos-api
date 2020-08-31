@@ -21,14 +21,14 @@ const resolver = {
 
             return StreamChat.generateUserToken(id);
         },
-        streamChatRole: async ({ id }, args, { dataSources }) => {
+        streamChatRole: async ({ id }, { id: contentId }, { dataSources }) => {
             const { Auth, StreamChat } = dataSources;
 
             const flag = get(ApollosConfig, 'FEATURE_FLAGS.LIVE_STREAM_CHAT', null)
             if (flag && flag.status === "LIVE") {
                 if (flag.securityGroupId) {
                     if (await Auth.isInSecurityGroup(flag.securityGroupId)) {
-                      await StreamChat.addModerator(id);
+                      await StreamChat.addModerator({ contentId, id });
                       return 'MODERATOR';
                     }
                 }

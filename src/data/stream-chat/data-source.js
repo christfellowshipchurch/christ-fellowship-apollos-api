@@ -29,14 +29,11 @@ export default class StreamChat extends RESTDataSource {
     return chatClient.createToken(userId);
   };
 
-  addModerator = async (id) => {
+  addModerator = async ({ contentId, id }) => {
     const globalId = createGlobalId(id, "AuthenticatedUser");
     const userId = globalId.split(":")[1];
 
-    await chatClient.updateUser({
-      id: userId,
-      // role: 'moderator', 
-      role: 'admin', 
-    });
+    const channel = chatClient.channel('livestream', contentId);
+    await channel.addModerators([userId]);
   }
 }
