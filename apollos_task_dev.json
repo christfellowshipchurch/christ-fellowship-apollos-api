@@ -110,6 +110,18 @@
         {
           "valueFrom": "/dev/APOLLOS_SECRET",
           "name": "APOLLOS_SECRET"
+        },
+        {
+          "valueFrom": "/dev/STREAM_CHAT_APP_ID",
+          "name": "STREAM_CHAT_APP_ID"
+        },
+        {
+          "valueFrom": "/dev/STREAM_CHAT_SECRET",
+          "name": "STREAM_CHAT_SECRET"
+        },
+        {
+          "valueFrom": "/dev/STREAM_CHAT_API_KEY",
+          "name": "STREAM_CHAT_API_KEY"
         }
       ],
       "mountPoints": [],
