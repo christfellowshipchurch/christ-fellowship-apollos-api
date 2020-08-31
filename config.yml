@@ -49,6 +49,13 @@ ALGOLIA:
       - title
       - htmlContent
       - unordered(summary)
+
+# Stream Chat https://getstream.io
+STREAM:
+  CHAT_SECRET: ${STREAM_CHAT_SECRET}
+  CHAT_API_KEY: ${STREAM_CHAT_API_KEY}
+  CHAT_APP_ID: ${STREAM_CHAT_APP_ID}
+
 TWILIO:
   NOTIFY_SID: ${TWILIO_NOTIFY_SID}
   ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
@@ -248,6 +255,9 @@ HOME_HEADER_FEATURES:
 
 FEATURE_FLAGS:
   LIVE_STREAM_UI:
+    securityGroupId: 1014843
+    status: 'LIVE'
+  LIVE_STREAM_CHAT:
     securityGroupId: 1014843
     status: 'LIVE'
   NOTIFICATION_CENTER:

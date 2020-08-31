@@ -41,34 +41,35 @@ import * as Address from './address';
 import * as Auth from './auth';
 import * as Browse from './browse';
 import * as Cache from './redis-cache';
-import * as Campus from './campus';
-import * as CheckInable from './checkinable';
-import * as ContentChannel from './content-channel';
-import * as ContentItem from './content-item';
-import * as DefinedValue from './defined-value';
-import * as DefinedValueList from './defined-value-list';
-import * as Event from './events';
-import * as Feature from './features';
-import * as Flag from './flag';
-import * as Group from './groups';
-import * as LiveStream from './live-stream';
-import * as MatrixItem from './matrix-item';
-import * as Message from './message';
-import * as Metadata from './metadata';
-import * as PageBuilder from './page-builder';
-import * as Person from './people';
-import * as PhoneNumber from './phone-number';
-import * as PrayerRequest from './prayer-request';
-import * as Schedule from './schedule';
-import * as Search from './search';
-import * as TwilioNotify from './twilio-notify';
-import * as WebsiteContentItem from './website-content-item';
-import * as WebsiteFeature from './website-feature';
-import * as WebsiteGroupContentItem from './website-group-content-item';
-import * as WebsiteHtmlContentItem from './website-html-content-item';
-import * as WebsiteNavigation from './website-navigation';
-import * as WebsitePagesContentItem from './website-pages-content-item';
-import * as Workflow from './workflow';
+import * as Campus from './campus'
+import * as CheckInable from './checkinable'
+import * as ContentChannel from './content-channel'
+import * as ContentItem from './content-item'
+import * as DefinedValue from './defined-value'
+import * as DefinedValueList from './defined-value-list'
+import * as Event from './events'
+import * as Feature from './features'
+import * as Flag from './flag'
+import * as Group from './groups'
+import * as LiveStream from './live-stream'
+import * as MatrixItem from './matrix-item'
+import * as Message from './message'
+import * as Metadata from './metadata'
+import * as PageBuilder from './page-builder'
+import * as Person from './people'
+import * as PhoneNumber from './phone-number'
+import * as PrayerRequest from './prayer-request'
+import * as Schedule from './schedule'
+import * as Search from './search'
+import * as StreamChat from './stream-chat'
+import * as TwilioNotify from './twilio-notify'
+import * as WebsiteContentItem from './website-content-item'
+import * as WebsiteFeature from './website-feature'
+import * as WebsiteGroupContentItem from './website-group-content-item'
+import * as WebsiteHtmlContentItem from './website-html-content-item'
+import * as WebsiteNavigation from './website-navigation'
+import * as WebsitePagesContentItem from './website-pages-content-item'
+import * as Workflow from './workflow'
 
 const data = {
   AdditionalEndpoint,
@@ -109,6 +110,7 @@ const data = {
   Search,
   Sharable,
   Sms: TwilioNotify,
+  StreamChat,
   Template,
   Theme,
   TwilioNotify,

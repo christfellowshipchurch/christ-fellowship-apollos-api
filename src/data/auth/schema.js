@@ -12,4 +12,8 @@ export default gql`
     extend type Query {
         canAccessExperimentalFeatures: Boolean
     }
+
+    extend type AuthenticatedUser {
+        streamChatToken: String
+    }
 `
