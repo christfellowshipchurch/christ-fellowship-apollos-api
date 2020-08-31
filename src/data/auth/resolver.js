@@ -1,4 +1,5 @@
 import { Auth as coreAuth } from '@apollosproject/data-connector-rock'
+import { get } from 'lodash';
 import ApollosConfig from '@apollosproject/config'
 import { resolverMerge } from '@apollosproject/server-core'
 
@@ -19,6 +20,21 @@ const resolver = {
             }
 
             return StreamChat.generateUserToken(id);
+        },
+        streamChatRole: async ({ id }, args, { dataSources }) => {
+            const { Auth, StreamChat } = dataSources;
+
+            const flag = get(ApollosConfig, 'FEATURE_FLAGS.LIVE_STREAM_CHAT', null)
+            if (flag && flag.status === "LIVE") {
+                if (flag.securityGroupId) {
+                    if (await Auth.isInSecurityGroup(flag.securityGroupId)) {
+                      await StreamChat.addModerator(id);
+                      return 'MODERATOR';
+                    }
+                }
+            }
+
+            return 'USER';
         },
     },
     Query: {

@@ -13,7 +13,13 @@ export default gql`
         canAccessExperimentalFeatures: Boolean
     }
 
+    enum CHAT_ROLES {
+      MODERATOR
+      USER
+    }
+
     extend type AuthenticatedUser {
         streamChatToken: String
+        streamChatRole(id: ID): CHAT_ROLES
     }
 `
