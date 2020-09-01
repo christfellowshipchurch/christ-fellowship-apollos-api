@@ -25,7 +25,7 @@ const resolver = {
     parentVideoCall: (root, args, { dataSources }) =>
       dataSources.Group.getGroupParentVideoCallParams(root),
     allowMessages: (root, args, { dataSources }) =>
-      dataSources.Group.canGroupTextMessage(root),
+      dataSources.Group.allowMessages(root),
   },
   Mutation: {
     addMemberAttendance: async (root, { id }, { dataSources }) => {
