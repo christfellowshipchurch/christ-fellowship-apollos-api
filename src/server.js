@@ -2,7 +2,7 @@ import { ApolloServer } from 'apollo-server-express';
 import ApollosConfig from '@apollosproject/config';
 import express from 'express';
 import { RockLoggingExtension } from '@apollosproject/rock-apollo-data-source';
-
+import { BugsnagPlugin } from '@apollosproject/bugsnag';
 import {
   resolvers,
   schema,
@@ -42,6 +42,7 @@ const apolloServer = new ApolloServer({
   }),
   introspection: true,
   extensions,
+  plugins: [new BugsnagPlugin()],
   formatError: (error) => {
     console.error(error.extensions.exception.stacktrace.join('\n'));
     return error;
