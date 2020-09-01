@@ -3,6 +3,7 @@ directive @cacheControl(maxAge: Int, scope: CacheControlScope) on FIELD_DEFINITI
 enum ACTION_FEATURE_ACTION {
   READ_CONTENT
   READ_EVENT
+  OPEN_URL
   VIEW_CHILDREN
   READ_GLOBAL_CONTENT
 }
@@ -22,6 +23,7 @@ type ActionListFeature implements Feature & Node {
   title: String
   subtitle: String
   actions: [ActionListAction]
+  primaryAction: FeatureAction
 }
 
 type Address implements Node {
@@ -111,6 +113,7 @@ type AuthenticatedUser {
   profile: Person
   rock: RockPersonDetails
   rockToken: String @deprecated(reason: "Use rock.authCookie instead")
+  streamChatToken: String
 }
 
 type Authentication {
@@ -145,6 +148,13 @@ type Campus implements Node {
   campusFeatures: [CampusFeature]
   pastor: CampusPastor
   events: [Event]
+}
+
+type CampusContentFeature implements PageBuilderFeature & Node {
+  id: ID!
+  order: Int
+  campus: Campus
+  action: PageBuilderAction
 }
 
 type CampusFeature {
@@ -195,6 +205,29 @@ type CommunicationPreferences {
   allowPushNotification: Boolean
 }
 
+enum CONTENT_BLOCK_DISPLAY {
+  LEFT
+  RIGHT
+  TOP
+  BOTTOM
+  BACKGROUND_IMAGE
+}
+
+type ContentBlockFeature implements PageBuilderFeature & Node {
+  id: ID!
+  order: Int
+  content: ContentBlockItem
+  display: CONTENT_BLOCK_DISPLAY
+}
+
+type ContentBlockItem {
+  title: String
+  subtitle: String
+  htmlContent: String
+  image: ImageMedia
+  callsToAction: [CallToAction]
+}
+
 type ContentChannel implements Node {
   id: ID!
   name: String
@@ -202,6 +235,15 @@ type ContentChannel implements Node {
   childContentChannels: [ContentChannel]
   childContentItemsConnection(first: Int, after: String): ContentItemsConnection
   iconName: String
+}
+
+type ContentGridFeature implements PageBuilderFeature & Node {
+  id: ID!
+  order: Int
+  title: String
+  subtitle: String
+  blocks: [ContentBlockItem]
+  primaryAction: PageBuilderAction
 }
 
 interface ContentItem {
@@ -254,15 +296,20 @@ type ContentSeriesContentItem implements ContentItem & Node {
   percentComplete: Float
   upNext: ContentItem
   scriptures: [Scripture]
-  isLiked: Boolean
-  likedCount: Int
   tags: [String]
   icon: String
   estimatedTime: String
   publishDate: String
   author: Person
-  sharing: SharableContentItem
   features: [Feature]
+  isLiked: Boolean
+  likedCount: Int
+  sharing: SharableContentItem
+}
+
+type DateTime {
+  start: String
+  end: String
 }
 
 type DefinedValue implements Node {
@@ -289,13 +336,13 @@ type DevotionalContentItem implements ContentItem & Node {
   parentChannel: ContentChannel
   theme: Theme
   scriptures: [Scripture]
-  isLiked: Boolean
-  likedCount: Int
   tags: [String]
   icon: String
   estimatedTime: String
   publishDate: String
   author: Person
+  isLiked: Boolean
+  likedCount: Int
   sharing: SharableContentItem
 }
 
@@ -331,10 +378,10 @@ type EventContentItem implements ContentItem & Node {
   openLinksInNewTab: Boolean
   hideLabel: Boolean
   events: [Event]
+  checkin: CheckInable
   isLiked: Boolean
   likedCount: Int
   sharing: SharableContentItem
-  checkin: CheckInable
 }
 
 interface Feature {
@@ -342,9 +389,23 @@ interface Feature {
   order: Int
 }
 
+type FeatureAction {
+  relatedNode: Node
+  action: ACTION_FEATURE_ACTION
+  title: String
+}
+
 enum FLAG_STATUS {
   LIVE
   DISABLED
+}
+
+type FloatLeftLiveStream {
+  start: String
+  isLive: Boolean
+  coverImage: ImageMedia
+  media: VideoMedia
+  title: String
 }
 
 enum GENDER {
@@ -355,13 +416,20 @@ enum GENDER {
 
 type Group implements Node {
   id: ID!
-  name: String
-  title: String
+  allowMessages: String
+  avatars: [String]
+  coverImage: ImageMedia
+  dateTime: DateTime
+  groupResources: [Resource]
   groupType: String
-  summary: String
   leaders: [Person]
   members: [Person]
-  schedule: String
+  parentVideoCall: VideoCallParams
+  phoneNumbers: [String]
+  schedule: Schedule
+  summary: String
+  title: String
+  videoCall: VideoCallParams
 }
 
 enum GROUP_TYPE {
@@ -386,6 +454,7 @@ type HeroListFeature implements Feature & Node {
   subtitle: String
   actions: [ActionListAction]
   heroCard: CardListItem
+  primaryAction: FeatureAction
 }
 
 type HorizontalCardListFeature implements Feature & Node {
@@ -404,6 +473,11 @@ type ImageMedia implements Media {
 
 type ImageMediaSource implements MediaSource {
   uri: String
+}
+
+enum INDEX_ACTION {
+  update
+  delete
 }
 
 type InformationalContentItem implements ContentItem & Node {
@@ -430,6 +504,7 @@ type InformationalContentItem implements ContentItem & Node {
 enum InteractionAction {
   VIEW
   COMPLETE
+  PRAY
 }
 
 input InteractionDataField {
@@ -462,6 +537,14 @@ type LiveStream {
   contentItem: ContentItem
 }
 
+type LiveStreamListFeature implements Feature & Node {
+  id: ID!
+  order: Int
+  title: String
+  subtitle: String
+  liveStreams: [LiveStream]
+}
+
 interface Media {
   name: String
   key: String
@@ -482,13 +565,13 @@ type MediaContentItem implements ContentItem & Node {
   parentChannel: ContentChannel
   theme: Theme
   scriptures: [Scripture]
-  isLiked: Boolean
-  likedCount: Int
   tags: [String]
   icon: String
   estimatedTime: String
   publishDate: String
   author: Person
+  isLiked: Boolean
+  likedCount: Int
   sharing: SharableContentItem
 }
 
@@ -502,9 +585,40 @@ interface MediaSource {
   uri: String
 }
 
+type Message implements Node {
+  id: ID!
+  title(hyphenated: Boolean): String
+  subtitle(hyphenated: Boolean): String
+  body(hyphenated: Boolean): String
+  date: String
+}
+
+type MessagesConnection {
+  edges: [MessagesConnectionEdge]
+  totalCount: Int
+  pageInfo: PaginationInfo
+}
+
+type MessagesConnectionEdge {
+  node: Message
+  cursor: String
+}
+
+input MessagesConnectionInput {
+  first: Int
+  after: String
+}
+
 type Metadata {
   name: String
   content: String
+}
+
+type MetadataFeature implements PageBuilderFeature & Node {
+  id: ID!
+  order: Int
+  title: String
+  meta: [Metadata]
 }
 
 type MetaTag {
@@ -514,15 +628,8 @@ type MetaTag {
 
 type Mutation {
   _placeholder: Boolean
-  updateLikeEntity(input: LikeEntityInput!): ContentItem
-  updateProfileField(input: UpdateProfileInput!): Person
-  updateProfileFields(input: [UpdateProfileInput]!): Person
-  uploadProfileImage(file: Upload!, size: Int!): Person
-  updateAddress(address: AddressInput!): Address
-  updateCommunicationPreference(type: UPDATEABLE_COMMUNICATION_PREFERENCES!, allow: Boolean!): Person
-  updateCommunicationPreferences(input: [UpdateCommunicationPreferenceInput]!): Person
-  submitRsvp(input: [Attribute]!): String
-  submitEmailCapture(input: [Attribute]!): String
+  identifySelf(input: AnalyticsIdentifyInput!): AnalyticsResult
+  trackEvent(input: AnalyticsTrackInput!): AnalyticsResult
   authenticate(identity: String!, password: String!): Authentication
   changePassword(password: String!): Authentication
   registerPerson(email: String!, password: String!, userProfile: [UpdateProfileInput]): Authentication
@@ -531,18 +638,42 @@ type Mutation {
   requestSmsLoginPin(phoneNumber: String!): SmsPinResult
   authenticateWithSms(phoneNumber: String!, pin: String!): Authentication
   registerWithSms(phoneNumber: String!, pin: String!, userProfile: [UpdateProfileInput]): Authentication
-  updateUserPushSettingsTN(input: TwilioNotifyPushInput!): Person
-  sendPushNotification(input: PushMessageInput): Boolean
-  interactWithNode(action: InteractionAction!, nodeId: ID!, data: [InteractionDataField]): InteractionResult
-  identifySelf(input: AnalyticsIdentifyInput!): AnalyticsResult
-  trackEvent(input: AnalyticsTrackInput!): AnalyticsResult
-  updateUserPushSettings(input: PushSettingsInput!): Person
   updateUserCampus(campusId: String!): Person
   checkInCurrentUser(id: ID!): CheckInable
+  updateLikeEntity(input: LikeEntityInput!): ContentItem
+  addMemberAttendance(id: ID!): Group
+  interactWithNode(action: InteractionAction!, nodeId: ID!, data: [InteractionDataField]): InteractionResult
+  updateUserPushSettings(input: PushSettingsInput!): Person
+  updateProfileField(input: UpdateProfileInput!): Person
+  updateProfileFields(input: [UpdateProfileInput]!): Person
+  uploadProfileImage(file: Upload!, size: Int!): Person
+  updateAddress(address: AddressInput!): Address
+  updateCommunicationPreference(type: UPDATEABLE_COMMUNICATION_PREFERENCES!, allow: Boolean!): Person
+  updateCommunicationPreferences(input: [UpdateCommunicationPreferenceInput]!): Person
+  submitRsvp(input: [Attribute]!): String
+  submitEmailCapture(input: [Attribute]!): String
+  addPrayer(text: String!, isAnonymous: Boolean): PrayerRequest
+  indexContentItem(id: String, action: INDEX_ACTION, key: String): String
+  updateUserPushSettingsTN(input: TwilioNotifyPushInput!): Person
+  sendPushNotification(input: PushMessageInput): Boolean
 }
 
 interface Node {
   id: ID!
+}
+
+enum PAGE_BUILDER_FEATURE_ACTION {
+  VIEW_MORE
+}
+
+type PageBuilderAction {
+  title: String
+  action: PAGE_BUILDER_FEATURE_ACTION
+}
+
+interface PageBuilderFeature {
+  id: ID!
+  order: Int
 }
 
 type PaginationInfo {
@@ -604,6 +735,40 @@ type Person implements Node {
   isGroupLeader: Boolean
 }
 
+type PrayerListFeature implements Feature & Node {
+  id: ID!
+  order: Int
+  isCard: Boolean
+  title: String
+  subtitle: String
+  prayers: [PrayerRequest]
+}
+
+type PrayerRequest implements Node {
+  id: ID!
+  text: String!
+  requestor: Person
+  isAnonymous: Boolean
+  isPrayed: Boolean
+  requestedDate: String
+}
+
+type PrayerRequestsConnection {
+  edges: [PrayerRequestsConnectionEdge]
+  totalCount: Int
+  pageInfo: PaginationInfo
+}
+
+type PrayerRequestsConnectionEdge {
+  node: PrayerRequest
+  cursor: String
+}
+
+input PrayerRequestsConnectionInput {
+  first: Int
+  after: String
+}
+
 input PushMessageInput {
   title: String
   body: String
@@ -618,7 +783,25 @@ input PushSettingsInput {
 type Query {
   _placeholder: Boolean
   node(id: ID!): Node
-  likedContent(first: Int, after: String): ContentItemsConnection
+  privacyPolicyUrl: String
+  passwordResetUrl: String
+  moreLinks: [AppLinks]
+  profileLinks: [AppLink]
+  websiteBanner: CallToAction
+  genderOptions: [String]
+  inAppLink(url: String!): String
+  getAddressByPerson: Address
+  getStatesList: DefinedValueList @deprecated(reason: "Use 'statesList' instead.")
+  stateOptions: [String]
+  currentUser: AuthenticatedUser
+  canAccessExperimentalFeatures: Boolean
+  userExists(identity: String): USER_AUTH_STATUS
+  getBrowseFilters: [ContentChannel] @deprecated(reason: "Use browseFilters instead")
+  browseFilters: [ContentItem]
+  campuses(location: CampusLocationInput): [Campus]
+  campus(name: String!): Campus
+  campusFAQ(name: String): [ContentItem]
+  campusContentItems(name: String!): [ContentItem]
   contentChannels: [ContentChannel]
   campaigns: ContentItemsConnection
   userFeed(first: Int, after: String): ContentItemsConnection
@@ -630,45 +813,50 @@ type Query {
   allEvents: [EventContentItem]
   featuredEvents: ContentItemsConnection
   sermons(first: Int, after: String): ContentItemsConnection
+  getDefinedValueByIdentifier(identifier: String): DefinedValue
+  getDefinedValueListByIdentifier(identifier: String): DefinedValueList
+  userFeedFeatures: [Feature]
+  userHeaderFeatures: [Feature]
+  flagStatus(key: String!): FLAG_STATUS
+  likedContent(first: Int, after: String): ContentItemsConnection
+  liveStream: LiveStream @deprecated(reason: "Use liveStreams, there may be multiple.")
+  liveStreams: [LiveStream]
+  floatLeftLiveStream: LiveStream
+  floatLeftEmptyLiveStream: LiveStream
+  notificationCenter(first: Int, after: String): MessagesConnection
+  metadata(relatedNode: ID!): [Metadata]
+  pageBuilderFeatures(url: String!): [PageBuilderFeature]
+  userPass: Pass
   getEthnicityList: DefinedValueList
   getSpouse: Person
   getChildren: [Person]
-  currentUser: AuthenticatedUser
-  canAccessExperimentalFeatures: Boolean
-  userExists(identity: String): USER_AUTH_STATUS
-  liveStream: LiveStream @deprecated(reason: "Use liveStreams, there may be multiple.")
-  liveStreams: [LiveStream]
+  currentUserPrayerRequests(first: Int, after: String): PrayerRequestsConnection
   scripture(query: String!, version: VERSION): Scripture @deprecated(reason: "Use 'scriptures' instead.")
   scriptures(query: String!, version: VERSION): [Scripture]
-  userPass: Pass
   search(query: String!, first: Int, after: String): SearchResultsConnection
-  campuses(location: CampusLocationInput): [Campus]
-  campus(name: String!): Campus
-  campusFAQ(name: String): [ContentItem]
-  campusContentItems(name: String!): [ContentItem]
-  userFeedFeatures: [Feature]
-  getDefinedValueByIdentifier(identifier: String): DefinedValue
-  getDefinedValueListByIdentifier(identifier: String): DefinedValueList
-  getAddressByPerson: Address
-  getStatesList: DefinedValueList @deprecated(reason: "Use 'statesList' instead.")
-  stateOptions: [String]
-  flagStatus(key: String!): FLAG_STATUS
   getWebsiteNavigation(website: String!): WebsiteNavigation
-  getBrowseFilters: [ContentChannel] @deprecated(reason: "Use browseFilters instead")
-  browseFilters: [ContentItem]
-  privacyPolicyUrl: String
-  passwordResetUrl: String
-  moreLinks: [AppLinks]
-  profileLinks: [AppLink]
-  websiteBanner: CallToAction
-  genderOptions: [String]
-  inAppLink(url: String!): String
-  metadata(relatedNode: ID!): [Metadata]
+}
+
+type Resource {
+  title: String
+  url: String
+  contentChannelItem: String
 }
 
 type RockPersonDetails {
   authToken: String
   authCookie: String
+}
+
+type Schedule {
+  id: ID!
+  name: String
+  description: String
+  friendlyScheduleText: String
+  weeklyTimeOfDay: String
+  weeklyDayOfWeek: Int
+  iCalendarContent: String
+  isActive: Boolean
 }
 
 type Scripture implements Node {
@@ -771,13 +959,13 @@ type UniversalContentItem implements ContentItem & Node {
   siblingContentItemsConnection(first: Int, after: String): ContentItemsConnection
   parentChannel: ContentChannel
   theme: Theme
-  isLiked: Boolean
-  likedCount: Int
   tags: [String]
   icon: String
   estimatedTime: String
   publishDate: String
   author: Person
+  isLiked: Boolean
+  likedCount: Int
   sharing: SharableContentItem
 }
 
@@ -812,6 +1000,11 @@ input UpdateProfileInput {
 """The `Upload` scalar type represents a file upload."""
 scalar Upload
 
+type Url implements Node {
+  url: String
+  id: ID!
+}
+
 enum USER_AUTH_STATUS {
   NONE
   NEW_APP_USER
@@ -830,6 +1023,12 @@ type VerticalCardListFeature implements Feature & Node {
   subtitle: String
   isFeatured: Boolean
   cards: [CardListItem]
+}
+
+type VideoCallParams {
+  link: String
+  meetingId: String
+  passcode: String
 }
 
 type VideoMedia implements Media {
@@ -961,6 +1160,14 @@ type WebsitePagesContentItem implements ContentItem & Node {
   sharing: SharableContentItem
 }
 
+type WebviewFeature implements Feature & Node {
+  id: ID!
+  order: Int
+  linkText: String
+  title: String
+  url: String
+}
+
 type WeekendContentItem implements ContentItem & Node {
   id: ID!
   title(hyphenated: Boolean): String
@@ -974,15 +1181,15 @@ type WeekendContentItem implements ContentItem & Node {
   siblingContentItemsConnection(first: Int, after: String): ContentItemsConnection
   parentChannel: ContentChannel
   theme: Theme
-  isLiked: Boolean
-  likedCount: Int
   tags: [String]
   icon: String
   estimatedTime: String
   publishDate: String
   author: Person
+  features: [Feature]
+  isLiked: Boolean
+  likedCount: Int
   liveStream: LiveStream
   sharing: SharableContentItem
-  features: [Feature]
 }
 
