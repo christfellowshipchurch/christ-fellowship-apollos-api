@@ -261,10 +261,13 @@ export default class Group extends baseGroup.dataSource {
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
       const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
+
+      // If url link does not match Zoom url pattern this will return the link string and meetingId and passcode will be null.
       const passcode = isNull(regexPasscode) ? null : regexPasscode[1];
+      const meetingId = isNull(regexMeetingId) ? null : regexMeetingId[1];
       return {
         link: zoomLink,
-        meetingId: regexMeetingId[1],
+        meetingId: meetingId,
         passcode,
       };
     }
@@ -278,10 +281,13 @@ export default class Group extends baseGroup.dataSource {
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
       const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
+
+      // If url link does not match Zoom url pattern this will return the link string and meetingId and passcode will be null.
       const passcode = isNull(regexPasscode) ? null : regexPasscode[1];
+      const meetingId = isNull(regexMeetingId) ? null : regexMeetingId[1];
       return {
         link: zoomLink,
-        meetingId: regexMeetingId[1],
+        meetingId: meetingId,
         passcode,
       };
     }
