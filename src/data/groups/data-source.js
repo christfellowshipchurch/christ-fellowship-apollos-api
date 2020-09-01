@@ -297,4 +297,10 @@ export default class Group extends baseGroup.dataSource {
   allowMessages = ({ attributeValues }) => {
     return get(attributeValues, 'allowMessages.value', '');
   };
+
+  getTitle = ({ attributeValues, name }) => {
+    const titleOverride = get(attributeValues, 'titleOverride.value', '');
+    if (titleOverride !== '') { return titleOverride };
+    return name;
+  };
 }
