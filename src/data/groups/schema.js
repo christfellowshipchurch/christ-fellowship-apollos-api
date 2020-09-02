@@ -42,6 +42,7 @@ export const groupSchema = gql`
     link: String
     meetingId: String
     passcode: String
+    labelText: String
   }
 
   type Group implements Node {

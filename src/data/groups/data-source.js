@@ -257,6 +257,11 @@ export default class Group extends baseGroup.dataSource {
 
   getGroupVideoCallParams = ({ attributeValues }) => {
     const zoomLink = get(attributeValues, 'zoom.value', '');
+    const primaryVideoCallLabelText = get(
+      attributeValues,
+      'primaryVideoCallLabelText.value',
+      ''
+    );
     if (zoomLink != '') {
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
@@ -265,23 +270,32 @@ export default class Group extends baseGroup.dataSource {
       // If url link does not match Zoom url pattern this will return the link string and meetingId and passcode will be null.
       const passcode = isNull(regexPasscode) ? null : regexPasscode[1];
       const meetingId = isNull(regexMeetingId) ? null : regexMeetingId[1];
+
       return {
         link: zoomLink,
         meetingId: meetingId,
         passcode,
+        labelText: primaryVideoCallLabelText,
       };
     }
     return null;
   };
 
-  getGroupParentVideoCallParams = async ({ parentGroupId }) => {
+  getGroupParentVideoCallParams = async ({
+    parentGroupId,
+    attributeValues,
+  }) => {
     const groupParent = await this.request('Groups').find(parentGroupId).get();
     const zoomLink = get(groupParent, 'attributeValues.zoom.value', '');
+    const secondaryVideoCallLabelText = get(
+      attributeValues,
+      'secondaryVideoCallLabelText.value',
+      ''
+    );
     if (zoomLink != '') {
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
       const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
-
       // If url link does not match Zoom url pattern this will return the link string and meetingId and passcode will be null.
       const passcode = isNull(regexPasscode) ? null : regexPasscode[1];
       const meetingId = isNull(regexMeetingId) ? null : regexMeetingId[1];
@@ -289,6 +303,7 @@ export default class Group extends baseGroup.dataSource {
         link: zoomLink,
         meetingId: meetingId,
         passcode,
+        labelText: secondaryVideoCallLabelText,
       };
     }
     return null;
@@ -300,7 +315,9 @@ export default class Group extends baseGroup.dataSource {
 
   getTitle = ({ attributeValues, name }) => {
     const titleOverride = get(attributeValues, 'titleOverride.value', '');
-    if (titleOverride !== '') { return titleOverride };
+    if (titleOverride !== '') {
+      return titleOverride;
+    }
     return name;
   };
 }

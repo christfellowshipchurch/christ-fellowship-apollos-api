@@ -3,8 +3,7 @@ import { resolverMerge, parseGlobalId } from '@apollosproject/server-core';
 
 const resolver = {
   Group: {
-    title: (root, args, { dataSources }) =>
-    dataSources.Group.getTitle(root),
+    title: (root, args, { dataSources }) => dataSources.Group.getTitle(root),
     summary: ({ description }, args, { dataSources }) => description,
     schedule: ({ scheduleId }, args, { dataSources }) =>
       dataSources.Group.getScheduleFromId(scheduleId),
