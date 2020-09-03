@@ -33,57 +33,37 @@ export default class Feature extends coreFeatures.dataSource {
         return accum;
     }, {})
 
-    async rockDynamicFeed({ contentChannelId = null }) {
-        if (!contentChannelId) {
-            return []
-        }
+    /** Algorithms */
+    async allLiveStreamContentAlgorithm() {
+        const { LiveStream } = this.context.dataSources;
+        const liveStreams = await LiveStream.getLiveStreams();
+        return liveStreams;
+    }
 
-        const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === "LIVE"
-        const { ContentItem, Person } = this.context.dataSources;
-        const contentChannelItems = await this.request('ContentChannelItems')
-            .filter(`ContentChannelId eq ${contentChannelId}`)
-            .andFilter(ContentItem.LIVE_CONTENT())
-            .cache({ ttl: 60 })
-            .orderBy('Order', 'asc')
-            .get()
-        let personas = []
+    async contentChannelAlgorithmWithActionOverride({ action = null, contentChannelId, limit = null } = {}) {
+        const contentChannel = await this.contentChannelAlgorithm({ contentChannelId, limit })
 
-        if (usePersonas) {
-            try {
-                personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
-            } catch (e) {
-                console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
-            }
-        }
+        return !!action
+            ? contentChannel.map(n => ({ ...n, action }))
+            : contentChannel
+    }
 
-        const actions = contentChannelItems.map((item, i) => {
-            const action = get(item, 'attributeValues.action.value', '')
+    async contentChildrenAlgorithm({ contentChannelItemId, limit = 10 }) {
+        const { ContentItem } = this.context.dataSources;
+        const cursor = (await ContentItem.getCursorByParentContentItemId(
+            contentChannelItemId
+        )).expand('ContentChannel');
+        const items = limit ? await cursor.top(limit).get() : await cursor.get();
 
-            if (!action || action === '' || !item.id) return null
-            const securityDataViews = split(
-                get(item, 'attributeValues.securityDataViews.value', ''),
-                ','
-            ).filter(dv => !!dv)
-
-            if (securityDataViews.length > 0) {
-                const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
-                if (userInSecurityDataViews.length === 0) {
-                    console.log("User does not have access to this item")
-                    return null
-                }
-            }
-
-            return {
-                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
-                title: item.title,
-                subtitle: get(item, 'contentChannel.name'),
-                relatedNode: { ...item, __type: ContentItem.resolveType(item) },
-                image: ContentItem.getCoverImage(item),
-                action,
-            }
-        })
-
-        return actions.filter(action => !!action)
+        return items.map((item, i) => ({
+            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+            title: item.title,
+            subtitle: ContentItem.createSummary(item),
+            relatedNode: { ...item, __type: ContentItem.resolveType(item) },
+            image: ContentItem.getCoverImage(item),
+            action: 'READ_CONTENT',
+            summary: ContentItem.createSummary(item),
+        }));
     }
 
     async globalContentAlgorithm({ index = 0, limit = null } = {}) {
@@ -113,14 +93,6 @@ export default class Feature extends coreFeatures.dataSource {
         }))
     }
 
-    async contentChannelAlgorithmWithActionOverride({ action = null, contentChannelId, limit = null } = {}) {
-        const contentChannel = await this.contentChannelAlgorithm({ contentChannelId, limit })
-
-        return !!action
-            ? contentChannel.map(n => ({ ...n, action }))
-            : contentChannel
-    }
-
     async personaFeedAlgorithmWithActionOverride({ action = null } = {}) {
         const personaFeed = await this.personaFeedAlgorithm()
 
@@ -139,6 +111,37 @@ export default class Feature extends coreFeatures.dataSource {
             image: event.coverImage,
             action: action || 'READ_EVENT',
         }))
+    }
+
+    /** Create Features */
+    createActionRowFeature({ actions }) {
+        return {
+            // The Feature ID is based on all of the action ids, added together.
+            // This is naive, and could be improved.
+            id: this.createFeatureId({
+                type: 'ActionBarFeature',
+                args: {
+                    actions
+                },
+            }),
+            actions: actions.map(action => {
+                // Ensures that we have a generated ID for the Primary Action related node, if not provided.
+                if (
+                    action &&
+                    action.relatedNode &&
+                    !action.relatedNode.id
+                ) {
+                    action.relatedNode.id = createGlobalId( // eslint-disable-line
+                        JSON.stringify(action.relatedNode),
+                        action.relatedNode.__typename
+                    );
+                }
+
+                return action
+            }),
+            // Typename is required so GQL knows specifically what Feature is being created
+            __typename: 'ActionBarFeature',
+        };
     }
 
     async createLiveStreamListFeature({ algorithms, title, subtitle }) {
@@ -163,28 +166,44 @@ export default class Feature extends coreFeatures.dataSource {
         };
     }
 
-    async allLiveStreamContentAlgorithm() {
-        const { LiveStream } = this.context.dataSources;
-        const liveStreams = await LiveStream.getLiveStreams();
-        return liveStreams;
+    /** Create Feeds */
+    async getGiveFeedFeatures() {
+        return Promise.all(
+            get(ApollosConfig, 'GIVE_FEATURES', []).map((featureConfig) => {
+                switch (featureConfig.type) {
+                    case 'VerticalCardList':
+                        return this.createVerticalCardListFeature(featureConfig);
+                    case 'HorizontalCardList':
+                        return this.createHorizontalCardListFeature(featureConfig);
+                    case 'HeroList':
+                        return this.createHeroListFeature(featureConfig);
+                    case 'PrayerList':
+                        return this.createPrayerListFeature(featureConfig);
+                    case 'ActionBar':
+                        return this.createActionRowFeature(featureConfig);
+                    case 'ActionList':
+                    default:
+                        // Action list was the default in 1.3.0 and prior.
+                        return this.createActionListFeature(featureConfig);
+                }
+            })
+        );
     }
 
-    async contentChildrenAlgorithm({ contentChannelItemId, limit = 10 }) {
-        const { ContentItem } = this.context.dataSources;
-        const cursor = (await ContentItem.getCursorByParentContentItemId(
-            contentChannelItemId
-        )).expand('ContentChannel');
-        const items = limit ? await cursor.top(limit).get() : await cursor.get();
-
-        return items.map((item, i) => ({
-            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
-            title: item.title,
-            subtitle: ContentItem.createSummary(item),
-            relatedNode: { ...item, __type: ContentItem.resolveType(item) },
-            image: ContentItem.getCoverImage(item),
-            action: 'READ_CONTENT',
-            summary: ContentItem.createSummary(item),
-        }));
+    async getHomeHeaderFeedFeatures() {
+        return Promise.all(
+            get(ApollosConfig, 'HOME_HEADER_FEATURES', []).map((featureConfig) => {
+                switch (featureConfig.type) {
+                    case 'PrayerList':
+                        return this.createPrayerListFeature(featureConfig);
+                    case 'LiveContentList':
+                        return this.createLiveStreamListFeature(featureConfig);
+                    case 'ActionList':
+                    default:
+                        return this.createActionListFeature(featureConfig);
+                }
+            })
+        );
     }
 
     async getRockFeedFeatures({ contentChannelId }) {
@@ -266,20 +285,59 @@ export default class Feature extends coreFeatures.dataSource {
         );
     }
 
-    async getHomeHeaderFeedFeatures() {
-        return Promise.all(
-            get(ApollosConfig, 'HOME_HEADER_FEATURES', []).map((featureConfig) => {
-                switch (featureConfig.type) {
-                    case 'PrayerList':
-                        return this.createPrayerListFeature(featureConfig);
-                    case 'LiveContentList':
-                        return this.createLiveStreamListFeature(featureConfig);
-                    case 'ActionList':
-                    default:
-                        // Action list was the default in 1.3.0 and prior.
-                        return this.createActionListFeature(featureConfig);
-                }
-            })
+    async rockDynamicFeed({ contentChannelId = null }) {
+        console.warn(
+            'Deprecated: Please use the name "getRockFeedFeatures" instead. You used "rockDynamicFeed"'
         );
+        if (!contentChannelId) {
+            return []
+        }
+
+        const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === "LIVE"
+        const { ContentItem, Person } = this.context.dataSources;
+        const contentChannelItems = await this.request('ContentChannelItems')
+            .filter(`ContentChannelId eq ${contentChannelId}`)
+            .andFilter(ContentItem.LIVE_CONTENT())
+            .cache({ ttl: 60 })
+            .orderBy('Order', 'asc')
+            .get()
+        let personas = []
+
+        if (usePersonas) {
+            try {
+                personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
+            } catch (e) {
+                console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
+            }
+        }
+
+        const actions = contentChannelItems.map((item, i) => {
+            const action = get(item, 'attributeValues.action.value', '')
+
+            if (!action || action === '' || !item.id) return null
+            const securityDataViews = split(
+                get(item, 'attributeValues.securityDataViews.value', ''),
+                ','
+            ).filter(dv => !!dv)
+
+            if (securityDataViews.length > 0) {
+                const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
+                if (userInSecurityDataViews.length === 0) {
+                    console.log("User does not have access to this item")
+                    return null
+                }
+            }
+
+            return {
+                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                title: item.title,
+                subtitle: get(item, 'contentChannel.name'),
+                relatedNode: { ...item, __type: ContentItem.resolveType(item) },
+                image: ContentItem.getCoverImage(item),
+                action,
+            }
+        })
+
+        return actions.filter(action => !!action)
     }
 }

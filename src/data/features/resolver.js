@@ -26,7 +26,9 @@ const resolver = {
             }
 
             return []
-        }
+        },
+        giveFeedFeatures: async (root, args, { dataSources: { Feature } }) =>
+            Feature.getGiveFeedFeatures(),
     }
 }
 

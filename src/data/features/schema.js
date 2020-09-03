@@ -9,6 +9,22 @@ export default gql`
         READ_GLOBAL_CONTENT
     }
 
+    type ActionBarFeatureAction {
+        relatedNode: Node
+        action: ACTION_FEATURE_ACTION
+        title: String
+
+        icon: String
+        theme: Theme
+    }
+
+    type ActionBarFeature implements Feature & Node {
+        id: ID!
+        order: Int
+    
+        actions: [ActionBarFeatureAction]
+    }
+
     type LiveStreamListFeature implements Feature & Node {
         id: ID!
         order: Int
@@ -19,5 +35,6 @@ export default gql`
     
     extend type Query {
         userHeaderFeatures: [Feature] @cacheControl(maxAge: 0)
+        giveFeedFeatures: [Feature] @cacheControl(maxAge: 0)
     }
 `
