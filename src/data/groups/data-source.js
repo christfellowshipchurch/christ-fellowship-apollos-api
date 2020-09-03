@@ -257,9 +257,9 @@ export default class Group extends baseGroup.dataSource {
 
   getGroupVideoCallParams = ({ attributeValues }) => {
     const zoomLink = get(attributeValues, 'zoom.value', '');
-    const primaryVideoCallLabelText = get(
+    const videoCallLabelText = get(
       attributeValues,
-      'primaryVideoCallLabelText.value',
+      'videoCallLabelText.value',
       ''
     );
     if (zoomLink != '') {
@@ -275,7 +275,7 @@ export default class Group extends baseGroup.dataSource {
         link: zoomLink,
         meetingId: meetingId,
         passcode,
-        labelText: primaryVideoCallLabelText,
+        labelText: videoCallLabelText,
       };
     }
     return null;
@@ -287,9 +287,9 @@ export default class Group extends baseGroup.dataSource {
   }) => {
     const groupParent = await this.request('Groups').find(parentGroupId).get();
     const zoomLink = get(groupParent, 'attributeValues.zoom.value', '');
-    const secondaryVideoCallLabelText = get(
+    const parentVideoCallLabelText = get(
       attributeValues,
-      'secondaryVideoCallLabelText.value',
+      'parentVideoCallLabelText.value',
       ''
     );
     if (zoomLink != '') {
@@ -303,7 +303,7 @@ export default class Group extends baseGroup.dataSource {
         link: zoomLink,
         meetingId: meetingId,
         passcode,
-        labelText: secondaryVideoCallLabelText,
+        labelText: parentVideoCallLabelText,
       };
     }
     return null;
