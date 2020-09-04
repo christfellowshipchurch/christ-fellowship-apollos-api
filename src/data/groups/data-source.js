@@ -41,18 +41,24 @@ export default class Group extends baseGroup.dataSource {
   };
 
   addMemberAttendance = async (id) => {
-    const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
-
     const { scheduleId, campusId } = await this.request('Groups')
       .filter(`Id eq ${id}`)
       .first();
+    const { start } = await this.getDateTimeFromId(scheduleId);
+
+    // Check to see if the current date is the date of the meeting before taking attendance.
+    if (moment(start).format('MMDDYYYY') !== moment().format('MMDDYYYY'))
+      return null;
+
+    const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
+
     const { locationId } = await this.request('Campuses')
       .filter(`Id eq ${campusId}`)
       .first();
-    const { start } = await this.getDateTimeFromId(scheduleId);
     const occurrenceDate = momentTz
       .tz(start, ApollosConfig.ROCK.TIMEZONE)
       .format('l LT');
+
     try {
       console.log('Adding current user to attendance');
       await this.put(
