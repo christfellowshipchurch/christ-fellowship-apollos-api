@@ -1,16 +1,16 @@
-import { gql } from 'apollo-server'
+import { gql } from 'apollo-server';
 
-import { createApolloServerConfig } from '@apollosproject/server-core'
+import { createApolloServerConfig } from '@apollosproject/server-core';
 
-import * as Analytics from '@apollosproject/data-connector-analytics'
-import * as Scripture from '@apollosproject/data-connector-bible'
+import * as Analytics from '@apollosproject/data-connector-analytics';
+import * as Scripture from '@apollosproject/data-connector-bible';
 // import * as LiveStream from '@apollosproject/data-connector-church-online'
-import * as Cloudinary from '@apollosproject/data-connector-cloudinary'
-import * as OneSignal from '@apollosproject/data-connector-onesignal'
-import * as Pass from '@apollosproject/data-connector-passes'
+import * as Cloudinary from '@apollosproject/data-connector-cloudinary';
+import * as OneSignal from '@apollosproject/data-connector-onesignal';
+import * as Pass from '@apollosproject/data-connector-passes';
 // import * as Search from '@apollosproject/data-connector-algolia-search';
 // import * as Cache from '@apollosproject/data-connector-redis-cache';
-import * as Sms from '@apollosproject/data-connector-twilio'
+import * as Sms from '@apollosproject/data-connector-twilio';
 import {
   Followings,
   Interactions,
@@ -24,21 +24,22 @@ import {
   Template,
   AuthSms,
   // Campus,
+  // Group,
   BinaryFiles,
   // Features,
   // Event,
   // PrayerRequest
-} from '@apollosproject/data-connector-rock'
-import * as Theme from './theme'
+} from '@apollosproject/data-connector-rock';
+import * as Theme from './theme';
 
 // This module is used to attach Rock User updating to the OneSignal module.
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
-import * as OneSignalWithRock from './oneSignalWithRock'
+import * as OneSignalWithRock from './oneSignalWithRock';
 
-import * as AdditionalEndpoint from './additional-endpoints'
-import * as Address from './address'
-import * as Auth from './auth'
-import * as Browse from './browse'
+import * as AdditionalEndpoint from './additional-endpoints';
+import * as Address from './address';
+import * as Auth from './auth';
+import * as Browse from './browse';
 import * as Cache from './redis-cache';
 import * as Campus from './campus'
 import * as CheckInable from './checkinable'
@@ -49,7 +50,7 @@ import * as DefinedValueList from './defined-value-list'
 import * as Event from './events'
 import * as Feature from './features'
 import * as Flag from './flag'
-import * as Group from './group'
+import * as Group from './groups'
 import * as LiveStream from './live-stream'
 import * as MatrixItem from './matrix-item'
 import * as Message from './message'
@@ -114,23 +115,23 @@ const data = {
   Theme,
   TwilioNotify,
   WebsiteContentItem: {
-    dataSource: WebsiteContentItem.dataSource
+    dataSource: WebsiteContentItem.dataSource,
   },
   WebsiteFeature: {
-    dataSource: WebsiteFeature.dataSource
+    dataSource: WebsiteFeature.dataSource,
   },
   WebsiteGroupContentItem: {
-    dataSource: WebsiteGroupContentItem.dataSource
+    dataSource: WebsiteGroupContentItem.dataSource,
   },
   WebsiteHtmlContentItem: {
-    dataSource: WebsiteHtmlContentItem.dataSource
+    dataSource: WebsiteHtmlContentItem.dataSource,
   },
   WebsiteNavigation,
   WebsitePagesContentItem: {
-    dataSource: WebsitePagesContentItem.dataSource
+    dataSource: WebsitePagesContentItem.dataSource,
   },
   Workflow,
-}
+};
 
 const {
   dataSources,
@@ -139,7 +140,7 @@ const {
   context,
   applyServerMiddleware,
   setupJobs,
-} = createApolloServerConfig(data)
+} = createApolloServerConfig(data);
 
 export {
   dataSources,
@@ -148,7 +149,7 @@ export {
   context,
   applyServerMiddleware,
   setupJobs,
-}
+};
 
 // the upload Scalar is added
 export const testSchema = [
@@ -156,4 +157,4 @@ export const testSchema = [
     scalar Upload
   `,
   ...schema,
-]
+];

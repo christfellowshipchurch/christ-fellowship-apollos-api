@@ -63,7 +63,7 @@
     "moment-timezone": "^0.5.27",
     "node-ical": "^0.10.0",
     "object-sizeof": "^1.6.0",
-    "prettier": "1.12.1",
+    "prettier": "^2.0.5",
     "randomcolor": "0.5.3",
     "remove-words": "^0.9.0",
     "sanitize-html": "^1.26.0",
