@@ -7,6 +7,11 @@ export default gql`
     extend enum ACTION_FEATURE_ACTION {
         VIEW_CHILDREN
         READ_GLOBAL_CONTENT
+        READ_PRAYER
+    }
+
+    extend type HorizontalCardListFeature {
+        primaryAction: FeatureAction
     }
 
     type ActionBarFeatureAction {
@@ -34,7 +39,9 @@ export default gql`
     }
     
     extend type Query {
-        userHeaderFeatures: [Feature] @cacheControl(maxAge: 0)
+        connectFeedFeatures: [Feature] @cacheControl(maxAge: 0)
+        eventsFeedFeatures: [Feature] @cacheControl(maxAge: 0)
         giveFeedFeatures: [Feature] @cacheControl(maxAge: 0)
+        userHeaderFeatures: [Feature] @cacheControl(maxAge: 0)
     }
 `

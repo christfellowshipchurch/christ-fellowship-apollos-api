@@ -1,31 +1,39 @@
 import {
     Feature as coreFeatures,
+    Utils
 } from '@apollosproject/data-connector-rock'
 import {
     get,
     split
 } from 'lodash'
+import moment from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
+import { printIntrospectionSchema } from 'graphql'
 
-const { ROCK_MAPPINGS, FEATURE_FLAGS } = ApollosConfig
+const { ROCK_MAPPINGS, FEATURE_FLAGS, ROCK } = ApollosConfig
+const { createImageUrlFromGuid } = Utils
 
 export default class Feature extends coreFeatures.dataSource {
     expanded = true
 
-    // Names of Action Algoritms mapping to the functions that create the actions.
+    /** Base Attrs and Methods from the Core DataSource */
     baseAlgorithms = this.ACTION_ALGORITHIMS;
+
+    // Names of Action Algoritms mapping to the functions that create the actions.
     ACTION_ALGORITHIMS = Object.entries({
         ...this.baseAlgorithms,
         // We need to make sure `this` refers to the class, not the `ACTION_ALGORITHIMS` object.
-        PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride,
+        ALL_EVENTS: this.allEventsAlgorithm,
+        ALL_LIVE_CONTENT: this.allLiveStreamContentAlgorithm,
         CONTENT_CHANNEL: this.contentChannelAlgorithmWithActionOverride,
+        CONTENT_CHILDREN: this.contentChildrenAlgorithm,
+        GLOBAL_CONTENT: this.globalContentAlgorithm,
+        MY_PRAYERS: this.myPrayersAlgorithm,
+        PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride,
+        ROCK_DYNAMIC_FEED: this.rockDynamicFeed,
         SERMON_CHILDREN: this.sermonChildrenAlgorithm,
         UPCOMING_EVENTS: this.upcomingEventsAlgorithmWithActionOverride,
-        GLOBAL_CONTENT: this.globalContentAlgorithm,
-        ROCK_DYNAMIC_FEED: this.rockDynamicFeed,
-        ALL_LIVE_CONTENT: this.allLiveStreamContentAlgorithm,
-        CONTENT_CHILDREN: this.contentChildrenAlgorithm,
     }).reduce((accum, [key, value]) => {
         // convenciance code to make sure all methods are bound to the Features dataSource
         // eslint-disable-next-line
@@ -34,6 +42,21 @@ export default class Feature extends coreFeatures.dataSource {
     }, {})
 
     /** Algorithms */
+    async allEventsAlgorithm() {
+        const { ContentItem } = this.context.dataSources
+
+        const items = await ContentItem.getEvents()
+
+        return items.map((item, i) => ({
+            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+            title: item.title,
+            relatedNode: { ...item, __type: ContentItem.resolveType(item) },
+            image: ContentItem.getCoverImage(item),
+            action: 'READ_CONTENT',
+            summary: ContentItem.createSummary(item),
+        }));
+    }
+
     async allLiveStreamContentAlgorithm() {
         const { LiveStream } = this.context.dataSources;
         const liveStreams = await LiveStream.getLiveStreams();
@@ -93,6 +116,43 @@ export default class Feature extends coreFeatures.dataSource {
         }))
     }
 
+    async myPrayersAlgorithm({ limit = 5 } = {}) {
+        const { PrayerRequest, Person } = this.context.dataSources;
+        const cursor = await PrayerRequest.byCurrentUser();
+        const items = await cursor.top(limit).get();
+
+        return items.map((item, i) => {
+            const getProfileImage = async () => {
+                const root = await Person.getFromAliasId(item.requestedByPersonAliasId)
+
+                const guid = get(root, 'photo.guid')
+
+                return {
+                    sources: [
+                        (guid && guid !== ''
+                            ? { uri: createImageUrlFromGuid(guid) }
+                            : { uri: "https://cloudfront.christfellowship.church/GetImage.ashx?guid=0ad7f78a-1e6b-46ad-a8be-baa0dbaaba8e" })
+                    ]
+                }
+            }
+
+            return ({
+                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                title: item.text,
+                relatedNode: {
+                    __type: "PrayerRequest",
+                    ...item
+                },
+                image: getProfileImage(),
+                action: 'READ_PRAYER',
+                subtitle: moment(item.enteredDateTime)
+                    .tz(ROCK.TIMEZONE)
+                    .utc()
+                    .format(),
+            })
+        });
+    }
+
     async personaFeedAlgorithmWithActionOverride({ action = null } = {}) {
         const personaFeed = await this.personaFeedAlgorithm()
 
@@ -144,6 +204,49 @@ export default class Feature extends coreFeatures.dataSource {
         };
     }
 
+    async createHorizontalCardListFeature({
+        algorithms = [],
+        hyphenatedTitle,
+        title,
+        subtitle,
+        primaryAction
+    }) {
+        // Generate a list of horizontal cards.
+        const cards = () => this.runAlgorithms({ algorithms });
+
+        // Ensures that we have a generated ID for the Primary Action related node, if not provided.
+        if (
+            primaryAction &&
+            primaryAction.relatedNode &&
+            !primaryAction.relatedNode.id
+        ) {
+            primaryAction.relatedNode.id = createGlobalId( // eslint-disable-line
+                JSON.stringify(primaryAction.relatedNode),
+                primaryAction.relatedNode.__typename
+            );
+        }
+
+        return {
+            // The Feature ID is based on all of the action ids, added together.
+            // This is naive, and could be improved.
+            id: this.createFeatureId({
+                type: 'HorizontalCardListFeature',
+                args: {
+                    algorithms,
+                    title,
+                    subtitle,
+                },
+            }),
+            cards,
+            hyphenatedTitle,
+            title,
+            subtitle,
+            primaryAction,
+            // Typename is required so GQL knows specifically what Feature is being created
+            __typename: 'HorizontalCardListFeature',
+        };
+    }
+
     async createLiveStreamListFeature({ algorithms, title, subtitle }) {
         const liveStreams = () => this.runAlgorithms({ algorithms });
 
@@ -167,9 +270,13 @@ export default class Feature extends coreFeatures.dataSource {
     }
 
     /** Create Feeds */
-    async getGiveFeedFeatures() {
+    getEventsFeedFeatures() {
+        return this.getFeedFeatures(get(ApollosConfig, 'FEATURE_FEEDS.EVENTS_TAB', []));
+    }
+
+    async getFeedFeatures(features) {
         return Promise.all(
-            get(ApollosConfig, 'GIVE_FEATURES', []).map((featureConfig) => {
+            features.map((featureConfig) => {
                 switch (featureConfig.type) {
                     case 'VerticalCardList':
                         return this.createVerticalCardListFeature(featureConfig);
@@ -190,6 +297,10 @@ export default class Feature extends coreFeatures.dataSource {
         );
     }
 
+    getGiveFeedFeatures() {
+        return this.getFeedFeatures(get(ApollosConfig, 'FEATURE_FEEDS.GIVE_TAB', []));
+    }
+
     async getHomeHeaderFeedFeatures() {
         return Promise.all(
             get(ApollosConfig, 'HOME_HEADER_FEATURES', []).map((featureConfig) => {
@@ -204,6 +315,10 @@ export default class Feature extends coreFeatures.dataSource {
                 }
             })
         );
+    }
+
+    getConnectFeedFeatures() {
+        return this.getFeedFeatures(get(ApollosConfig, 'FEATURE_FEEDS.CONNECT_TAB', []));
     }
 
     async getRockFeedFeatures({ contentChannelId }) {

@@ -232,32 +232,77 @@ HOME_FEATURES:
         arguments:
           contentChannelId: 64
 
-GIVE_FEATURES:
-  - type: HeroList
-    algorithms:
-      - type: CONTENT_CHANNEL
-        arguments:
-          contentChannelId: 76
-  - type: ActionBar
-    actions:
-      - action: OPEN_URL
-        title: 'Give Now'
-        icon: 'envelope-open-dollar'
-        theme:
-          colors:
-            primary: '#1ec27f'
+FEATURE_FEEDS:
+  CONNECT_TAB:
+    - type: ActionBar
+      actions:
+        - action: OPEN_URL
+          title: 'Groups'
+          icon: 'users'
+          theme:
+            colors:
+              primary: '#00aeef'
+          relatedNode:
+            __typename: Url
+            url: 'https://rock.gocf.org/groups'
+        - action: OPEN_URL
+          title: 'Serve'
+          icon: 'handshake'
+          theme:
+            colors:
+              primary: '#d52158'
+          relatedNode:
+            __typename: Url
+            url: 'https://rock.christfellowship.church/dreamteam'
+        - action: OPEN_URL
+          title: 'Give Now'
+          icon: 'envelope-open-dollar'
+          theme:
+            colors:
+              primary: '#1ec27f'
+          relatedNode:
+            __typename: Url
+            url: 'https://pushpay.com/g/christfellowship'
+    - type: HorizontalCardList
+      algorithms: [MY_PRAYERS]
+      title: 'My Prayers'
+      primaryAction:
+        # Right now, you hardcode exactly what GraphQL should return.
+        # Long term, we hope to have a more sophisticated mechanism for driving this field
+        action: OPEN_URL
+        title: 'See all'
         relatedNode:
           __typename: Url
-          url: 'https://pushpay.com/g/christfellowship'
+          url: 'christfellowship://c/MyPrayerRequestsFeed'
+  EVENTS_TAB:
+    - type: VerticalCardList
+      algorithms: [ALL_EVENTS]
+  GIVE_TAB:
+    - type: HeroList
+      algorithms:
+        - type: CONTENT_CHANNEL
+          arguments:
+            contentChannelId: 76
+    - type: ActionBar
+      actions:
+        - action: OPEN_URL
+          title: 'Give Now'
+          icon: 'envelope-open-dollar'
+          theme:
+            colors:
+              primary: '#1ec27f'
+          relatedNode:
+            __typename: Url
+            url: 'https://pushpay.com/g/christfellowship'
+  HOME_HEADER:
+    - algorithms: [ALL_LIVE_CONTENT]
+      type: LiveContentList
+      title: Live Now
+    - algorithms: [DAILY_PRAYER]
+      isCard: false
+      type: PrayerList
+      title: Daily Prayer
 
-HOME_HEADER_FEATURES:
-  - algorithms: [ALL_LIVE_CONTENT]
-    type: LiveContentList
-    title: Live Now
-  - algorithms: [DAILY_PRAYER]
-    isCard: false
-    type: PrayerList
-    title: Daily Prayer
 
 FEATURE_FLAGS:
   LIVE_STREAM_UI:
