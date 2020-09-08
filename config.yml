@@ -247,6 +247,15 @@ HOME_FEATURES:
 
 FEATURE_FEEDS:
   CONNECT_TAB:
+    - type: AvatarList
+      algorithms: [CURRENT_USER]
+      isCard: false
+      primaryAction:
+        action: OPEN_URL
+        icon: 'settings'
+        relatedNode:
+          __typename: Url
+          url: 'christfellowship://c/EditCurrentUser'
     - type: ActionBar
       actions:
         - action: OPEN_URL
@@ -287,6 +296,10 @@ FEATURE_FEEDS:
         relatedNode:
           __typename: Url
           url: 'christfellowship://c/MyPrayerRequestsFeed'
+    - type: HorizontalCardList
+      algorithms: [MY_GROUPS]
+      title: 'My Groups'
+      flagKey: GROUPS
   EVENTS_TAB:
     - type: VerticalCardList
       algorithms: [ALL_EVENTS]

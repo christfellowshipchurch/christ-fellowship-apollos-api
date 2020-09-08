@@ -8,6 +8,7 @@ export default gql`
         VIEW_CHILDREN
         READ_GLOBAL_CONTENT
         READ_PRAYER
+        READ_GROUP
     }
 
     extend type HorizontalCardListFeature {
@@ -28,6 +29,15 @@ export default gql`
         order: Int
     
         actions: [ActionBarFeatureAction]
+    }
+
+    type AvatarListFeature implements Feature & Node {
+        id: ID!
+        order: Int
+    
+        people: [Person]
+        isCard: Boolean
+        primaryAction: ActionBarFeatureAction
     }
 
     type LiveStreamListFeature implements Feature & Node {
