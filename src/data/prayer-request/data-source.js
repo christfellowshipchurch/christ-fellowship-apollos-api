@@ -31,8 +31,7 @@ export default class PrayerRequest extends corePrayerRequest.dataSource {
             .andFilter('IsPublic eq true') // prayers can be set to private in Rock
             .andFilter(`Answer eq null or Answer eq ''`) // prayers that aren't answered
             .sort([
-                { field: 'PrayerCount', direction: 'asc' }, // # of times prayed, ascending
-                { field: 'EnteredDateTime', direction: 'asc' }, // oldest prayer first
+                { field: 'EnteredDateTime', direction: 'desc' }, // newest prayer first
             ]);
     }
 }

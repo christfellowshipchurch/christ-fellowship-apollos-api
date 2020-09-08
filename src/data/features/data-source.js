@@ -1,31 +1,41 @@
 import {
     Feature as coreFeatures,
+    Utils
 } from '@apollosproject/data-connector-rock'
 import {
     get,
-    split
+    split,
+    filter
 } from 'lodash'
+import moment from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
 
-const { ROCK_MAPPINGS, FEATURE_FLAGS } = ApollosConfig
+const { ROCK_MAPPINGS, FEATURE_FLAGS, ROCK } = ApollosConfig
+const { createImageUrlFromGuid } = Utils
 
 export default class Feature extends coreFeatures.dataSource {
     expanded = true
 
-    // Names of Action Algoritms mapping to the functions that create the actions.
+    /** Base Attrs and Methods from the Core DataSource */
     baseAlgorithms = this.ACTION_ALGORITHIMS;
+
+    // Names of Action Algoritms mapping to the functions that create the actions.
     ACTION_ALGORITHIMS = Object.entries({
         ...this.baseAlgorithms,
         // We need to make sure `this` refers to the class, not the `ACTION_ALGORITHIMS` object.
-        PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride,
+        ALL_EVENTS: this.allEventsAlgorithm,
+        ALL_LIVE_CONTENT: this.allLiveStreamContentAlgorithm,
         CONTENT_CHANNEL: this.contentChannelAlgorithmWithActionOverride,
+        CONTENT_CHILDREN: this.contentChildrenAlgorithm,
+        GLOBAL_CONTENT: this.globalContentAlgorithm,
+        MY_GROUPS: this.myGroupsAlgorithm,
+        MY_PRAYERS: this.myPrayersAlgorithm,
+        PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride,
+        ROCK_DYNAMIC_FEED: this.rockDynamicFeed,
         SERMON_CHILDREN: this.sermonChildrenAlgorithm,
         UPCOMING_EVENTS: this.upcomingEventsAlgorithmWithActionOverride,
-        GLOBAL_CONTENT: this.globalContentAlgorithm,
-        ROCK_DYNAMIC_FEED: this.rockDynamicFeed,
-        ALL_LIVE_CONTENT: this.allLiveStreamContentAlgorithm,
-        CONTENT_CHILDREN: this.contentChildrenAlgorithm,
+        CURRENT_USER: this.currentUserAlgorithm
     }).reduce((accum, [key, value]) => {
         // convenciance code to make sure all methods are bound to the Features dataSource
         // eslint-disable-next-line
@@ -33,57 +43,58 @@ export default class Feature extends coreFeatures.dataSource {
         return accum;
     }, {})
 
-    async rockDynamicFeed({ contentChannelId = null }) {
-        if (!contentChannelId) {
-            return []
-        }
+    /** Algorithms */
+    async allEventsAlgorithm() {
+        const { ContentItem } = this.context.dataSources
 
-        const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === "LIVE"
-        const { ContentItem, Person } = this.context.dataSources;
-        const contentChannelItems = await this.request('ContentChannelItems')
-            .filter(`ContentChannelId eq ${contentChannelId}`)
-            .andFilter(ContentItem.LIVE_CONTENT())
-            .cache({ ttl: 60 })
-            .orderBy('Order', 'asc')
-            .get()
-        let personas = []
+        const items = await ContentItem.getEvents()
 
-        if (usePersonas) {
-            try {
-                personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
-            } catch (e) {
-                console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
-            }
-        }
+        return items.map((item, i) => ({
+            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+            title: item.title,
+            relatedNode: { ...item, __type: ContentItem.resolveType(item) },
+            image: ContentItem.getCoverImage(item),
+            action: 'READ_CONTENT',
+            summary: ContentItem.createSummary(item),
+        }));
+    }
 
-        const actions = contentChannelItems.map((item, i) => {
-            const action = get(item, 'attributeValues.action.value', '')
+    async allLiveStreamContentAlgorithm() {
+        const { LiveStream } = this.context.dataSources;
+        const liveStreams = await LiveStream.getLiveStreams();
+        return liveStreams;
+    }
 
-            if (!action || action === '' || !item.id) return null
-            const securityDataViews = split(
-                get(item, 'attributeValues.securityDataViews.value', ''),
-                ','
-            ).filter(dv => !!dv)
+    async currentUserAlgorithm() {
+        const { Auth } = this.context.dataSources
 
-            if (securityDataViews.length > 0) {
-                const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
-                if (userInSecurityDataViews.length === 0) {
-                    console.log("User does not have access to this item")
-                    return null
-                }
-            }
+        return Auth.getCurrentPerson()
+    }
 
-            return {
-                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
-                title: item.title,
-                subtitle: get(item, 'contentChannel.name'),
-                relatedNode: { ...item, __type: ContentItem.resolveType(item) },
-                image: ContentItem.getCoverImage(item),
-                action,
-            }
-        })
+    async contentChannelAlgorithmWithActionOverride({ action = null, contentChannelId, limit = null } = {}) {
+        const contentChannel = await this.contentChannelAlgorithm({ contentChannelId, limit })
 
-        return actions.filter(action => !!action)
+        return !!action
+            ? contentChannel.map(n => ({ ...n, action }))
+            : contentChannel
+    }
+
+    async contentChildrenAlgorithm({ contentChannelItemId, limit = 10 }) {
+        const { ContentItem } = this.context.dataSources;
+        const cursor = (await ContentItem.getCursorByParentContentItemId(
+            contentChannelItemId
+        )).expand('ContentChannel');
+        const items = limit ? await cursor.top(limit).get() : await cursor.get();
+
+        return items.map((item, i) => ({
+            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+            title: item.title,
+            subtitle: ContentItem.createSummary(item),
+            relatedNode: { ...item, __type: ContentItem.resolveType(item) },
+            image: ContentItem.getCoverImage(item),
+            action: 'READ_CONTENT',
+            summary: ContentItem.createSummary(item),
+        }));
     }
 
     async globalContentAlgorithm({ index = 0, limit = null } = {}) {
@@ -113,12 +124,74 @@ export default class Feature extends coreFeatures.dataSource {
         }))
     }
 
-    async contentChannelAlgorithmWithActionOverride({ action = null, contentChannelId, limit = null } = {}) {
-        const contentChannel = await this.contentChannelAlgorithm({ contentChannelId, limit })
+    async myGroupsAlgorithm({ limit = null } = {}) {
+        const { Group, Auth, ContentItem } = this.context.dataSources
 
-        return !!action
-            ? contentChannel.map(n => ({ ...n, action }))
-            : contentChannel
+        try {
+            const { id } = await Auth.getCurrentPerson()
+            const groups = await Group.getByPerson({ personId: id })
+
+            return groups.map((item, i) => {
+                const getScheduleFriendlyText = async () => {
+                    const schedule = await Group.getScheduleFromId(item.scheduleId)
+
+                    return schedule.friendlyScheduleText
+                }
+
+                return ({
+                    id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                    title: Group.getTitle(item),
+                    relatedNode: {
+                        __type: "Group",
+                        ...item
+                    },
+                    image: ContentItem.getCoverImage(item),
+                    action: 'READ_GROUP',
+                    subtitle: getScheduleFriendlyText()
+                })
+            });
+        } catch (e) {
+            console.log("Error getting Groups for current user. User likely not logged in", { e })
+        }
+
+        return []
+    }
+
+    async myPrayersAlgorithm({ limit = 5 } = {}) {
+        const { PrayerRequest, Person } = this.context.dataSources;
+        const cursor = await PrayerRequest.byCurrentUser();
+        const items = await cursor.top(limit).get();
+
+        return items.map((item, i) => {
+            const getProfileImage = async () => {
+                const root = await Person.getFromAliasId(item.requestedByPersonAliasId)
+
+                const guid = get(root, 'photo.guid')
+
+                return {
+                    sources: [
+                        (guid && guid !== ''
+                            ? { uri: createImageUrlFromGuid(guid) }
+                            : { uri: "https://cloudfront.christfellowship.church/GetImage.ashx?guid=0ad7f78a-1e6b-46ad-a8be-baa0dbaaba8e" })
+                    ]
+                }
+            }
+
+            return ({
+                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                title: item.text,
+                relatedNode: {
+                    __type: "PrayerRequest",
+                    ...item
+                },
+                image: getProfileImage(),
+                action: 'READ_PRAYER',
+                subtitle: moment(item.enteredDateTime)
+                    .tz(ROCK.TIMEZONE)
+                    .utc()
+                    .format(),
+            })
+        });
     }
 
     async personaFeedAlgorithmWithActionOverride({ action = null } = {}) {
@@ -139,6 +212,114 @@ export default class Feature extends coreFeatures.dataSource {
             image: event.coverImage,
             action: action || 'READ_EVENT',
         }))
+    }
+
+    /** Create Features */
+    createActionRowFeature({ actions }) {
+        return {
+            // The Feature ID is based on all of the action ids, added together.
+            // This is naive, and could be improved.
+            id: this.createFeatureId({
+                type: 'ActionBarFeature',
+                args: {
+                    actions
+                },
+            }),
+            actions: actions.map(action => {
+                // Ensures that we have a generated ID for the Primary Action related node, if not provided.
+                if (
+                    action &&
+                    action.relatedNode &&
+                    !action.relatedNode.id
+                ) {
+                    action.relatedNode.id = createGlobalId( // eslint-disable-line
+                        JSON.stringify(action.relatedNode),
+                        action.relatedNode.__typename
+                    );
+                }
+
+                return action
+            }),
+            // Typename is required so GQL knows specifically what Feature is being created
+            __typename: 'ActionBarFeature',
+        };
+    }
+
+    async createAvatarListFeature({ algorithms, primaryAction, isCard }) {
+        const people = () => this.runAlgorithms({ algorithms });
+
+        // Ensures that we have a generated ID for the Primary Action related node, if not provided.
+        if (
+            primaryAction &&
+            primaryAction.relatedNode &&
+            !primaryAction.relatedNode.id
+        ) {
+            primaryAction.relatedNode.id = createGlobalId( // eslint-disable-line
+                JSON.stringify(primaryAction.relatedNode),
+                primaryAction.relatedNode.__typename
+            );
+        }
+
+        return {
+            // The Feature ID is based on all of the action ids, added together.
+            // This is naive, and could be improved.
+            id: this.createFeatureId({
+                type: 'AvatarListFeature',
+                args: {
+                    algorithms,
+                    primaryAction,
+                    isCard
+                },
+            }),
+            people,
+            isCard,
+            primaryAction,
+            // Typename is required so GQL knows specifically what Feature is being created
+            __typename: 'AvatarListFeature',
+        };
+    }
+
+    async createHorizontalCardListFeature({
+        algorithms = [],
+        hyphenatedTitle,
+        title,
+        subtitle,
+        primaryAction
+    }) {
+        // Generate a list of horizontal cards.
+        const cards = () => this.runAlgorithms({ algorithms });
+
+        // Ensures that we have a generated ID for the Primary Action related node, if not provided.
+        if (
+            primaryAction &&
+            primaryAction.relatedNode &&
+            !primaryAction.relatedNode.id
+        ) {
+            primaryAction.relatedNode.id = createGlobalId( // eslint-disable-line
+                JSON.stringify(primaryAction.relatedNode),
+                primaryAction.relatedNode.__typename
+            );
+        }
+
+        return {
+            // The Feature ID is based on all of the action ids, added together.
+            // This is naive, and could be improved.
+            id: this.createFeatureId({
+                type: 'HorizontalCardListFeature',
+                args: {
+                    algorithms,
+                    title,
+                    subtitle,
+                },
+            }),
+            cards,
+            hyphenatedTitle,
+            title,
+            subtitle,
+            primaryAction,
+            // Typename is required so GQL knows specifically what Feature is being created
+            __typename: 'HorizontalCardListFeature',
+        };
     }
 
     async createLiveStreamListFeature({ algorithms, title, subtitle }) {
@@ -163,28 +344,74 @@ export default class Feature extends coreFeatures.dataSource {
         };
     }
 
-    async allLiveStreamContentAlgorithm() {
-        const { LiveStream } = this.context.dataSources;
-        const liveStreams = await LiveStream.getLiveStreams();
-        return liveStreams;
+    /** Create Feeds */
+    getEventsFeedFeatures() {
+        return this.getFeedFeatures(get(ApollosConfig, 'FEATURE_FEEDS.EVENTS_TAB', []));
     }
 
-    async contentChildrenAlgorithm({ contentChannelItemId, limit = 10 }) {
-        const { ContentItem } = this.context.dataSources;
-        const cursor = (await ContentItem.getCursorByParentContentItemId(
-            contentChannelItemId
-        )).expand('ContentChannel');
-        const items = limit ? await cursor.top(limit).get() : await cursor.get();
+    async getFeedFeatures(features) {
+        const { Flag } = this.context.dataSources
+        const featuresFilteredByPermissions = await Promise.all(features
+            .map(async (feature) => {
+                const flagKey = get(feature, 'flagKey')
 
-        return items.map((item, i) => ({
-            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
-            title: item.title,
-            subtitle: ContentItem.createSummary(item),
-            relatedNode: { ...item, __type: ContentItem.resolveType(item) },
-            image: ContentItem.getCoverImage(item),
-            action: 'READ_CONTENT',
-            summary: ContentItem.createSummary(item),
-        }));
+                if (flagKey) {
+                    const status = await Flag.currentUserCanUseFeature(flagKey)
+
+                    if (status !== "LIVE") return null
+                }
+
+                return feature
+            }))
+
+        return Promise.all(
+            featuresFilteredByPermissions
+                .filter(feature => !!feature)
+                .map((featureConfig) => {
+                    switch (featureConfig.type) {
+                        case 'ActionBar':
+                            return this.createActionRowFeature(featureConfig);
+                        case 'AvatarList':
+                            return this.createAvatarListFeature(featureConfig);
+                        case 'HeroList':
+                            return this.createHeroListFeature(featureConfig);
+                        case 'HorizontalCardList':
+                            return this.createHorizontalCardListFeature(featureConfig);
+                        case 'PrayerList':
+                            return this.createPrayerListFeature(featureConfig);
+                        case 'VerticalCardList':
+                            return this.createVerticalCardListFeature(featureConfig);
+                        case 'ActionList':
+                        default:
+                            // Action list was the default in 1.3.0 and prior.
+                            return this.createActionListFeature(featureConfig);
+                    }
+                })
+        );
+    }
+
+    getGiveFeedFeatures() {
+        return this.getFeedFeatures(get(ApollosConfig, 'FEATURE_FEEDS.GIVE_TAB', []));
+    }
+
+    async getHomeHeaderFeedFeatures() {
+        return Promise.all(
+            get(ApollosConfig, 'FEATURE_FEEDS.HOME_HEADER', []).map((featureConfig) => {
+                switch (featureConfig.type) {
+                    case 'PrayerList':
+                        return this.createPrayerListFeature(featureConfig);
+                    case 'LiveContentList':
+                        return this.createLiveStreamListFeature(featureConfig);
+                    case 'ActionList':
+                    default:
+                        return this.createActionListFeature(featureConfig);
+                }
+            })
+        );
+    }
+
+    getConnectFeedFeatures() {
+        return this.getFeedFeatures(get(ApollosConfig, 'FEATURE_FEEDS.CONNECT_TAB', []));
     }
 
     async getRockFeedFeatures({ contentChannelId }) {
@@ -266,20 +493,59 @@ export default class Feature extends coreFeatures.dataSource {
         );
     }
 
-    async getHomeHeaderFeedFeatures() {
-        return Promise.all(
-            get(ApollosConfig, 'HOME_HEADER_FEATURES', []).map((featureConfig) => {
-                switch (featureConfig.type) {
-                    case 'PrayerList':
-                        return this.createPrayerListFeature(featureConfig);
-                    case 'LiveContentList':
-                        return this.createLiveStreamListFeature(featureConfig);
-                    case 'ActionList':
-                    default:
-                        // Action list was the default in 1.3.0 and prior.
-                        return this.createActionListFeature(featureConfig);
-                }
-            })
+    async rockDynamicFeed({ contentChannelId = null }) {
+        console.warn(
+            'Deprecated: Please use the name "getRockFeedFeatures" instead. You used "rockDynamicFeed"'
         );
+        if (!contentChannelId) {
+            return []
+        }
+
+        const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === "LIVE"
+        const { ContentItem, Person } = this.context.dataSources;
+        const contentChannelItems = await this.request('ContentChannelItems')
+            .filter(`ContentChannelId eq ${contentChannelId}`)
+            .andFilter(ContentItem.LIVE_CONTENT())
+            .cache({ ttl: 60 })
+            .orderBy('Order', 'asc')
+            .get()
+        let personas = []
+
+        if (usePersonas) {
+            try {
+                personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
+            } catch (e) {
+                console.log("Rock Dynamic Feed: Unable to retrieve personas for user.")
+            }
+        }
+
+        const actions = contentChannelItems.map((item, i) => {
+            const action = get(item, 'attributeValues.action.value', '')
+
+            if (!action || action === '' || !item.id) return null
+            const securityDataViews = split(
+                get(item, 'attributeValues.securityDataViews.value', ''),
+                ','
+            ).filter(dv => !!dv)
+
+            if (securityDataViews.length > 0) {
+                const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
+                if (userInSecurityDataViews.length === 0) {
+                    console.log("User does not have access to this item")
+                    return null
+                }
+            }
+
+            return {
+                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                title: item.title,
+                subtitle: get(item, 'contentChannel.name'),
+                relatedNode: { ...item, __type: ContentItem.resolveType(item) },
+                image: ContentItem.getCoverImage(item),
+                action,
+            }
+        })
+
+        return actions.filter(action => !!action)
     }
 }
