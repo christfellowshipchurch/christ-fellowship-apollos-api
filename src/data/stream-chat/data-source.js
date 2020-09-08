@@ -36,4 +36,12 @@ export default class StreamChat extends RESTDataSource {
     const channel = chatClient.channel('livestream', contentId);
     await channel.addModerators([userId]);
   }
+
+  removeModerator = async ({ contentId, id }) => {
+    const globalId = createGlobalId(id, "AuthenticatedUser");
+    const userId = globalId.split(":")[1];
+
+    const channel = chatClient.channel('livestream', contentId);
+    await channel.demoteModerators([userId]);
+  }
 }
