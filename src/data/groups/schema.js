@@ -20,6 +20,10 @@ export const groupSchema = gql`
     title: String
     url: String
     contentChannelItem: String
+    
+    icon: String
+    action: ACTION_FEATURE_ACTION
+    relatedNode: Node
   }
 
   type DateTime {
