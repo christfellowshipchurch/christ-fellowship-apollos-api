@@ -87,7 +87,7 @@ export default class Group extends baseGroup.dataSource {
       .expand('GroupRole')
       .filter(
         `PersonId eq ${personId} ${
-          asLeader ? ' and GroupRole/IsLeader eq true' : ''
+        asLeader ? ' and GroupRole/IsLeader eq true' : ''
         }`
       )
       .andFilter(`GroupMemberStatus ne 'Inactive'`)
@@ -117,8 +117,8 @@ export default class Group extends baseGroup.dataSource {
   getMatrixItemsFromId = async (id) =>
     id
       ? this.request('/AttributeMatrixItems')
-          .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
-          .get()
+        .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+        .get()
       : [];
 
   groupTypeMap = {
@@ -263,12 +263,14 @@ export default class Group extends baseGroup.dataSource {
 
   getGroupVideoCallParams = ({ attributeValues }) => {
     const zoomLink = get(attributeValues, 'zoom.value', '');
+    // Returns a Defined Value Guid
     const videoCallLabelText = get(
       attributeValues,
       'videoCallLabelText.value',
       ''
     );
     if (zoomLink != '') {
+      const { DefinedValue } = this.context.dataSources
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
       const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
@@ -281,7 +283,7 @@ export default class Group extends baseGroup.dataSource {
         link: zoomLink,
         meetingId: meetingId,
         passcode,
-        labelText: videoCallLabelText,
+        labelText: DefinedValue.getValueById(videoCallLabelText),
       };
     }
     return null;
@@ -293,12 +295,14 @@ export default class Group extends baseGroup.dataSource {
   }) => {
     const groupParent = await this.request('Groups').find(parentGroupId).get();
     const zoomLink = get(groupParent, 'attributeValues.zoom.value', '');
+    // Returns a Defined Value Guid
     const parentVideoCallLabelText = get(
       attributeValues,
       'parentVideoCallLabelText.value',
       ''
     );
     if (zoomLink != '') {
+      const { DefinedValue } = this.context.dataSources
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
       const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
@@ -309,7 +313,7 @@ export default class Group extends baseGroup.dataSource {
         link: zoomLink,
         meetingId: meetingId,
         passcode,
-        labelText: parentVideoCallLabelText,
+        labelText: DefinedValue.getValueById(parentVideoCallLabelText),
       };
     }
     return null;
