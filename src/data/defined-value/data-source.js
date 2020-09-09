@@ -13,4 +13,10 @@ export default class DefinedValue extends RockApolloDataSource {
             ? this.request().filter(type.query).first()
             : null
     }
+
+    getValueById = async (id) => {
+        const definedValue = await this.getByIdentifier(id)
+
+        return definedValue.value
+    }
 }
