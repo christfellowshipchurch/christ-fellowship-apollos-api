@@ -4,7 +4,6 @@ import ApollosConfig from '@apollosproject/config'
 import { get, filter, find } from 'lodash'
 import { Utils } from '@apollosproject/data-connector-rock'
 
-
 const { enforceCurrentUser, createImageUrlFromGuid } = Utils
 
 const resolver = {

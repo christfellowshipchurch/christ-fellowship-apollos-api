@@ -25,7 +25,7 @@ ROCK:
   SHARE_URL: https://christfellowship.church
   # This should match the timezone of the Rock server
   # TIMEZONE: "Etc/GMT+5"
-  TIMEZONE: "America/New_York"
+  TIMEZONE: 'America/New_York'
   DEEP_LINK_HOST:
   ROOT_API_URL: ${ROOT_URL}
   USE_PLUGIN: true
@@ -37,7 +37,10 @@ ONE_SIGNAL:
 CHURCH_ONLINE:
   URL: https://live.gochristfellowship.com/api/v1/
   # MEDIA_URLS: [https://christfellow2-lh.akamaihd.net/i/christfellow_1@144364/master.m3u8]
-  MEDIA_URLS: [http://link.theplatform.com/s/IfSiAC/bD1fN9vCet4B?mbr=true@144364/master.m3u8]
+  MEDIA_URLS:
+    [
+      http://link.theplatform.com/s/IfSiAC/bD1fN9vCet4B?mbr=true@144364/master.m3u8,
+    ]
   WEB_VIEW_URL: https://live.gochristfellowship.com/
 ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
@@ -117,7 +120,7 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
     InformationalContentItem:
       EntityType: ContentChannelItem
-      ContentChannelId: [45]
+      ContentChannelId: [45, 76]
     EventContentItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [23]
@@ -198,15 +201,15 @@ ROCK_MAPPINGS:
   # when migrating from Arena to Rock, the Arena keys were kept
   # this configuration helps eliminate the need to remember specific Arena keys
   PERSON_ATTRIBUTES:
-    SALVATION_DATE: "Arena-15-139"
-    BAPTISM_DATE: "BaptismDate"
-    ETHNICITY: "Ethnicity"
+    SALVATION_DATE: 'Arena-15-139'
+    BAPTISM_DATE: 'BaptismDate'
+    ETHNICITY: 'Ethnicity'
   CONNECTION_STATUS:
     FIRST_CONNECTION:
-      KEY: "Arena-15-135"
+      KEY: 'Arena-15-135'
     ORIGINAL_ENTRY:
-      KEY: "Arena-15-64"
-      VALUE: "65c8d8f1-491a-4335-bbdc-845ebc2887ab"
+      KEY: 'Arena-15-64'
+      VALUE: '65c8d8f1-491a-4335-bbdc-845ebc2887ab'
 
   LOCATION_TYPES:
     HOME_ADDRESS: 19
@@ -218,15 +221,23 @@ ROCK_MAPPINGS:
     ADDRESS_UPDATE: 328
     CHECK_IN: 411
 
-  SERVING_GROUP_TYPE_ID: 23
-  COMMUNITY_GROUP_TYPE_ID: 25
-  FAMILY_GROUP_TYPE_ID: 10
+  ADULT_GROUP_TYPE_ID: 31
+  CFE_JOURNEY_EXPERIENCE_GROUP_TYPE_ID: 124
+  FREEDOM_GROUP_TYPE_ID: 92
+  GET_STRONGER_GROUP_TYPE_ID: 101
+  HUB_MARRIAGE_STUDIES_GROUP_TYPE_ID: 90
+  HUB_STUDIES_GROUP_TYPE_ID: 85
+  MARRIAGE_STUDIES_GROUP_TYPE_ID: 89
+  STUDENTS_GROUP_TYPE_ID: 76
+  STUDIES_GROUP_TYPE_ID: 86
+  TABLE_GET_STRONGER_GROUP_TYPE_ID: 121
+  TABLE_STUDIES_GROUP_TYPE_ID: 94
+  YOUNG_ADULTS_GROUP_TYPE_ID: 73
+
   DEFAULT_CAMPUS_ID: 9
   HOME_FEATURES_CHANNEL_ID: 64
   GENERAL_PRAYER_CATEGORY_ID: 580
 
-# TODO : @caleb "I would like to not have to manually put the index in the GLOBAL_CONTENT feature"
-# NOTE : GLOBAL_CONTENT uses a 0 based index
 HOME_FEATURES:
   - title: Dynamic Rock Feed
     algorithms:
@@ -234,33 +245,112 @@ HOME_FEATURES:
         arguments:
           contentChannelId: 64
 
-HOME_HEADER_FEATURES:
-  - algorithms: [ALL_LIVE_CONTENT]
-    type: LiveContentList
-    title: Live Now
-  - algorithms: [DAILY_PRAYER]
-    isCard: false
-    type: PrayerList
-    title: Daily Prayer
+FEATURE_FEEDS:
+  CONNECT_TAB:
+    - type: AvatarList
+      algorithms: [CURRENT_USER]
+      isCard: false
+      primaryAction:
+        action: OPEN_URL
+        icon: 'settings'
+        relatedNode:
+          __typename: Url
+          url: 'christfellowship://c/EditCurrentUser'
+    - type: ActionBar
+      actions:
+        - action: OPEN_URL
+          title: 'Groups'
+          icon: 'users'
+          theme:
+            colors:
+              primary: '#00aeef'
+          relatedNode:
+            __typename: Url
+            url: 'https://rock.gocf.org/groups'
+        - action: OPEN_URL
+          title: 'Serve'
+          icon: 'handshake'
+          theme:
+            colors:
+              primary: '#d52158'
+          relatedNode:
+            __typename: Url
+            url: 'https://rock.christfellowship.church/dreamteam'
+        - action: OPEN_URL
+          title: 'Give Now'
+          icon: 'envelope-open-dollar'
+          theme:
+            colors:
+              primary: '#1ec27f'
+          relatedNode:
+            __typename: Url
+            url: 'https://pushpay.com/g/christfellowship'
+    - type: HorizontalCardList
+      algorithms: [MY_PRAYERS]
+      title: 'My Prayers'
+      primaryAction:
+        # Right now, you hardcode exactly what GraphQL should return.
+        # Long term, we hope to have a more sophisticated mechanism for driving this field
+        action: OPEN_URL
+        title: 'See all'
+        relatedNode:
+          __typename: Url
+          url: 'christfellowship://c/MyPrayerRequestsFeed'
+    - type: HorizontalCardList
+      algorithms: [MY_GROUPS]
+      title: 'My Groups'
+      flagKey: GROUPS
+  EVENTS_TAB:
+    - type: VerticalCardList
+      algorithms: [ALL_EVENTS]
+  GIVE_TAB:
+    - type: HeroList
+      algorithms:
+        - type: CONTENT_CHANNEL
+          arguments:
+            contentChannelId: 76
+    - type: ActionBar
+      actions:
+        - action: OPEN_URL
+          title: 'Give Now'
+          icon: 'envelope-open-dollar'
+          theme:
+            colors:
+              primary: '#1ec27f'
+          relatedNode:
+            __typename: Url
+            url: 'https://pushpay.com/g/christfellowship'
+  HOME_HEADER:
+    - algorithms: [ALL_LIVE_CONTENT]
+      type: LiveContentList
+      title: Live Now
+    - algorithms: [DAILY_PRAYER]
+      isCard: false
+      type: PrayerList
+      title: Daily Prayer
+
 
 FEATURE_FLAGS:
   LIVE_STREAM_UI:
     securityGroupId: 1014843
-    status: "LIVE"
+    status: 'LIVE'
   LIVE_STREAM_CHAT:
     securityGroupId: 1014843
-    status: "LIVE"
+    status: 'LIVE'
   NOTIFICATION_CENTER:
     securityGroupId: 1014843 # CFDP Experimental Features
-    status: "LIVE"
+    status: 'LIVE'
+  GROUPS:
+    securityGroupId: 1014843 # CFDP Experimental Features
+    status: 'LIVE'
   ROCK_DYNAMIC_FEED_WITH_PERSONAS:
-    status: "LIVE"
+    status: 'LIVE'
   CHECK_IN:
-    status: "LIVE"
+    status: 'LIVE'
   HOME_HEADER:
     # TODO : add this back when done testing
     # securityGroupId: 1014843
-    status: "LIVE"
+    status: 'LIVE'
 
 PAGE_BUILDER:
   locations:
@@ -286,7 +376,6 @@ PAGE_BUILDER:
           - type: MATRIX_ITEMS
             arguments:
               attributeKey: contentBlocks
-
 
 NOTIFICATIONS:
   PRAYING: 'Your church family is praying for you right now. Thanks for sharing your request with us!'

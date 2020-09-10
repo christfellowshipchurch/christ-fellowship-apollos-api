@@ -32,8 +32,8 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@apollosproject/config": "1.5.0",
     "@apollosproject/bugsnag": "1.5.0",
+    "@apollosproject/config": "1.5.0",
     "@apollosproject/data-connector-algolia-search": "1.5.0",
     "@apollosproject/data-connector-analytics": "1.5.0",
     "@apollosproject/data-connector-bible": "1.5.0",
@@ -61,9 +61,9 @@
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.27",
-    "node-ical": "^0.10.0",
+    "node-ical": "^0.11.4",
     "object-sizeof": "^1.6.0",
-    "prettier": "1.12.1",
+    "prettier": "^2.0.5",
     "randomcolor": "0.5.3",
     "remove-words": "^0.9.0",
     "sanitize-html": "^1.26.0",
