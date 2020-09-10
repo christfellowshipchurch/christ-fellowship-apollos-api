@@ -22,18 +22,23 @@ const resolver = {
             return StreamChat.generateUserToken(id);
         },
         streamChatRole: async ({ id }, { id: contentId }, { dataSources }) => {
-            const { Auth, StreamChat } = dataSources;
+            const { Auth, Flag, StreamChat } = dataSources;
+            const featureFlagStatus = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
 
-            const flag = get(ApollosConfig, 'FEATURE_FLAGS.LIVE_STREAM_CHAT', null)
-            if (flag && flag.status === "LIVE") {
-                if (flag.securityGroupId) {
-                    if (await Auth.isInSecurityGroup(flag.securityGroupId)) {
-                      await StreamChat.addModerator({ contentId, id });
-                      return 'MODERATOR';
-                    }
-                }
+            if (featureFlagStatus !== 'LIVE') {
+                return null;
             }
 
+            // Temporarily use the feature flag group as the moderator group
+            const flag = get(ApollosConfig, 'FEATURE_FLAGS.LIVE_STREAM_CHAT', null)
+            const MODERATORS_SECURITY_GROUP_ID = flag.securityGroupId;
+
+            if (await Auth.isInSecurityGroup(MODERATORS_SECURITY_GROUP_ID)) {
+                await StreamChat.addModerator({ contentId, id });
+                return 'MODERATOR';
+            }
+
+            await StreamChat.removeModerator({ contentId, id });
             return 'USER';
         },
     },
