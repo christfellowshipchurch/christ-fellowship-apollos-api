@@ -159,31 +159,36 @@ export default class Group extends baseGroup.dataSource {
       .first();
 
   getResources = async ({ attributeValues }) => {
+    const { ContentItem } = this.context.dataSources
     const matrixAttributeValue = get(attributeValues, 'resources.value', '');
 
     const items = await this.getMatrixItemsFromId(matrixAttributeValue);
-    const values = await Promise.all(
+    return Promise.all(
       items.map(async (item) => {
         // If a resource is a contentChannelItem parse guid into apollos id and set it as the value
         if (item.attributeValues.contentChannelItem.value !== '') {
           const contentItem = await this.getContentChannelItem(
             item.attributeValues.contentChannelItem.value
           );
-          const contentItemApollosId = createGlobalId(
-            contentItem.id,
-            'UniversalContentItem'
-          );
 
-          item.attributeValues.contentChannelItem.value = contentItemApollosId;
-          return item.attributeValues;
+          return {
+            title: get(item, 'attributeValues.title.value'),
+            action: "READ_CONTENT",
+            relatedNode: { ...contentItem, __type: ContentItem.resolveType(item) }
+          }
         }
-        return item.attributeValues;
+
+        return {
+          title: get(item, 'attributeValues.title.value'),
+          action: "OPEN_URL",
+          relatedNode: {
+            __type: "Url",
+            id: createGlobalId(get(item, 'attributeValues.url.value'), "Url"),
+            url: get(item, 'attributeValues.url.value')
+          }
+        };
       })
     );
-    const mappedValues = values.map((attribute) =>
-      mapValues(attribute, (o) => o.value)
-    );
-    return mappedValues;
   };
 
   getAvatars = async (id) => {
