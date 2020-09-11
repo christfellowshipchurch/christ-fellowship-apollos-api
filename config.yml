@@ -286,20 +286,18 @@ FEATURE_FEEDS:
             __typename: Url
             url: 'https://pushpay.com/g/christfellowship'
     - type: HorizontalCardList
+      algorithms: [MY_GROUPS]
+      title: 'My Groups'
+      flagKey: GROUPS
+    - type: HorizontalCardList
       algorithms: [MY_PRAYERS]
       title: 'My Prayers'
       primaryAction:
-        # Right now, you hardcode exactly what GraphQL should return.
-        # Long term, we hope to have a more sophisticated mechanism for driving this field
         action: OPEN_URL
         title: 'See all'
         relatedNode:
           __typename: Url
           url: 'christfellowship://c/MyPrayerRequestsFeed'
-    - type: HorizontalCardList
-      algorithms: [MY_GROUPS]
-      title: 'My Groups'
-      flagKey: GROUPS
   EVENTS_TAB:
     - type: VerticalCardList
       algorithms: [ALL_EVENTS]
@@ -313,6 +311,15 @@ FEATURE_FEEDS:
       actions:
         - action: OPEN_URL
           title: 'Give Now'
+          icon: 'envelope-open-dollar'
+          theme:
+            colors:
+              primary: '#1ec27f'
+          relatedNode:
+            __typename: Url
+            url: 'https://pushpay.com/g/christfellowship'
+        - action: OPEN_URL
+          title: 'PayPal'
           icon: 'envelope-open-dollar'
           theme:
             colors:

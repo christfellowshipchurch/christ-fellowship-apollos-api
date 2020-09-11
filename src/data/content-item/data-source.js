@@ -38,6 +38,7 @@ export default class ContentItem extends coreContentItem.dataSource {
   resolveType(props) {
     const { clientVersion } = this.context;
     const {
+      id,
       attributeValues,
       attributes,
     } = props
@@ -54,6 +55,10 @@ export default class ContentItem extends coreContentItem.dataSource {
       if (get(attributeValues, 'scriptures', '') !== "") {
         return "DevotionalContentItem"
       }
+    }
+
+    if (id === 7964 && !clientVersion.includes("web")) {
+      return "InformationalContentItem"
     }
 
     return super.resolveType(props)
