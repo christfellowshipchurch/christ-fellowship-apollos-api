@@ -20,6 +20,7 @@ export default class Message extends RockApolloDataSource {
         return this.request('DefinedValues')
             .andFilter(`DefinedTypeId eq ${DEFINED_TYPE_ID}`)
             .andFilter(`IsActive eq true`)
+            .orderBy("Order")
     }
 
 }
