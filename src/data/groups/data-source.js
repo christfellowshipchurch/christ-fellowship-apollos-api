@@ -9,6 +9,38 @@ const { ROCK_MAPPINGS } = ApollosConfig;
 
 const { createImageUrlFromGuid } = Utils;
 
+/** TEMPORARY FIX
+ *  In order to launch the My Groups feature in time for the September, 2020 Fall
+ *  Groups Launch, we needed a quick and easy way to exclude a specific subset of
+ *  groups that are not intended to behave like a "small group"
+ * 
+ *  Long term "todo" is to filter by a specific group type OR to add a toggle inside
+ *  of Rock that can be filtered on.
+ */
+
+const EXCLUDE_IDS = [
+  269201,
+  242028,
+  1004296,
+  810456,
+  810457,
+  810458,
+  245763,
+  910040,
+  956591,
+  956595,
+  956596,
+  956597,
+  1039500,
+  1040691,
+  1041021,
+  241739,
+  241743,
+  241744,
+  241745,
+  1042531,
+]
+
 export default class Group extends baseGroup.dataSource {
   getFromId = async (id) => {
     const { Cache } = this.context.dataSources;
@@ -33,11 +65,36 @@ export default class Group extends baseGroup.dataSource {
       Cache.set({
         key: cachedKey,
         data: group,
-        expiresIn: 60 * 60 * 24, // 24 hour cache
+        expiresIn: 60 * 60 * 12, // 12 hour cache
       });
     }
 
     return group;
+  };
+
+  getMembers = async (groupId) => {
+    const { Person } = this.context.dataSources;
+    const members = await this.request('GroupMembers')
+      .andFilter(`GroupId eq ${groupId}`)
+      .andFilter(`GroupMemberStatus eq '1'`)
+      .get();
+    return Promise.all(
+      members.map(({ personId }) => Person.getFromId(personId))
+    );
+  };
+
+  getLeaders = async (groupId) => {
+    const { Person } = this.context.dataSources;
+    const members = await this.request('GroupMembers')
+      .filter(`GroupId eq ${groupId}`)
+      .andFilter('GroupRole/IsLeader eq true')
+      .andFilter(`GroupMemberStatus eq '1'`)
+      .expand('GroupRole')
+      .get();
+    const leaders = await Promise.all(
+      members.map(({ personId }) => Person.getFromId(personId))
+    );
+    return leaders.length ? leaders : null;
   };
 
   addMemberAttendance = async (id) => {
@@ -91,11 +148,16 @@ export default class Group extends baseGroup.dataSource {
         }`
       )
       .andFilter(`GroupMemberStatus ne 'Inactive'`)
+      // Filter by Group Type Id up here
+      .andFilter(this.getGroupTypeIds().map((id) => `(GroupRole/GroupTypeId eq ${id})`).join(' or '))
       .get();
 
     // Get the actual group data for the groups above.
     const groups = await Promise.all(
-      groupAssociations.map(({ groupId: id }) => this.getFromId(id))
+      groupAssociations
+        // Temp solution for protected group ids
+        .filter(({ groupId }) => !EXCLUDE_IDS.includes(groupId))
+        .map(({ groupId: id }) => this.getFromId(id))
     );
 
     // Filter the groups to make sure we only pull those that are
