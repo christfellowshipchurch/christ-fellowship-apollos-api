@@ -72,6 +72,8 @@ build/
 storyLoader.js
 *.xcworkspacedata
 
+.vscode
+
 # sublime text settings
 *.sublime-project
 *.sublime-workspace
