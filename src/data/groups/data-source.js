@@ -13,7 +13,7 @@ const { createImageUrlFromGuid } = Utils;
  *  In order to launch the My Groups feature in time for the September, 2020 Fall
  *  Groups Launch, we needed a quick and easy way to exclude a specific subset of
  *  groups that are not intended to behave like a "small group"
- * 
+ *
  *  Long term "todo" is to filter by a specific group type OR to add a toggle inside
  *  of Rock that can be filtered on.
  */
@@ -39,7 +39,7 @@ const EXCLUDE_IDS = [
   241744,
   241745,
   1042531,
-]
+];
 
 export default class Group extends baseGroup.dataSource {
   getFromId = async (id) => {
@@ -144,12 +144,16 @@ export default class Group extends baseGroup.dataSource {
       .expand('GroupRole')
       .filter(
         `PersonId eq ${personId} ${
-        asLeader ? ' and GroupRole/IsLeader eq true' : ''
+          asLeader ? ' and GroupRole/IsLeader eq true' : ''
         }`
       )
       .andFilter(`GroupMemberStatus ne 'Inactive'`)
       // Filter by Group Type Id up here
-      .andFilter(this.getGroupTypeIds().map((id) => `(GroupRole/GroupTypeId eq ${id})`).join(' or '))
+      .andFilter(
+        this.getGroupTypeIds()
+          .map((id) => `(GroupRole/GroupTypeId eq ${id})`)
+          .join(' or ')
+      )
       .get();
 
     // Get the actual group data for the groups above.
@@ -179,8 +183,8 @@ export default class Group extends baseGroup.dataSource {
   getMatrixItemsFromId = async (id) =>
     id
       ? this.request('/AttributeMatrixItems')
-        .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
-        .get()
+          .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+          .get()
       : [];
 
   groupTypeMap = {
@@ -221,7 +225,7 @@ export default class Group extends baseGroup.dataSource {
       .first();
 
   getResources = async ({ attributeValues }) => {
-    const { ContentItem } = this.context.dataSources
+    const { ContentItem } = this.context.dataSources;
     const matrixAttributeValue = get(attributeValues, 'resources.value', '');
 
     const items = await this.getMatrixItemsFromId(matrixAttributeValue);
@@ -235,19 +239,22 @@ export default class Group extends baseGroup.dataSource {
 
           return {
             title: get(item, 'attributeValues.title.value'),
-            action: "READ_CONTENT",
-            relatedNode: { ...contentItem, __type: ContentItem.resolveType(item) }
-          }
+            action: 'READ_CONTENT',
+            relatedNode: {
+              ...contentItem,
+              __type: ContentItem.resolveType(item),
+            },
+          };
         }
 
         return {
           title: get(item, 'attributeValues.title.value'),
-          action: "OPEN_URL",
+          action: 'OPEN_URL',
           relatedNode: {
-            __type: "Url",
-            id: createGlobalId(get(item, 'attributeValues.url.value'), "Url"),
-            url: get(item, 'attributeValues.url.value')
-          }
+            __type: 'Url',
+            id: createGlobalId(get(item, 'attributeValues.url.value'), 'Url'),
+            url: get(item, 'attributeValues.url.value'),
+          },
         };
       })
     );
@@ -282,27 +289,18 @@ export default class Group extends baseGroup.dataSource {
     });
   };
 
-  getDateTimeFromiCalendarContent = async (schedule) => {
-    if (!schedule || !schedule.iCalendarContent) {
-      return { start: null, end: null };
-    }
-
-    const iCal = schedule.iCalendarContent;
-    const dateTimes = iCal.match(/DTEND:(\w+).*DTSTART:(\w+)/s);
-
-    return {
-      start: moment(dateTimes[2]).utc().format(),
-      end: moment(dateTimes[1]).utc().format(),
-    };
-  };
-
   getDateTimeFromId = async (id) => {
     const schedule = await this.getScheduleFromId(id);
     const { iCalendarContent, weeklyDayOfWeek, weeklyTimeOfDay } = schedule;
 
     // Use iCalendarContent if it exists else use weeklyDayOfWeek and weeklyTimeOfDay to create a start and end time for schedules.
     if (iCalendarContent !== '') {
-      return await this.getDateTimeFromiCalendarContent(schedule);
+      const occurrences = await this.context.dataSources.Schedule.getOccurrences(
+        schedule.id
+      );
+
+      const nextOccurrence = head(occurrences);
+      return { start: nextOccurrence.start, end: nextOccurrence.end };
     } else if (weeklyDayOfWeek !== null && weeklyTimeOfDay) {
       const proto = Object.getPrototypeOf(moment());
       proto.setTime = function (time) {
@@ -312,6 +310,7 @@ export default class Group extends baseGroup.dataSource {
       const time = moment()
         .weekday(weeklyDayOfWeek)
         .setTime(weeklyTimeOfDay)
+        .tz(ApollosConfig.ROCK.TIMEZONE)
         .utc()
         .format();
 
@@ -337,7 +336,7 @@ export default class Group extends baseGroup.dataSource {
       ''
     );
     if (zoomLink != '') {
-      const { DefinedValue } = this.context.dataSources
+      const { DefinedValue } = this.context.dataSources;
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
       const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
@@ -369,7 +368,7 @@ export default class Group extends baseGroup.dataSource {
       ''
     );
     if (zoomLink != '') {
-      const { DefinedValue } = this.context.dataSources
+      const { DefinedValue } = this.context.dataSources;
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
       const regexPasscode = zoomLink.match(/\?pwd=(\w+)/);
