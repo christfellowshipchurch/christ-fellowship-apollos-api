@@ -164,7 +164,7 @@ export default class Group extends baseGroup.dataSource {
     // active and NOT archived
     const filteredGroups = await Promise.all(
       groups.filter(
-        (group) => group.isActive === true && group.isArchived === false
+        (group) => group && group.isActive && !group.isArchived
       )
     );
 
