@@ -1,18 +1,30 @@
-import { liveSchema } from '@apollosproject/data-schema'
 import gql from 'graphql-tag'
 
+/**
+ * Copies the LiveStream schema from @apollos/data-schema-1.5.0
+ */
 export default gql`
-    type LiveStream {
-        isLive: Boolean @cacheControl(maxAge: 10)
-        eventStartTime: String
-        media: VideoMedia
-        webViewUrl: String
-        contentItem: ContentItem @cacheControl(maxAge: 10)
+    # TODO : move this to its own directory when it's production ready
+    type ChatChannel {
+        name: String!
+        channelID: String!
+        
+        # maybe..? might be unecessary but thought I would throw it in there
+        members: [Person]
+    }
 
-        chatChannelId: String
-    }    
+    interface ChatChannelNode {
+        chatChannel: ChatChannel
+    }
 
-    ${liveSchema}
+    extend type LiveStream implements ChatChannelNode
+
+    interface LiveNode {
+        liveStream: LiveStream
+    }
+
+    extend EventContentItem implements LiveNode
+    #
 
     type LiveStream implements Node {
         id: ID!
@@ -26,6 +38,10 @@ export default gql`
         relatedNode: Node
     }
 
+    extend type WeekendContentItem {
+        liveStream: LiveStream
+    }
+
     type FloatLeftLiveStream {
         start: String
         isLive: Boolean
@@ -37,5 +53,9 @@ export default gql`
     extend type Query {
         floatLeftLiveStream: LiveStream
         floatLeftEmptyLiveStream: LiveStream
+
+        liveStream: LiveStream
+            @deprecated(reason: "Use liveStreams, there may be multiple.")
+        liveStreams: [LiveStream] @cacheControl(maxAge: 10)
     }
 `
