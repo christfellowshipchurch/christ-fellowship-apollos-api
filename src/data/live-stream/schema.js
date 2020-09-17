@@ -30,7 +30,8 @@ export default gql`
         eventEndTime: String
         media: VideoMedia
         webViewUrl: String
-        contentItem: ContentItem @cacheControl(maxAge: 10) @deprecated(reason: "LiveStreams are not limited to ContentItems. Please use 'relatedNode' instead.")
+        contentItem: ContentItem @cacheControl(maxAge: 10) 
+            @deprecated(reason: "LiveStreams are not limited to ContentItems. Please use 'relatedNode' instead.")
 
         relatedNode: Node
     }
