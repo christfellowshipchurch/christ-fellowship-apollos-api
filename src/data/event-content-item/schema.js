@@ -1,7 +1,8 @@
 import gql from 'graphql-tag'
 
 export default gql`
-  type EventInstanceCategory {
+  ## Describes where and when a collection of events is happening
+  type EventLocation {
     name: String
     instances: [Event]
   }
@@ -30,19 +31,26 @@ export default gql`
     parentChannel: ContentChannel
     theme: Theme
 
-    nextOccurrence: String @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
-    startDate: String @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
-    endDate: String @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
+    nextOccurrence: String 
+      @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
+    startDate: String 
+      @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
+    endDate: String 
+      @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
 
     tags: [String]
-    callsToAction: [CallToAction] @deprecated(reason: "Updating to use FeatureAction to better adhere to navigation standards. Please use 'actions' instead.")
-    openLinksInNewTab: Boolean @deprecated(reason: "Label will now be explicitly defined on the API")
-    hideLabel: Boolean @deprecated(reason: "Label will now be explicitly defined on the API")
-    events: [Event] @deprecated(reason: "We have updated the organization of the events schema. Please use 'categories' instead.")
+    callsToAction: [CallToAction] 
+      @deprecated(reason: "Updating to use FeatureAction to better adhere to navigation standards. Please use 'actions' instead.")
+    openLinksInNewTab: Boolean 
+      @deprecated(reason: "Label will now be explicitly defined on the API")
+    hideLabel: Boolean 
+      @deprecated(reason: "Label will now be explicitly defined on the API")
+    events: [Event] 
+      @deprecated(reason: "We have updated the organization of the events schema. Please use 'categories' instead.")
 
     # This label is an additional
     label: String
-    categories: [EventInstanceCategories]
+    eventLocations: [EventLocation]
   }
 `
 
