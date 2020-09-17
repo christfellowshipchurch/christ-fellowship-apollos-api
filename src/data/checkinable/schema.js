@@ -8,7 +8,17 @@ export default gql`
         isCheckedIn: Boolean @cacheControl(maxAge: 10)
     }
 
+    interface CheckInableNode {
+        checkin: CheckInable
+    }
+
+    extend type EventContentItem implements CheckInable
     extend type EventContentItem {
+        checkin: CheckInable
+    }
+
+    extend type LiveStream implements CheckInable
+    extend type LiveStream {
         checkin: CheckInable
     }
 

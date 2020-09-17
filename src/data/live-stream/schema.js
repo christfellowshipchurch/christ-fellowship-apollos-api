@@ -4,24 +4,11 @@ import gql from 'graphql-tag'
  * Copies the LiveStream schema from @apollos/data-schema-1.5.0
  */
 export default gql`
-    # TODO : move this to its own directory when it's production ready
-    type ChatChannel {
-        name: String!
-        channelID: String!
-    }
-
-    interface ChatChannelNode {
-        chatChannel: ChatChannel
-    }
-
-    extend type LiveStream implements ChatChannelNode
-
     interface LiveNode {
         liveStream: LiveStream
     }
 
-    extend EventContentItem implements LiveNode
-    #
+    extend type EventContentItem implements LiveNode
 
     type LiveStream implements Node {
         id: ID!

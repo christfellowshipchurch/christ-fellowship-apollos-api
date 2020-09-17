@@ -2,7 +2,7 @@ import gql from 'graphql-tag'
 
 export default gql`
   ## Describes where and when a collection of events is happening
-  type EventLocation {
+  type EventGrouping {
     name: String
     instances: [Event]
   }
@@ -50,7 +50,7 @@ export default gql`
 
     # This label is an additional
     label: String
-    eventLocations: [EventLocation]
+    eventGroupings: [EventGrouping]
   }
 `
 
