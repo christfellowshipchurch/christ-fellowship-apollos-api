@@ -8,9 +8,6 @@ export default gql`
     type ChatChannel {
         name: String!
         channelID: String!
-        
-        # maybe..? might be unecessary but thought I would throw it in there
-        members: [Person]
     }
 
     interface ChatChannelNode {
