@@ -1,14 +1,16 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
 export default gql`
-    type ChatChannel {
-        name: String!
-        channelID: String!
-    }
+  type ChatChannel {
+    name: String!
+    channelID: String!
+  }
 
-    interface ChatChannelNode {
-        chatChannel: ChatChannel
-    }
+  interface ChatChannelNode {
+    chatChannel: ChatChannel
+  }
 
-    extend type LiveStream implements ChatChannelNode
-`
+  extend type LiveStream implements ChatChannelNode {
+    chatChannel: ChatChannel
+  }
+`;
