@@ -21,6 +21,6 @@ export default gql`
   }
 
   extend type Mutation {
-    checkInCurrentUser(id: ID!): CheckInableNode
+    checkInCurrentUser(id: ID!): CheckInable
   }
 `;
