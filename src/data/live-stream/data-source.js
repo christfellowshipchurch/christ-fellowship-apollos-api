@@ -1,7 +1,8 @@
 import { dataSource as matrixItemDataSource } from '../matrix-item'
 import moment from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
-import { split, filter, get, find, flatten } from 'lodash'
+import { createGlobalId } from '@apollosproject/server-core'
+import { split, filter, get, find, flatten, flattenDeep } from 'lodash'
 
 import { getIdentifierType } from '../utils'
 
@@ -37,39 +38,43 @@ export default class LiveStream extends matrixItemDataSource {
   };
 
   getRelatedNodeFromId = async (id) => {
-    const attributeMatrix = await this.request(`/AttributeMatrixItems`)
+    const attributeMatrixItem = await this.request(`/AttributeMatrixItems`)
       .expand('AttributeMatrix')
       .filter(`Id eq ${id}`)
       .select(`AttributeMatrix/Guid`)
       .first()
-
-    console.log({ attributeMatrix })
+    const { attributeMatrix } = attributeMatrixItem
 
     if (attributeMatrix) {
       const attributeValue = await this.request('/AttributeValues')
         .expand('Attribute')
         .filter(`Value eq '${attributeMatrix.guid}'`)
-        .andFilter(`(EntityTypeId eq 208)`) // append for specific EntityTypes that are supported
+        .andFilter(`(Attribute/EntityTypeId eq 208)`) // append for specific EntityTypes that are supported
         .select('EntityId, Attribute/EntityTypeId')
         .first()
-
-      console.log({ attributeValue })
 
       if (attributeValue) {
         const { ContentItem } = this.context.dataSources
         const { entityId, attribute } = attributeValue
         const { entityTypeId } = attribute
 
-        console.log({ attributeValue, entityId, attribute, entityTypeId })
-
         switch (entityTypeId) {
           case 208: // Entity Type Id for Content Item
-            return ContentItem.getFromId(entityId)
+            const contentItem = await ContentItem.getFromId(entityId)
+
+            const resolvedType = ContentItem.resolveType(contentItem)
+            const globalId = createGlobalId(entityId, resolvedType)
+
+            return ({
+              ...contentItem,
+              globalId
+            })
           default:
             return null
         }
       }
     }
+
     return null
   }
 
@@ -141,14 +146,39 @@ export default class LiveStream extends matrixItemDataSource {
     const { Event, Schedule } = this.context.dataSources
     const TEMPLATE_ID = 11
 
-    const attributeMatrix = await this.request('/AttributeMatrixItems')
-      .expand('AttributeMatrix')
-      .filter(`AttributeMatrix/AttributeMatrixTemplateId eq ${TEMPLATE_ID}`)
+    // Get Attribute Matrix by Template Id
+    const attributeMatrices = await this.request('/AttributeMatrices')
+      .filter(`AttributeMatrixTemplateId eq ${TEMPLATE_ID}`)
+      .select('Guid')
       .get()
+
+    // Get Content Channel Items where Attribute Value is equal to Attribute Matrix Guid
+    const contentChannelItemPromises = await Promise.all(attributeMatrices.map(({ guid }) => {
+      const attributeKey = "LiveStreams"
+      const query = `attributeKey=${attributeKey}&value=${guid}`
+
+      return this.request(`/ContentChannelItems/GetByAttributeValue?${query}`)
+        .get()
+    }))
+
+    const contentChannelItems = flattenDeep(contentChannelItemPromises.filter(i => i.length))
+
+    // Get Attribute Matrix Items from the "filtered" Attribute Matrix Guids
+    const attributeMatrixItemPromises = await Promise.all(contentChannelItems.map(({ id, attributeValues }) => {
+      const attributeMatrixGuid = get(attributeValues, 'liveStreams.value')
+      return this.request('/AttributeMatrixItems')
+        .expand('AttributeMatrix')
+        .filter(`AttributeMatrix/${getIdentifierType(attributeMatrixGuid).query}`)
+        .transform((results) => results.map(n =>
+          ({ ...n, contentChannelItemId: id }))
+        )
+        .get()
+    }))
+    const attributeMatrixItems = flattenDeep(attributeMatrixItemPromises)
 
     const upcomingOrLive = []
 
-    await Promise.all(attributeMatrix.map(async matrixItem => {
+    await Promise.all(attributeMatrixItems.map(async matrixItem => {
       const scheduleGuid = get(matrixItem, "attributeValues.schedule.value")
 
       if (scheduleGuid) {
@@ -171,12 +201,6 @@ export default class LiveStream extends matrixItemDataSource {
         if (moment().isAfter(end)) return
 
         const scheduleInstances = await Schedule.parseiCalendar(schedule.iCalendarContent)
-
-        console.log({
-          scheduleInstances,
-          filtered: scheduleInstances
-            .filter(instance => moment().isSameOrBefore(instance.end))
-        })
 
         upcomingOrLive.push(...scheduleInstances
           .filter(instance => moment().isSameOrBefore(instance.end))
@@ -213,7 +237,7 @@ export default class LiveStream extends matrixItemDataSource {
             sources: [{ uri: get(contentItem, 'attributeValues.liveStreamUri.value', '') }]
           },
           webViewUrl: get(contentItem, 'attributeValues.liveStreamUri.value', ''),
-          contentItem
+          contentChannelItemId: contentItem.id
         })
       })
     }
