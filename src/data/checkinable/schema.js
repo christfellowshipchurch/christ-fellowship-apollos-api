@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server'
+import { gql } from 'apollo-server';
 
 export default gql`
     type CheckInable implements Node {
@@ -22,7 +22,8 @@ export default gql`
         checkin: CheckInable
     }
 
+
     extend type Mutation {
         checkInCurrentUser(id: ID!): CheckInable
     }
-`
+`;

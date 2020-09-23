@@ -1,4 +1,4 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
 /**
  * Copies the LiveStream schema from @apollos/data-schema-1.5.0
