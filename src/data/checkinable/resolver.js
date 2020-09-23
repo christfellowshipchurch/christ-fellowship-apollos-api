@@ -4,6 +4,10 @@ import ApollosConfig from '@apollosproject/config'
 import { get } from 'lodash'
 
 const resolver = {
+    CheckInableNode: {
+        __resolveType: ({ __typename, __type }, args, resolveInfo) =>
+            __typename || resolveInfo.schema.getType(__type)
+    },
     CheckInable: {
         __resolveType: ({ __typename }) => __typename,
         id: ({ id }, args, context, { parentType }) =>

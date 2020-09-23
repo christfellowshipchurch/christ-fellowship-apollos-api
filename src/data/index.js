@@ -42,7 +42,6 @@ import * as Auth from './auth';
 import * as Browse from './browse';
 import * as Cache from './redis-cache';
 import * as Campus from './campus';
-import * as ChatChannel from './chat-channel';
 import * as CheckInable from './checkinable';
 import * as ContentChannel from './content-channel';
 import * as ContentItem from './content-item';
@@ -82,7 +81,6 @@ const data = {
   Browse,
   Cache,
   Campus,
-  ChatChannel,
   CheckInable,
   ContentChannel,
   ContentItem,

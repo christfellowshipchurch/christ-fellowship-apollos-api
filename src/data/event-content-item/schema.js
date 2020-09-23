@@ -46,7 +46,7 @@ export default gql`
     hideLabel: Boolean 
       @deprecated(reason: "Label will now be explicitly defined on the API")
     events: [Event] 
-      @deprecated(reason: "We have updated the organization of the events schema. Please use 'categories' instead.")
+      @deprecated(reason: "We have updated the organization of the events schema. Please use 'eventGroupings' instead.")
 
     # This label is an additional
     label: String

@@ -1,9 +1,28 @@
-import { resolverMerge } from '@apollosproject/server-core'
+import { resolverMerge, createGlobalId } from '@apollosproject/server-core'
 import * as coreLiveStream from '@apollosproject/data-connector-church-online'
 import moment from 'moment'
 
 const resolver = {
-  LiveStream: coreLiveStream.resolver.LiveStream,
+  LiveNode: {
+    __resolveType: ({ __typename, __type }, args, resolveInfo) =>
+      __typename || resolveInfo.schema.getType(__type)
+  },
+  LiveStream: {
+    id: ({ id, eventStartTime, eventEndTime }, args, context, { parentType }) =>
+      createGlobalId(JSON.stringify({ id, eventStartTime, eventEndTime }), parentType.name),
+    isLive: ({ id, eventStartTime, eventEndTime }) =>
+      moment().isBetween(eventStartTime, eventEndTime),
+    relatedNode: ({ id, guid }, args, { dataSources }) => {
+      if (id) {
+        const { LiveStream } = dataSources
+
+        return LiveStream.getRelatedNodeFromId(id)
+      }
+    },
+    chatChannelId: ({ id, eventStartTime, eventEndTime }) => {
+      //
+    },
+  },
   Query: {
     floatLeftLiveStream: (root, args, { dataSources }) => ({
       isLive: true,

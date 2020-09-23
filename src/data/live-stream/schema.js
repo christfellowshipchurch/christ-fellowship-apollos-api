@@ -9,6 +9,9 @@ export default gql`
     }
 
     extend type EventContentItem implements LiveNode
+    extend type EventContentItem {
+        liveStream: LiveStream
+    }
 
     type LiveStream implements Node {
         id: ID!
@@ -21,6 +24,8 @@ export default gql`
             @deprecated(reason: "LiveStreams are not limited to ContentItems. Please use 'relatedNode' instead.")
 
         relatedNode: Node
+
+        chatChannelId: String
     }
 
     extend type WeekendContentItem {

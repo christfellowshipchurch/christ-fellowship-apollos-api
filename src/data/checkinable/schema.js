@@ -12,12 +12,12 @@ export default gql`
         checkin: CheckInable
     }
 
-    extend type EventContentItem implements CheckInable
+    extend type EventContentItem implements CheckInableNode
     extend type EventContentItem {
         checkin: CheckInable
     }
 
-    extend type LiveStream implements CheckInable
+    extend type LiveStream implements CheckInableNode
     extend type LiveStream {
         checkin: CheckInable
     }
