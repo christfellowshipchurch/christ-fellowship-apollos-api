@@ -6,11 +6,14 @@ import { get } from 'lodash'
 const resolver = {
   LiveNode: {
     __resolveType: ({ __typename, __type }, args, resolveInfo) =>
-      __typename || resolveInfo.schema.getType(__type)
+      __typename || resolveInfo.schema.getType(__type),
   },
   LiveStream: {
     id: ({ id, eventStartTime, eventEndTime }, args, context, { parentType }) =>
-      createGlobalId(JSON.stringify({ id, eventStartTime, eventEndTime }), parentType.name),
+      createGlobalId(
+        JSON.stringify({ id, eventStartTime, eventEndTime }),
+        parentType.name
+      ),
     isLive: ({ id, eventStartTime, eventEndTime }) =>
       moment().isBetween(eventStartTime, eventEndTime),
     media: ({ attributeValues }) => {
@@ -28,28 +31,34 @@ const resolver = {
       if (contentChannelItemId) {
         const { ContentItem } = dataSources;
 
-        return ContentItem.getFromId(contentChannelItemId)
+        return ContentItem.getFromId(contentChannelItemId);
       }
 
-      return null
+      return null;
     },
-    relatedNode: async ({ id, contentChannelItemId }, _, { models, dataSources }, resolveInfo) => {
+    relatedNode: async (
+      { id, contentChannelItemId },
+      _,
+      { models, dataSources },
+      resolveInfo
+    ) => {
       try {
-        let globalId = ""
+        let globalId = '';
 
         // If we know that the related node is a content channel item, let's just query for that
         if (contentChannelItemId) {
-          const { ContentItem } = dataSources
-          const contentItem = await ContentItem.getFromId(contentChannelItemId)
+          const { ContentItem } = dataSources;
+          const contentItem = await ContentItem.getFromId(contentChannelItemId);
 
-          const resolvedType = ContentItem.resolveType(contentItem)
-          globalId = createGlobalId(contentChannelItemId, resolvedType)
-        } else if (id) { // If we don't know the related node type, we need to manually figure it out
-          const { LiveStream } = dataSources
-          const unresolvedNode = await LiveStream.getRelatedNodeFromId(id)
+          const resolvedType = ContentItem.resolveType(contentItem);
+          globalId = createGlobalId(contentChannelItemId, resolvedType);
+        } else if (id) {
+          // If we don't know the related node type, we need to manually figure it out
+          const { LiveStream } = dataSources;
+          const unresolvedNode = await LiveStream.getRelatedNodeFromId(id);
 
-          const { globalId: relatedNodeGlobalId } = unresolvedNode
-          globalId = relatedNodeGlobalId
+          const { globalId: relatedNodeGlobalId } = unresolvedNode;
+          globalId = relatedNodeGlobalId;
         }
 
         return await models.Node.get(globalId, dataSources, resolveInfo);
@@ -61,8 +70,14 @@ const resolver = {
     chatChannelId: ({ id, eventStartTime, eventEndTime }) => {
       //
     },
-    checkin: ({ id }, args, { dataSources: { CheckInable } }, { parentType }) =>
-      CheckInable.getByContentItem(id),
+    checkin: ({ attributeValues }, args, { dataSources: { CheckInable } }) => {
+      const groupId = get(attributeValues, 'checkInGroup.value', '');
+      const scheduleId = get(attributeValues, 'schedule.value', '');
+      return CheckInable.getByIdentifiers({
+        groupIdentifier: groupId,
+        scheduleIdentifiers: [scheduleId],
+      });
+    },
   },
   Query: {
     floatLeftLiveStream: (root, args, { dataSources }) => ({
