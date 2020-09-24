@@ -17,8 +17,6 @@ const resolver = {
     isLive: ({ id, eventStartTime, eventEndTime }) =>
       moment().isBetween(eventStartTime, eventEndTime),
     media: ({ attributeValues }) => {
-      console.log({ attributeValues })
-
       const liveStreamUrl = get(attributeValues, 'liveStreamUrl.value')
 
       if (liveStreamUrl) {
