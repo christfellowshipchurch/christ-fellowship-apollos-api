@@ -26,7 +26,8 @@ const resolver = {
       message: ContentItem.generateShareMessage(root),
     }),
     checkin: ({ id }, args, { dataSources: { CheckInable } }, { parentType }) =>
-      CheckInable.getByContentItem(id),
+      null,
+    // CheckInable.getByContentItem(id),
     label: async ({ attributeValues }, args, { dataSources: { MatrixItem, Event, Schedule } }) => {
       // Get Matrix Items
       const matrixGuid = get(attributeValues, 'schedules.value', '')

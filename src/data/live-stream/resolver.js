@@ -1,6 +1,7 @@
 import { resolverMerge, createGlobalId } from '@apollosproject/server-core'
 import * as coreLiveStream from '@apollosproject/data-connector-church-online'
 import moment from 'moment'
+import { get } from 'lodash'
 
 const resolver = {
   LiveNode: {
@@ -12,6 +13,17 @@ const resolver = {
       createGlobalId(JSON.stringify({ id, eventStartTime, eventEndTime }), parentType.name),
     isLive: ({ id, eventStartTime, eventEndTime }) =>
       moment().isBetween(eventStartTime, eventEndTime),
+    media: ({ attributeValues }) => {
+      console.log({ attributeValues })
+
+      const liveStreamUrl = get(attributeValues, 'liveStreamUrl.value')
+
+      if (liveStreamUrl) {
+        return { sources: [{ uri: liveStreamUrl }] }
+      }
+
+      return null
+    },
     contentItem: ({ contentChannelItemId }, _, { models, dataSources }) => {
       if (contentChannelItemId) {
         const { ContentItem } = dataSources;

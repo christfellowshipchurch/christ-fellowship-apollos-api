@@ -2,7 +2,7 @@ import { dataSource as matrixItemDataSource } from '../matrix-item'
 import moment from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
-import { split, filter, get, find, flatten, flattenDeep } from 'lodash'
+import { split, filter, get, find, flatten, flattenDeep, uniqBy } from 'lodash'
 
 import { getIdentifierType } from '../utils'
 
@@ -203,7 +203,8 @@ export default class LiveStream extends matrixItemDataSource {
         const scheduleInstances = await Schedule.parseiCalendar(schedule.iCalendarContent)
 
         upcomingOrLive.push(...scheduleInstances
-          .filter(instance => moment().isSameOrBefore(instance.end))
+          // .filter(instance => moment().isSameOrBefore(instance.end)) // returns all live or upcoming
+          .filter(instance => moment().isBetween(moment(instance.start), moment(instance.end))) // returns only live
           .map(({ start, end }) => ({ ...matrixItem, eventStartTime: start, eventEndTime: end }))
         )
       }
@@ -211,7 +212,11 @@ export default class LiveStream extends matrixItemDataSource {
       return
     }))
 
-    return upcomingOrLive
+    /**
+     * Weird bug where some schedules were being returned twice.
+     * This filters to make sure we're only returning a Live Stream instance once
+     */
+    return uniqBy(upcomingOrLive, (elem) => [elem.id, elem.eventStartTime, elem.eventEndTime].join())
   }
 
   async getLiveStreams() {
@@ -237,7 +242,12 @@ export default class LiveStream extends matrixItemDataSource {
             sources: [{ uri: get(contentItem, 'attributeValues.liveStreamUri.value', '') }]
           },
           webViewUrl: get(contentItem, 'attributeValues.liveStreamUri.value', ''),
-          contentChannelItemId: contentItem.id
+          contentChannelItemId: contentItem.id,
+          attributeValues: {
+            liveStreamUrl: {
+              value: get(contentItem, 'attributeValues.liveStreamUri.value', '')
+            }
+          }
         })
       })
     }
