@@ -339,7 +339,6 @@ FEATURE_FLAGS:
     securityGroupId: 1014843 # CFDP Experimental Features
     status: 'LIVE'
   GROUPS:
-    securityGroupId: 1014843 # CFDP Experimental Features
     status: 'LIVE'
   ROCK_DYNAMIC_FEED_WITH_PERSONAS:
     status: 'LIVE'
