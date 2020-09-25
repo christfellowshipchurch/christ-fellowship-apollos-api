@@ -1,9 +1,26 @@
-import { resolverMerge } from '@apollosproject/server-core'
+import { createGlobalId, resolverMerge } from '@apollosproject/server-core'
 import * as coreLiveStream from '@apollosproject/data-connector-church-online'
+import { get } from 'lodash';
+import crypto from 'crypto-js'
 import moment from 'moment'
 
 const resolver = {
-  LiveStream: coreLiveStream.resolver.LiveStream,
+  LiveStream: {
+    ...coreLiveStream.resolver.LiveStream,
+    chatChannelId: async (root, args, { dataSources }) => {
+      const { ContentItem } = dataSources;
+
+      const id = get(root, 'contentItem.id');
+      const contentItem = await ContentItem.getFromId(id);
+
+      const resolvedType = ContentItem.resolveType(contentItem);
+      const globalId = createGlobalId(id, resolvedType);
+
+      const startTime = get(root, 'contentItem.nextOccurrences[0].start');
+      const endTime = get(root, 'contentItem.nextOccurrences[0].end');
+      return crypto.SHA1(`${globalId}${startTime}${endTime}`).toString();
+    },
+  },
   Query: {
     floatLeftLiveStream: (root, args, { dataSources }) => ({
       isLive: true,
