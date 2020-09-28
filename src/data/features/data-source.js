@@ -5,7 +5,7 @@ import {
 import {
     get,
     split,
-    filter
+    flattenDeep
 } from 'lodash'
 import moment from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
@@ -28,14 +28,16 @@ export default class Feature extends coreFeatures.dataSource {
         ALL_LIVE_CONTENT: this.allLiveStreamContentAlgorithm,
         CONTENT_CHANNEL: this.contentChannelAlgorithmWithActionOverride,
         CONTENT_CHILDREN: this.contentChildrenAlgorithm,
+        CURRENT_USER: this.currentUserAlgorithm,
+        CURRENT_USER_FAMILY: this.currentUserFamilyAlgorithm,
         GLOBAL_CONTENT: this.globalContentAlgorithm,
         MY_GROUPS: this.myGroupsAlgorithm,
         MY_PRAYERS: this.myPrayersAlgorithm,
+        MY_VOLUNTEER_GROUPS: this.myVolunteerGroupsAlgorithm,
         PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride,
         ROCK_DYNAMIC_FEED: this.rockDynamicFeed,
         SERMON_CHILDREN: this.sermonChildrenAlgorithm,
         UPCOMING_EVENTS: this.upcomingEventsAlgorithmWithActionOverride,
-        CURRENT_USER: this.currentUserAlgorithm
     }).reduce((accum, [key, value]) => {
         // convenciance code to make sure all methods are bound to the Features dataSource
         // eslint-disable-next-line
@@ -69,6 +71,17 @@ export default class Feature extends coreFeatures.dataSource {
         const { Auth } = this.context.dataSources
 
         return Auth.getCurrentPerson()
+    }
+
+    async currentUserFamilyAlgorithm() {
+        // Get the spouse first and then display the children underneath
+        const { Person } = this.context.dataSources
+        const family = await Promise.all([
+            Person.getSpouseByUser(),
+            Person.getChildrenByUser(),
+        ])
+
+        return flattenDeep(family).filter(p => !!p)
     }
 
     async contentChannelAlgorithmWithActionOverride({ action = null, contentChannelId, limit = null } = {}) {
@@ -194,6 +207,36 @@ export default class Feature extends coreFeatures.dataSource {
         });
     }
 
+    async myVolunteerGroupsAlgorithm({ limit = null } = {}) {
+        const { Group, Auth, ContentItem } = this.context.dataSources
+
+        try {
+            const { id } = await Auth.getCurrentPerson()
+            const groups = await Group.getByPersonByTypeId({
+                personId: id,
+                typeId: ROCK_MAPPINGS.GROUP_TYPE_IDS.DREAM_TEAM,
+            })
+
+            return groups.map((item, i) => {
+                return ({
+                    id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                    title: Group.getTitle(item),
+                    relatedNode: {
+                        __type: "Group",
+                        ...item
+                    },
+                    image: null,
+                    action: 'READ_GROUP',
+                    subtitle: ""
+                })
+            });
+        } catch (e) {
+            console.log("Error getting Groups for current user. User likely not logged in", { e })
+        }
+
+        return []
+    }
+
     async personaFeedAlgorithmWithActionOverride({ action = null } = {}) {
         const personaFeed = await this.personaFeedAlgorithm()
 
@@ -215,7 +258,7 @@ export default class Feature extends coreFeatures.dataSource {
     }
 
     /** Create Features */
-    createActionRowFeature({ actions }) {
+    createActionBarFeature({ actions }) {
         return {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
@@ -370,7 +413,7 @@ export default class Feature extends coreFeatures.dataSource {
                 .map((featureConfig) => {
                     switch (featureConfig.type) {
                         case 'ActionBar':
-                            return this.createActionRowFeature(featureConfig);
+                            return this.createActionBarFeature(featureConfig);
                         case 'AvatarList':
                             return this.createAvatarListFeature(featureConfig);
                         case 'HeroList':

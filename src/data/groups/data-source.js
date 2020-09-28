@@ -77,6 +77,7 @@ export default class Group extends baseGroup.dataSource {
     const members = await this.request('GroupMembers')
       .andFilter(`GroupId eq ${groupId}`)
       .andFilter(`GroupMemberStatus eq '1'`)
+      .top(10)
       .get();
     return Promise.all(
       members.map(({ personId }) => Person.getFromId(personId))
@@ -89,6 +90,7 @@ export default class Group extends baseGroup.dataSource {
       .filter(`GroupId eq ${groupId}`)
       .andFilter('GroupRole/IsLeader eq true')
       .andFilter(`GroupMemberStatus eq '1'`)
+      .top(10)
       .expand('GroupRole')
       .get();
     const leaders = await Promise.all(
@@ -144,7 +146,7 @@ export default class Group extends baseGroup.dataSource {
       .expand('GroupRole')
       .filter(
         `PersonId eq ${personId} ${
-          asLeader ? ' and GroupRole/IsLeader eq true' : ''
+        asLeader ? ' and GroupRole/IsLeader eq true' : ''
         }`
       )
       .andFilter(`GroupMemberStatus ne 'Inactive'`)
@@ -180,11 +182,49 @@ export default class Group extends baseGroup.dataSource {
     );
   };
 
+  getByPersonByTypeId = async ({ personId, typeId = null, asLeader = false }) => {
+    if (!typeId) return []
+
+    // Get the active groups that the person is a member of.
+    // Conditionally filter that list of groups on whether or not your
+    // role in that group is that of "Leader".
+    const groupAssociations = await this.request('GroupMembers')
+      .expand('GroupRole')
+      .filter(
+        `PersonId eq ${personId} ${
+        asLeader ? ' and GroupRole/IsLeader eq true' : ''
+        }`
+      )
+      .andFilter(`GroupMemberStatus ne 'Inactive'`)
+      // Filter by Group Type Id up here
+      .andFilter(`GroupRole/GroupTypeId eq ${typeId}`)
+      .get();
+
+    // Get the actual group data for the groups above.
+    const groups = await Promise.all(
+      groupAssociations
+        // Temp solution for protected group ids
+        .filter(({ groupId }) => !EXCLUDE_IDS.includes(groupId))
+        .map(({ groupId: id }) => this.getFromId(id))
+    );
+
+    // Filter the groups to make sure we only pull those that are
+    // active and NOT archived
+    const filteredGroups = await Promise.all(
+      groups.filter(
+        (group) => group && group.isActive && !group.isArchived
+      )
+    );
+
+    // Remove the groups that aren't of the types we want and return.
+    return filteredGroups;
+  };
+
   getMatrixItemsFromId = async (id) =>
     id
       ? this.request('/AttributeMatrixItems')
-          .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
-          .get()
+        .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+        .get()
       : [];
 
   groupTypeMap = {
@@ -290,6 +330,8 @@ export default class Group extends baseGroup.dataSource {
   };
 
   getDateTimeFromId = async (id) => {
+    if (!id) return null
+
     const schedule = await this.getScheduleFromId(id);
     const { iCalendarContent, weeklyDayOfWeek, weeklyTimeOfDay } = schedule;
 
