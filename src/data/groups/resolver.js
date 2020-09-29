@@ -2,6 +2,9 @@ import { Group as baseGroup } from '@apollosproject/data-connector-rock';
 import { resolverMerge, parseGlobalId } from '@apollosproject/server-core';
 
 const resolver = {
+  GroupType: {
+    __resolveType: () => "GroupType"
+  },
   Group: {
     title: (root, args, { dataSources }) => dataSources.Group.getTitle(root),
     summary: ({ description }, args, { dataSources }) => description,

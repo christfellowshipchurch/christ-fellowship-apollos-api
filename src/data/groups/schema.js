@@ -49,22 +49,49 @@ export const groupSchema = gql`
     labelText: String
   }
 
-  type Group implements Node {
-    id: ID!
-    allowMessages: String
-    avatars: [String]
-    coverImage: ImageMedia
-    dateTime: DateTime
+  # TODO : probably need a better name for this
+  interface GroupType {
+    title: String
+    summary: String
+    groupType: String
     groupResources: [Resource]
+    coverImage: ImageMedia
+    avatars: [String]
+    leaders: [Person]
+    members: [Person]
+  }
+
+  type Group implements GroupType & Node {
+    id: ID!
+
+    title: String
+    summary: String
     groupType: String
     leaders: [Person]
     members: [Person]
+    coverImage: ImageMedia
+    groupResources: [Resource]
+    avatars: [String]
+
+    allowMessages: String
+    dateTime: DateTime
     parentVideoCall: VideoCallParams
     phoneNumbers: [String]
     schedule: Schedule
-    summary: String
-    title: String
     videoCall: VideoCallParams
+  }
+
+  type VolunteerGroup implements GroupType & Node {
+    id: ID!
+
+    title: String
+    summary: String
+    groupType: String
+    leaders: [Person]
+    members: [Person]
+    coverImage: ImageMedia
+    groupResources: [Resource]
+    avatars: [String]
   }
 
   extend type Person {
