@@ -144,7 +144,7 @@ export default class Group extends baseGroup.dataSource {
       .expand('GroupRole')
       .filter(
         `PersonId eq ${personId} ${
-          asLeader ? ' and GroupRole/IsLeader eq true' : ''
+        asLeader ? ' and GroupRole/IsLeader eq true' : ''
         }`
       )
       .andFilter(`GroupMemberStatus ne 'Inactive'`)
@@ -183,8 +183,8 @@ export default class Group extends baseGroup.dataSource {
   getMatrixItemsFromId = async (id) =>
     id
       ? this.request('/AttributeMatrixItems')
-          .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
-          .get()
+        .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+        .get()
       : [];
 
   groupTypeMap = {
@@ -308,9 +308,9 @@ export default class Group extends baseGroup.dataSource {
         return this.set({ hour, minute, seconds });
       };
       const time = moment()
+        .tz(ApollosConfig.ROCK.TIMEZONE)
         .weekday(weeklyDayOfWeek)
         .setTime(weeklyTimeOfDay)
-        .tz(ApollosConfig.ROCK.TIMEZONE)
         .utc()
         .format();
 
