@@ -50,7 +50,7 @@ export const groupSchema = gql`
   }
 
   # TODO : probably need a better name for this
-  interface GroupType {
+  interface GroupItem {
     title: String
     summary: String
     groupType: String
@@ -61,7 +61,7 @@ export const groupSchema = gql`
     members: [Person]
   }
 
-  type Group implements GroupType & Node {
+  type Group implements GroupItem & Node {
     id: ID!
 
     title: String
@@ -81,7 +81,7 @@ export const groupSchema = gql`
     videoCall: VideoCallParams
   }
 
-  type VolunteerGroup implements GroupType & Node {
+  type VolunteerGroup implements GroupItem & Node {
     id: ID!
 
     title: String
