@@ -138,7 +138,12 @@ export default class Group extends baseGroup.dataSource {
     }
   };
 
-  getByPerson = async ({ personId, type = null, asLeader = false, groupTypeIds = null }) => {
+  getByPerson = async ({
+    personId,
+    type = null,
+    asLeader = false,
+    groupTypeIds = null
+  }) => {
     // Get the active groups that the person is a member of.
     // Conditionally filter that list of groups on whether or not your
     // role in that group is that of "Leader".

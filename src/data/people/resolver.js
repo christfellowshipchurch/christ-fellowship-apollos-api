@@ -1,43 +1,15 @@
 import { Person as corePerson } from '@apollosproject/data-connector-rock'
 import { resolverMerge } from '@apollosproject/server-core'
 import ApollosConfig from '@apollosproject/config'
-import { get, filter, find } from 'lodash'
+import { get, filter, find, difference } from 'lodash'
 import { Utils } from '@apollosproject/data-connector-rock'
 
 const { enforceCurrentUser, createImageUrlFromGuid } = Utils
 
 const resolver = {
     Person: {
-        photo: (root) => {
-            const guid = get(root, 'photo.guid')
-            return (guid && guid !== ''
-                ? { uri: createImageUrlFromGuid(guid) }
-                : { uri: "https://cloudfront.christfellowship.church/GetImage.ashx?guid=0ad7f78a-1e6b-46ad-a8be-baa0dbaaba8e" })
-        },
-        phoneNumber: enforceCurrentUser(async ({ id }, args, { dataSources }) => {
-            const phoneNumber = await dataSources.PhoneNumber.getByUser()
-
-            return phoneNumber
-                ? get(phoneNumber, 'number', '')
-                : ''
-        }),
         address: (root, args, { dataSources }) =>
             dataSources.Address.getByUser(),
-        ethnicity: enforceCurrentUser(({ id }, args, { dataSources }) =>
-            dataSources.Person.getAttributeByKey({
-                personId: id,
-                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.ETHNICITY')
-            })),
-        baptismDate: enforceCurrentUser(({ id }, args, { dataSources }) =>
-            dataSources.Person.getAttributeByKey({
-                personId: id,
-                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.BAPTISM_DATE')
-            })),
-        salvationDate: enforceCurrentUser(({ id }, args, { dataSources }) =>
-            dataSources.Person.getAttributeByKey({
-                personId: id,
-                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.SALVATION_DATE')
-            })),
         communicationPreferences: ({ emailPreference }, args, { dataSources }) => ({
             allowSMS: async () => {
                 const phoneNumber = await dataSources.PhoneNumber.getByUser()
@@ -48,7 +20,64 @@ const resolver = {
             },
             allowEmail: emailPreference < 2,
             allowPushNotifications: null
-        })
+        }),
+        baptismDate: enforceCurrentUser(({ id }, args, { dataSources }) =>
+            dataSources.Person.getAttributeByKey({
+                personId: id,
+                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.BAPTISM_DATE')
+            })),
+        ethnicity: enforceCurrentUser(({ id }, args, { dataSources }) =>
+            dataSources.Person.getAttributeByKey({
+                personId: id,
+                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.ETHNICITY')
+            })),
+        groups: enforceCurrentUser(({ id }, { input }, { dataSources }) => {
+            const { Group } = dataSources
+            let args = { personId: id }
+
+            if (input) {
+                const include = get(input, 'includeTypes', [])
+                const exclude = get(input, 'excludeTypes', [])
+
+                /**
+                 * Respect the include before the exclude
+                 * 
+                 * TODO : respect a combination of both include and exclude... maybe?
+                 */
+                if (include.length) {
+                    args.groupTypeIds = Object.keys(Group.groupTypeMap)
+                        .filter(key => include.includes(key))
+                        .map(key => Group.groupTypeMap[key])
+                } else if (exclude.length) {
+                    args.groupTypeIds = Object.keys(Group.groupTypeMap)
+                        .filter(key => !exclude.includes(key))
+                        .map(key => Group.groupTypeMap[key])
+                }
+
+                args.asLeader = get(input, 'asLeader', false)
+            }
+
+            return Group.getByPerson(args)
+        }),
+        phoneNumber: enforceCurrentUser(async ({ id }, args, { dataSources }) => {
+            const phoneNumber = await dataSources.PhoneNumber.getByUser()
+
+            return phoneNumber
+                ? get(phoneNumber, 'number', '')
+                : ''
+        }),
+        photo: (root) => {
+            const guid = get(root, 'photo.guid')
+            return (guid && guid !== ''
+                ? { uri: createImageUrlFromGuid(guid) }
+                : { uri: "https://cloudfront.christfellowship.church/GetImage.ashx?guid=0ad7f78a-1e6b-46ad-a8be-baa0dbaaba8e" })
+        },
+        salvationDate: enforceCurrentUser(({ id }, args, { dataSources }) =>
+            dataSources.Person.getAttributeByKey({
+                personId: id,
+                key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.SALVATION_DATE')
+            })),
+
     },
     Query: {
         getEthnicityList: (root, args, { dataSources }) =>

@@ -95,8 +95,14 @@ export const groupSchema = gql`
     avatars: [String]
   }
 
+  input GroupFilterInput {
+    includeTypes: [GROUP_TYPE]
+    excludeTypes: [GROUP_TYPE]
+    asLeader: Boolean
+  }
+
   extend type Person {
-    groups(type: GROUP_TYPE, asLeader: Boolean): [GroupItem]
+    groups(input: GroupFilterInput): [GroupItem]
     isGroupLeader: Boolean
   }
 
