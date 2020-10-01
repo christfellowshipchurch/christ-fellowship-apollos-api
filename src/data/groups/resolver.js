@@ -1,26 +1,31 @@
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
 import { resolverMerge, parseGlobalId } from '@apollosproject/server-core';
 
+const defaultResolvers = {
+  title: (root, args, { dataSources }) => dataSources.Group.getTitle(root),
+  summary: ({ description }, args, { dataSources }) => description,
+  groupType: ({ groupTypeId }, args, { dataSources }) =>
+    dataSources.Group.getGroupTypeFromId(groupTypeId),
+  groupResources: (root, args, { dataSources }) =>
+    dataSources.Group.getResources(root),
+  coverImage: (root, args, { dataSources: { ContentItem } }) =>
+    ContentItem.getCoverImage(root),
+  avatars: ({ id }, args, { dataSources }) =>
+    dataSources.Group.getAvatars(id),
+}
+
 const resolver = {
-  GroupType: {
-    __resolveType: () => "GroupType"
+  GroupItem: {
+    __resolveType: (root, { dataSources: { Group } }) =>
+      Group.resolveType(root),
   },
   Group: {
-    title: (root, args, { dataSources }) => dataSources.Group.getTitle(root),
-    summary: ({ description }, args, { dataSources }) => description,
+    ...defaultResolvers,
     schedule: ({ scheduleId }, args, { dataSources }) =>
       dataSources.Group.getScheduleFromId(scheduleId),
-    groupType: ({ groupTypeId }, args, { dataSources }) =>
-      dataSources.Group.getGroupTypeFromId(groupTypeId),
-    coverImage: (root, args, { dataSources: { ContentItem } }) =>
-      ContentItem.getCoverImage(root),
-    avatars: ({ id }, args, { dataSources }) =>
-      dataSources.Group.getAvatars(id),
     phoneNumbers: ({ id }, args, { dataSources }) => {
       return dataSources.Group.groupPhoneNumbers(id);
     },
-    groupResources: (root, args, { dataSources }) =>
-      dataSources.Group.getResources(root),
     dateTime: ({ scheduleId }, args, { dataSources }) =>
       dataSources.Group.getDateTimeFromId(scheduleId),
     videoCall: (root, args, { dataSources }) =>
@@ -29,6 +34,9 @@ const resolver = {
       dataSources.Group.getGroupParentVideoCallParams(root),
     allowMessages: (root, args, { dataSources }) =>
       dataSources.Group.allowMessages(root),
+  },
+  VolunteerGroup: {
+    ...defaultResolvers
   },
   Mutation: {
     addMemberAttendance: async (root, { id }, { dataSources }) => {

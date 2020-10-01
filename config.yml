@@ -139,6 +139,11 @@ ROCK_MAPPINGS:
     WebsiteFeature:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [21]
+  GROUP_ITEM:
+    Group:
+      EntityType: Group
+    VolunteerGroup:
+      GroupTypeId: [37]
 
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews

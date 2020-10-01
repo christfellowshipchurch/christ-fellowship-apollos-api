@@ -14,6 +14,8 @@ export const groupSchema = gql`
     TableGetStronger
     TableStudies
     YoungAdults
+
+    DreamTeam
   }
 
   type Resource {
@@ -49,7 +51,6 @@ export const groupSchema = gql`
     labelText: String
   }
 
-  # TODO : probably need a better name for this
   interface GroupItem {
     title: String
     summary: String
@@ -95,7 +96,7 @@ export const groupSchema = gql`
   }
 
   extend type Person {
-    groups(type: GROUP_TYPE, asLeader: Boolean): [Group]
+    groups(type: GROUP_TYPE, asLeader: Boolean): [GroupItem]
     isGroupLeader: Boolean
   }
 

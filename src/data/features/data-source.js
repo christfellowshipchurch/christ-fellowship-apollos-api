@@ -212,9 +212,9 @@ export default class Feature extends coreFeatures.dataSource {
 
         try {
             const { id } = await Auth.getCurrentPerson()
-            const groups = await Group.getByPersonByTypeId({
+            const groups = await Group.getByPerson({
+                type: "DreamTeam",
                 personId: id,
-                typeId: ROCK_MAPPINGS.GROUP_TYPE_IDS.DREAM_TEAM,
             })
 
             return groups.map((item, i) => {

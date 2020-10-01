@@ -1,7 +1,7 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
-import { get, mapValues, isNull, filter, head } from 'lodash';
+import { get, mapValues, isNull, filter, head, chunk, flatten } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import { getIdentifierType } from '../utils';
@@ -138,25 +138,30 @@ export default class Group extends baseGroup.dataSource {
     }
   };
 
-  getByPerson = async ({ personId, type = null, asLeader = false }) => {
+  getByPerson = async ({ personId, type = null, asLeader = false, groupTypeIds = null }) => {
     // Get the active groups that the person is a member of.
     // Conditionally filter that list of groups on whether or not your
     // role in that group is that of "Leader".
-    const groupAssociations = await this.request('GroupMembers')
-      .expand('GroupRole')
-      .filter(
-        `PersonId eq ${personId} ${
-        asLeader ? ' and GroupRole/IsLeader eq true' : ''
-        }`
-      )
-      .andFilter(`GroupMemberStatus ne 'Inactive'`)
-      // Filter by Group Type Id up here
-      .andFilter(
-        this.getGroupTypeIds()
-          .map((id) => `(GroupRole/GroupTypeId eq ${id})`)
-          .join(' or ')
-      )
-      .get();
+    const _groupTypeIds = groupTypeIds || this.getGroupTypeIds()
+    const groupAssociationRequests = await Promise.all(chunk(_groupTypeIds, 3).map(
+      (groupTypeIds) => this.request('GroupMembers')
+        .expand('GroupRole')
+        .filter(
+          `PersonId eq ${personId} ${
+          asLeader ? ' and GroupRole/IsLeader eq true' : ''
+          }`
+        )
+        .andFilter(`GroupMemberStatus ne 'Inactive'`)
+        // Filter by Group Type Id up here
+        .andFilter(
+          groupTypeIds
+            .map((id) => `(GroupRole/GroupTypeId eq ${id})`)
+            .join(' or ')
+        )
+        .get()
+    ))
+
+    const groupAssociations = flatten(groupAssociationRequests)
 
     // Get the actual group data for the groups above.
     const groups = await Promise.all(
@@ -182,44 +187,6 @@ export default class Group extends baseGroup.dataSource {
     );
   };
 
-  getByPersonByTypeId = async ({ personId, typeId = null, asLeader = false }) => {
-    if (!typeId) return []
-
-    // Get the active groups that the person is a member of.
-    // Conditionally filter that list of groups on whether or not your
-    // role in that group is that of "Leader".
-    const groupAssociations = await this.request('GroupMembers')
-      .expand('GroupRole')
-      .filter(
-        `PersonId eq ${personId} ${
-        asLeader ? ' and GroupRole/IsLeader eq true' : ''
-        }`
-      )
-      .andFilter(`GroupMemberStatus ne 'Inactive'`)
-      // Filter by Group Type Id up here
-      .andFilter(`GroupRole/GroupTypeId eq ${typeId}`)
-      .get();
-
-    // Get the actual group data for the groups above.
-    const groups = await Promise.all(
-      groupAssociations
-        // Temp solution for protected group ids
-        .filter(({ groupId }) => !EXCLUDE_IDS.includes(groupId))
-        .map(({ groupId: id }) => this.getFromId(id))
-    );
-
-    // Filter the groups to make sure we only pull those that are
-    // active and NOT archived
-    const filteredGroups = await Promise.all(
-      groups.filter(
-        (group) => group && group.isActive && !group.isArchived
-      )
-    );
-
-    // Remove the groups that aren't of the types we want and return.
-    return filteredGroups;
-  };
-
   getMatrixItemsFromId = async (id) =>
     id
       ? this.request('/AttributeMatrixItems')
@@ -240,6 +207,7 @@ export default class Group extends baseGroup.dataSource {
     TableGetStronger: ROCK_MAPPINGS.TABLE_GET_STRONGER_GROUP_TYPE_ID,
     TableStudies: ROCK_MAPPINGS.TABLE_STUDIES_GROUP_TYPE_ID,
     YoungAdults: ROCK_MAPPINGS.YOUNG_ADULTS_GROUP_TYPE_ID,
+    DreamTeam: ROCK_MAPPINGS.GROUP_TYPE_IDS.DREAM_TEAM
   };
 
   getGroupTypeIds = () => Object.values(this.groupTypeMap);
@@ -438,4 +406,40 @@ export default class Group extends baseGroup.dataSource {
     }
     return name;
   };
+
+  resolveType({ groupTypeId, id }) {
+    // if we have defined an ContentChannelTypeId based maping in the YML file, use it!
+    if (
+      Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
+        ({ GroupTypeId }) =>
+          GroupTypeId &&
+          GroupTypeId.includes(groupTypeId)
+      )
+    ) {
+      return Object.keys(ROCK_MAPPINGS.GROUP_ITEM).find((key) => {
+        const value = ROCK_MAPPINGS.GROUP_ITEM[key];
+        return (
+          value.GroupTypeId &&
+          value.GroupTypeId.includes(groupTypeId)
+        );
+      });
+    }
+    // if we have defined a GroupId based maping in the YML file, use it!
+    if (
+      Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
+        ({ GroupId }) =>
+          GroupId && GroupId.includes(id)
+      )
+    ) {
+      return Object.keys(ROCK_MAPPINGS.GROUP_ITEM).find((key) => {
+        const value = ROCK_MAPPINGS.GROUP_ITEM[key];
+        return (
+          value.GroupId &&
+          value.GroupId.includes(id)
+        );
+      });
+    }
+
+    return 'Group';
+  }
 }
