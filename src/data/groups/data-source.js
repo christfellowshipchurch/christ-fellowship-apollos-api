@@ -51,6 +51,9 @@ const EXCLUDE_IDS = [
   1032484,
   1032485,
   1032486,
+  1032487,
+  1032488,
+  1032489,
 ];
 
 export default class Group extends baseGroup.dataSource {
