@@ -340,29 +340,30 @@ FEATURE_FEEDS:
       title: Daily Prayer
 
 
+
 FEATURE_FLAGS:
-  LIVE_STREAM_UI:
-    securityGroupId: 1014843
+  CHECK_IN:
+    status: 'LIVE'
+  GROUPS:
+    status: 'LIVE'
+  HOME_HEADER:
     status: 'LIVE'
   LIVE_STREAM_CHAT:
-    securityGroupId: 1014843
+    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    status: 'LIVE'
+  LIVE_STREAM_UI:
+    securityGroupId: 1014843 # CFDP Experimental Features
     status: 'LIVE'
   NOTIFICATION_CENTER:
     securityGroupId: 1014843 # CFDP Experimental Features
     status: 'LIVE'
-  GROUPS:
-    status: 'LIVE'
-  VOLUNTEER_GROUPS:
-    securityGroupId: 1014843 # CFDP Experimental Features
-    status: 'LIVE'
   ROCK_DYNAMIC_FEED_WITH_PERSONAS:
     status: 'LIVE'
-  CHECK_IN:
+  VOLUNTEER_GROUPS:
+    securityGroupId: 1052010 # CFDP Feature Flags/My Dream Teams
     status: 'LIVE'
-  HOME_HEADER:
-    # TODO : add this back when done testing
-    # securityGroupId: 1014843
-    status: 'LIVE'
+  
+  
 
 PAGE_BUILDER:
   locations:
