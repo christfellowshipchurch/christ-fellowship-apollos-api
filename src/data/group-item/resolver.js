@@ -4,16 +4,20 @@ import { resolverMerge, parseGlobalId, createGlobalId } from '@apollosproject/se
 const defaultResolvers = {
   id: ({ id }, args, context, { parentType }) =>
     createGlobalId(id, parentType.name),
-  title: (root, args, { dataSources }) => dataSources.Group.getTitle(root),
+  title: (root, args, { dataSources }) => dataSources.GroupItem.getTitle(root),
   summary: ({ description }, args, { dataSources }) => description,
   groupType: ({ groupTypeId }, args, { dataSources }) =>
-    dataSources.Group.getGroupTypeFromId(groupTypeId),
+    dataSources.GroupItem.getGroupTypeFromId(groupTypeId),
   groupResources: (root, args, { dataSources }) =>
-    dataSources.Group.getResources(root),
+    dataSources.GroupItem.getResources(root),
   coverImage: (root, args, { dataSources: { ContentItem } }) =>
     ContentItem.getCoverImage(root),
   avatars: ({ id }, args, { dataSources }) =>
-    dataSources.Group.getAvatars(id),
+    dataSources.GroupItem.getAvatars(id),
+  members: ({ id }, args, { dataSources }) =>
+    dataSources.GroupItem.getMembers(id),
+  leaders: ({ id }, args, { dataSources }) =>
+    dataSources.GroupItem.getLeaders(id),
 }
 
 const resolver = {
@@ -24,18 +28,18 @@ const resolver = {
   Group: {
     ...defaultResolvers,
     schedule: ({ scheduleId }, args, { dataSources }) =>
-      dataSources.Group.getScheduleFromId(scheduleId),
+      dataSources.GroupItem.getScheduleFromId(scheduleId),
     phoneNumbers: ({ id }, args, { dataSources }) => {
-      return dataSources.Group.groupPhoneNumbers(id);
+      return dataSources.GroupItem.groupPhoneNumbers(id);
     },
     dateTime: ({ scheduleId }, args, { dataSources }) =>
-      dataSources.Group.getDateTimeFromId(scheduleId),
+      dataSources.GroupItem.getDateTimeFromId(scheduleId),
     videoCall: (root, args, { dataSources }) =>
-      dataSources.Group.getGroupVideoCallParams(root),
+      dataSources.GroupItem.getGroupVideoCallParams(root),
     parentVideoCall: (root, args, { dataSources }) =>
-      dataSources.Group.getGroupParentVideoCallParams(root),
+      dataSources.GroupItem.getGroupParentVideoCallParams(root),
     allowMessages: (root, args, { dataSources }) =>
-      dataSources.Group.allowMessages(root),
+      dataSources.GroupItem.allowMessages(root),
   },
   VolunteerGroup: {
     ...defaultResolvers
