@@ -5,7 +5,7 @@ import {
 import {
     get,
     split,
-    flattenDeep
+    flattenDeep,
 } from 'lodash'
 import moment from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
@@ -141,8 +141,12 @@ export default class Feature extends coreFeatures.dataSource {
         const { Group, Auth, ContentItem } = this.context.dataSources
 
         try {
+            // Exclude Dream Team
+            const groupTypeKeys = Object.keys(Group.groupTypeMap).filter(key => key !== "DreamTeam")
+            const groupTypeIds = groupTypeKeys.map(key => Group.groupTypeMap[key])
+
             const { id } = await Auth.getCurrentPerson()
-            const groups = await Group.getByPerson({ personId: id })
+            const groups = await Group.getByPerson({ personId: id, groupTypeIds })
 
             return groups.map((item, i) => {
                 const getScheduleFriendlyText = async () => {
