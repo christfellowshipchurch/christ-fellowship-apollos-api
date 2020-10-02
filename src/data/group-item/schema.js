@@ -14,6 +14,8 @@ export const groupSchema = gql`
     TableGetStronger
     TableStudies
     YoungAdults
+
+    DreamTeam
   }
 
   type Resource {
@@ -49,26 +51,58 @@ export const groupSchema = gql`
     labelText: String
   }
 
-  type Group implements Node {
-    id: ID!
-    allowMessages: String
-    avatars: [String]
-    coverImage: ImageMedia
-    dateTime: DateTime
+  interface GroupItem {
+    title: String
+    summary: String
+    groupType: String
     groupResources: [Resource]
+    coverImage: ImageMedia
+    avatars: [String]
+    leaders: [Person]
+    members: [Person]
+  }
+
+  type Group implements GroupItem & Node {
+    id: ID!
+
+    title: String
+    summary: String
     groupType: String
     leaders: [Person]
     members: [Person]
+    coverImage: ImageMedia
+    groupResources: [Resource]
+    avatars: [String]
+
+    allowMessages: String
+    dateTime: DateTime
     parentVideoCall: VideoCallParams
     phoneNumbers: [String]
     schedule: Schedule
-    summary: String
-    title: String
     videoCall: VideoCallParams
   }
 
+  type VolunteerGroup implements GroupItem & Node {
+    id: ID!
+
+    title: String
+    summary: String
+    groupType: String
+    leaders: [Person]
+    members: [Person]
+    coverImage: ImageMedia
+    groupResources: [Resource]
+    avatars: [String]
+  }
+
+  input GroupFilterInput {
+    includeTypes: [GROUP_TYPE]
+    excludeTypes: [GROUP_TYPE]
+    asLeader: Boolean
+  }
+
   extend type Person {
-    groups(type: GROUP_TYPE, asLeader: Boolean): [Group]
+    groups(input: GroupFilterInput): [GroupItem]
     isGroupLeader: Boolean
   }
 
