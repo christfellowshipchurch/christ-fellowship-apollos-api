@@ -1,7 +1,9 @@
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
-import { resolverMerge, parseGlobalId } from '@apollosproject/server-core';
+import { resolverMerge, parseGlobalId, createGlobalId } from '@apollosproject/server-core';
 
 const defaultResolvers = {
+  id: ({ id }, args, context, { parentType }) =>
+    createGlobalId(id, parentType.name),
   title: (root, args, { dataSources }) => dataSources.Group.getTitle(root),
   summary: ({ description }, args, { dataSources }) => description,
   groupType: ({ groupTypeId }, args, { dataSources }) =>

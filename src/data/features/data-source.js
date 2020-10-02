@@ -159,7 +159,7 @@ export default class Feature extends coreFeatures.dataSource {
                     id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
                     title: Group.getTitle(item),
                     relatedNode: {
-                        __type: "Group",
+                        __type: Group.resolveType(item),
                         ...item
                     },
                     image: ContentItem.getCoverImage(item),
@@ -226,7 +226,7 @@ export default class Feature extends coreFeatures.dataSource {
                     id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
                     title: Group.getTitle(item),
                     relatedNode: {
-                        __type: "Group",
+                        __type: Group.resolveType(item),
                         ...item
                     },
                     image: null,
