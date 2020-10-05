@@ -282,8 +282,8 @@ export default class Person extends corePerson.dataSource {
             firstName: get(reducedInput, 'firstName', null),
             lastName: get(reducedInput, 'lastName', null),
 
-            adults: get(reducedInput, 'adults', 1),
-            children: get(reducedInput, 'children', 0),
+            // adults: get(reducedInput, 'adults', 1),
+            // children: get(reducedInput, 'children', 0),
 
             visitDate: get(reducedInput, 'visitDate', null),
             visitTime: get(reducedInput, 'visitTime', null),
