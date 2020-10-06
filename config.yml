@@ -293,15 +293,6 @@ FEATURE_FEEDS:
           relatedNode:
             __typename: Url
             url: 'https://pushpay.com/g/christfellowship'
-        - action: OPEN_URL
-          title: 'Give Now'
-          icon: 'envelope-open-dollar'
-          theme:
-            colors:
-              primary: '#1ec27f'
-          relatedNode:
-            __typename: Url
-            url: 'https://pushpay.com/g/christfellowship'
     - type: HorizontalCardList
       algorithms: [MY_GROUPS]
       title: 'My Groups'
