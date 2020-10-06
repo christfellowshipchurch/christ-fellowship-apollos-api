@@ -1,6 +1,10 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
-import { createGlobalId } from '@apollosproject/server-core';
+import {
+  createGlobalId,
+  createCursor,
+  parseCursor
+} from '@apollosproject/server-core';
 import { get, mapValues, isNull, filter, head, chunk, flatten, take } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
@@ -71,6 +75,43 @@ export default class GroupItem extends baseGroup.dataSource {
 
     return group;
   };
+
+  async paginateMembersById({ after, first = 20, id, isLeader = false }) {
+    let skip = 0;
+    if (after) {
+      const parsed = parseCursor(after);
+      if (parsed && Object.hasOwnProperty.call(parsed, 'position')) {
+        skip = parsed.position + 1;
+      } else {
+        throw new Error(`An invalid 'after' cursor was provided: ${after}`);
+      }
+    }
+
+    // temporarily store the select parameter to
+    // put back after "Id" is selected for the count
+    const cursor = this.request('GroupMembers')
+      .filter(`GroupId eq ${id}`)
+      .andFilter(`GroupRole/IsLeader eq ${isLeader}`)
+      .andFilter(`GroupMemberStatus eq '1'`)
+      .expand('GroupRole, Person')
+      .top(first)
+      .skip(skip)
+      .transform((results) => results
+        .filter(groupMember => {
+          return !!groupMember.person
+        })
+        .map(({ person }, i) => {
+          return ({
+            node: this.context.dataSources.Person.getFromId(person.id),
+            cursor: createCursor({ position: i + skip })
+          })
+        }))
+
+    return {
+      getTotalCount: cursor.count,
+      edges: cursor.get(),
+    };
+  }
 
   getMembers = async (groupId) => {
     const { Person } = this.context.dataSources;
@@ -272,19 +313,25 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getAvatars = async (id) => {
-    const members = await this.getMembers(id);
-    const leaders = await this.getLeaders(id);
-    const firstLeader = head(leaders);
-    const filteredMembers = firstLeader
-      ? filter(members, (o) => o.id !== firstLeader.id)
-      : members;
-    let avatars = [];
-    filteredMembers.map((member) =>
-      member.photo.guid
-        ? avatars.push(createImageUrlFromGuid(member.photo.guid))
-        : null
-    );
-    return take(avatars, 15);
+    try {
+      const members = await this.getMembers(id);
+      const leaders = await this.getLeaders(id);
+      const firstLeader = head(leaders);
+      const filteredMembers = firstLeader
+        ? filter(members, (o) => o.id !== firstLeader.id)
+        : members;
+      let avatars = [];
+      filteredMembers.map((member) =>
+        member.photo.guid
+          ? avatars.push(createImageUrlFromGuid(member.photo.guid))
+          : null
+      );
+      return take(avatars, 15);
+    } catch (e) {
+      console.log({ e })
+    }
+
+    return []
   };
 
   groupPhoneNumbers = async (id) => {
