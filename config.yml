@@ -139,6 +139,11 @@ ROCK_MAPPINGS:
     WebsiteFeature:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [21]
+  GROUP_ITEM:
+    Group:
+      EntityType: Group
+    VolunteerGroup:
+      GroupTypeId: [37]
 
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews
@@ -221,6 +226,9 @@ ROCK_MAPPINGS:
     ADDRESS_UPDATE: 328
     CHECK_IN: 411
 
+  GROUP_TYPE_IDS:
+    DREAM_TEAM: 37
+
   ADULT_GROUP_TYPE_ID: 31
   CFE_JOURNEY_EXPERIENCE_GROUP_TYPE_ID: 124
   FREEDOM_GROUP_TYPE_ID: 92
@@ -290,6 +298,10 @@ FEATURE_FEEDS:
       title: 'My Groups'
       flagKey: GROUPS
     - type: HorizontalCardList
+      algorithms: [MY_VOLUNTEER_GROUPS]
+      title: 'My Dream Teams'
+      flagKey: VOLUNTEER_GROUPS
+    - type: HorizontalCardList
       algorithms: [MY_PRAYERS]
       title: 'My Prayers'
       primaryAction:
@@ -328,26 +340,30 @@ FEATURE_FEEDS:
       title: Daily Prayer
 
 
+
 FEATURE_FLAGS:
-  LIVE_STREAM_UI:
-    securityGroupId: 1014843
+  CHECK_IN:
+    status: 'LIVE'
+  GROUPS:
+    status: 'LIVE'
+  HOME_HEADER:
     status: 'LIVE'
   LIVE_STREAM_CHAT:
-    securityGroupId: 1014843
+    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    status: 'LIVE'
+  LIVE_STREAM_UI:
+    securityGroupId: 1014843 # CFDP Experimental Features
     status: 'LIVE'
   NOTIFICATION_CENTER:
     securityGroupId: 1014843 # CFDP Experimental Features
     status: 'LIVE'
-  GROUPS:
-    status: 'LIVE'
   ROCK_DYNAMIC_FEED_WITH_PERSONAS:
     status: 'LIVE'
-  CHECK_IN:
+  VOLUNTEER_GROUPS:
+    securityGroupId: 1052010 # CFDP Feature Flags/My Dream Teams
     status: 'LIVE'
-  HOME_HEADER:
-    # TODO : add this back when done testing
-    # securityGroupId: 1014843
-    status: 'LIVE'
+  
+  
 
 PAGE_BUILDER:
   locations:
