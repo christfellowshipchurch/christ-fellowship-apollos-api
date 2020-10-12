@@ -4,6 +4,7 @@ import { createGlobalId } from '@apollosproject/server-core';
 import { get, mapValues, isNull, filter, head, chunk, flatten, take } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
+import crypto from 'crypto-js'
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
 
@@ -408,6 +409,13 @@ export default class GroupItem extends baseGroup.dataSource {
       return titleOverride;
     }
     return name;
+  };
+
+  getChatChannelId = (root) => {
+    const resolvedType = this.resolveType(root);
+    const globalId = createGlobalId(root.id, resolvedType);
+
+    return crypto.SHA1(globalId).toString();
   };
 
   resolveType({ groupTypeId, id }) {

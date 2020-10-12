@@ -60,6 +60,7 @@ export const groupSchema = gql`
     avatars: [String]
     leaders: [Person]
     members: [Person]
+    chatChannelId: String
   }
 
   type Group implements GroupItem & Node {
@@ -73,6 +74,7 @@ export const groupSchema = gql`
     coverImage: ImageMedia
     groupResources: [Resource]
     avatars: [String]
+    chatChannelId: String
 
     allowMessages: String
     dateTime: DateTime
@@ -93,6 +95,7 @@ export const groupSchema = gql`
     coverImage: ImageMedia
     groupResources: [Resource]
     avatars: [String]
+    chatChannelId: String
   }
 
   input GroupFilterInput {
