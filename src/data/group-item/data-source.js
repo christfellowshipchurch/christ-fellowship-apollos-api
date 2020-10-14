@@ -39,6 +39,22 @@ const EXCLUDE_IDS = [
   241744,
   241745,
   1042531,
+  828068,
+  1032459,
+  1032476,
+  1032477,
+  1032478,
+  1032479,
+  1032480,
+  1032481,
+  1032482,
+  1032483,
+  1032484,
+  1032485,
+  1032486,
+  1032487,
+  1032488,
+  1032489,
 ];
 
 export default class GroupItem extends baseGroup.dataSource {
@@ -150,8 +166,7 @@ export default class GroupItem extends baseGroup.dataSource {
       (groupTypeIds) => this.request('GroupMembers')
         .expand('GroupRole')
         .filter(
-          `PersonId eq ${personId} ${
-          asLeader ? ' and GroupRole/IsLeader eq true' : ''
+          `PersonId eq ${personId} ${asLeader ? ' and GroupRole/IsLeader eq true' : ''
           }`
         )
         .andFilter(`GroupMemberStatus ne 'Inactive'`)
