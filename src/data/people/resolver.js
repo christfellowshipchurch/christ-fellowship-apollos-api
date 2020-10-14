@@ -1,5 +1,5 @@
 import { Person as corePerson } from '@apollosproject/data-connector-rock'
-import { resolverMerge, withEdgePagination } from '@apollosproject/server-core'
+import { resolverMerge } from '@apollosproject/server-core'
 import ApollosConfig from '@apollosproject/config'
 import { get, filter, find, difference } from 'lodash'
 import { Utils } from '@apollosproject/data-connector-rock'
@@ -69,7 +69,7 @@ const resolver = {
         photo: (root) => {
             const guid = get(root, 'photo.guid')
             return (guid && guid !== ''
-                ? { uri: `${createImageUrlFromGuid(guid)}&quality=50&maxwidth=100&maxheight=100` }
+                ? { uri: createImageUrlFromGuid(guid) }
                 : { uri: "https://cloudfront.christfellowship.church/GetImage.ashx?guid=0ad7f78a-1e6b-46ad-a8be-baa0dbaaba8e" })
         },
         salvationDate: enforceCurrentUser(({ id }, args, { dataSources }) =>
@@ -78,10 +78,6 @@ const resolver = {
                 key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.SALVATION_DATE')
             })),
 
-    },
-    PeopleConnection: {
-        totalCount: ({ getTotalCount }) => getTotalCount(),
-        pageInfo: withEdgePagination,
     },
     Query: {
         getEthnicityList: (root, args, { dataSources }) =>

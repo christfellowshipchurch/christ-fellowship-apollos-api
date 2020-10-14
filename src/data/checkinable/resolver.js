@@ -4,14 +4,21 @@ import ApollosConfig from '@apollosproject/config'
 import { get } from 'lodash'
 
 const resolver = {
+    CheckInOption: {
+        __resolveType: ({ __typename }) => __typename,
+        id: ({ id }, args, context, { parentType }) =>
+            createGlobalId(id, parentType.name),
+    },
+    CheckInableNode: {
+        __resolveType: ({ __typename, __type }, args, resolveInfo) =>
+            __typename || resolveInfo.schema.getType(__type)
+    },
     CheckInable: {
         __resolveType: ({ __typename }) => __typename,
         id: ({ id }, args, context, { parentType }) =>
             createGlobalId(id, parentType.name),
-        title: async ({ id, isCheckedIn }, args, { dataSources }) => {
-            return isCheckedIn ? "Checked In" : "Check In"
-        },
-        message: ({ isCheckedIn }) => isCheckedIn ? "Thank you for checking in!" : "Let us know you're here",
+        title: (root, args, { dataSources }) => "Ready to serve?",
+        message: () => "Select the times you will be serving today.",
         isCheckedIn: async ({ isCheckedIn }) => {
             const flag = get(ApollosConfig, 'FEATURE_FLAGS.CHECK_IN.status', null)
 
@@ -19,12 +26,24 @@ const resolver = {
 
             return isCheckedIn
         },
+        options: async (root, args, { dataSources }, { parentType }) => {
+            const { CheckInable, Auth } = dataSources
+            const currentUser = await Auth.getCurrentPerson()
+
+            return CheckInable.getOptions(root, { personId: currentUser.id })
+        }
     },
     Mutation: {
-        checkInCurrentUser: async (root, { id }, { dataSources }) => {
-            const globalId = parseGlobalId(id)
+        checkInCurrentUser: async (root, { id, optionIds = [] }, { dataSources }) => {
+            const groupId = parseGlobalId(id)
+            const scheduleIds = optionIds
+                .map(oid => get(parseGlobalId(oid), 'id'))
+                .filter(oid => oid)
             try {
-                return dataSources.CheckInable.checkInCurrentUser(globalId.id)
+                return dataSources.CheckInable.checkInCurrentUser(
+                    groupId.id,
+                    { scheduleIds }
+                )
             } catch (e) {
                 console.log({ e })
             }

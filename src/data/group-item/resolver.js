@@ -2,6 +2,8 @@ import { Group as baseGroup } from '@apollosproject/data-connector-rock';
 import { resolverMerge, parseGlobalId, createGlobalId } from '@apollosproject/server-core';
 
 const defaultResolvers = {
+  id: ({ id }, args, context, { parentType }) =>
+    createGlobalId(id, parentType.name),
   title: (root, args, { dataSources }) => dataSources.GroupItem.getTitle(root),
   summary: ({ description }, args, { dataSources }) => description,
   groupType: ({ groupTypeId }, args, { dataSources }) =>
@@ -10,12 +12,6 @@ const defaultResolvers = {
     dataSources.GroupItem.getResources(root),
   coverImage: (root, args, { dataSources: { ContentItem } }) =>
     ContentItem.getCoverImage(root),
-  people: async ({ id }, args, { dataSources: { GroupItem } }) =>
-    GroupItem.paginateMembersById({
-      ...args,
-      id
-    }),
-
   avatars: ({ id }, args, { dataSources }) =>
     dataSources.GroupItem.getAvatars(id),
   members: ({ id }, args, { dataSources }) =>
@@ -26,14 +22,11 @@ const defaultResolvers = {
 
 const resolver = {
   GroupItem: {
-    ...defaultResolvers,
     __resolveType: (root, { dataSources: { Group } }) =>
       Group.resolveType(root),
   },
   Group: {
     ...defaultResolvers,
-    id: ({ id }, args, context, { parentType }) =>
-      createGlobalId(id, parentType.name),
     schedule: ({ scheduleId }, args, { dataSources }) =>
       dataSources.GroupItem.getScheduleFromId(scheduleId),
     phoneNumbers: ({ id }, args, { dataSources }) => {
@@ -52,6 +45,8 @@ const resolver = {
     ...defaultResolvers,
     id: ({ id }, args, context, { parentType }) =>
       createGlobalId(id, parentType.name),
+    checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
+      CheckInable.getFromId(id)
   },
   Mutation: {
     addMemberAttendance: async (root, { id }, { dataSources }) => {

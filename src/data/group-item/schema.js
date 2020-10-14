@@ -57,12 +57,6 @@ export const groupSchema = gql`
     groupType: String
     groupResources: [Resource]
     coverImage: ImageMedia
-    people(
-      first: Int
-      after: String
-      isLeader: Boolean
-    ): PeopleConnection
-
     avatars: [String]
     leaders: [Person]
     members: [Person]
@@ -74,17 +68,11 @@ export const groupSchema = gql`
     title: String
     summary: String
     groupType: String
-    coverImage: ImageMedia
-    groupResources: [Resource]
-    people(
-      first: Int
-      after: String
-      isLeader: Boolean
-    ): PeopleConnection
-
-    avatars: [String]
     leaders: [Person]
     members: [Person]
+    coverImage: ImageMedia
+    groupResources: [Resource]
+    avatars: [String]
 
     allowMessages: String
     dateTime: DateTime
@@ -100,17 +88,11 @@ export const groupSchema = gql`
     title: String
     summary: String
     groupType: String
-    coverImage: ImageMedia
-    groupResources: [Resource]
-    people(
-      first: Int
-      after: String
-      isLeader: Boolean
-    ): PeopleConnection
-
-    avatars: [String]
     leaders: [Person]
     members: [Person]
+    coverImage: ImageMedia
+    groupResources: [Resource]
+    avatars: [String]
   }
 
   input GroupFilterInput {

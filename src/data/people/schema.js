@@ -30,17 +30,6 @@ export default gql`
         value: String!
     }
 
-    type PeopleConnection {
-        edges: [PeopleConnectionEdge]
-        totalCount: Int
-        pageInfo: PaginationInfo
-    }
-
-    type PeopleConnectionEdge {
-        node: Person
-        cursor: String
-    }
-
     type Person implements Node @cacheControl(maxAge: 0) {
         id: ID!
         firstName: String
