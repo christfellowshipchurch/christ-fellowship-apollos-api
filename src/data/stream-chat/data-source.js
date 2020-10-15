@@ -4,9 +4,8 @@ import { createGlobalId } from "@apollosproject/server-core";
 import { StreamChat as StreamChatClient } from "stream-chat";
 import { get } from 'lodash';
 
-const { STREAM, FEATURE_FLAGS } = ApollosConfig;
+const { STREAM } = ApollosConfig;
 const { CHAT_SECRET, CHAT_API_KEY } = STREAM;
-const MODERATOR_GROUP_ID = get(FEATURE_FLAGS, 'LIVE_STREAM_CHAT.moderatorGroupId', -1);
 
 // Define singleton instance of StreamChatClient
 let chatClient;
@@ -35,14 +34,11 @@ export default class StreamChat extends RESTDataSource {
     return chatClient.createToken(streamUserId);
   };
 
-  currentUserIsGlobalModerator = async () => {
-    const { Auth } = this.context.dataSources;
+  currentUserIsLiveStreamModerator = async () => {
+    const { Flag } = this.context.dataSources;
+    const flagStatus = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT_MODERATOR');
 
-    if (await Auth.isInSecurityGroup(MODERATOR_GROUP_ID)) {
-      return true;
-    }
-
-    return false;
+    return flagStatus === 'LIVE';
   }
 
   addModerator = async ({ channelId, userId, channelType = 'livestream' }) => {

@@ -28,7 +28,7 @@ const resolver = {
         return null;
       }
 
-      if (await StreamChat.currentUserIsGlobalModerator()) {
+      if (await StreamChat.currentUserIsLiveStreamModerator()) {
         await StreamChat.addModerator({ channelId, userId });
         return 'MODERATOR';
       }
