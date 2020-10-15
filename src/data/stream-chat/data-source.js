@@ -2,9 +2,10 @@ import ApollosConfig from "@apollosproject/config";
 import { RESTDataSource } from 'apollo-datasource-rest'
 import { createGlobalId } from "@apollosproject/server-core";
 import { StreamChat as StreamChatClient } from "stream-chat";
+import { get } from 'lodash';
 
 const { STREAM } = ApollosConfig;
-const { CHAT_SECRET, CHAT_API_KEY, CHAT_APP_ID } = STREAM;
+const { CHAT_SECRET, CHAT_API_KEY } = STREAM;
 
 // Define singleton instance of StreamChatClient
 let chatClient;
@@ -21,27 +22,36 @@ if (CHAT_SECRET && CHAT_API_KEY && !chatClient) {
   );
 }
 
-export default class StreamChat extends RESTDataSource {
-  generateUserToken = (id) => {
-    const globalId = createGlobalId(id, "AuthenticatedUser");
-    const userId = globalId.split(":")[1];
+function getStreamUserId(id) {
+  const globalId = createGlobalId(id, "AuthenticatedUser");
+  return globalId.split(":")[1];
+}
 
-    return chatClient.createToken(userId);
+export default class StreamChat extends RESTDataSource {
+  generateUserToken = (userId) => {
+    const streamUserId = getStreamUserId(userId);
+
+    return chatClient.createToken(streamUserId);
   };
 
-  addModerator = async ({ contentId, id }) => {
-    const globalId = createGlobalId(id, "AuthenticatedUser");
-    const userId = globalId.split(":")[1];
+  currentUserIsLiveStreamModerator = async () => {
+    const { Flag } = this.context.dataSources;
+    const flagStatus = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT_MODERATOR');
 
-    const channel = chatClient.channel('livestream', contentId);
-    await channel.addModerators([userId]);
+    return flagStatus === 'LIVE';
   }
 
-  removeModerator = async ({ contentId, id }) => {
-    const globalId = createGlobalId(id, "AuthenticatedUser");
-    const userId = globalId.split(":")[1];
+  addModerator = async ({ channelId, userId, channelType = 'livestream' }) => {
+    const streamUserId = getStreamUserId(userId);
 
-    const channel = chatClient.channel('livestream', contentId);
-    await channel.demoteModerators([userId]);
+    const channel = chatClient.channel(channelType, channelId);
+    await channel.addModerators([streamUserId]);
+  }
+
+  removeModerator = async ({ channelId, userId, channelType = 'livestream' }) => {
+    const streamUserId = getStreamUserId(userId);
+
+    const channel = chatClient.channel(channelType, channelId);
+    await channel.demoteModerators([streamUserId]);
   }
 }
