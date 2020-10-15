@@ -1,5 +1,4 @@
 import { Auth as coreAuth } from '@apollosproject/data-connector-rock'
-import { get } from 'lodash';
 import ApollosConfig from '@apollosproject/config'
 import { resolverMerge } from '@apollosproject/server-core'
 
@@ -21,24 +20,20 @@ const resolver = {
 
             return StreamChat.generateUserToken(id);
         },
-        streamChatRole: async ({ id }, { id: contentId }, { dataSources }) => {
-            const { Auth, Flag, StreamChat } = dataSources;
+        streamChatRole: async ({ id: userId }, { id: channelId }, { dataSources }) => {
+            const { Flag, StreamChat } = dataSources;
             const featureFlagStatus = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
 
             if (featureFlagStatus !== 'LIVE') {
                 return null;
             }
 
-            // Temporarily use the feature flag group as the moderator group
-            const flag = get(ApollosConfig, 'FEATURE_FLAGS.LIVE_STREAM_CHAT', null)
-            const MODERATORS_SECURITY_GROUP_ID = flag.securityGroupId;
-
-            if (await Auth.isInSecurityGroup(MODERATORS_SECURITY_GROUP_ID)) {
-                await StreamChat.addModerator({ contentId, id });
+            if (await StreamChat.currentUserIsGlobalModerator()) {
+                await StreamChat.addModerator({ channelId, userId });
                 return 'MODERATOR';
             }
 
-            await StreamChat.removeModerator({ contentId, id });
+            await StreamChat.removeModerator({ channelId, userId });
             return 'USER';
         },
     },
