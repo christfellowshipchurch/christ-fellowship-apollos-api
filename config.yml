@@ -339,8 +339,6 @@ FEATURE_FEEDS:
       type: PrayerList
       title: Daily Prayer
 
-
-
 FEATURE_FLAGS:
   CHECK_IN:
     status: 'LIVE'
@@ -348,8 +346,13 @@ FEATURE_FLAGS:
     status: 'LIVE'
   HOME_HEADER:
     status: 'LIVE'
+  GROUP_CHAT:
+    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
   LIVE_STREAM_CHAT:
     securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    status: 'LIVE'
+  LIVE_STREAM_CHAT_MODERATOR:
+    securityGroupId: 1054703 # CFDP Global Event Chat Moderators Group
     status: 'LIVE'
   LIVE_STREAM_UI:
     securityGroupId: 1014843 # CFDP Experimental Features
@@ -362,8 +365,6 @@ FEATURE_FLAGS:
   VOLUNTEER_GROUPS:
     securityGroupId: 1052010 # CFDP Feature Flags/My Dream Teams
     status: 'LIVE'
-  
-  
 
 PAGE_BUILDER:
   locations:
