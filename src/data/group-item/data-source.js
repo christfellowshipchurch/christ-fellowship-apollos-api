@@ -1,7 +1,7 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
-import { get, mapValues, isNull, filter, head, chunk, flatten, take } from 'lodash';
+import { get, mapValues, isNull, filter, head, chunk, flatten, take, difference } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js'
@@ -57,6 +57,8 @@ const EXCLUDE_IDS = [
   1032488,
   1032489,
 ];
+
+const CHANNEL_TYPE = 'group';
 
 export default class GroupItem extends baseGroup.dataSource {
   getFromId = async (id) => {
@@ -426,11 +428,34 @@ export default class GroupItem extends baseGroup.dataSource {
     return name;
   };
 
-  getChatChannelId = (root) => {
+  getChatChannelId = async (root) => {
+    const { Auth, StreamChat } = this.context.dataSources;
+    const currentPerson = await Auth.getCurrentPerson();
     const resolvedType = this.resolveType(root);
     const globalId = createGlobalId(root.id, resolvedType);
+    const channelId = crypto.SHA1(globalId).toString();
 
-    return crypto.SHA1(globalId).toString();
+    const groupMembers = await this.getMembers(root.id);
+    const members = groupMembers.map(member => StreamChat.getStreamUserId(member.id));
+
+    // Create any Stream users that might not exist
+    // We need to do this before we can create a channel 🙄
+    await StreamChat.createStreamUsers({ users: groupMembers.map(StreamChat.getStreamUser) });
+
+    // Make sure the channel exists.
+    // If it doesn't, create it.
+    await StreamChat.getChannel({ channelId, channelType: CHANNEL_TYPE, options: {
+      members,
+      created_by: StreamChat.getStreamUser(currentPerson)
+    }});
+
+    // Add group members not in channel
+    await StreamChat.addMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE} );
+
+    // Remove channel members not in group
+    await StreamChat.removeMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE} );
+
+    return channelId;
   };
 
   resolveType({ groupTypeId, id }) {
