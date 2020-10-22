@@ -39,6 +39,10 @@ export default class ContentItem extends coreContentItem.dataSource {
     return orderA - orderB
   });
 
+  CONTENT_ITEM_ASSOCIATION_SORT = () => [
+    { field: 'Order', direction: 'asc' },
+  ];
+
   LIVE_CONTENT = () => {
     // If we're in a staging environment, we want to
     //  return null so that no filter is applied over
@@ -282,6 +286,7 @@ export default class ContentItem extends coreContentItem.dataSource {
   getCursorByParentContentItemId = async (id) => {
     const associations = await this.request('ContentChannelItemAssociations')
       .filter(`ContentChannelItemId eq ${id}`)
+      .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
       .cache({ ttl: 60 })
       .get();
 
@@ -301,6 +306,7 @@ export default class ContentItem extends coreContentItem.dataSource {
   getCursorByChildContentItemId = async (id) => {
     const associations = await this.request('ContentChannelItemAssociations')
       .filter(`ChildContentChannelItemId eq ${id}`)
+      .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
       .cache({ ttl: 60 })
       .get();
 
