@@ -27,6 +27,8 @@ const CREATE_USERS_LIMIT = 100;
 const QUERY_MEMBERS_LIMIT = 100;
 const ADD_MEMBERS_LIMIT = 100;
 const REMOVE_MEMBERS_LIMIT = 100;
+const PROMOTE_MODERATORS_LIMIT = 100;
+const DEMOTE_MODERATORS_LIMIT = 100;
 
 export default class StreamChat extends RESTDataSource {
   getStreamUserId(id) {
@@ -75,13 +77,13 @@ export default class StreamChat extends RESTDataSource {
     return channel.create();
   }
 
-  getChannelMembers = async({ channelId, channelType }) => {
+  getChannelMembers = async({ channelId, channelType, filter = {} }) => {
     const channel = chatClient.channel(channelType, channelId);
 
     const channelMembers = [];
     let responseMembers;
     do {
-      const channelMembersResponse = await channel.queryMembers({}, {}, { limit: QUERY_MEMBERS_LIMIT, offset: channelMembers.length });
+      const channelMembersResponse = await channel.queryMembers(filter, {}, { limit: QUERY_MEMBERS_LIMIT, offset: channelMembers.length });
       responseMembers = channelMembersResponse.members;
       channelMembers.push(...responseMembers);
     } while (responseMembers.length === QUERY_MEMBERS_LIMIT);
@@ -113,6 +115,33 @@ export default class StreamChat extends RESTDataSource {
     if (badMembers.length) {
       await Promise.all(chunk(badMembers, REMOVE_MEMBERS_LIMIT).map(async (chunkedMembers) => {
         await channel.removeMembers(chunkedMembers);
+      }));
+    }
+  }
+
+  // Compare the group leaders to the channel moderators
+  // Promote any member who is a group leader, but not a channel moderator
+  // Demote any member who is a channel moderator, but not a group leader
+  updateModerators = async({ channelId, groupLeaders, channelType = 'livestream' }) => {
+    const channel = chatClient.channel(channelType, channelId);
+    const channelModerators = await this.getChannelMembers({ channelId, channelType, filter: { is_moderator: true } });
+    const channelModeratorIds = channelModerators.map(channelModerator => get(channelModerator, 'user.id'));
+
+    // Promote any groupLeaders not in the channelModerators list
+    const newModerators = groupLeaders.filter(leader => !channelModeratorIds.includes(leader));
+
+    if (newModerators.length) {
+      await Promise.all(chunk(newModerators, PROMOTE_MODERATORS_LIMIT).map(async (chunkedModerators) => {
+        await channel.addModerators(chunkedModerators);
+      }));
+    }
+
+    // Demote any moderators not in the groupLeaders list
+    const badModerators = channelModeratorIds.filter(channelModerator => !groupLeaders.includes(channelModerator));
+
+    if (badModerators.length) {
+      await Promise.all(chunk(badModerators, DEMOTE_MODERATORS_LIMIT).map(async (chunkedModerators) => {
+        await channel.demoteModerators(chunkedModerators);
       }));
     }
   }

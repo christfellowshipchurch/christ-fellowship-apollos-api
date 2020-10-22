@@ -438,6 +438,9 @@ export default class GroupItem extends baseGroup.dataSource {
     const groupMembers = await this.getMembers(root.id);
     const members = groupMembers.map(member => StreamChat.getStreamUserId(member.id));
 
+    const groupLeaders = await this.getLeaders(root.id);
+    const leaders = groupLeaders.map(leader => StreamChat.getStreamUserId(leader.id));
+
     // Create any Stream users that might not exist
     // We need to do this before we can create a channel 🙄
     await StreamChat.createStreamUsers({ users: groupMembers.map(StreamChat.getStreamUser) });
@@ -454,6 +457,9 @@ export default class GroupItem extends baseGroup.dataSource {
 
     // Remove channel members not in group
     await StreamChat.removeMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE} );
+
+    // Promote/demote members for moderation if necessary
+    await StreamChat.updateModerators({ channelId, groupLeaders: leaders, channelType: CHANNEL_TYPE });
 
     return channelId;
   };
