@@ -2,18 +2,21 @@ import { RESTDataSource } from 'apollo-datasource-rest';
 import RockApolloDataSource from '@apollosproject/rock-apollo-data-source'
 import ApollosConfig from '@apollosproject/config'
 import { parseGlobalId } from '@apollosproject/server-core'
-import { flatten } from 'lodash'
+import { flatten, get, toNumber } from 'lodash'
 import moment from 'moment-timezone'
 import { getIdentifierType } from '../utils'
 
 const { ROCK, ROCK_CONSTANTS, ROCK_MAPPINGS } = ApollosConfig;
 
+const sortOptions = ({ startDateTime: a }, { startDateTime: b }) => moment(a).diff(b)
+
 export default class Checkinable extends RockApolloDataSource {
 
-    // In order to trigger a Rock Webhook, we need to just hit the base
-    // rock url without the `/api` appended. For this, we are going to 
-    // set the baseUrl to just that. For any other API requests that need
-    // to happen in this datasource, just remember to prefix your request with `/api`
+    /** In order to trigger a Rock Webhook, we need to just hit the base
+     *  rock url without the `/api` appended. For this, we are going to 
+     *  set the baseUrl to just that. For any other API requests that need
+     *  to happen in this datasource, just remember to prefix your request with `/api`
+     */
     get baseURL() {
         return process.env.ROCK_API;
     }
@@ -23,16 +26,27 @@ export default class Checkinable extends RockApolloDataSource {
         return GroupItem.getFromId(id)
     }
 
-    /** (group, args) */
+    /**
+     * @param {Object} group                Rock Group.
+     * @param {Number} group.id             Group Id.
+     * @param {Number} group.groupTypeId    Group Type Id.
+     * @param {Number} group.scheduleId     Schedule Id.
+     * 
+     * @param {Object} args                 Describes additional information for fetching options.
+     * @param {Number} args.personId        Person Id used to determine `isCheckedIn`.
+     * @param {String} args.forDate         Date to get Check In Options for.
+     */
     getOptions(
-        { id, groupTypeId },
+        { id, groupTypeId, scheduleId },
         { personId, forDate }
     ) {
         try {
             switch (groupTypeId) {
                 case 37: // Dream Team
-                default:
                     return this.getVolunteerGroupOptions({ id, personId, forDate })
+                case 31: // Adult Groups
+                default:
+                    return this.getGroupOptions({ id, personId, forDate, scheduleId })
             }
         } catch (e) {
             console.log({ e })
@@ -41,6 +55,76 @@ export default class Checkinable extends RockApolloDataSource {
         return []
     }
 
+    /**
+     * @param {Object}  props
+     * @param {Number}  props.groupId       Group Id.
+     * @param {Number}  group.scheduleId    Schedule Id.
+     * @param {Number}  props.personId      Person Id used to determine `isCheckedIn`.
+     * @param {String}  props.forDate       Date to get Check In Options for.
+     * @param {Boolean} props.isActive      Filter schedule for active options. Defaults to true.
+     */
+    async parseCheckInSchedule({
+        groupId,
+        scheduleId,
+        personId,
+        forDate,
+        isActive = true
+    }) {
+        const { Schedule } = this.context.dataSources
+        const { nextStart, startOffset, endOffset } = await Schedule.parseById(scheduleId)
+
+        /** Check to make sure the nextStartDateTime is valid */
+        if (nextStart &&
+            moment(nextStart).isValid()) {
+            /** Beginning of the most recent instance */
+            const instanceStartDate = moment
+                .tz(nextStart, ROCK.TIMEZONE)
+                .utc()
+            /** Allowed start time for the check in */
+            const checkInStart = moment(instanceStartDate.format()).subtract(startOffset, 'minutes')
+            /** Allowed end time for the check in */
+            const checkInEnd = moment(instanceStartDate.format()).add(endOffset, 'minutes')
+
+            const returnData = {
+                /** Person Id is required
+                 *  If the Start Date is right now or in the past, let's check for 
+                 *  a check in record. If it's in the future, there's no way for
+                 *  someone to have already checked in, so we can just assume false
+                 *  and save us a few API calls
+                 */
+                id: scheduleId,
+                isCheckedIn: this.personIsCheckedIn({ groupId, scheduleId, personId, forDate }),
+                startDateTime: instanceStartDate.format()
+            }
+
+            /** We want to only allow a schedule to be added if the current time falls
+             *  between the start and end date/time of the schedule
+             * 
+             *  For example: a schedule may start at 7am with 30 minutes before and after
+             *  for check in. This would mean that this schedule is valid between 6:30am
+             *  and 7:30am
+             */
+            if (isActive) {
+                if (moment().isBetween(checkInStart, checkInEnd)) {
+                    return returnData
+                }
+
+                return null
+            } else {
+                return returnData
+            }
+        }
+
+        return null
+    }
+
+    /**
+     * @param {Object}  props
+     * @param {Number}  props.groupId       Group Id.
+     * @param {Number}  group.scheduleId    Schedule Id.
+     * @param {Number}  props.personId      Person Id used to determine `isCheckedIn`.
+     * @param {String}  props.forDate       Date to get Check In Options for.
+     */
     async personIsCheckedIn({
         groupId,
         scheduleId,
@@ -55,12 +139,12 @@ export default class Checkinable extends RockApolloDataSource {
 
         if (aliasIds.length) {
             /** Get the Attendance Occurrences for the given Group and Schedule
-                     * 
-                     *  Attendance Occurrences are the exact instance that a Check In
-                     *  is available for. This is what groups all attendances into commonalities
-                     * 
-                     *  For example: Group 2 on Sept 1 @ 1pm, Group 2 on Sept 1 @ 3pm, Group 2 on Sept 7 @ 1pm, etc
-                     */
+             * 
+             *  Attendance Occurrences are the exact instance that a Check In
+             *  is available for. This is what groups all attendances into commonalities
+             * 
+             *  For example: Group 2 on Sept 1 @ 1pm, Group 2 on Sept 1 @ 3pm, Group 2 on Sept 7 @ 1pm, etc
+             */
             const date = forDate || moment().tz(ROCK.TIMEZONE).format('YYYY-MM-DDT00:00:00')
             const attendanceOccurrences = await this.request('AttendanceOccurrences')
                 .filter(`GroupId eq ${groupId}`)
@@ -121,53 +205,43 @@ export default class Checkinable extends RockApolloDataSource {
             /** Loop through all schedules and parse them for the next Start time */
             await Promise.all(schedules.map(async s => {
                 const { id: sid } = s
-                const lava = `{% schedule id:'${sid}' %}
-                    {
-                        "nextStartDateTime": "{{ schedule.NextStartDateTime | Date:'yyyy-MM-dd HH:mm' }}",
-                        "startOffsetMinutes": {{ schedule.CheckInStartOffsetMinutes }},
-                        "endOffsetMinutes": {{ schedule.CheckInEndOffsetMinutes }}
-                    }
-                {% endschedule %}`
-                const response = await this.post(`/Lava/RenderTemplate`, lava.replace(/\n/g, ""))
-                const jsonResponse = JSON.parse(response)
+                const schedule = await this.parseCheckInSchedule({
+                    scheduleId: sid,
+                    personId,
+                    forDate,
+                    groupId: id
+                })
 
-                /** Check to make sure the nextStartDateTime is valid */
-                if (jsonResponse.nextStartDateTime &&
-                    moment(jsonResponse.nextStartDateTime).isValid()) {
-                    /** Beginning of the most recent instance */
-                    const instanceStartDate = moment
-                        .tz(jsonResponse.nextStartDateTime, ROCK.TIMEZONE)
-                        .utc()
-                    /** Allowed start time for the check in */
-                    const checkInStart = moment(instanceStartDate.format()).subtract(jsonResponse.startOffsetMinutes, 'minutes')
-                    /** Allowed end time for the check in */
-                    const checkInEnd = moment(instanceStartDate.format()).add(jsonResponse.endOffsetMinutes, 'minutes')
-
-                    /** We want to only allow a schedule to be added if the current time falls
-                     *  between the start and end date/time of the schedule
-                     * 
-                     *  For example: a schedule may start at 7am with 30 minutes before and after
-                     *  for check in. This would mean that this schedule is valid between 6:30am
-                     *  and 7:30am
-                     */
-                    if (moment().isBetween(checkInStart, checkInEnd)) {
-                        options.push({
-                            /** Person Id is required
-                             *  If the Start Date is right now or in the past, let's check for 
-                             *  a check in record. If it's in the future, there's no way for
-                             *  someone to have already checked in, so we can just assume false
-                             *  and save us a few API calls
-                             */
-                            id: sid,
-                            isCheckedIn: this.personIsCheckedIn({ groupId: id, scheduleId: sid, personId, forDate }),
-                            startDateTime: instanceStartDate.format()
-                        })
-                    }
+                if (schedule) {
+                    options.push(schedule)
                 }
             }))
         }))
 
-        return options.sort(({ startDateTime: a }, { startDateTime: b }) => moment(a).diff(b))
+        return options.sort(sortOptions)
+    }
+
+    async getGroupOptions({
+        id,
+        personId = null,
+        forDate = null,
+        scheduleId
+    }) {
+        let options = []
+
+        if (scheduleId) {
+            const schedule = await this.parseCheckInSchedule({
+                groupId: id,
+                scheduleId,
+                personId,
+                forDate
+            })
+            if (schedule) {
+                options.push(schedule)
+            }
+        }
+
+        return options.sort(sortOptions)
     }
 
     mostRecentCheckIn = async (rockPersonId, rockGroupId) => {
@@ -230,7 +304,7 @@ export default class Checkinable extends RockApolloDataSource {
             console.log(e)
         }
 
-        return { id }
+        return this.getFromId(id)
     }
 
     isCheckedInBySchedule = async ({ scheduleIds, groupId }) => {
@@ -304,9 +378,10 @@ export default class Checkinable extends RockApolloDataSource {
                             })
                         }
                     case 'guid':
-                        const { id } = await Group.getFromId(identifier.value)
+                        const { id, ...group } = await Group.getFromId(identifier.value)
                         return {
                             id,
+                            ...group,
                             isCheckedIn: await this.isCheckedInBySchedule({
                                 groupId: id,
                                 scheduleIds: scheduleIds.split(",")

@@ -20,7 +20,7 @@ export default gql`
         checkin: CheckInable
     }
 
-    extend type EventContentItem {
+    extend type EventContentItem implements CheckInableNode {
         checkin: CheckInable
     }
 
@@ -28,8 +28,8 @@ export default gql`
         checkin: CheckInable
     }
 
-    input CheckInOptionInput {
-        id: ID
+    extend type Group implements CheckInableNode {
+        checkin: CheckInable
     }
 
     extend type Mutation {
