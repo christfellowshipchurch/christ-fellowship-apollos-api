@@ -25,6 +25,7 @@ export default gql`
         relatedNode: Node
 
         chatChannelId: String
+            @deprecated(reason: "Use 'streamChatChannel' instead")
     }
 
     extend type WeekendContentItem {

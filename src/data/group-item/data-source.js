@@ -476,6 +476,7 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getChatChannelId = async (root) => {
+    // TODO : break up this logic and move it to the StreamChat DataSource
     const { Auth, StreamChat, Flag } = this.context.dataSources;
     const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
 
@@ -500,16 +501,18 @@ export default class GroupItem extends baseGroup.dataSource {
 
     // Make sure the channel exists.
     // If it doesn't, create it.
-    await StreamChat.getChannel({ channelId, channelType: CHANNEL_TYPE, options: {
-      members,
-      created_by: StreamChat.getStreamUser(currentPerson)
-    }});
+    await StreamChat.getChannel({
+      channelId, channelType: CHANNEL_TYPE, options: {
+        members,
+        created_by: StreamChat.getStreamUser(currentPerson)
+      }
+    });
 
     // Add group members not in channel
-    await StreamChat.addMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE} );
+    await StreamChat.addMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE });
 
     // Remove channel members not in group
-    await StreamChat.removeMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE} );
+    await StreamChat.removeMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE });
 
     // Promote/demote members for moderation if necessary
     await StreamChat.updateModerators({ channelId, groupLeaders: leaders, channelType: CHANNEL_TYPE });

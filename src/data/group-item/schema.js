@@ -63,7 +63,9 @@ export const groupSchema = gql`
       after: String
       isLeader: Boolean
     ): PeopleConnection
-    chatChannelId: String
+    
+    chatChannelId: String 
+      @deprecated(reason: "Use 'streamChatChannel' instead")
   }
 
   type Group implements GroupItem & Node {
@@ -81,7 +83,8 @@ export const groupSchema = gql`
       isLeader: Boolean
     ): PeopleConnection
 
-    chatChannelId: String
+    chatChannelId: String 
+      @deprecated(reason: "Use 'streamChatChannel' instead")
 
     allowMessages: String
     dateTime: DateTime
@@ -113,7 +116,8 @@ export const groupSchema = gql`
       isLeader: Boolean
     ): PeopleConnection
 
-    chatChannelId: String
+    chatChannelId: String 
+      @deprecated(reason: "Use 'streamChatChannel' instead")
   }
 
   input GroupFilterInput {

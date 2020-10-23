@@ -24,7 +24,7 @@ const defaultResolvers = {
       id
     }),
   chatChannelId: (root, args, { dataSources }) =>
-    dataSources.GroupItem.getChatChannelId(root),
+    null, // Deprecated
 }
 
 const resolver = {
