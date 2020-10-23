@@ -123,7 +123,7 @@ ROCK_MAPPINGS:
       ContentChannelId: [45, 76]
     EventContentItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [23]
+      ContentChannelTypeId: [23, 29]
     WebsitePagesContentItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [14]
@@ -156,6 +156,7 @@ ROCK_MAPPINGS:
   # Apollos will pull these content channels and expose them as events.
   EVENTS_CONTENT_CHANNEL_IDS:
     - 47
+    - 78
 
   # Apollos will pull content items from these channels and expose them on the user feed
   # However, it will not expose the channel itself.
