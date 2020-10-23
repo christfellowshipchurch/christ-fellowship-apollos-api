@@ -23,6 +23,8 @@ const defaultResolvers = {
       ...args,
       id
     }),
+  chatChannelId: (root, args, { dataSources }) =>
+    dataSources.GroupItem.getChatChannelId(root),
 }
 
 const resolver = {

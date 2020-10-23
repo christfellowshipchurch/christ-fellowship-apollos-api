@@ -57,11 +57,13 @@ export const groupSchema = gql`
     groupType: String
     groupResources: [Resource]
     coverImage: ImageMedia
+
     people(
       first: Int
       after: String
       isLeader: Boolean
     ): PeopleConnection
+    chatChannelId: String
   }
 
   type Group implements GroupItem & Node {
@@ -78,6 +80,8 @@ export const groupSchema = gql`
       after: String
       isLeader: Boolean
     ): PeopleConnection
+
+    chatChannelId: String
 
     allowMessages: String
     dateTime: DateTime
@@ -102,11 +106,14 @@ export const groupSchema = gql`
     coverImage: ImageMedia
     groupResources: [Resource]
     avatars: [String]
+
     people(
       first: Int
       after: String
       isLeader: Boolean
     ): PeopleConnection
+
+    chatChannelId: String
   }
 
   input GroupFilterInput {
