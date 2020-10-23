@@ -32,6 +32,10 @@ export default gql`
         checkin: CheckInable
     }
 
+    extend type LiveStream implements CheckInableNode {
+        checkin: CheckInable
+    }
+
     extend type Mutation {
         checkInCurrentUser(id: ID!, optionIds: [ID]): CheckInable
     }

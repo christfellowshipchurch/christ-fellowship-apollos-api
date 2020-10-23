@@ -8,8 +8,7 @@ export default gql`
         liveStream: LiveStream
     }
 
-    extend type EventContentItem implements LiveNode
-    extend type EventContentItem {
+    extend type EventContentItem implements LiveNode {
         liveStream: LiveStream
     }
 
@@ -32,27 +31,25 @@ export default gql`
         liveStream: LiveStream
     }
   
-type FloatLeftLiveStream {
-    start: String
-    isLive: Boolean
-    coverImage: ImageMedia
-    media: VideoMedia
-    title: String
-  }
+    type FloatLeftLiveStream {
+        start: String
+        isLive: Boolean
+        coverImage: ImageMedia
+        media: VideoMedia
+        title: String
+    }
 
-  extend type Query {
-        floatLeftLiveStream: LiveStream
-        floatLeftEmptyLiveStream: LiveStream
-
+    extend type Query {
         liveStream: LiveStream
             @deprecated(reason: "Use liveStreams, there may be multiple.")
         liveStreams: [LiveStream] @cacheControl(maxAge: 10)
+
         floatLeftLiveStream: LiveStream
         floatLeftEmptyLiveStream: LiveStream
     }
 
-  extend enum InteractionAction {
-    LIVESTREAM_JOINED
-    LIVESTREAM_CLOSED
-  }
+    extend enum InteractionAction {
+        LIVESTREAM_JOINED
+        LIVESTREAM_CLOSED
+    }
 `;
