@@ -20,6 +20,29 @@ export default class ContentItem extends coreContentItem.dataSource {
 
   CORE_LIVE_CONTENT = this.LIVE_CONTENT
 
+  /**
+   * @param {Object[]} associations - Rock Content Channel Item Associations
+   * 
+   * @return {function}
+   */
+  sortByAssociationOrder = (associations) => ((a, b) => {
+    /**
+     * Find the Association Order for the given content channel items
+     */
+    const { order: orderA } = associations.find(item => item.childContentChannelItemId === a.id)
+    const { order: orderB } = associations.find(item => item.childContentChannelItemId === b.id)
+
+    /**
+     * Compare functions want either `0`, `< 0` or `> 0` as a return value, so we'll just subtract
+     * orderA - orderB in order to mimic the `Order asc` request
+     */
+    return orderA - orderB
+  });
+
+  CONTENT_ITEM_ASSOCIATION_SORT = () => [
+    { field: 'Order', direction: 'asc' },
+  ];
+
   LIVE_CONTENT = () => {
     // If we're in a staging environment, we want to
     //  return null so that no filter is applied over
@@ -55,10 +78,6 @@ export default class ContentItem extends coreContentItem.dataSource {
       if (get(attributeValues, 'scriptures', '') !== "") {
         return "DevotionalContentItem"
       }
-    }
-
-    if (id === 7964 && !clientVersion.includes("web")) {
-      return "InformationalContentItem"
     }
 
     return super.resolveType(props)
@@ -254,4 +273,54 @@ export default class ContentItem extends coreContentItem.dataSource {
 
     return `${title} - ${this.createSummary(root)}`
   }
+
+  // MARK : - Core DataSource overrides
+  /**
+   * Gets all Content Channel Item Associations for a given Content Channel Item
+   * @param {number} id - Rock Id of the Content Channel Item for the Association
+   */
+  getAssociationCursorByContentItemId = async (id) => {
+    return this.request('ContentChannelItemAssociations')
+      .filter(`ContentChannelItemId eq ${id}`)
+      .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
+      .cache({ ttl: 60 });
+  };
+
+  /**
+   * Gets all Child Content Channel Items for a given Parent Content Channel Item
+   * @param {number} id - Rock Id of the Parent Content Channel Item
+   */
+  getCursorByParentContentItemId = async (id) => {
+    const associations = await this.request('ContentChannelItemAssociations')
+      .filter(`ContentChannelItemId eq ${id}`)
+      .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
+      .cache({ ttl: 60 })
+      .get();
+
+    if (!associations || !associations.length) return this.request().empty();
+
+    return this.getFromIds(
+      associations.map(
+        ({ childContentChannelItemId }) => childContentChannelItemId
+      )
+    ).transform(results => results.sort(this.sortByAssociationOrder(associations)));
+  };
+
+  /**
+   * Gets all Parent Content Channel Items for a given Child Content Channel Item
+   * @param {number} id - Rock Id of the Child Content Channel Item
+   */
+  getCursorByChildContentItemId = async (id) => {
+    const associations = await this.request('ContentChannelItemAssociations')
+      .filter(`ChildContentChannelItemId eq ${id}`)
+      .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
+      .cache({ ttl: 60 })
+      .get();
+
+    if (!associations || !associations.length) return this.request().empty();
+
+    return this.getFromIds(
+      associations.map(({ contentChannelItemId }) => contentChannelItemId)
+    ).transform(results => results.sort(this.sortByAssociationOrder(associations)));
+  };
 }

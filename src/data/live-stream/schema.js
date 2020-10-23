@@ -31,21 +31,28 @@ export default gql`
     extend type WeekendContentItem {
         liveStream: LiveStream
     }
+  
+type FloatLeftLiveStream {
+    start: String
+    isLive: Boolean
+    coverImage: ImageMedia
+    media: VideoMedia
+    title: String
+  }
 
-    type FloatLeftLiveStream {
-        start: String
-        isLive: Boolean
-        coverImage: ImageMedia
-        media: VideoMedia
-        title: String
-    }
-
-    extend type Query {
+  extend type Query {
         floatLeftLiveStream: LiveStream
         floatLeftEmptyLiveStream: LiveStream
 
         liveStream: LiveStream
             @deprecated(reason: "Use liveStreams, there may be multiple.")
         liveStreams: [LiveStream] @cacheControl(maxAge: 10)
+        floatLeftLiveStream: LiveStream
+        floatLeftEmptyLiveStream: LiveStream
     }
-`
+
+  extend enum InteractionAction {
+    LIVESTREAM_JOINED
+    LIVESTREAM_CLOSED
+  }
+`;

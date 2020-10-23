@@ -487,6 +487,7 @@ type Group implements Node {
   summary: String
   title: String
   videoCall: VideoCallParams
+  chatChannelId: String
 }
 
 enum GROUP_TYPE {

@@ -139,6 +139,11 @@ ROCK_MAPPINGS:
     WebsiteFeature:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [21]
+  GROUP_ITEM:
+    Group:
+      EntityType: Group
+    VolunteerGroup:
+      GroupTypeId: [37]
 
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews
@@ -212,15 +217,23 @@ ROCK_MAPPINGS:
       KEY: 'Arena-15-64'
       VALUE: '65c8d8f1-491a-4335-bbdc-845ebc2887ab'
 
+  # References a type of location that describes one or more specific locations
   LOCATION_TYPES:
     HOME_ADDRESS: 19
+  
+  # References a specific location within Rock
+  LOCATION_IDS:
+    WEB_AND_APP: 190052
 
   WORKFLOW_IDS:
     RSVP: 232
     EMAIL_CAPTURE: 236
     PASSWORD_RESET_EMAIL: 327
     ADDRESS_UPDATE: 328
-    CHECK_IN: 411
+    CHECK_IN: 552
+
+  GROUP_TYPE_IDS:
+    DREAM_TEAM: 37
 
   ADULT_GROUP_TYPE_ID: 31
   CFE_JOURNEY_EXPERIENCE_GROUP_TYPE_ID: 124
@@ -291,6 +304,10 @@ FEATURE_FEEDS:
       title: 'My Groups'
       flagKey: GROUPS
     - type: HorizontalCardList
+      algorithms: [MY_VOLUNTEER_GROUPS]
+      title: 'My Dream Teams'
+      flagKey: VOLUNTEER_GROUPS
+    - type: HorizontalCardList
       algorithms: [MY_PRAYERS]
       title: 'My Prayers'
       primaryAction:
@@ -328,27 +345,32 @@ FEATURE_FEEDS:
       type: PrayerList
       title: Daily Prayer
 
-
 FEATURE_FLAGS:
-  LIVE_STREAM_UI:
-    securityGroupId: 1014843
+  CHECK_IN:
+    status: 'LIVE'
+  GROUPS:
+    status: 'LIVE'
+  HOME_HEADER:
+    status: 'LIVE'
+  GROUP_CHAT:
+    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
     status: 'LIVE'
   LIVE_STREAM_CHAT:
-    securityGroupId: 1014843
+    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    status: 'LIVE'
+  LIVE_STREAM_CHAT_MODERATOR:
+    securityGroupId: 1054703 # CFDP Global Event Chat Moderators Group
+    status: 'LIVE'
+  LIVE_STREAM_UI:
+    securityGroupId: 1014843 # CFDP Experimental Features
     status: 'LIVE'
   NOTIFICATION_CENTER:
     securityGroupId: 1014843 # CFDP Experimental Features
     status: 'LIVE'
-  GROUPS:
-    securityGroupId: 1014843 # CFDP Experimental Features
-    status: 'LIVE'
   ROCK_DYNAMIC_FEED_WITH_PERSONAS:
     status: 'LIVE'
-  CHECK_IN:
-    status: 'LIVE'
-  HOME_HEADER:
-    # TODO : add this back when done testing
-    # securityGroupId: 1014843
+  VOLUNTEER_GROUPS:
+    securityGroupId: 1052010 # CFDP Feature Flags/My Dream Teams
     status: 'LIVE'
 
 PAGE_BUILDER:
