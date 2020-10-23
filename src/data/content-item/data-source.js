@@ -280,6 +280,17 @@ export default class ContentItem extends coreContentItem.dataSource {
 
   // MARK : - Core DataSource overrides
   /**
+   * Gets all Content Channel Item Associations for a given Content Channel Item
+   * @param {number} id - Rock Id of the Content Channel Item for the Association
+   */
+  getAssociationCursorByContentItemId = async (id) => {
+    return this.request('ContentChannelItemAssociations')
+      .filter(`ContentChannelItemId eq ${id}`)
+      .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
+      .cache({ ttl: 60 });
+  };
+
+  /**
    * Gets all Child Content Channel Items for a given Parent Content Channel Item
    * @param {number} id - Rock Id of the Parent Content Channel Item
    */

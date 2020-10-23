@@ -108,6 +108,29 @@ const resolverExtensions = {
   },
 }
 
+const connectionResolvers = {
+  childContentItemsConnection: async ({ id }, args, { dataSources }) => {
+    const { ContentItem } = dataSources
+    const { edges, ...pagination } = await ContentItem.paginate({
+      cursor: await ContentItem.getAssociationCursorByContentItemId(id),
+      args,
+    })
+    const resolveEdges = async () => {
+      const resolvedAssociations = await edges
+
+      return resolvedAssociations.map(({ node, ...edge }) => ({
+        node: ContentItem.getFromId(node.childContentChannelItemId),
+        ...edge
+      }))
+    }
+
+    return {
+      edges: resolveEdges(),
+      ...pagination
+    }
+  },
+}
+
 const resolver = {
   Query: {
     getContentItemByTitle: async (root, { title }, { dataSources }) =>
@@ -133,24 +156,29 @@ const resolver = {
   },
   ContentItem: {
     ...titleResolver,
+    ...connectionResolvers,
   },
   DevotionalContentItem: {
     ...resolverExtensions,
+    ...connectionResolvers,
   },
   UniversalContentItem: {
     ...resolverExtensions,
+    ...connectionResolvers,
   },
   ContentSeriesContentItem: {
-    ...resolverExtensions
+    ...resolverExtensions,
+    ...connectionResolvers,
   },
   MediaContentItem: {
-    ...resolverExtensions
+    ...resolverExtensions,
+    ...connectionResolvers,
   },
   WeekendContentItem: {
-    ...resolverExtensions
+    ...resolverExtensions,
+    ...connectionResolvers,
   },
   ...EventContentItem.resolver,
-  ...InformationalContentItem.resolver,
   ...WebsiteContentItem.resolver,
   ...WebsiteHtmlContentItem.resolver,
   ...WebsiteFeature.resolver,
