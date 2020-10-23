@@ -65,16 +65,13 @@ const resolver = {
         return null;
       }
     },
-    chatChannelId: ({ id, eventStartTime, eventEndTime }) => {
-      //
+    streamChatChannel: ({ id, eventStartTime, eventEndTime }) => {
+      return { id: JSON.stringify({ id, eventStartTime, eventEndTime }) }
     },
     checkin: ({ attributeValues }, args, { dataSources: { CheckInable } }) => {
       const groupId = get(attributeValues, 'checkInGroup.value', '');
-      const scheduleId = get(attributeValues, 'schedule.value', '');
-      return CheckInable.getByIdentifiers({
-        groupIdentifier: groupId,
-        scheduleIdentifiers: [scheduleId],
-      });
+
+      return CheckInable.getById(groupId);
     },
   },
   Query: {
