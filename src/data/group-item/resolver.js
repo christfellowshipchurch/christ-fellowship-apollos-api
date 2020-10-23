@@ -18,6 +18,8 @@ const defaultResolvers = {
     dataSources.GroupItem.getMembers(id),
   leaders: ({ id }, args, { dataSources }) =>
     dataSources.GroupItem.getLeaders(id),
+  chatChannelId: (root, args, { dataSources }) =>
+    dataSources.GroupItem.getChatChannelId(root),
 }
 
 const resolver = {
