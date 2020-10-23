@@ -216,15 +216,20 @@ ROCK_MAPPINGS:
       KEY: 'Arena-15-64'
       VALUE: '65c8d8f1-491a-4335-bbdc-845ebc2887ab'
 
+  # References a type of location that describes one or more specific locations
   LOCATION_TYPES:
     HOME_ADDRESS: 19
+  
+  # References a specific location within Rock
+  LOCATION_IDS:
+    WEB_AND_APP: 190052
 
   WORKFLOW_IDS:
     RSVP: 232
     EMAIL_CAPTURE: 236
     PASSWORD_RESET_EMAIL: 327
     ADDRESS_UPDATE: 328
-    CHECK_IN: 411
+    CHECK_IN: 552
 
   GROUP_TYPE_IDS:
     DREAM_TEAM: 37

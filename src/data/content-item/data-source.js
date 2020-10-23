@@ -80,10 +80,6 @@ export default class ContentItem extends coreContentItem.dataSource {
       }
     }
 
-    if (id === 7964 && !clientVersion.includes("web")) {
-      return "InformationalContentItem"
-    }
-
     return super.resolveType(props)
   }
 

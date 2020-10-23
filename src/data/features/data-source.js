@@ -51,6 +51,8 @@ export default class Feature extends coreFeatures.dataSource {
 
         const items = await ContentItem.getEvents()
 
+        console.log({ items })
+
         return items.map((item, i) => ({
             id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
             title: item.title,

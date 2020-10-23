@@ -1,5 +1,5 @@
 import { Person as corePerson } from '@apollosproject/data-connector-rock'
-import { resolverMerge } from '@apollosproject/server-core'
+import { resolverMerge, withEdgePagination } from '@apollosproject/server-core'
 import ApollosConfig from '@apollosproject/config'
 import { get, filter, find, difference } from 'lodash'
 import { Utils } from '@apollosproject/data-connector-rock'
@@ -78,6 +78,10 @@ const resolver = {
                 key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.SALVATION_DATE')
             })),
 
+    },
+    PeopleConnection: {
+        totalCount: ({ getTotalCount }) => getTotalCount(),
+        pageInfo: withEdgePagination,
     },
     Query: {
         getEthnicityList: (root, args, { dataSources }) =>
