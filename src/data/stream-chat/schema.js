@@ -13,12 +13,4 @@ export default gql`
   extend type LiveStream implements StreamChatChannelNode {
     streamChatChannel: StreamChatChannel
   }
-
-  extend type Group implements StreamChatChannelNode {
-    streamChatChannel: StreamChatChannel
-  }
-
-  extend type VolunteerGroup implements StreamChatChannelNode {
-    streamChatChannel: StreamChatChannel
-  }
 `
