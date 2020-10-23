@@ -429,7 +429,13 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getChatChannelId = async (root) => {
-    const { Auth, StreamChat } = this.context.dataSources;
+    const { Auth, StreamChat, Flag } = this.context.dataSources;
+    const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
+
+    if (featureFlagStatus !== 'LIVE') {
+      return null;
+    }
+
     const currentPerson = await Auth.getCurrentPerson();
     const resolvedType = this.resolveType(root);
     const globalId = createGlobalId(root.id, resolvedType);
