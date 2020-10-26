@@ -179,6 +179,7 @@ const resolver = {
     ...connectionResolvers,
   },
   ...EventContentItem.resolver,
+  ...InformationalContentItem.resolver,
   ...WebsiteContentItem.resolver,
   ...WebsiteHtmlContentItem.resolver,
   ...WebsiteFeature.resolver,
