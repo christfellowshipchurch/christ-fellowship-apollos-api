@@ -48,14 +48,22 @@ const resolver = {
     allowMessages: (root, args, { dataSources }) =>
       dataSources.GroupItem.allowMessages(root),
     checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
-      CheckInable.getFromId(id)
+      CheckInable.getFromId(id),
+    streamChatChannel: ({ id }, args, { dataSources: { CheckInable } }) => {
+      // TODO
+      return null
+    },
   },
   VolunteerGroup: {
     ...defaultResolvers,
     id: ({ id }, args, context, { parentType }) =>
       createGlobalId(id, parentType.name),
     checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
-      CheckInable.getFromId(id)
+      CheckInable.getFromId(id),
+    streamChatChannel: ({ id }, args, { dataSources: { CheckInable } }) => {
+      // TODO
+      return null
+    },
   },
   Mutation: {
     addMemberAttendance: async (root, { id }, { dataSources }) => {
