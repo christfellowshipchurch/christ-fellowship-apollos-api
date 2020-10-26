@@ -10,6 +10,7 @@ import {
   split,
   parseInt
 } from 'lodash'
+import moment from 'moment-timezone';
 
 import { createVideoUrlFromGuid } from '../utils'
 
@@ -20,6 +21,7 @@ export default class ContentItem extends coreContentItem.dataSource {
 
   CORE_LIVE_CONTENT = this.LIVE_CONTENT
 
+  // MARK : - Utils
   /**
    * @param {Object[]} associations - Rock Content Channel Item Associations
    * 
@@ -57,6 +59,29 @@ export default class ContentItem extends coreContentItem.dataSource {
 
     return this.CORE_LIVE_CONTENT()
   }
+
+  CHILDREN_LIVE_CONTENT = () => {
+    // If we're in a staging environment, we want to
+    //  return null so that no filter is applied over
+    //  the content querying.
+    // If we're not in a staging environment, we want
+    //  to apply the standard LIVE_CONTENT filter based
+    //  on the config.yml settings
+
+    if (process.env.CONTENT === 'stage') {
+      return null
+    }
+
+    // get a date in the local timezone of the rock instance.
+    // will create a timezone formatted string and then strip off the offset
+    // should output something like 2019-03-27T12:27:20 which means 12:27pm in New York
+    const date = moment()
+      .tz(ROCK.TIMEZONE)
+      .format()
+      .split(/[-+]\d+:\d+/)[0];
+    const filter = `(((ChildContentChannelItem/StartDateTime lt datetime'${date}') or (ChildContentChannelItem/StartDateTime eq null)) and ((ChildContentChannelItem/ExpireDateTime gt datetime'${date}') or (ChildContentChannelItem/ExpireDateTime eq null))) and (((ChildContentChannelItem/Status eq 'Approved') or (ChildContentChannelItem/ContentChannel/RequiresApproval eq false)))`;
+    return get(ROCK, 'SHOW_INACTIVE_CONTENT', false) ? null : filter;
+  };
 
   resolveType(props) {
     const { clientVersion } = this.context;
@@ -285,7 +310,9 @@ export default class ContentItem extends coreContentItem.dataSource {
    */
   getAssociationCursorByContentItemId = async (id) => {
     return this.request('ContentChannelItemAssociations')
+      // .expand('ChildContentChannel')
       .filter(`ContentChannelItemId eq ${id}`)
+      .andFilter(this.CHILDREN_LIVE_CONTENT())
       .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
       .cache({ ttl: 60 });
   };
