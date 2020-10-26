@@ -29,6 +29,7 @@ const resolver = {
       null,
     // CheckInable.getByContentItem(id),
     label: async ({ attributeValues }, args, { dataSources: { MatrixItem, Event, Schedule } }) => {
+      return ""
       // Get Matrix Items
       const matrixGuid = get(attributeValues, 'schedules.value', '')
       const matrixItems = await MatrixItem.getItemsFromId(matrixGuid)
