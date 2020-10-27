@@ -5,11 +5,13 @@ import {
   get,
   flatten,
   uniq,
+  uniqBy,
   first
 } from 'lodash'
 import moment from 'moment'
 import momentTz from 'moment-timezone'
 
+import { parseRockKeyValuePairs } from '../utils'
 import sanitizeHtml from '../sanitize-html'
 import { sharingResolver } from '../content-item/resolver'
 import deprecatedResolvers from './deprecated-resolvers'
@@ -26,8 +28,26 @@ const resolver = {
       message: ContentItem.generateShareMessage(root),
     }),
     checkin: ({ id }, args, { dataSources: { CheckInable } }, { parentType }) =>
-      null,
-    // CheckInable.getByContentItem(id),
+    CheckInable.getByContentItem(id),
+    callsToAction: async ({ attributeValues }, args, { dataSources }) => {
+      // Deprecated Content Channel Type
+      const ctaValuePairs = parseRockKeyValuePairs(
+        get(attributeValues, 'callsToAction.value', ''),
+        'call',
+        'action')
+
+      if (ctaValuePairs.length) return ctaValuePairs
+
+      // Get Matrix Items
+      const { MatrixItem } = dataSources
+      const matrixGuid = get(attributeValues, 'actions.value', '')
+      const matrixItems = await MatrixItem.getItemsFromId(matrixGuid)
+
+      return matrixItems.map(({ attributeValues: matrixItemAttributeValues }) => ({
+        call: get(matrixItemAttributeValues, 'title.value', ''),
+        action: get(matrixItemAttributeValues, 'url.value', ''),
+      }))
+    },
     label: async ({ attributeValues }, args, { dataSources: { MatrixItem, Event, Schedule } }) => {
       return ""
       // Get Matrix Items
@@ -86,8 +106,11 @@ const resolver = {
             const rockSchedules = await Schedule.getFromIds(schedules)
             const times = await Promise.all(rockSchedules.map(s => Event.parseScheduleAsEvents(s)))
 
-            return flatten(times)
-              .sort((a, b) => moment(a.start).diff(b.start))
+            return uniqBy(
+              flatten(times)
+                .sort((a, b) => moment(a.start).diff(b.start)),
+              'start'
+            )
           }
         }
       })

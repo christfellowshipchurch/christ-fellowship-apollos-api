@@ -180,7 +180,6 @@ export default class LiveStream extends matrixItemDataSource {
 
     await Promise.all(attributeMatrixItems.map(async matrixItem => {
       const scheduleGuid = get(matrixItem, "attributeValues.schedule.value")
-
       if (scheduleGuid) {
         // Do we need to filter this list by only getting Schedules that have an 
         // `EffectiveStartDate` in the past? Do we care about future schedules in
@@ -189,16 +188,6 @@ export default class LiveStream extends matrixItemDataSource {
           .select('Id, iCalendarContent')
           .filter(`${getIdentifierType(scheduleGuid).query}`)
           .first()
-
-        /** The iCalendar invite includes the "relative" start and end date of
-         *  a given Schedule. This takes into account if a schedules has, for
-         *  example, only 1 instance as opposed to many. Let's just filter those out
-         *  right away before we take the time to break down the iCalendar into all
-         *  instances
-         */
-        const { end } = Event.getDateTime(schedule)
-
-        if (moment().isAfter(end)) return
 
         const scheduleInstances = await Schedule.parseiCalendar(schedule.iCalendarContent)
 
@@ -252,8 +241,9 @@ export default class LiveStream extends matrixItemDataSource {
       })
     }
 
-    const allQueries = await Promise.all([byContentItems(), this.byAttributeMatrixTemplate()])
+    const contentItems = await byContentItems()
+    const attributeMatrix = await this.byAttributeMatrixTemplate()
 
-    return flatten(allQueries).filter(i => !!i)
+    return [...contentItems, ...attributeMatrix].filter(i => !!i)
   }
 }

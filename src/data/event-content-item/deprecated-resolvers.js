@@ -13,8 +13,6 @@ import {
 } from 'lodash'
 import moment from 'moment'
 
-import { parseRockKeyValuePairs } from '../utils'
-
 const deprecatedResolvers = {
   nextOccurrence: async ({ title, attributeValues }, args, { dataSources }) => {
     const scheduleGuids = get(attributeValues, 'schedules.value', null)
@@ -35,11 +33,6 @@ const deprecatedResolvers = {
   startDate: ({ startDateTime }) => startDateTime,
   endDate: ({ expireDateTime }) => expireDateTime,
   tags: ({ attributeValues }) => split(get(attributeValues, 'tags.value', ''), ','),
-  callsToAction: ({ attributeValues }, args, { dataSources }) =>
-    parseRockKeyValuePairs(
-      get(attributeValues, 'callsToAction.value', ''),
-      'call',
-      'action'),
   openLinksInNewTab: ({ attributeValues }) => toLower(get(attributeValues, 'openLinksInNewTab.value', 'false')) === 'true',
   hideLabel: ({ attributeValues }) => toLower(get(attributeValues, 'hideLabel.value', 'false')) === 'true',
   events: async ({ title, attributeValues }, args, { dataSources }) => {
