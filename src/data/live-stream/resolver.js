@@ -65,7 +65,10 @@ const resolver = {
         return null;
       }
     },
-    streamChatChannel: ({ id, eventStartTime, eventEndTime }) => {
+    streamChatChannel: async ({ id, eventStartTime, eventEndTime }, _, { dataSources: { Flag } }) => {
+      const featureFlag = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
+      if (featureFlag !== 'LIVE') return null;
+
       return { id: JSON.stringify({ id, eventStartTime, eventEndTime }) }
     },
     checkin: ({ attributeValues }, args, { dataSources: { CheckInable } }) => {

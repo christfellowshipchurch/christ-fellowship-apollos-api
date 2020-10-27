@@ -25,6 +25,8 @@ const defaultResolvers = {
     }),
   chatChannelId: (root, args, { dataSources }) =>
     null, // Deprecated
+  streamChatChannel: async (root, args, { dataSources }) =>
+    dataSources.GroupItem.getChatChannelId(root)
 }
 
 const resolver = {
@@ -49,10 +51,6 @@ const resolver = {
       dataSources.GroupItem.allowMessages(root),
     checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
       CheckInable.getFromId(id),
-    streamChatChannel: ({ id }, args, { dataSources: { CheckInable } }) => {
-      // TODO
-      return null
-    },
   },
   VolunteerGroup: {
     ...defaultResolvers,
@@ -60,10 +58,6 @@ const resolver = {
       createGlobalId(id, parentType.name),
     checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
       CheckInable.getFromId(id),
-    streamChatChannel: ({ id }, args, { dataSources: { CheckInable } }) => {
-      // TODO
-      return null
-    },
   },
   Mutation: {
     addMemberAttendance: async (root, { id }, { dataSources }) => {

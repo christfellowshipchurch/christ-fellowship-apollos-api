@@ -517,7 +517,10 @@ export default class GroupItem extends baseGroup.dataSource {
     // Promote/demote members for moderation if necessary
     await StreamChat.updateModerators({ channelId, groupLeaders: leaders, channelType: CHANNEL_TYPE });
 
-    return channelId;
+    return {
+      id: root.id,
+      channelId
+    }
   };
 
   resolveType({ groupTypeId, id }) {
