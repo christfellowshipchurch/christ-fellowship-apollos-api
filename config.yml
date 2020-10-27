@@ -352,6 +352,9 @@ FEATURE_FLAGS:
   LIVE_STREAM_CHAT:
     securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
     status: 'LIVE'
+  LIVE_STREAM_LANDSCAPE_CHAT:
+    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    status: 'LIVE'
   LIVE_STREAM_CHAT_MODERATOR:
     securityGroupId: 1054703 # CFDP Global Event Chat Moderators Group
     status: 'LIVE'
