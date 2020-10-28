@@ -36,6 +36,8 @@ const deprecatedResolvers = {
   openLinksInNewTab: ({ attributeValues }) => toLower(get(attributeValues, 'openLinksInNewTab.value', 'false')) === 'true',
   hideLabel: ({ attributeValues }) => toLower(get(attributeValues, 'hideLabel.value', 'false')) === 'true',
   events: async ({ title, attributeValues }, args, { dataSources }) => {
+    return []
+
     // If a CMS user has selected 1 or more campuses to use for this event,
     // we want to OVERRIDE any schedule attached to the event and use the 
     // campus weekend service times instead
