@@ -322,7 +322,7 @@ export default class Checkinable extends RockApolloDataSource {
     }
 
     getByContentItem = async (id) => {
-        const { ContentItem, Flag, Group, Schedule } = this.context.dataSources;
+        const { ContentItem, Flag, } = this.context.dataSources;
 
         try {
             const featureStatus = await Flag.currentUserCanUseFeature("CHECK_IN")
@@ -341,10 +341,6 @@ export default class Checkinable extends RockApolloDataSource {
         const groupKey = Object.keys(attributes).find(key =>
             key.toLowerCase().includes('group')
             && attributes[key].fieldTypeId === ROCK_CONSTANTS.GROUP)
-        const scheduleKey = Object.keys(attributes).find(key =>
-            key.toLowerCase().includes('schedule')
-            && (attributes[key].fieldTypeId === ROCK_CONSTANTS.SCHEDULES
-                || attributes[key].fieldTypeId === ROCK_CONSTANTS.SCHEDULE))
 
         if (groupKey && groupKey !== '') {
             // The workflow in Rock requires an integer id, so if
@@ -352,45 +348,8 @@ export default class Checkinable extends RockApolloDataSource {
             // the id from Rock and cache the value in Redis for later
             // access.
             const groupValue = attributeValues[groupKey].value
-            const scheduleIds = attributeValues[scheduleKey].value
 
-            if (groupValue && groupValue !== '') {
-                // At this point, we want to check and make sure that we should even
-                // be offering check in. We want want to check if `now` falls within
-                // a time of the schedules on the content item
-                //
-                const showSchedule = await Schedule.timeIsInSchedules({
-                    ids: scheduleIds.split(','),
-                    time: moment().utc().toISOString()
-                })
-
-                if (!showSchedule) return null
-
-                const identifier = getIdentifierType(groupValue)
-
-                switch (identifier.type) {
-                    case 'int':
-                        return {
-                            id: identifier.value,
-                            isCheckedIn: await this.isCheckedInBySchedule({
-                                groupId: identifier.value,
-                                scheduleIds: scheduleIds.split(",")
-                            })
-                        }
-                    case 'guid':
-                        const { id, ...group } = await Group.getFromId(identifier.value)
-                        return {
-                            id,
-                            ...group,
-                            isCheckedIn: await this.isCheckedInBySchedule({
-                                groupId: id,
-                                scheduleIds: scheduleIds.split(",")
-                            })
-                        }
-                    default:
-                        break;
-                }
-            }
+            return groupValue && groupValue !== "" ? this.getFromId(groupValue) : null
         }
 
         return null
