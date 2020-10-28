@@ -241,9 +241,8 @@ export default class LiveStream extends matrixItemDataSource {
       })
     }
 
-    const contentItems = await byContentItems()
     const attributeMatrix = await this.byAttributeMatrixTemplate()
 
-    return [...contentItems, ...attributeMatrix].filter(i => !!i)
+    return attributeMatrix.filter(i => !!i)
   }
 }
