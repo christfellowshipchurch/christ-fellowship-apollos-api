@@ -11,13 +11,7 @@ const resolver = {
   },
   AuthenticatedUser: {
     streamChatToken: async ({ id }, args, { dataSources }) => {
-      const { Flag, StreamChat } = dataSources;
-      const featureFlagStatus = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
-
-      if (featureFlagStatus !== 'LIVE') {
-        return null;
-      }
-
+      const { StreamChat } = dataSources;
       return StreamChat.generateUserToken(id);
     },
     streamChatRole: async ({ id: userId }, { id: channelId }, { dataSources }) => {

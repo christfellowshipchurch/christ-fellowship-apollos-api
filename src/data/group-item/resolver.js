@@ -18,8 +18,15 @@ const defaultResolvers = {
     dataSources.GroupItem.getMembers(id),
   leaders: ({ id }, args, { dataSources }) =>
     dataSources.GroupItem.getLeaders(id),
+  people: async ({ id }, args, { dataSources: { GroupItem } }) =>
+    GroupItem.paginateMembersById({
+      ...args,
+      id
+    }),
   chatChannelId: (root, args, { dataSources }) =>
-    dataSources.GroupItem.getChatChannelId(root),
+    null, // Deprecated
+  streamChatChannel: async (root, args, { dataSources }) =>
+    dataSources.GroupItem.getChatChannelId(root)
 }
 
 const resolver = {
@@ -42,9 +49,15 @@ const resolver = {
       dataSources.GroupItem.getGroupParentVideoCallParams(root),
     allowMessages: (root, args, { dataSources }) =>
       dataSources.GroupItem.allowMessages(root),
+    checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
+      CheckInable.getFromId(id),
   },
   VolunteerGroup: {
-    ...defaultResolvers
+    ...defaultResolvers,
+    id: ({ id }, args, context, { parentType }) =>
+      createGlobalId(id, parentType.name),
+    checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
+      CheckInable.getFromId(id),
   },
   Mutation: {
     addMemberAttendance: async (root, { id }, { dataSources }) => {

@@ -47,6 +47,16 @@ export default gql`
         communicationPreferences: CommunicationPreferences
     }
 
+    type PeopleConnection {
+        edges: [PeopleConnectionEdge]
+        totalCount: Int
+        pageInfo: PaginationInfo
+    }
+    type PeopleConnectionEdge {
+        node: Person
+        cursor: String
+    }
+
     type CommunicationPreferences {
         allowSMS: Boolean
         allowEmail: Boolean

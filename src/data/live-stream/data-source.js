@@ -1,10 +1,14 @@
-import { split, filter, get, find } from 'lodash'
-import { dataSource as scheduleDataSource } from '../schedule'
+import { dataSource as matrixItemDataSource } from '../matrix-item'
 import moment from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
+import { createGlobalId } from '@apollosproject/server-core'
+import { split, filter, get, find, flatten, flattenDeep, uniqBy } from 'lodash'
 
-export default class LiveStream extends scheduleDataSource {
-  resource = 'LiveStream';
+import { getIdentifierType } from '../utils'
+
+const { ROCK } = ApollosConfig
+
+export default class LiveStream extends matrixItemDataSource {
 
   get baseURL() {
     return ApollosConfig.CHURCH_ONLINE.URL;
@@ -16,6 +20,62 @@ export default class LiveStream extends scheduleDataSource {
 
   get webViewUrl() {
     return ApollosConfig.CHURCH_ONLINE.WEB_VIEW_URL;
+  }
+
+  getFromId = (id) => {
+    const decoded = JSON.parse(id)
+
+    return this.request()
+      .filter(`Id eq ${decoded.id}`)
+      .transform((result) =>
+        result.map((node, i) => ({
+          ...node,
+          eventStartTime: decoded.eventStartTime,
+          eventEndTime: decoded.eventEndTime,
+        }))
+      )
+      .first()
+  };
+
+  getRelatedNodeFromId = async (id) => {
+    const attributeMatrixItem = await this.request(`/AttributeMatrixItems`)
+      .expand('AttributeMatrix')
+      .filter(`Id eq ${id}`)
+      .select(`AttributeMatrix/Guid`)
+      .first()
+    const { attributeMatrix } = attributeMatrixItem
+
+    if (attributeMatrix) {
+      const attributeValue = await this.request('/AttributeValues')
+        .expand('Attribute')
+        .filter(`Value eq '${attributeMatrix.guid}'`)
+        .andFilter(`(Attribute/EntityTypeId eq 208)`) // append for specific EntityTypes that are supported
+        .select('EntityId, Attribute/EntityTypeId')
+        .first()
+
+      if (attributeValue) {
+        const { ContentItem } = this.context.dataSources
+        const { entityId, attribute } = attributeValue
+        const { entityTypeId } = attribute
+
+        switch (entityTypeId) {
+          case 208: // Entity Type Id for Content Item
+            const contentItem = await ContentItem.getFromId(entityId)
+
+            const resolvedType = ContentItem.resolveType(contentItem)
+            const globalId = createGlobalId(entityId, resolvedType)
+
+            return ({
+              ...contentItem,
+              globalId
+            })
+          default:
+            return null
+        }
+      }
+    }
+
+    return null
   }
 
   async getLiveStream() {
@@ -82,30 +142,108 @@ export default class LiveStream extends scheduleDataSource {
     return liveStreamContentItemsWithNextOccurrences;
   }
 
+  async byAttributeMatrixTemplate() {
+    const { Event, Schedule } = this.context.dataSources
+    const TEMPLATE_ID = 11
+
+    // Get Attribute Matrix by Template Id
+    const attributeMatrices = await this.request('/AttributeMatrices')
+      .filter(`AttributeMatrixTemplateId eq ${TEMPLATE_ID}`)
+      .select('Guid')
+      .get()
+
+    // Get Content Channel Items where Attribute Value is equal to Attribute Matrix Guid
+    const contentChannelItemPromises = await Promise.all(attributeMatrices.map(({ guid }) => {
+      const attributeKey = "LiveStreams"
+      const query = `attributeKey=${attributeKey}&value=${guid}`
+
+      return this.request(`/ContentChannelItems/GetByAttributeValue?${query}`)
+        .get()
+    }))
+
+    const contentChannelItems = flattenDeep(contentChannelItemPromises.filter(i => i.length))
+
+    // Get Attribute Matrix Items from the "filtered" Attribute Matrix Guids
+    const attributeMatrixItemPromises = await Promise.all(contentChannelItems.map(({ id, attributeValues }) => {
+      const attributeMatrixGuid = get(attributeValues, 'liveStreams.value')
+      return this.request('/AttributeMatrixItems')
+        .expand('AttributeMatrix')
+        .filter(`AttributeMatrix/${getIdentifierType(attributeMatrixGuid).query}`)
+        .transform((results) => results.map(n =>
+          ({ ...n, contentChannelItemId: id }))
+        )
+        .get()
+    }))
+    const attributeMatrixItems = flattenDeep(attributeMatrixItemPromises)
+
+    const upcomingOrLive = []
+
+    await Promise.all(attributeMatrixItems.map(async matrixItem => {
+      const scheduleGuid = get(matrixItem, "attributeValues.schedule.value")
+      if (scheduleGuid) {
+        // Do we need to filter this list by only getting Schedules that have an 
+        // `EffectiveStartDate` in the past? Do we care about future schedules in
+        // this context?
+        const schedule = await this.request('/Schedules')
+          .select('Id, iCalendarContent')
+          .filter(`${getIdentifierType(scheduleGuid).query}`)
+          .first()
+
+        const scheduleInstances = await Schedule.parseiCalendar(schedule.iCalendarContent)
+
+        upcomingOrLive.push(...scheduleInstances
+          // .filter(instance => moment().isSameOrBefore(instance.end)) // returns all live or upcoming
+          .filter(instance => moment().isBetween(moment(instance.start), moment(instance.end))) // returns only live
+          .map(({ start, end }) => ({ ...matrixItem, eventStartTime: start, eventEndTime: end }))
+        )
+      }
+
+      return
+    }))
+
+    /**
+     * Weird bug where some schedules were being returned twice.
+     * This filters to make sure we're only returning a Live Stream instance once
+     */
+    return uniqBy(upcomingOrLive, (elem) => [elem.id, elem.eventStartTime, elem.eventEndTime].join())
+  }
+
   async getLiveStreams() {
-    const liveStreamContentItems = await this.getLiveStreamContentItems()
+    const byContentItems = async () => {
+      const liveStreamContentItems = await this.getLiveStreamContentItems()
 
-    // console.log({ liveStreamContentItems })
+      // Check the schedule on each event to see
+      // if it's currently live
+      const currentlyLiveContentItems = filter(liveStreamContentItems,
+        ({ nextOccurrences }) =>
+          find(nextOccurrences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end))
+      )
 
-    // Check the schedule on each event to see
-    // if it's currently live
-    const currentlyLiveContentItems = filter(liveStreamContentItems,
-      ({ nextOccurrences }) =>
-        find(nextOccurrences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end))
-    )
+      // Create the Live Stream object from the Content Items
+      // that are currently live and return active Live Streams
+      return currentlyLiveContentItems.map(contentItem => {
+        const { start, end } = find(contentItem.nextOccurrences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end))
 
-    // Create the Live Stream object from the Content Items
-    // that are currently live and return active Live Streams
-    return currentlyLiveContentItems.map(contentItem => {
-      return ({
-        isLive: true,
-        eventStartTime: null, // TODO
-        media: {
-          sources: [{ uri: get(contentItem, 'attributeValues.liveStreamUri.value', '') }]
-        },
-        webViewUrl: get(contentItem, 'attributeValues.liveStreamUri.value', ''),
-        contentItem
+        return ({
+          eventStartTime: start,
+          eventEndTime: end,
+          media: {
+            sources: [{ uri: get(contentItem, 'attributeValues.liveStreamUri.value', '') }]
+          },
+          webViewUrl: get(contentItem, 'attributeValues.liveStreamUri.value', ''),
+          contentChannelItemId: contentItem.id,
+          attributeValues: {
+            liveStreamUrl: {
+              value: get(contentItem, 'attributeValues.liveStreamUri.value', '')
+            }
+          }
+        })
       })
-    })
+    }
+
+    const contentItems = await byContentItems()
+    const attributeMatrix = await this.byAttributeMatrixTemplate()
+
+    return [...contentItems, ...attributeMatrix].filter(i => !!i)
   }
 }

@@ -180,6 +180,7 @@ const resolver = {
   },
   ...InformationalContentItem.resolver,
   ...EventContentItem.resolver,
+  ...InformationalContentItem.resolver,
   ...WebsiteContentItem.resolver,
   ...WebsiteHtmlContentItem.resolver,
   ...WebsiteFeature.resolver,
