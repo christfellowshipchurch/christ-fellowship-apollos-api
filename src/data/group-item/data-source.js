@@ -177,6 +177,7 @@ export default class GroupItem extends baseGroup.dataSource {
           }`
         )
         .andFilter(`GroupMemberStatus ne 'Inactive'`)
+        .andFilter(`GroupMemberStatus ne 'Pending'`)
         // Filter by Group Type Id up here
         .andFilter(
           groupTypeIds
