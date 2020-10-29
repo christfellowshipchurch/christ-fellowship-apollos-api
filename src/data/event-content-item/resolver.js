@@ -1,20 +1,12 @@
-import {
-  ContentItem as coreContentItem,
-} from '@apollosproject/data-connector-rock'
-import {
-  get,
-  flatten,
-  uniq,
-  uniqBy,
-  first
-} from 'lodash'
-import moment from 'moment'
-import momentTz from 'moment-timezone'
+import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock';
+import { get, flatten, uniq, uniqBy, first } from 'lodash';
+import moment from 'moment';
+import momentTz from 'moment-timezone';
 
-import { parseRockKeyValuePairs } from '../utils'
-import sanitizeHtml from '../sanitize-html'
-import { sharingResolver } from '../content-item/resolver'
-import deprecatedResolvers from './deprecated-resolvers'
+import { parseRockKeyValuePairs } from '../utils';
+import sanitizeHtml from '../sanitize-html';
+import { sharingResolver } from '../content-item/resolver';
+import deprecatedResolvers from './deprecated-resolvers';
 
 const resolver = {
   EventContentItem: {
@@ -22,100 +14,168 @@ const resolver = {
     ...sharingResolver,
     ...deprecatedResolvers,
     htmlContent: ({ content }) => sanitizeHtml(content),
-    sharing: (root, args, { dataSources: { ContentItem } }, { parentType }) => ({
+    sharing: (
+      root,
+      args,
+      { dataSources: { ContentItem } },
+      { parentType }
+    ) => ({
       url: ContentItem.generateShareUrl(root, parentType),
       title: 'Share via ...',
       message: ContentItem.generateShareMessage(root),
     }),
     checkin: ({ id }, args, { dataSources: { CheckInable } }, { parentType }) =>
-    CheckInable.getByContentItem(id),
+      CheckInable.getByContentItem(id),
     callsToAction: async ({ attributeValues }, args, { dataSources }) => {
       // Deprecated Content Channel Type
       const ctaValuePairs = parseRockKeyValuePairs(
         get(attributeValues, 'callsToAction.value', ''),
         'call',
-        'action')
+        'action'
+      );
 
-      if (ctaValuePairs.length) return ctaValuePairs
+      if (ctaValuePairs.length) return ctaValuePairs;
 
       // Get Matrix Items
-      const { MatrixItem } = dataSources
-      const matrixGuid = get(attributeValues, 'actions.value', '')
-      const matrixItems = await MatrixItem.getItemsFromId(matrixGuid)
+      const { MatrixItem } = dataSources;
+      const matrixGuid = get(attributeValues, 'actions.value', '');
+      const matrixItems = await MatrixItem.getItemsFromId(matrixGuid);
 
-      return matrixItems.map(({ attributeValues: matrixItemAttributeValues }) => ({
-        call: get(matrixItemAttributeValues, 'title.value', ''),
-        action: get(matrixItemAttributeValues, 'url.value', ''),
-      }))
+      return matrixItems.map(
+        ({ attributeValues: matrixItemAttributeValues }) => ({
+          call: get(matrixItemAttributeValues, 'title.value', ''),
+          action: get(matrixItemAttributeValues, 'url.value', ''),
+        })
+      );
     },
-    label: async ({ attributeValues }, args, { dataSources: { MatrixItem, Event, Schedule } }) => {
-      return ""
+    liveStreamActions: async ({ attributeValues }, args, { dataSources }) => {
       // Get Matrix Items
-      const matrixGuid = get(attributeValues, 'schedules.value', '')
-      const matrixItems = await MatrixItem.getItemsFromId(matrixGuid)
+      const { MatrixItem } = dataSources;
+      const liveStreamActionsMatrixGuid = get(
+        attributeValues,
+        'liveStreamActions.value',
+        ''
+      );
+      const liveStreamActionsItems = await MatrixItem.getItemsFromId(
+        liveStreamActionsMatrixGuid
+      );
+
+      const defaultLiveStreamActions = [
+        { call: 'Get Connected', action: 'https://christfellowship.church/' },
+        { call: 'I Have Decided', action: 'https://christfellowship.church/' },
+        { call: 'Give Online', action: 'https://christfellowship.church/' },
+      ];
+
+      const liveStreamActionsItemsMapped = liveStreamActionsItems.map(
+        ({ attributeValues: liveStreamActionsItemsAttributeValues }) => ({
+          call: get(liveStreamActionsItemsAttributeValues, 'title.value', ''),
+          action: get(liveStreamActionsItemsAttributeValues, 'url.value', ''),
+          duration: get(
+            liveStreamActionsItemsAttributeValues,
+            'duration.value',
+            ''
+          ),
+          startTime: get(
+            liveStreamActionsItemsAttributeValues,
+            'startTime.value',
+            ''
+          ),
+        })
+      );
+
+      return defaultLiveStreamActions.concat(liveStreamActionsItemsMapped);
+    },
+    label: async (
+      { attributeValues },
+      args,
+      { dataSources: { MatrixItem, Event, Schedule } }
+    ) => {
+      return '';
+      // Get Matrix Items
+      const matrixGuid = get(attributeValues, 'schedules.value', '');
+      const matrixItems = await MatrixItem.getItemsFromId(matrixGuid);
 
       // Get Schedules
       const schedules = await Schedule.getFromIds(
-        uniq(matrixItems.map(m => get(item, 'attributeValues.schedule.value', '')))
-      )
+        uniq(
+          matrixItems.map((m) =>
+            get(item, 'attributeValues.schedule.value', '')
+          )
+        )
+      );
 
       // Sort by start date asc, take the first
-      const eventStart = first(schedules.sort((a, b) => moment(a.effectiveStartDate).diff(b.effectiveStartDate)))
+      const eventStart = first(
+        schedules.sort((a, b) =>
+          moment(a.effectiveStartDate).diff(b.effectiveStartDate)
+        )
+      );
 
       // Sort by end date desc, take the first
-      const eventEnd = first(schedules.sort((a, b) => moment(b.effectiveEndDate).diff(a.effectiveEndDate)))
+      const eventEnd = first(
+        schedules.sort((a, b) =>
+          moment(b.effectiveEndDate).diff(a.effectiveEndDate)
+        )
+      );
 
-      return ""
+      return '';
     },
-    eventGroupings: async ({ attributeValues }, args, { dataSources: { MatrixItem, Event, Schedule } }) => {
+    eventGroupings: async (
+      { attributeValues },
+      args,
+      { dataSources: { MatrixItem, Event, Schedule } }
+    ) => {
       // Get Matrix Items
-      const matrixGuid = get(attributeValues, 'schedules.value', '')
-      let matrixItems = []
+      const matrixGuid = get(attributeValues, 'schedules.value', '');
+      let matrixItems = [];
 
-      if (!matrixGuid || matrixGuid === "") return []
+      if (!matrixGuid || matrixGuid === '') return [];
 
       try {
-        matrixItems = await MatrixItem.getItemsFromId(matrixGuid)
+        matrixItems = await MatrixItem.getItemsFromId(matrixGuid);
       } catch (e) {
-        console.log({ e })
-        return []
+        console.log({ e });
+        return [];
       }
 
       /**
        * Matrix Items are structured in Rock as: { schedule, [filters] }
        * We need to invert that relationship to be: { filter: [schedules] }
        */
-      const filterScheduleDictionary = {}
-      matrixItems.forEach(item => {
-        const schedule = get(item, 'attributeValues.schedule.value', '')
-        const filters = get(item, 'attributeValues.filters.value', '')
+      const filterScheduleDictionary = {};
+      matrixItems.forEach((item) => {
+        const schedule = get(item, 'attributeValues.schedule.value', '');
+        const filters = get(item, 'attributeValues.filters.value', '');
 
-        filters.split(',').forEach(filter => {
+        filters.split(',').forEach((filter) => {
           if (filterScheduleDictionary[filter]) {
-            filterScheduleDictionary[filter].push(schedule)
+            filterScheduleDictionary[filter].push(schedule);
           } else {
-            filterScheduleDictionary[filter] = [schedule]
+            filterScheduleDictionary[filter] = [schedule];
           }
-        })
-      })
+        });
+      });
 
-      return Object.entries(filterScheduleDictionary).map(([name, schedules]) => {
-        return {
-          name,
-          instances: async () => {
-            const rockSchedules = await Schedule.getFromIds(schedules)
-            const times = await Promise.all(rockSchedules.map(s => Event.parseScheduleAsEvents(s)))
+      return Object.entries(filterScheduleDictionary).map(
+        ([name, schedules]) => {
+          return {
+            name,
+            instances: async () => {
+              const rockSchedules = await Schedule.getFromIds(schedules);
+              const times = await Promise.all(
+                rockSchedules.map((s) => Event.parseScheduleAsEvents(s))
+              );
 
-            return uniqBy(
-              flatten(times)
-                .sort((a, b) => moment(a.start).diff(b.start)),
-              'start'
-            )
-          }
+              return uniqBy(
+                flatten(times).sort((a, b) => moment(a.start).diff(b.start)),
+                'start'
+              );
+            },
+          };
         }
-      })
-    }
+      );
+    },
   },
-}
+};
 
-export default resolver
+export default resolver;
