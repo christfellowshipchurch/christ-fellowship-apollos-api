@@ -7,31 +7,17 @@ import {
 
 import * as Analytics from '@apollosproject/data-connector-analytics';
 import * as Scripture from '@apollosproject/data-connector-bible';
-// import * as LiveStream from '@apollosproject/data-connector-church-online'
-// import * as Cloudinary from '@apollosproject/data-connector-cloudinary';
 import * as OneSignal from '@apollosproject/data-connector-onesignal';
 import * as Pass from '@apollosproject/data-connector-passes';
-// import * as Search from '@apollosproject/data-connector-algolia-search';
-// import * as Cache from '@apollosproject/data-connector-redis-cache';
-import * as Sms from '@apollosproject/data-connector-twilio';
 import {
+  AuthSms,
+  BinaryFiles,
   Followings,
   Interactions,
-  RockConstants,
-  // Person,
-  // ContentItem,
-  // ContentChannel,
-  Sharable,
-  // Auth,
   PersonalDevice,
+  RockConstants,
+  Sharable,
   Template,
-  AuthSms,
-  // Campus,
-  // Group,
-  BinaryFiles,
-  // Features,
-  // Event,
-  // PrayerRequest
 } from '@apollosproject/data-connector-rock';
 import * as Theme from './theme';
 
@@ -39,6 +25,8 @@ import * as Theme from './theme';
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
 import * as OneSignalWithRock from './oneSignalWithRock';
 
+// TODO : use when 1.7.0 goes into production
+// import * as ActionAlgorithm from './action-algorithms';
 import * as AdditionalEndpoint from './additional-endpoints';
 import * as Address from './address';
 import * as Auth from './auth';
@@ -77,6 +65,7 @@ import * as Workflow from './workflow';
 
 // MARK : - Please keep in alphabetical order
 const data = {
+  // ActionAlgorithm,
   AdditionalEndpoint,
   Address,
   Analytics,

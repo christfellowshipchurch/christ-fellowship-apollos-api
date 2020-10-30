@@ -44,7 +44,7 @@ export default class Feature extends coreFeatures.dataSource {
         return accum;
     }, {})
 
-    /** Algorithms */
+    // MARK : - Algorithms
     async allEventsAlgorithm() {
         const { ContentItem } = this.context.dataSources
 
@@ -211,7 +211,7 @@ export default class Feature extends coreFeatures.dataSource {
     }
 
     async myVolunteerGroupsAlgorithm({ limit = null } = {}) {
-        const { Group, Auth, ContentItem } = this.context.dataSources
+        const { Group, Auth } = this.context.dataSources
 
         try {
             const { id } = await Auth.getCurrentPerson()
@@ -288,7 +288,7 @@ export default class Feature extends coreFeatures.dataSource {
     }
 
     async createAvatarListFeature({ algorithms, primaryAction, isCard }) {
-        const people = () => this.runAlgorithms({ algorithms });
+        const people = this.runAlgorithms({ algorithms });
 
         // Ensures that we have a generated ID for the Primary Action related node, if not provided.
         if (
@@ -324,8 +324,7 @@ export default class Feature extends coreFeatures.dataSource {
         subtitle,
         primaryAction
     }) {
-        // Generate a list of horizontal cards.
-        const cards = () => this.runAlgorithms({ algorithms });
+        const cards = this.runAlgorithms({ algorithms });
 
         // Ensures that we have a generated ID for the Primary Action related node, if not provided.
         if (
@@ -357,7 +356,7 @@ export default class Feature extends coreFeatures.dataSource {
     }
 
     async createLiveStreamListFeature({ algorithms, title, subtitle }) {
-        const liveStreams = () => this.runAlgorithms({ algorithms });
+        const liveStreams = this.runAlgorithms({ algorithms });
 
         return {
             // The Feature ID is based on all of the action ids, added together.
