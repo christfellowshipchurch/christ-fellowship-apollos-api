@@ -1,6 +1,9 @@
 import { gql } from 'apollo-server';
 
-import { createApolloServerConfig } from '@apollosproject/server-core';
+import {
+  createApolloServerConfig,
+  Interfaces,
+} from '@apollosproject/server-core';
 
 import * as Analytics from '@apollosproject/data-connector-analytics';
 import * as Scripture from '@apollosproject/data-connector-bible';
@@ -72,6 +75,7 @@ import * as WebsiteNavigation from './website-navigation';
 import * as WebsitePagesContentItem from './website-pages-content-item';
 import * as Workflow from './workflow';
 
+// MARK : - Please keep in alphabetical order
 const data = {
   AdditionalEndpoint,
   Address,
@@ -94,6 +98,7 @@ const data = {
   Group,
   GroupItem,
   Interactions,
+  Interfaces,
   LiveStream,
   MatrixItem,
   Message,

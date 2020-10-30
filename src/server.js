@@ -61,6 +61,11 @@ const apolloServer = new ApolloServer({
 
 const app = express();
 
+// health check
+app.get('/health', (req, res) => {
+  res.send('ok');
+});
+
 applyServerMiddleware({ app, dataSources, context });
 setupJobs({ app, dataSources, context });
 
