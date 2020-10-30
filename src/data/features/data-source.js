@@ -9,7 +9,6 @@ import {
 } from 'lodash'
 import moment from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
-import { createGlobalId } from '@apollosproject/server-core'
 
 const { ROCK_MAPPINGS, FEATURE_FLAGS, ROCK } = ApollosConfig
 const { createImageUrlFromGuid } = Utils
@@ -52,7 +51,7 @@ export default class Feature extends coreFeatures.dataSource {
         const items = await ContentItem.getEvents()
 
         return items.map((item, i) => ({
-            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+            id: `${item.id}${i}`,
             title: item.title,
             relatedNode: { ...item, __type: ContentItem.resolveType(item) },
             image: ContentItem.getCoverImage(item),
@@ -100,7 +99,7 @@ export default class Feature extends coreFeatures.dataSource {
         const items = limit ? await cursor.top(limit).get() : await cursor.get();
 
         return items.map((item, i) => ({
-            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+            id: `${item.id}${i}`,
             title: item.title,
             subtitle: ContentItem.createSummary(item),
             relatedNode: { ...item, __type: ContentItem.resolveType(item) },
@@ -128,7 +127,7 @@ export default class Feature extends coreFeatures.dataSource {
         const items = limit ? await cursor.top(limit).get() : await cursor.get()
 
         return items.map((item, i) => ({
-            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+            id: `${item.id}${i}`,
             title: item.title,
             subtitle: get(item, 'contentChannel.name'),
             relatedNode: { ...item, __type: ContentItem.resolveType(item) },
@@ -156,7 +155,7 @@ export default class Feature extends coreFeatures.dataSource {
                 }
 
                 return ({
-                    id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                    id: `${item.id}${i}`,
                     title: Group.getTitle(item),
                     relatedNode: {
                         __type: Group.resolveType(item),
@@ -195,7 +194,7 @@ export default class Feature extends coreFeatures.dataSource {
             }
 
             return ({
-                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                id: `${item.id}${i}`,
                 title: item.text,
                 relatedNode: {
                     __type: "PrayerRequest",
@@ -223,7 +222,7 @@ export default class Feature extends coreFeatures.dataSource {
 
             return groups.map((item, i) => {
                 return ({
-                    id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                    id: `${item.id}${i}`,
                     title: Group.getTitle(item),
                     relatedNode: {
                         __type: Group.resolveType(item),
@@ -253,7 +252,7 @@ export default class Feature extends coreFeatures.dataSource {
         const events = await this.context.dataSources.ContentItem.getEvents(limit)
 
         return events.map((event, i) => ({
-            id: createGlobalId(`${event.id}${i}`, 'ActionListAction'),
+            id: `${event.id}${i}`,
             title: event.title,
             relatedNode: { ...event, __type: 'EventContentItem' },
             image: event.coverImage,
@@ -267,7 +266,6 @@ export default class Feature extends coreFeatures.dataSource {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
             id: this.createFeatureId({
-                type: 'ActionBarFeature',
                 args: {
                     actions
                 },
@@ -279,10 +277,7 @@ export default class Feature extends coreFeatures.dataSource {
                     action.relatedNode &&
                     !action.relatedNode.id
                 ) {
-                    action.relatedNode.id = createGlobalId( // eslint-disable-line
-                        JSON.stringify(action.relatedNode),
-                        action.relatedNode.__typename
-                    );
+                    action.relatedNode.id = this.createFeatureId({ args: action.relatedNode});
                 }
 
                 return action
@@ -301,17 +296,13 @@ export default class Feature extends coreFeatures.dataSource {
             primaryAction.relatedNode &&
             !primaryAction.relatedNode.id
         ) {
-            primaryAction.relatedNode.id = createGlobalId( // eslint-disable-line
-                JSON.stringify(primaryAction.relatedNode),
-                primaryAction.relatedNode.__typename
-            );
+            primaryAction.relatedNode.id = this.createFeatureId({ args: primaryAction.relatedNode });
         }
 
         return {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
             id: this.createFeatureId({
-                type: 'AvatarListFeature',
                 args: {
                     algorithms,
                     primaryAction,
@@ -342,17 +333,13 @@ export default class Feature extends coreFeatures.dataSource {
             primaryAction.relatedNode &&
             !primaryAction.relatedNode.id
         ) {
-            primaryAction.relatedNode.id = createGlobalId( // eslint-disable-line
-                JSON.stringify(primaryAction.relatedNode),
-                primaryAction.relatedNode.__typename
-            );
+            primaryAction.relatedNode.id = this.createFeatureId({ args: primaryAction.relatedNode });
         }
 
         return {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
             id: this.createFeatureId({
-                type: 'HorizontalCardListFeature',
                 args: {
                     algorithms,
                     title,
@@ -376,7 +363,6 @@ export default class Feature extends coreFeatures.dataSource {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
             id: this.createFeatureId({
-                type: 'LiveStreamListFeature',
                 args: {
                     algorithms,
                     title,
@@ -584,7 +570,7 @@ export default class Feature extends coreFeatures.dataSource {
             }
 
             return {
-                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                id: `${item.id}${i}`,
                 title: item.title,
                 subtitle: get(item, 'contentChannel.name'),
                 relatedNode: { ...item, __type: ContentItem.resolveType(item) },
