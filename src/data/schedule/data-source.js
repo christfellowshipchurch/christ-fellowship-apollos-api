@@ -18,9 +18,32 @@ export default class Schedule extends RockApolloDataSource {
   defaultEndOffsetMinutes = 60 * 12 // 8 hours
 
   /** MARK: - Getters */
-  getFromId = (id) => this.request()
-    .filter(getIdentifierType(id).query)
-    .get()
+  getFromId = async (id) => {
+    const { Cache } = this.context.dataSources;
+    const cachedKey = `${process.env.CONTENT}_schedule_${id}`
+    const cachedValue = await Cache.get({
+      key: cachedKey,
+    });
+
+    if (cachedValue) {
+      return cachedValue;
+    }
+
+    this.request()
+      .filter(getIdentifierType(id).query)
+      .transform(result => {
+        if (result != null) {
+          Cache.set({
+            key: cachedKey,
+            data: attributeMatrix,
+            expiresIn: 60 * 5 // 5 minute
+          });
+        }
+
+        return result
+      })
+      .get()
+  }
 
   getFromIds = (ids) =>
     this.request()
