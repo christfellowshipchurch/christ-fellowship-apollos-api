@@ -1,7 +1,7 @@
-import { createGlobalId, resolverMerge } from '@apollosproject/server-core'
-import * as coreLiveStream from '@apollosproject/data-connector-church-online'
+import { createGlobalId, resolverMerge } from '@apollosproject/server-core';
+import * as coreLiveStream from '@apollosproject/data-connector-church-online';
 import { get } from 'lodash';
-import moment from 'moment'
+import moment from 'moment';
 
 const resolver = {
   LiveNode: {
@@ -17,13 +17,77 @@ const resolver = {
     isLive: ({ id, eventStartTime, eventEndTime }) =>
       moment().isBetween(eventStartTime, eventEndTime),
     media: ({ attributeValues }) => {
-      const liveStreamUrl = get(attributeValues, 'liveStreamUrl.value')
+      const liveStreamUrl = get(attributeValues, 'liveStreamUrl.value');
 
       if (liveStreamUrl) {
-        return { sources: [{ uri: liveStreamUrl }] }
+        return { sources: [{ uri: liveStreamUrl }] };
       }
 
-      return null
+      return null;
+    },
+    actions: async ({ id, guid }, args, { dataSources }) => {
+      const unresolvedNode = await dataSources.LiveStream.getRelatedNodeFromId(
+        id
+      );
+      // Get Matrix Items
+      const liveStreamActionsMatrixGuid = get(
+        unresolvedNode,
+        'attributeValues.liveStreamActions.value',
+        ''
+      );
+      const liveStreamActionsItems = await dataSources.MatrixItem.getItemsFromId(
+        liveStreamActionsMatrixGuid
+      );
+
+      const defaultLiveStreamActions = [
+        {
+          call: 'Get Connected',
+          action: 'OPEN_URL',
+          relatedNode: {
+            __typename: 'Url',
+            url: 'https://christfellowship.church/',
+          },
+        },
+        {
+          call: 'I Have Decided',
+          action: 'OPEN_URL',
+          relatedNode: {
+            __typename: 'Url',
+            url: 'https://christfellowship.church/',
+          },
+        },
+        {
+          call: 'Give Online',
+          action: 'OPEN_URL',
+          relatedNode: {
+            __typename: 'Url',
+            url: 'https://christfellowship.church/',
+          },
+        },
+      ];
+
+      const liveStreamActionsItemsMapped = liveStreamActionsItems.map(
+        ({ attributeValues: liveStreamActionsItemsAttributeValues }) => ({
+          action: 'OPEN_URL',
+          duration: get(
+            liveStreamActionsItemsAttributeValues,
+            'duration.value',
+            ''
+          ),
+          relatedNode: {
+            __typename: 'Url',
+            url: get(liveStreamActionsItemsAttributeValues, 'url.value', ''),
+          },
+          start: get(
+            liveStreamActionsItemsAttributeValues,
+            'startTime.value',
+            ''
+          ),
+          title: get(liveStreamActionsItemsAttributeValues, 'title.value', ''),
+        })
+      );
+
+      return defaultLiveStreamActions.concat(liveStreamActionsItemsMapped);
     },
     contentItem: ({ contentChannelItemId }, _, { models, dataSources }) => {
       if (contentChannelItemId) {
@@ -65,11 +129,17 @@ const resolver = {
         return null;
       }
     },
-    streamChatChannel: async ({ id, eventStartTime, eventEndTime }, _, { dataSources: { Flag } }) => {
-      const featureFlag = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
+    streamChatChannel: async (
+      { id, eventStartTime, eventEndTime },
+      _,
+      { dataSources: { Flag } }
+    ) => {
+      const featureFlag = await Flag.currentUserCanUseFeature(
+        'LIVE_STREAM_CHAT'
+      );
       if (featureFlag !== 'LIVE') return null;
 
-      return { id: JSON.stringify({ id, eventStartTime, eventEndTime }) }
+      return { id: JSON.stringify({ id, eventStartTime, eventEndTime }) };
     },
     checkin: ({ attributeValues }, args, { dataSources: { CheckInable } }) => {
       const groupId = get(attributeValues, 'checkInGroup.value', '');
