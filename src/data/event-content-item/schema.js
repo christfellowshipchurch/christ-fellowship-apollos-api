@@ -49,7 +49,6 @@ export default gql`
     @deprecated(
       reason: "Updating to use FeatureAction to better adhere to navigation standards. Please use 'actions' instead."
     )
-    liveStreamActions: [CallToAction]
     openLinksInNewTab: Boolean
     @deprecated(reason: "Label will now be explicitly defined on the API")
     hideLabel: Boolean

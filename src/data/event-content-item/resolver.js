@@ -48,43 +48,6 @@ const resolver = {
         })
       );
     },
-    liveStreamActions: async ({ attributeValues }, args, { dataSources }) => {
-      // Get Matrix Items
-      const { MatrixItem } = dataSources;
-      const liveStreamActionsMatrixGuid = get(
-        attributeValues,
-        'liveStreamActions.value',
-        ''
-      );
-      const liveStreamActionsItems = await MatrixItem.getItemsFromId(
-        liveStreamActionsMatrixGuid
-      );
-
-      const defaultLiveStreamActions = [
-        { call: 'Get Connected', action: 'https://christfellowship.church/' },
-        { call: 'I Have Decided', action: 'https://christfellowship.church/' },
-        { call: 'Give Online', action: 'https://christfellowship.church/' },
-      ];
-
-      const liveStreamActionsItemsMapped = liveStreamActionsItems.map(
-        ({ attributeValues: liveStreamActionsItemsAttributeValues }) => ({
-          call: get(liveStreamActionsItemsAttributeValues, 'title.value', ''),
-          action: get(liveStreamActionsItemsAttributeValues, 'url.value', ''),
-          duration: get(
-            liveStreamActionsItemsAttributeValues,
-            'duration.value',
-            ''
-          ),
-          startTime: get(
-            liveStreamActionsItemsAttributeValues,
-            'startTime.value',
-            ''
-          ),
-        })
-      );
-
-      return defaultLiveStreamActions.concat(liveStreamActionsItemsMapped);
-    },
     label: async (
       { attributeValues },
       args,
