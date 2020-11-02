@@ -241,7 +241,25 @@ export default class LiveStream extends matrixItemDataSource {
       })
     }
 
+    const { Cache } = this.context.dataSources;
+    const cachedKey = `${process.env.CONTENT}_liveStreams`
+    const cachedValue = await Cache.get({
+      key: cachedKey,
+    });
+
+    if (cachedValue) {
+      return cachedValue;
+    }
+
     const attributeMatrix = await this.byAttributeMatrixTemplate()
+
+    if (attributeMatrix != null) {
+      Cache.set({
+        key: cachedKey,
+        data: attributeMatrix,
+        expiresIn: 60 * 4 // 4 hour cache
+      });
+    }
 
     return attributeMatrix.filter(i => !!i)
   }

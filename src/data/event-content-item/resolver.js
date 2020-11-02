@@ -6,7 +6,8 @@ import {
   flatten,
   uniq,
   uniqBy,
-  first
+  first,
+  filter
 } from 'lodash'
 import moment from 'moment'
 import momentTz from 'moment-timezone'
@@ -90,13 +91,15 @@ const resolver = {
         const schedule = get(item, 'attributeValues.schedule.value', '')
         const filters = get(item, 'attributeValues.filters.value', '')
 
-        filters.split(',').forEach(filter => {
-          if (filterScheduleDictionary[filter]) {
-            filterScheduleDictionary[filter].push(schedule)
-          } else {
-            filterScheduleDictionary[filter] = [schedule]
-          }
-        })
+        if (schedule && schedule !== "" && filters && filters !== "") {
+          filters.split(',').forEach(filter => {
+            if (filterScheduleDictionary[filter]) {
+              filterScheduleDictionary[filter].push(schedule)
+            } else {
+              filterScheduleDictionary[filter] = [schedule]
+            }
+          })
+        }
       })
 
       return Object.entries(filterScheduleDictionary).map(([name, schedules]) => {
