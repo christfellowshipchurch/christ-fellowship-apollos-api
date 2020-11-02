@@ -9,12 +9,12 @@ const resolver = {
   StreamChatChannel: {
     id: ({ id }, args, context, { parentType }) =>
       createGlobalId(id, parentType.name),
-    channelId: ({ id }, args, context, { parentType }) => {
-      const globalId = createGlobalId(id, parentType.name)
-
-      return crypto.SHA1(globalId).toString();
-    }
   },
+  StreamChatChannelType: {
+    LIVESTREAM: 'livestream',
+    MESSAGING: 'messaging',
+    GROUP: 'group',
+  }
 };
 
 export default resolver;

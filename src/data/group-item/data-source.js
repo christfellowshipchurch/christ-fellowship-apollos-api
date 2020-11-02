@@ -477,7 +477,7 @@ export default class GroupItem extends baseGroup.dataSource {
     return name;
   };
 
-  getChatChannelId = async (root) => {
+  getStreamChatChannel = async (root) => {
     // TODO : break up this logic and move it to the StreamChat DataSource
     const { Auth, StreamChat, Flag } = this.context.dataSources;
     const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
@@ -519,9 +519,15 @@ export default class GroupItem extends baseGroup.dataSource {
     // Promote/demote members for moderation if necessary
     await StreamChat.updateModerators({ channelId, groupLeaders: leaders, channelType: CHANNEL_TYPE });
 
+    console.log('[rkd] Group.streamChatChannel:', {
+      id: root.id,
+      channelId,
+      channelType: CHANNEL_TYPE,
+    });
     return {
       id: root.id,
-      channelId
+      channelId,
+      channelType: CHANNEL_TYPE,
     }
   };
 
