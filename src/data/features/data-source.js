@@ -331,7 +331,8 @@ export default class Feature extends coreFeatures.dataSource {
         hyphenatedTitle,
         title,
         subtitle,
-        primaryAction
+        primaryAction,
+        cardType = 'DEFAULT'
     }) {
         // Generate a list of horizontal cards.
         const cards = () => this.runAlgorithms({ algorithms });
@@ -364,6 +365,7 @@ export default class Feature extends coreFeatures.dataSource {
             title,
             subtitle,
             primaryAction,
+            cardType,
             // Typename is required so GQL knows specifically what Feature is being created
             __typename: 'HorizontalCardListFeature',
         };
@@ -525,7 +527,7 @@ export default class Feature extends coreFeatures.dataSource {
                     case 'VerticalCardList':
                     default:
                         // VerticalCardList with the CONTENT_CHILDREN as default
-                        return this.createVerticalCardListFeature({
+                        return this.createHorizontalCardListFeature({
                             algorithms: [{
                                 type: "CONTENT_CHILDREN",
                                 arguments: {
