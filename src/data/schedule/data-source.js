@@ -35,7 +35,7 @@ export default class Schedule extends RockApolloDataSource {
         if (result != null) {
           Cache.set({
             key: cachedKey,
-            data: attributeMatrix,
+            data: result,
             expiresIn: 60 * 5 // 5 minute
           });
         }
@@ -188,9 +188,9 @@ export default class Schedule extends RockApolloDataSource {
       })
 
     /** TL;DR: parseiCalendar filters by the _day_ of the event, not the time
-     *  
+     *
      *  The first event that is returned is the closest event.
-     *  If the event is today, but already past the time 
+     *  If the event is today, but already past the time
      *  (ie: event starts at 9am and right now is 10am), the event
      *  will still return today's instance.
      */
@@ -246,7 +246,7 @@ export default class Schedule extends RockApolloDataSource {
     const duration = get(args, 'duration')
     /** Before parsing the iCal object, we need to find and replace the start and end data/time
      *  with one that specifies the current timezone of the event
-     * 
+     *
      *  Rock returns a DTSTART/DTEND in the following format: DTSTART:20200419T171500
      *  which is ambiguous to the time zone, so node-ical will pick the local one
      *  node-ical wants time zone specified in the following manner: DTSTART;TZID=America/New_York:20200419T171500
@@ -304,7 +304,7 @@ export default class Schedule extends RockApolloDataSource {
         /** For repeated events, we only want the very next occurence
          *  based on today's date, so we use the after method of rrule
          *  to get the next occurrence based on the today's date
-         *  
+         *
          *  In order to insure that an event will remain visible on the
          *  platform while the event is happening, we offset the time of
          *  'now' by the duration of the event
