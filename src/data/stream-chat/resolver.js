@@ -10,11 +10,6 @@ const resolver = {
     id: ({ id }, args, context, { parentType }) =>
       createGlobalId(id, parentType.name),
   },
-  StreamChatChannelType: {
-    LIVESTREAM: 'livestream',
-    MESSAGING: 'messaging',
-    GROUP: 'group',
-  }
 };
 
 export default resolver;
