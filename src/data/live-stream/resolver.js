@@ -1,7 +1,10 @@
 import { createGlobalId, resolverMerge } from '@apollosproject/server-core';
 import * as coreLiveStream from '@apollosproject/data-connector-church-online';
+import { Utils } from '@apollosproject/data-connector-rock';
 import { get } from 'lodash';
 import moment from 'moment';
+
+const { createImageUrlFromGuid } = Utils;
 
 const resolver = {
   LiveNode: {
@@ -72,18 +75,27 @@ const resolver = {
           duration: get(
             liveStreamActionsItemsAttributeValues,
             'duration.value',
-            ''
+            null
           ),
+          image: get(liveStreamActionsItemsAttributeValues, 'image.value', null)
+            ? createImageUrlFromGuid(
+                liveStreamActionsItemsAttributeValues.image.value
+              )
+            : null,
           relatedNode: {
             __typename: 'Url',
-            url: get(liveStreamActionsItemsAttributeValues, 'url.value', ''),
+            url: get(liveStreamActionsItemsAttributeValues, 'url.value', null),
           },
           start: get(
             liveStreamActionsItemsAttributeValues,
             'startTime.value',
-            ''
+            null
           ),
-          title: get(liveStreamActionsItemsAttributeValues, 'title.value', ''),
+          title: get(
+            liveStreamActionsItemsAttributeValues,
+            'title.value',
+            null
+          ),
         })
       );
 
