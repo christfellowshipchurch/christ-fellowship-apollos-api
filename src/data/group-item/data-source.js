@@ -379,6 +379,10 @@ export default class GroupItem extends baseGroup.dataSource {
         schedule.id
       );
 
+      if (!occurrences || !occurrences.length) {
+        return { start: null, end: null };
+      }
+
       const nextOccurrence = head(occurrences);
       return { start: nextOccurrence.start, end: nextOccurrence.end };
     } else if (weeklyDayOfWeek !== null && weeklyTimeOfDay) {
