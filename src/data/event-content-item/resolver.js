@@ -1,12 +1,21 @@
-import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock';
-import { get, flatten, uniq, uniqBy, first } from 'lodash';
-import moment from 'moment';
-import momentTz from 'moment-timezone';
+import {
+  ContentItem as coreContentItem,
+} from '@apollosproject/data-connector-rock'
+import {
+  get,
+  flatten,
+  uniq,
+  uniqBy,
+  first,
+  filter
+} from 'lodash'
+import moment from 'moment'
+import momentTz from 'moment-timezone'
 
-import { parseRockKeyValuePairs } from '../utils';
-import sanitizeHtml from '../sanitize-html';
-import { sharingResolver } from '../content-item/resolver';
-import deprecatedResolvers from './deprecated-resolvers';
+import { parseRockKeyValuePairs } from '../utils'
+import sanitizeHtml from '../sanitize-html'
+import { sharingResolver } from '../content-item/resolver'
+import deprecatedResolvers from './deprecated-resolvers'
 
 const resolver = {
   EventContentItem: {
@@ -110,11 +119,29 @@ const resolver = {
         const schedule = get(item, 'attributeValues.schedule.value', '');
         const filters = get(item, 'attributeValues.filters.value', '');
 
-        filters.split(',').forEach((filter) => {
-          if (filterScheduleDictionary[filter]) {
-            filterScheduleDictionary[filter].push(schedule);
-          } else {
-            filterScheduleDictionary[filter] = [schedule];
+        if (schedule && schedule !== "" && filters && filters !== "") {
+          filters.split(',').forEach(filter => {
+            if (filterScheduleDictionary[filter]) {
+              filterScheduleDictionary[filter].push(schedule)
+            } else {
+              filterScheduleDictionary[filter] = [schedule]
+            }
+          })
+        }
+      })
+
+      return Object.entries(filterScheduleDictionary).map(([name, schedules]) => {
+        return {
+          name,
+          instances: async () => {
+            const rockSchedules = await Schedule.getFromIds(schedules)
+            const times = await Promise.all(rockSchedules.map(s => Event.parseScheduleAsEvents(s)))
+
+            return uniqBy(
+              flatten(times)
+                .sort((a, b) => moment(a.start).diff(b.start)),
+              'start'
+            )
           }
         });
       });

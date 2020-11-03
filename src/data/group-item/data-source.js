@@ -176,7 +176,9 @@ export default class GroupItem extends baseGroup.dataSource {
           `PersonId eq ${personId} ${asLeader ? ' and GroupRole/IsLeader eq true' : ''
           }`
         )
+        // Do not include groups where user's status is Inactive or Pending
         .andFilter(`GroupMemberStatus ne 'Inactive'`)
+        .andFilter(`GroupMemberStatus ne 'Pending'`)
         // Filter by Group Type Id up here
         .andFilter(
           groupTypeIds

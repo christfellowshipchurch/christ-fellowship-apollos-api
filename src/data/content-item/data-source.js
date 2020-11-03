@@ -89,6 +89,7 @@ export default class ContentItem extends coreContentItem.dataSource {
       id,
       attributeValues,
       attributes,
+      contentChannelTypeId
     } = props
     const versionParse = split(clientVersion, '.').join('')
 
@@ -102,6 +103,20 @@ export default class ContentItem extends coreContentItem.dataSource {
     if (parseInt(versionParse) > 520) {
       if (get(attributeValues, 'scriptures', '') !== "") {
         return "DevotionalContentItem"
+      }
+    }
+
+    /**
+     * Versions of the app that are lower than 5.4.0 have a visual bug where they
+     * don't ever show dates/times on EventContentItems.
+     * 
+     * We have an error in logic where the `hideLabel` boolean flag is not respected,
+     * so we need to just resolve all `EventContentItem` types to `InformationalContentItem`
+     * to avoid the visual issue.
+     */
+    if (parseInt(versionParse) < 540) {
+      if (get(ROCK_MAPPINGS, 'CONTENT_ITEM.EventContentItem.ContentChannelTypeId', []).includes(contentChannelTypeId)) {
+        return 'InformationalContentItem'
       }
     }
 
