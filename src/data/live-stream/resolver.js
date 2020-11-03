@@ -45,7 +45,7 @@ const resolver = {
           action: 'OPEN_URL',
           relatedNode: {
             __typename: 'Url',
-            url: 'https://christfellowship.church/',
+            url: 'https://rock.christfellowship.church/connect',
           },
         },
         {
@@ -53,7 +53,7 @@ const resolver = {
           action: 'OPEN_URL',
           relatedNode: {
             __typename: 'Url',
-            url: 'https://christfellowship.church/',
+            url: 'https://rock.christfellowship.church/decision',
           },
         },
         {
@@ -61,7 +61,7 @@ const resolver = {
           action: 'OPEN_URL',
           relatedNode: {
             __typename: 'Url',
-            url: 'https://christfellowship.church/',
+            url: 'https://pushpay.com/g/christfellowship',
           },
         },
       ];
