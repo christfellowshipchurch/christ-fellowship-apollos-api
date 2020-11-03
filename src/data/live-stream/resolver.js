@@ -41,7 +41,7 @@ const resolver = {
 
       const defaultLiveStreamActions = [
         {
-          call: 'Get Connected',
+          title: 'Get Connected',
           action: 'OPEN_URL',
           relatedNode: {
             __typename: 'Url',
@@ -49,7 +49,7 @@ const resolver = {
           },
         },
         {
-          call: 'I Have Decided',
+          title: 'I Have Decided',
           action: 'OPEN_URL',
           relatedNode: {
             __typename: 'Url',
@@ -57,7 +57,7 @@ const resolver = {
           },
         },
         {
-          call: 'Give Online',
+          title: 'Give Online',
           action: 'OPEN_URL',
           relatedNode: {
             __typename: 'Url',
