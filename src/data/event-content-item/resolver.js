@@ -14,12 +14,7 @@ const resolver = {
     ...sharingResolver,
     ...deprecatedResolvers,
     htmlContent: ({ content }) => sanitizeHtml(content),
-    sharing: (
-      root,
-      args,
-      { dataSources: { ContentItem } },
-      { parentType }
-    ) => ({
+    sharing: (root, args, { dataSources: { ContentItem } }, { parentType }) => ({
       url: ContentItem.generateShareUrl(root, parentType),
       title: 'Share via ...',
       message: ContentItem.generateShareMessage(root),
@@ -41,12 +36,10 @@ const resolver = {
       const matrixGuid = get(attributeValues, 'actions.value', '');
       const matrixItems = await MatrixItem.getItemsFromId(matrixGuid);
 
-      return matrixItems.map(
-        ({ attributeValues: matrixItemAttributeValues }) => ({
-          call: get(matrixItemAttributeValues, 'title.value', ''),
-          action: get(matrixItemAttributeValues, 'url.value', ''),
-        })
-      );
+      return matrixItems.map(({ attributeValues: matrixItemAttributeValues }) => ({
+        call: get(matrixItemAttributeValues, 'title.value', ''),
+        action: get(matrixItemAttributeValues, 'url.value', ''),
+      }));
     },
     label: async (
       { attributeValues },
@@ -60,25 +53,17 @@ const resolver = {
 
       // Get Schedules
       const schedules = await Schedule.getFromIds(
-        uniq(
-          matrixItems.map((m) =>
-            get(item, 'attributeValues.schedule.value', '')
-          )
-        )
+        uniq(matrixItems.map((m) => get(item, 'attributeValues.schedule.value', '')))
       );
 
       // Sort by start date asc, take the first
       const eventStart = first(
-        schedules.sort((a, b) =>
-          moment(a.effectiveStartDate).diff(b.effectiveStartDate)
-        )
+        schedules.sort((a, b) => moment(a.effectiveStartDate).diff(b.effectiveStartDate))
       );
 
       // Sort by end date desc, take the first
       const eventEnd = first(
-        schedules.sort((a, b) =>
-          moment(b.effectiveEndDate).diff(a.effectiveEndDate)
-        )
+        schedules.sort((a, b) => moment(b.effectiveEndDate).diff(a.effectiveEndDate))
       );
 
       return '';
@@ -121,43 +106,39 @@ const resolver = {
         }
       });
 
-      return Object.entries(filterScheduleDictionary).map(
-        ([name, schedules]) => {
-          return {
-            name,
-            instances: async () => {
-              const rockSchedules = await Schedule.getFromIds(schedules);
-              const times = await Promise.all(
-                rockSchedules.map((s) => Event.parseScheduleAsEvents(s))
-              );
+      return Object.entries(filterScheduleDictionary).map(([name, schedules]) => {
+        return {
+          name,
+          instances: async () => {
+            const rockSchedules = await Schedule.getFromIds(schedules);
+            const times = await Promise.all(
+              rockSchedules.map((s) => Event.parseScheduleAsEvents(s))
+            );
 
-              return uniqBy(
-                flatten(times).sort((a, b) => moment(a.start).diff(b.start)),
-                'start'
-              );
-            },
-          };
-        }
-      );
+            return uniqBy(
+              flatten(times).sort((a, b) => moment(a.start).diff(b.start)),
+              'start'
+            );
+          },
+        };
+      });
 
-      return Object.entries(filterScheduleDictionary).map(
-        ([name, schedules]) => {
-          return {
-            name,
-            instances: async () => {
-              const rockSchedules = await Schedule.getFromIds(schedules);
-              const times = await Promise.all(
-                rockSchedules.map((s) => Event.parseScheduleAsEvents(s))
-              );
+      return Object.entries(filterScheduleDictionary).map(([name, schedules]) => {
+        return {
+          name,
+          instances: async () => {
+            const rockSchedules = await Schedule.getFromIds(schedules);
+            const times = await Promise.all(
+              rockSchedules.map((s) => Event.parseScheduleAsEvents(s))
+            );
 
-              return uniqBy(
-                flatten(times).sort((a, b) => moment(a.start).diff(b.start)),
-                'start'
-              );
-            },
-          };
-        }
-      );
+            return uniqBy(
+              flatten(times).sort((a, b) => moment(a.start).diff(b.start)),
+              'start'
+            );
+          },
+        };
+      });
     },
   },
 };
