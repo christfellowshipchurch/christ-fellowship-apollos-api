@@ -426,7 +426,78 @@ export default class Feature extends coreFeatures.dataSource {
     }
 
     getGiveFeedFeatures() {
-        return this.getFeedFeatures(get(ApollosConfig, 'FEATURE_FEEDS.GIVE_TAB', []));
+        const { clientVersion } = this.context;
+        const versionParse = split(clientVersion, '.').join('')
+        const config = get(ApollosConfig, 'FEATURE_FEEDS.GIVE_TAB', [])
+        const pushPayConfig = {
+            action: 'OPEN_URL',
+            title: "PushPay",
+            icon: "push-pay",
+            theme: {
+                colors: {
+                    primary: "#d52158"
+                }
+            },
+            relatedNode: {
+                __typename: 'Url',
+                url: "https://cf.church/pushpay"
+            }
+        }
+        const payPalConfig = {
+            action: 'OPEN_URL',
+            title: "PayPal",
+            icon: "pay-pal",
+            theme: {
+                colors: {
+                    primary: "#179bd7"
+                }
+            },
+            relatedNode: {
+                __typename: 'Url',
+                url: "http://cf.church/paypal"
+            }
+        }
+        const cashAppConfig = {
+            action: 'OPEN_URL',
+            title: "CashApp",
+            icon: "cash-app",
+            theme: {
+                colors: {
+                    primary: "#1ec27f"
+                }
+            },
+            relatedNode: {
+                __typename: 'Url',
+                url: "http://cf.church/cash-app"
+            }
+        }
+        const venmoConfig = {
+            action: 'OPEN_URL',
+            title: "Venmo",
+            icon: "venmo",
+            theme: {
+                colors: {
+                    primary: "#00aeef"
+                }
+            },
+            relatedNode: {
+                __typename: 'Url',
+                url: "http://cf.church/venmo"
+            }
+        }
+
+        const actionIndex = config.findIndex(item => item.type === 'ActionBar')
+
+        if (parseInt(versionParse) >= 540) {
+            config[actionIndex].actions = [pushPayConfig, payPalConfig, cashAppConfig, venmoConfig]
+        } else {
+            pushPayConfig.icon = "envelope-open-dollar"
+            config[actionIndex].actions = [pushPayConfig]
+        }
+
+        console.log({config: config[1].actions})
+
+        return this.getFeedFeatures(config);
     }
 
     async getHomeHeaderFeedFeatures() {
