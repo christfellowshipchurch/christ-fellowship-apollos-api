@@ -122,23 +122,6 @@ const resolver = {
           },
         };
       });
-
-      return Object.entries(filterScheduleDictionary).map(([name, schedules]) => {
-        return {
-          name,
-          instances: async () => {
-            const rockSchedules = await Schedule.getFromIds(schedules);
-            const times = await Promise.all(
-              rockSchedules.map((s) => Event.parseScheduleAsEvents(s))
-            );
-
-            return uniqBy(
-              flatten(times).sort((a, b) => moment(a.start).diff(b.start)),
-              'start'
-            );
-          },
-        };
-      });
     },
   },
 };
