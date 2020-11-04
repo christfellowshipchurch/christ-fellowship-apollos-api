@@ -322,7 +322,8 @@ export default class Feature extends coreFeatures.dataSource {
         hyphenatedTitle,
         title,
         subtitle,
-        primaryAction
+        primaryAction,
+        cardType
     }) {
         const cards = this.runAlgorithms({ algorithms });
 
@@ -343,6 +344,7 @@ export default class Feature extends coreFeatures.dataSource {
                     algorithms,
                     title,
                     subtitle,
+                    cardType
                 },
             }),
             cards,
@@ -350,6 +352,7 @@ export default class Feature extends coreFeatures.dataSource {
             title,
             subtitle,
             primaryAction,
+            cardType,
             // Typename is required so GQL knows specifically what Feature is being created
             __typename: 'HorizontalCardListFeature',
         };
@@ -514,7 +517,7 @@ export default class Feature extends coreFeatures.dataSource {
                             algorithms: [{
                                 type: "CONTENT_CHILDREN",
                                 arguments: {
-                                    contentChannelItemId: item.id
+                                    contentChannelItemId: item.id,
                                 }
                             }],
                             title: item.title,
