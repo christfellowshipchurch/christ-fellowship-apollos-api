@@ -95,6 +95,27 @@ export default class LiveStream extends matrixItemDataSource {
     };
   }
 
+  async getStreamChatChannel(root) {
+    console.log('[rkd] getStreamChatChannel:', getStreamChatChannel);
+    // TODO : break up this logic and move it to the StreamChat DataSource
+    const { Auth, StreamChat, Flag } = this.context.dataSources;
+    const featureFlagStatus = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
+
+    if (featureFlagStatus !== 'LIVE') {
+      return null;
+    }
+
+    const resolvedType = this.resolveType(root);
+    console.log('[rkd] resolvedType:', resolvedType);
+    const globalId = createGlobalId(root.id, resolvedType);
+    const channelId = crypto.SHA1(globalId).toString();
+    return {
+      id: root.id,
+      channelId,
+      channelType: CHANNEL_TYPE,
+    }
+};
+
   async getLiveStreamContentItems() {
     const { Cache } = this.context.dataSources;
     const cachedKey = `${process.env.CONTENT}_liveStreamContentItems`
@@ -135,7 +156,7 @@ export default class LiveStream extends matrixItemDataSource {
     //   Cache.set({
     //     key: cachedKey,
     //     data: liveStreamContentItemsWithNextOccurrences,
-    //     expiresIn: 60 // one minute cache 
+    //     expiresIn: 60 // one minute cache
     //   });
     // }
 
@@ -181,7 +202,7 @@ export default class LiveStream extends matrixItemDataSource {
     await Promise.all(attributeMatrixItems.map(async matrixItem => {
       const scheduleGuid = get(matrixItem, "attributeValues.schedule.value")
       if (scheduleGuid) {
-        // Do we need to filter this list by only getting Schedules that have an 
+        // Do we need to filter this list by only getting Schedules that have an
         // `EffectiveStartDate` in the past? Do we care about future schedules in
         // this context?
         const schedule = await this.request('/Schedules')
