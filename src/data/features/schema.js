@@ -11,7 +11,7 @@ export default gql`
         READ_GROUP
     }
 
-    enum HORIZONTAL_CARD_TYPE {
+    enum HorizontalCardType {
         DEFAULT
         HIGHLIGHT
         HIGHLIGHT_MEDIUM
