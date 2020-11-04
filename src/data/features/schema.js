@@ -20,7 +20,7 @@ export default gql`
 
     extend type HorizontalCardListFeature {
         primaryAction: FeatureAction
-        cardType: HORIZONTAL_CARD_TYPE
+        cardType: HorizontalCardType
     }
 
     type ActionBarFeatureAction {
