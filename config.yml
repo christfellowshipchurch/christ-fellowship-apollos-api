@@ -298,7 +298,7 @@ FEATURE_FEEDS:
               primary: "#1ec27f"
           relatedNode:
             __typename: Url
-            url: "https://pushpay.com/g/christfellowship"
+            url: "https://cf.church/pushpay?feed=connect"
     - type: HorizontalCardList
       algorithms: [MY_GROUPS]
       title: "My Groups"
@@ -326,16 +326,7 @@ FEATURE_FEEDS:
           arguments:
             contentChannelId: 76
     - type: ActionBar
-      actions:
-        - action: OPEN_URL
-          title: "Give Now"
-          icon: "envelope-open-dollar"
-          theme:
-            colors:
-              primary: "#1ec27f"
-          relatedNode:
-            __typename: Url
-            url: "https://pushpay.com/g/christfellowship"
+      actions: []
   HOME_HEADER:
     - algorithms: [ALL_LIVE_CONTENT]
       type: LiveContentList
