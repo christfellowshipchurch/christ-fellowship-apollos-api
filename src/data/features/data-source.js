@@ -563,6 +563,10 @@ export default class Feature extends coreFeatures.dataSource {
             return true
         })
 
+        const { clientVersion } = this.context;
+        const versionParse = split(clientVersion, '.').join('')
+        const versionNumber = parseInt(versionParse)
+
         return Promise.all(
             filteredContentChannelItems.map((item) => {
                 const action = get(item, 'attributeValues.action.value', '')
@@ -580,6 +584,41 @@ export default class Feature extends coreFeatures.dataSource {
                             title: item.title,
                             subtitle: ContentItem.createSummary(item),
                         })
+                    case 'DefaultHorizontalCardList':
+                    case 'HighlightHorizontalCardList':
+                    case 'HighlightMediumHorizontalCardList':
+                    case 'HighlightSmallHorizontalCardList':
+                        /**
+                         * There was a bug in the Horizontal Card Feed that was resolved
+                         * in 5.4.0, so in order to help keep this from being an issue,
+                         * we'll just go ahead and resolve this to a Vertical List for 
+                         * any version less than 5.4.0
+                         */
+                        if (versionNumber >= 540) {
+                            // HorizontalCardList with Card Type override
+                            return this.createHorizontalCardListFeature({
+                                algorithms: [{
+                                    type: "CONTENT_CHILDREN",
+                                    arguments: {
+                                        contentChannelItemId: item.id,
+                                    }
+                                }],
+                                title: item.title,
+                                subtitle: ContentItem.createSummary(item),
+                                cardType: () => {
+                                    switch (action) {
+                                        case 'HighlightHorizontalCardList':
+                                            return 'HIGHLIGHT';
+                                        case 'HighlightMediumHorizontalCardList':
+                                            return 'HIGHLIGHT_MEDIUM';
+                                        case 'HighlightSmallHorizontalCardList':
+                                            return 'HIGHLIGHT_SMALL';
+                                        default:
+                                            return 'DEFAULT'
+                                    }
+                                }
+                            });
+                        }
                     case 'READ_GLOBAL_CONTENT': // deprecated, old action
                     case 'VerticalCardList':
                     default:
