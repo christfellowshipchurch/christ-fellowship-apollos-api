@@ -63,7 +63,7 @@ export const createVideoUrlFromGuid = (uri) =>
 const contentSingleTag = (strings, id) => `christfellowship://c/ContentSingle?itemId=${strings[0]}${id}`
 const contentFeedTag = (strings, id) => `christfellowship://c/ContentFeed?itemId=${strings[0]}${id}&nested=true`
 export const generateAppLinkFromUrl = async (uri, context) => {
-  const externalLinks = ['cf.church/pushpay', 'cf.church/paypal', 'cf.church/cash-app', 'cf.church/venmo']
+  const externalLinks = ['cf.church/pushpay']
   const parsedUrl = URL.parse(uri)
   const host = parsedUrl.host
 
