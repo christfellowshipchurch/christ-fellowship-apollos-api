@@ -86,22 +86,21 @@ export default class ContentItem extends coreContentItem.dataSource {
   resolveType(props) {
     const { clientVersion } = this.context;
     const {
-      id,
       attributeValues,
-      attributes,
       contentChannelTypeId
     } = props
     const versionParse = split(clientVersion, '.').join('')
 
-    /** Versions of the app that are a lower version than 5.2.1 have a bug
-     *  that will crash the app whenever a DevotionalContentItem is referenced.
+    /** 
+     * Versions of the app that are a lower version than 5.2.1 have a bug
+     * that will crash the app whenever a DevotionalContentItem is referenced.
      * 
-     *  In order to counter-balance that, we just wanna make sure the request
-     *  is coming from something higher than version 5.2.0 before we start
-     *  dynamically returning DevotionalContentItem as a resolved type
+     * In order to counter-balance that, we just wanna make sure the request
+     * is coming from something higher than version 5.2.0 before we start
+     * dynamically returning DevotionalContentItem as a resolved type
      */
     if (parseInt(versionParse) > 520) {
-      if (get(attributeValues, 'scriptures', '') !== "") {
+      if (get(attributeValues, 'scriptures.value', '') !== "") {
         return "DevotionalContentItem"
       }
     }

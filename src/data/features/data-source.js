@@ -440,7 +440,7 @@ export default class Feature extends coreFeatures.dataSource {
             },
             relatedNode: {
                 __typename: 'Url',
-                url: "https://cf.church/pushpay?feed=give"
+                url: "https://cf.church/pushpay"
             }
         }
         const payPalConfig = {
@@ -454,7 +454,7 @@ export default class Feature extends coreFeatures.dataSource {
             },
             relatedNode: {
                 __typename: 'Url',
-                url: "http://cf.church/paypal?feed=give"
+                url: "http://cf.church/paypal"
             }
         }
         const cashAppConfig = {
@@ -468,7 +468,7 @@ export default class Feature extends coreFeatures.dataSource {
             },
             relatedNode: {
                 __typename: 'Url',
-                url: "http://cf.church/cash-app?feed=give"
+                url: "http://cf.church/cash-app"
             }
         }
         const venmoConfig = {
@@ -482,7 +482,7 @@ export default class Feature extends coreFeatures.dataSource {
             },
             relatedNode: {
                 __typename: 'Url',
-                url: "http://cf.church/venmo?feed=give"
+                url: "http://cf.church/venmo"
             }
         }
 
@@ -494,8 +494,6 @@ export default class Feature extends coreFeatures.dataSource {
             pushPayConfig.icon = "envelope-open-dollar"
             config[actionIndex].actions = [pushPayConfig]
         }
-
-        console.log({config: config[1].actions})
 
         return this.getFeedFeatures(config);
     }
@@ -688,7 +686,7 @@ export default class Feature extends coreFeatures.dataSource {
                 subtitle: get(item, 'contentChannel.name'),
                 relatedNode: { ...item, __type: ContentItem.resolveType(item) },
                 image: ContentItem.getCoverImage(item),
-                action: action.includes('Horizontal') ? 'READ_GLOBAL_CONTENT' : action,
+                action: action.includes('Horizontal') ? 'VIEW_CHILDREN' : action,
             }
         })
 
