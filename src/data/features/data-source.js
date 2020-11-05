@@ -596,6 +596,18 @@ export default class Feature extends coreFeatures.dataSource {
                          */
                         if (versionNumber >= 540) {
                             // HorizontalCardList with Card Type override
+                            const getCardType = () => {
+                                switch (action) {
+                                    case 'HighlightHorizontalCardList':
+                                        return 'HIGHLIGHT';
+                                    case 'HighlightMediumHorizontalCardList':
+                                        return 'HIGHLIGHT_MEDIUM';
+                                    case 'HighlightSmallHorizontalCardList':
+                                        return 'HIGHLIGHT_SMALL';
+                                    default:
+                                        return 'DEFAULT'
+                                }
+                            }
                             return this.createHorizontalCardListFeature({
                                 algorithms: [{
                                     type: "CONTENT_CHILDREN",
@@ -605,18 +617,7 @@ export default class Feature extends coreFeatures.dataSource {
                                 }],
                                 title: item.title,
                                 subtitle: ContentItem.createSummary(item),
-                                cardType: () => {
-                                    switch (action) {
-                                        case 'HighlightHorizontalCardList':
-                                            return 'HIGHLIGHT';
-                                        case 'HighlightMediumHorizontalCardList':
-                                            return 'HIGHLIGHT_MEDIUM';
-                                        case 'HighlightSmallHorizontalCardList':
-                                            return 'HIGHLIGHT_SMALL';
-                                        default:
-                                            return 'DEFAULT'
-                                    }
-                                }
+                                cardType: getCardType()
                             });
                         }
                     case 'READ_GLOBAL_CONTENT': // deprecated, old action
