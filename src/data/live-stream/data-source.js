@@ -143,7 +143,7 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async byAttributeMatrixTemplate() {
-    const { Event, Schedule } = this.context.dataSources
+    const { Schedule } = this.context.dataSources
     const TEMPLATE_ID = 11
 
     // Get Attribute Matrix by Template Id
@@ -163,17 +163,63 @@ export default class LiveStream extends matrixItemDataSource {
 
     const contentChannelItems = flattenDeep(contentChannelItemPromises.filter(i => i.length))
 
+    let personas = []
+    if (usePersonas) {
+      try {
+        personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
+      } catch (e) {
+        console.log("Events: Unable to retrieve personas for user.")
+        console.log(e)
+      }
+    }
+
+    const itemsBySecurityGroup = contentChannelItems.filter(item => {
+      /**
+       * Get security data views for the given content channel item from
+       * an attribute value. Rock stores data views as a string of comma
+       * separated Guids
+       * 
+       * Split the string by a comma so we can just work with an array of
+       * strings
+       */
+      const securityDataViews = split(
+        get(item, 'attributeValues.securityDataViews.value', ''),
+        ','
+      ).filter(dv => !!dv)
+
+      if (securityDataViews.length > 0) {
+        /**
+         * If there is at least 1 guid, we are going to check to see if the current user
+         * is in at least one of those security groups. If so, we're good to return `true`.
+         * 
+         * If there are no common guids, we return false to filter this option out of the
+         * collection of items for the user's live streams
+         */
+        const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
+        
+        return userInSecurityDataViews.length === 0
+      }
+
+      /**
+       * If there are no security data views on this content item, that means
+       * that this item is globally accessible and we're good to return `true`
+       */
+      return true
+    })
+
     // Get Attribute Matrix Items from the "filtered" Attribute Matrix Guids
-    const attributeMatrixItemPromises = await Promise.all(contentChannelItems.map(({ id, attributeValues }) => {
-      const attributeMatrixGuid = get(attributeValues, 'liveStreams.value')
-      return this.request('/AttributeMatrixItems')
-        .expand('AttributeMatrix')
-        .filter(`AttributeMatrix/${getIdentifierType(attributeMatrixGuid).query}`)
-        .transform((results) => results.map(n =>
-          ({ ...n, contentChannelItemId: id }))
-        )
-        .get()
-    }))
+    const attributeMatrixItemPromises = await Promise.all(
+      itemsBySecurityGroup.map(({ id, attributeValues }) => {
+        const attributeMatrixGuid = get(attributeValues, 'liveStreams.value')
+        return this.request('/AttributeMatrixItems')
+          .expand('AttributeMatrix')
+          .filter(`AttributeMatrix/${getIdentifierType(attributeMatrixGuid).query}`)
+          .transform((results) => results.map(n =>
+            ({ ...n, contentChannelItemId: id }))
+          )
+          .get()
+      })
+    )
     const attributeMatrixItems = flattenDeep(attributeMatrixItemPromises)
 
     const upcomingOrLive = []
