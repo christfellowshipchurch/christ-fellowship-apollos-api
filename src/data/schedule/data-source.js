@@ -29,9 +29,10 @@ export default class Schedule extends RockApolloDataSource {
       return cachedValue;
     }
 
-    this.request()
+    return this.request()
       .filter(getIdentifierType(id).query)
       .transform(result => {
+        console.log({result})
         if (result != null) {
           Cache.set({
             key: cachedKey,
@@ -107,8 +108,8 @@ export default class Schedule extends RockApolloDataSource {
       const iCalStart = iCalendarContent.match(/DTSTART:(\w+)/s);
       const iCalEnd = iCalendarContent.match(/DTEND:(\w+)/s);
       const duration = moment
-        .tz(iCalEnd[1], ApollosConfig.ROCK.TIMEZONE)
-        .diff(moment.tz(iCalStart[1], ApollosConfig.ROCK.TIMEZONE))
+        .tz(iCalEnd[1], TIMEZONE)
+        .diff(moment.tz(iCalStart[1], TIMEZONE))
 
       /** Custom schedules have an iCalendar string, but duration of the event
        *  is only 1 second.
@@ -140,9 +141,12 @@ export default class Schedule extends RockApolloDataSource {
   }
 
   async parseById(id) {
+    if (!id) return null
     /** Gets the schedule from Rock and then parses
      */
     const schedule = await this.getFromId(id)
+
+    if (!schedule) return null
 
     return this.parse(first(schedule))
   }
@@ -174,10 +178,20 @@ export default class Schedule extends RockApolloDataSource {
       ? this.defaultEndOffsetMinutes
       : scheduleEndOffsetMinutes
 
-    return {
-      nextStart, // Keep a null start date by default for easier value checking
-      startOffset, // Default the startOffset if the offset is 0
-      endOffset // Default the endOffset if the offset is 0
+    // Convert to UTC time
+    if (moment(nextStart).isValid()) {
+      return {
+        nextStart: moment.tz(nextStart, TIMEZONE).utc().format(), 
+        startOffset, 
+        endOffset 
+      }
+    }
+
+    // Fallback
+    return { 
+      nextStart: null, // Keep a null start date by default for easier value checking
+      startOffset: 0, // Default the startOffset if the offset is 0
+      endOffset: 0 // Default the endOffset if the offset is 0
     }
   }
 
@@ -255,8 +269,8 @@ export default class Schedule extends RockApolloDataSource {
     const iCalStart = iCal.match(/DTSTART:(\w+)/s);
     const iCalEnd = iCal.match(/DTEND:(\w+)/s);
     const iCalAdjusted = iCal
-      .replace(iCalStart[0], `DTSTART;TZID=${ApollosConfig.ROCK.TIMEZONE}:${iCalStart[1]}`)
-      .replace(iCalEnd[0], `DTEND;TZID=${ApollosConfig.ROCK.TIMEZONE}:${iCalEnd[1]}`)
+      .replace(iCalStart[0], `DTSTART;TZID=${TIMEZONE}:${iCalStart[1]}`)
+      .replace(iCalEnd[0], `DTEND;TZID=${TIMEZONE}:${iCalEnd[1]}`)
 
     const iCalEvents = Object.values(await ical.async.parseICS(iCalAdjusted))
 
@@ -331,7 +345,7 @@ export default class Schedule extends RockApolloDataSource {
      * Shorthand for converting a date to a moment
      * Object with Rock's timezone offset
      */
-    const mDate = moment.tz(date, ApollosConfig.ROCK.TIMEZONE)
+    const mDate = moment.tz(date, TIMEZONE)
 
     return mDate.utc()
   }
