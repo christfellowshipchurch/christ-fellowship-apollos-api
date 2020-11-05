@@ -440,7 +440,7 @@ export default class Feature extends coreFeatures.dataSource {
             },
             relatedNode: {
                 __typename: 'Url',
-                url: "https://cf.church/pushpay"
+                url: "https://cf.church/pushpay?feed=give"
             }
         }
         const payPalConfig = {
@@ -454,7 +454,7 @@ export default class Feature extends coreFeatures.dataSource {
             },
             relatedNode: {
                 __typename: 'Url',
-                url: "http://cf.church/paypal"
+                url: "http://cf.church/paypal?feed=give"
             }
         }
         const cashAppConfig = {
@@ -468,7 +468,7 @@ export default class Feature extends coreFeatures.dataSource {
             },
             relatedNode: {
                 __typename: 'Url',
-                url: "http://cf.church/cash-app"
+                url: "http://cf.church/cash-app?feed=give"
             }
         }
         const venmoConfig = {
@@ -482,7 +482,7 @@ export default class Feature extends coreFeatures.dataSource {
             },
             relatedNode: {
                 __typename: 'Url',
-                url: "http://cf.church/venmo"
+                url: "http://cf.church/venmo?feed=give"
             }
         }
 
