@@ -688,7 +688,7 @@ export default class Feature extends coreFeatures.dataSource {
                 subtitle: get(item, 'contentChannel.name'),
                 relatedNode: { ...item, __type: ContentItem.resolveType(item) },
                 image: ContentItem.getCoverImage(item),
-                action,
+                action: action.includes('Horizontal') ? 'READ_GLOBAL_CONTENT' : action,
             }
         })
 
