@@ -6,6 +6,22 @@ enum ACTION_FEATURE_ACTION {
   OPEN_URL
   VIEW_CHILDREN
   READ_GLOBAL_CONTENT
+  READ_PRAYER
+  READ_GROUP
+}
+
+type ActionBarFeature implements Feature & Node {
+  id: ID!
+  order: Int
+  actions: [ActionBarFeatureAction]
+}
+
+type ActionBarFeatureAction {
+  relatedNode: Node
+  action: ACTION_FEATURE_ACTION
+  title: String
+  icon: String
+  theme: Theme
 }
 
 type ActionListAction {
@@ -114,11 +130,20 @@ type AuthenticatedUser {
   rock: RockPersonDetails
   rockToken: String @deprecated(reason: "Use rock.authCookie instead")
   streamChatToken: String
+  streamChatRole(id: ID!): CHAT_ROLES
 }
 
 type Authentication {
   user: AuthenticatedUser
   token: String
+}
+
+type AvatarListFeature implements Feature & Node {
+  id: ID!
+  order: Int
+  people: [Person]
+  isCard: Boolean
+  primaryAction: ActionBarFeatureAction
 }
 
 enum CacheControlScope {
@@ -147,7 +172,7 @@ type Campus implements Node {
   serviceTimes: [ServiceTime]
   campusFeatures: [CampusFeature]
   pastor: CampusPastor
-  events: [Event]
+  events: [Event] @deprecated(reason: "Events are no longer organized by limiting them to a physical campus. Events are organized into categories. Please reference 'EventContentItem' instead")
 }
 
 type CampusContentFeature implements PageBuilderFeature & Node {
@@ -189,11 +214,29 @@ type CardListItem {
   action: ACTION_FEATURE_ACTION
 }
 
+enum CHAT_ROLES {
+  MODERATOR
+  USER
+}
+
+type ChatChannel {
+  name: String!
+  channelID: String!
+}
+
+interface ChatChannelNode {
+  chatChannel: ChatChannel
+}
+
 type CheckInable implements Node {
   id: ID!
   title: String
   message: String
   isCheckedIn: Boolean
+}
+
+interface CheckInableNode {
+  checkin: CheckInable
 }
 
 """A rgb color string"""
@@ -322,6 +365,12 @@ type DefinedValueList implements Node {
   values: [DefinedValue]
 }
 
+type Device implements Node {
+  id: ID!
+  pushId: String!
+  notificationsEnabled: Boolean!
+}
+
 type DevotionalContentItem implements ContentItem & Node {
   id: ID!
   title(hyphenated: Boolean): String
@@ -357,7 +406,7 @@ type Event implements Node {
   campuses: [Campus]
 }
 
-type EventContentItem implements ContentItem & Node {
+type EventContentItem implements ContentItem & Node & CheckInableNode & LiveNode {
   id: ID!
   title(hyphenated: Boolean): String
   coverImage: ImageMedia
@@ -370,18 +419,26 @@ type EventContentItem implements ContentItem & Node {
   siblingContentItemsConnection(first: Int, after: String): ContentItemsConnection
   parentChannel: ContentChannel
   theme: Theme
-  nextOccurrence: String
-  startDate: String
-  endDate: String
+  nextOccurrence: String @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
+  startDate: String @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
+  endDate: String @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
   tags: [String]
-  callsToAction: [CallToAction]
-  openLinksInNewTab: Boolean
-  hideLabel: Boolean
-  events: [Event]
+  callsToAction: [CallToAction] @deprecated(reason: "Updating to use FeatureAction to better adhere to navigation standards. Please use 'actions' instead.")
+  openLinksInNewTab: Boolean @deprecated(reason: "Label will now be explicitly defined on the API")
+  hideLabel: Boolean @deprecated(reason: "Label will now be explicitly defined on the API")
+  events: [Event] @deprecated(reason: "We have updated the organization of the events schema. Please use 'categories' instead.")
+  label: String
+  eventGroupings: [EventGrouping]
   checkin: CheckInable
   isLiked: Boolean
   likedCount: Int
+  liveStream: LiveStream
   sharing: SharableContentItem
+}
+
+type EventGrouping {
+  name: String
+  instances: [Event]
 }
 
 interface Feature {
@@ -430,6 +487,7 @@ type Group implements Node {
   summary: String
   title: String
   videoCall: VideoCallParams
+  chatChannelId: String
 }
 
 enum GROUP_TYPE {
@@ -463,6 +521,7 @@ type HorizontalCardListFeature implements Feature & Node {
   title: String
   subtitle: String
   cards: [CardListItem]
+  primaryAction: FeatureAction
 }
 
 type ImageMedia implements Media {
@@ -529,12 +588,21 @@ input LikeEntityInput {
   operation: LIKE_OPERATION!
 }
 
-type LiveStream {
+interface LiveNode {
+  liveStream: LiveStream
+}
+
+type LiveStream implements Node & ChatChannelNode & CheckInableNode {
+  id: ID!
   isLive: Boolean
   eventStartTime: String
+  eventEndTime: String
   media: VideoMedia
   webViewUrl: String
-  contentItem: ContentItem
+  contentItem: ContentItem @deprecated(reason: "LiveStreams are not limited to ContentItems. Please use 'relatedNode' instead.")
+  relatedNode: Node
+  chatChannel: ChatChannel
+  checkin: CheckInable
 }
 
 type LiveStreamListFeature implements Feature & Node {
@@ -639,7 +707,7 @@ type Mutation {
   authenticateWithSms(phoneNumber: String!, pin: String!): Authentication
   registerWithSms(phoneNumber: String!, pin: String!, userProfile: [UpdateProfileInput]): Authentication
   updateUserCampus(campusId: String!): Person
-  checkInCurrentUser(id: ID!): CheckInable
+  checkInCurrentUser(id: ID!): CheckInableNode
   updateLikeEntity(input: LikeEntityInput!): ContentItem
   addMemberAttendance(id: ID!): Group
   interactWithNode(action: InteractionAction!, nodeId: ID!, data: [InteractionDataField]): InteractionResult
@@ -733,6 +801,7 @@ type Person implements Node {
   campus: Campus
   groups(type: GROUP_TYPE, asLeader: Boolean): [Group]
   isGroupLeader: Boolean
+  devices: [Device]
 }
 
 type PrayerListFeature implements Feature & Node {
@@ -816,13 +885,16 @@ type Query {
   getDefinedValueByIdentifier(identifier: String): DefinedValue
   getDefinedValueListByIdentifier(identifier: String): DefinedValueList
   userFeedFeatures: [Feature]
+  connectFeedFeatures: [Feature]
+  eventsFeedFeatures: [Feature]
+  giveFeedFeatures: [Feature]
   userHeaderFeatures: [Feature]
   flagStatus(key: String!): FLAG_STATUS
   likedContent(first: Int, after: String): ContentItemsConnection
-  liveStream: LiveStream @deprecated(reason: "Use liveStreams, there may be multiple.")
-  liveStreams: [LiveStream]
   floatLeftLiveStream: LiveStream
   floatLeftEmptyLiveStream: LiveStream
+  liveStream: LiveStream @deprecated(reason: "Use liveStreams, there may be multiple.")
+  liveStreams: [LiveStream]
   notificationCenter(first: Int, after: String): MessagesConnection
   metadata(relatedNode: ID!): [Metadata]
   pageBuilderFeatures(url: String!): [PageBuilderFeature]
@@ -841,6 +913,9 @@ type Resource {
   title: String
   url: String
   contentChannelItem: String
+  icon: String
+  action: ACTION_FEATURE_ACTION
+  relatedNode: Node
 }
 
 type RockPersonDetails {
@@ -1029,6 +1104,7 @@ type VideoCallParams {
   link: String
   meetingId: String
   passcode: String
+  labelText: String
 }
 
 type VideoMedia implements Media {

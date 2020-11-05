@@ -10,6 +10,7 @@ import {
   split,
   parseInt
 } from 'lodash'
+import moment from 'moment-timezone';
 
 import { createVideoUrlFromGuid } from '../utils'
 
@@ -19,6 +20,30 @@ export default class ContentItem extends coreContentItem.dataSource {
   expanded = true
 
   CORE_LIVE_CONTENT = this.LIVE_CONTENT
+
+  // MARK : - Utils
+  /**
+   * @param {Object[]} associations - Rock Content Channel Item Associations
+   * 
+   * @return {function}
+   */
+  sortByAssociationOrder = (associations) => ((a, b) => {
+    /**
+     * Find the Association Order for the given content channel items
+     */
+    const { order: orderA } = associations.find(item => item.childContentChannelItemId === a.id)
+    const { order: orderB } = associations.find(item => item.childContentChannelItemId === b.id)
+
+    /**
+     * Compare functions want either `0`, `< 0` or `> 0` as a return value, so we'll just subtract
+     * orderA - orderB in order to mimic the `Order asc` request
+     */
+    return orderA - orderB
+  });
+
+  CONTENT_ITEM_ASSOCIATION_SORT = () => [
+    { field: 'Order', direction: 'asc' },
+  ];
 
   LIVE_CONTENT = () => {
     // If we're in a staging environment, we want to
@@ -35,12 +60,36 @@ export default class ContentItem extends coreContentItem.dataSource {
     return this.CORE_LIVE_CONTENT()
   }
 
+  CHILDREN_LIVE_CONTENT = () => {
+    // If we're in a staging environment, we want to
+    //  return null so that no filter is applied over
+    //  the content querying.
+    // If we're not in a staging environment, we want
+    //  to apply the standard LIVE_CONTENT filter based
+    //  on the config.yml settings
+
+    if (process.env.CONTENT === 'stage') {
+      return null
+    }
+
+    // get a date in the local timezone of the rock instance.
+    // will create a timezone formatted string and then strip off the offset
+    // should output something like 2019-03-27T12:27:20 which means 12:27pm in New York
+    const date = moment()
+      .tz(ROCK.TIMEZONE)
+      .format()
+      .split(/[-+]\d+:\d+/)[0];
+    const filter = `(((ChildContentChannelItem/StartDateTime lt datetime'${date}') or (ChildContentChannelItem/StartDateTime eq null)) and ((ChildContentChannelItem/ExpireDateTime gt datetime'${date}') or (ChildContentChannelItem/ExpireDateTime eq null))) and (((ChildContentChannelItem/Status eq 'Approved') or (ChildContentChannelItem/ContentChannel/RequiresApproval eq false)))`;
+    return get(ROCK, 'SHOW_INACTIVE_CONTENT', false) ? null : filter;
+  };
+
   resolveType(props) {
     const { clientVersion } = this.context;
     const {
       id,
       attributeValues,
       attributes,
+      contentChannelTypeId
     } = props
     const versionParse = split(clientVersion, '.').join('')
 
@@ -57,8 +106,18 @@ export default class ContentItem extends coreContentItem.dataSource {
       }
     }
 
-    if (id === 7964 && !clientVersion.includes("web")) {
-      return "InformationalContentItem"
+    /**
+     * Versions of the app that are lower than 5.4.0 have a visual bug where they
+     * don't ever show dates/times on EventContentItems.
+     * 
+     * We have an error in logic where the `hideLabel` boolean flag is not respected,
+     * so we need to just resolve all `EventContentItem` types to `InformationalContentItem`
+     * to avoid the visual issue.
+     */
+    if (parseInt(versionParse) < 540) {
+      if (get(ROCK_MAPPINGS, 'CONTENT_ITEM.EventContentItem.ContentChannelTypeId', []).includes(contentChannelTypeId)) {
+        return 'InformationalContentItem'
+      }
     }
 
     return super.resolveType(props)
@@ -254,4 +313,56 @@ export default class ContentItem extends coreContentItem.dataSource {
 
     return `${title} - ${this.createSummary(root)}`
   }
+
+  // MARK : - Core DataSource overrides
+  /**
+   * Gets all Content Channel Item Associations for a given Content Channel Item
+   * @param {number} id - Rock Id of the Content Channel Item for the Association
+   */
+  getAssociationCursorByContentItemId = async (id) => {
+    return this.request('ContentChannelItemAssociations')
+      // .expand('ChildContentChannel')
+      .filter(`ContentChannelItemId eq ${id}`)
+      .andFilter(this.CHILDREN_LIVE_CONTENT())
+      .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
+      .cache({ ttl: 60 });
+  };
+
+  /**
+   * Gets all Child Content Channel Items for a given Parent Content Channel Item
+   * @param {number} id - Rock Id of the Parent Content Channel Item
+   */
+  getCursorByParentContentItemId = async (id) => {
+    const associations = await this.request('ContentChannelItemAssociations')
+      .filter(`ContentChannelItemId eq ${id}`)
+      .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
+      .cache({ ttl: 60 })
+      .get();
+
+    if (!associations || !associations.length) return this.request().empty();
+
+    return this.getFromIds(
+      associations.map(
+        ({ childContentChannelItemId }) => childContentChannelItemId
+      )
+    ).transform(results => results.sort(this.sortByAssociationOrder(associations)));
+  };
+
+  /**
+   * Gets all Parent Content Channel Items for a given Child Content Channel Item
+   * @param {number} id - Rock Id of the Child Content Channel Item
+   */
+  getCursorByChildContentItemId = async (id) => {
+    const associations = await this.request('ContentChannelItemAssociations')
+      .filter(`ChildContentChannelItemId eq ${id}`)
+      .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
+      .cache({ ttl: 60 })
+      .get();
+
+    if (!associations || !associations.length) return this.request().empty();
+
+    return this.getFromIds(
+      associations.map(({ contentChannelItemId }) => contentChannelItemId)
+    ).transform(results => results.sort(this.sortByAssociationOrder(associations)));
+  };
 }

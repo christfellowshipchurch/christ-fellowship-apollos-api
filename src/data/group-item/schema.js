@@ -57,9 +57,19 @@ export const groupSchema = gql`
     groupType: String
     groupResources: [Resource]
     coverImage: ImageMedia
-    avatars: [String]
-    leaders: [Person]
-    members: [Person]
+
+    people(
+      first: Int
+      after: String
+      isLeader: Boolean
+    ): PeopleConnection
+    
+    chatChannelId: String 
+      @deprecated(reason: "Use 'streamChatChannel' instead")
+
+    avatars: [String] @deprecated(reason: "Use people instead")
+    leaders: [Person] @deprecated(reason: "Use people instead")
+    members: [Person] @deprecated(reason: "Use people instead")
   }
 
   type Group implements GroupItem & Node {
@@ -68,11 +78,17 @@ export const groupSchema = gql`
     title: String
     summary: String
     groupType: String
-    leaders: [Person]
-    members: [Person]
     coverImage: ImageMedia
     groupResources: [Resource]
-    avatars: [String]
+
+    people(
+      first: Int
+      after: String
+      isLeader: Boolean
+    ): PeopleConnection
+
+    chatChannelId: String 
+      @deprecated(reason: "Use 'streamChatChannel' instead")
 
     allowMessages: String
     dateTime: DateTime
@@ -80,6 +96,10 @@ export const groupSchema = gql`
     phoneNumbers: [String]
     schedule: Schedule
     videoCall: VideoCallParams
+
+    avatars: [String] @deprecated(reason: "Use people instead")
+    leaders: [Person] @deprecated(reason: "Use people instead")
+    members: [Person] @deprecated(reason: "Use people instead")
   }
 
   type VolunteerGroup implements GroupItem & Node {
@@ -88,11 +108,21 @@ export const groupSchema = gql`
     title: String
     summary: String
     groupType: String
-    leaders: [Person]
-    members: [Person]
     coverImage: ImageMedia
     groupResources: [Resource]
-    avatars: [String]
+
+    people(
+      first: Int
+      after: String
+      isLeader: Boolean
+    ): PeopleConnection
+
+    chatChannelId: String 
+      @deprecated(reason: "Use 'streamChatChannel' instead")
+
+    avatars: [String] @deprecated(reason: "Use people instead")
+    leaders: [Person] @deprecated(reason: "Use people instead")
+    members: [Person] @deprecated(reason: "Use people instead")
   }
 
   input GroupFilterInput {

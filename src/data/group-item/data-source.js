@@ -1,9 +1,14 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
-import { createGlobalId } from '@apollosproject/server-core';
-import { get, mapValues, isNull, filter, head, chunk, flatten, take } from 'lodash';
+import {
+  createGlobalId,
+  createCursor,
+  parseCursor
+} from '@apollosproject/server-core';
+import { get, mapValues, isNull, filter, head, chunk, flatten, take, difference } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
+import crypto from 'crypto-js'
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
 
@@ -39,7 +44,25 @@ const EXCLUDE_IDS = [
   241744,
   241745,
   1042531,
+  828068,
+  1032459,
+  1032476,
+  1032477,
+  1032478,
+  1032479,
+  1032480,
+  1032481,
+  1032482,
+  1032483,
+  1032484,
+  1032485,
+  1032486,
+  1032487,
+  1032488,
+  1032489,
 ];
+
+const CHANNEL_TYPE = 'group';
 
 export default class GroupItem extends baseGroup.dataSource {
   getFromId = async (id) => {
@@ -150,11 +173,12 @@ export default class GroupItem extends baseGroup.dataSource {
       (groupTypeIds) => this.request('GroupMembers')
         .expand('GroupRole')
         .filter(
-          `PersonId eq ${personId} ${
-          asLeader ? ' and GroupRole/IsLeader eq true' : ''
+          `PersonId eq ${personId} ${asLeader ? ' and GroupRole/IsLeader eq true' : ''
           }`
         )
+        // Do not include groups where user's status is Inactive or Pending
         .andFilter(`GroupMemberStatus ne 'Inactive'`)
+        .andFilter(`GroupMemberStatus ne 'Pending'`)
         // Filter by Group Type Id up here
         .andFilter(
           groupTypeIds
@@ -271,20 +295,63 @@ export default class GroupItem extends baseGroup.dataSource {
     );
   };
 
+  async paginateMembersById({ after, first = 20, id, isLeader = false }) {
+    let skip = 0;
+    if (after) {
+      const parsed = parseCursor(after);
+      if (parsed && Object.hasOwnProperty.call(parsed, 'position')) {
+        skip = parsed.position + 1;
+      } else {
+        throw new Error(`An invalid 'after' cursor was provided: ${after}`);
+      }
+    }
+
+    // temporarily store the select parameter to
+    // put back after "Id" is selected for the count
+    const cursor = this.request('GroupMembers')
+      .filter(`GroupId eq ${id}`)
+      .andFilter(`GroupRole/IsLeader eq ${isLeader}`)
+      .andFilter(`GroupMemberStatus eq '1'`)
+      .expand('GroupRole, Person')
+      .top(first)
+      .skip(skip)
+      .transform((results) => results
+        .filter(groupMember => {
+          return !!groupMember.person
+        })
+        .map(({ person }, i) => {
+          return ({
+            node: this.context.dataSources.Person.getFromId(person.id),
+            cursor: createCursor({ position: i + skip })
+          })
+        }))
+
+    return {
+      getTotalCount: cursor.count,
+      edges: cursor.get(),
+    };
+  }
+
   getAvatars = async (id) => {
-    const members = await this.getMembers(id);
-    const leaders = await this.getLeaders(id);
-    const firstLeader = head(leaders);
-    const filteredMembers = firstLeader
-      ? filter(members, (o) => o.id !== firstLeader.id)
-      : members;
-    let avatars = [];
-    filteredMembers.map((member) =>
-      member.photo.guid
-        ? avatars.push(createImageUrlFromGuid(member.photo.guid))
-        : null
-    );
-    return take(avatars, 15);
+    try {
+      const members = await this.getMembers(id);
+      const leaders = await this.getLeaders(id);
+      const firstLeader = head(leaders);
+      const filteredMembers = firstLeader
+        ? filter(members, (o) => o.id !== firstLeader.id)
+        : members;
+      let avatars = [];
+      filteredMembers.map((member) =>
+        member.photo.guid
+          ? avatars.push(createImageUrlFromGuid(member.photo.guid))
+          : null
+      );
+      return take(avatars, 15);
+    } catch (e) {
+      console.log({ e })
+    }
+
+    return []
   };
 
   groupPhoneNumbers = async (id) => {
@@ -311,6 +378,10 @@ export default class GroupItem extends baseGroup.dataSource {
       const occurrences = await this.context.dataSources.Schedule.getOccurrences(
         schedule.id
       );
+
+      if (!occurrences || !occurrences.length) {
+        return { start: null, end: null };
+      }
 
       const nextOccurrence = head(occurrences);
       return { start: nextOccurrence.start, end: nextOccurrence.end };
@@ -408,6 +479,54 @@ export default class GroupItem extends baseGroup.dataSource {
       return titleOverride;
     }
     return name;
+  };
+
+  getChatChannelId = async (root) => {
+    // TODO : break up this logic and move it to the StreamChat DataSource
+    const { Auth, StreamChat, Flag } = this.context.dataSources;
+    const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
+
+    if (featureFlagStatus !== 'LIVE') {
+      return null;
+    }
+
+    const currentPerson = await Auth.getCurrentPerson();
+    const resolvedType = this.resolveType(root);
+    const globalId = createGlobalId(root.id, resolvedType);
+    const channelId = crypto.SHA1(globalId).toString();
+
+    const groupMembers = await this.getMembers(root.id);
+    const members = groupMembers.map(member => StreamChat.getStreamUserId(member.id));
+
+    const groupLeaders = await this.getLeaders(root.id);
+    const leaders = groupLeaders.map(leader => StreamChat.getStreamUserId(leader.id));
+
+    // Create any Stream users that might not exist
+    // We need to do this before we can create a channel 🙄
+    await StreamChat.createStreamUsers({ users: groupMembers.map(StreamChat.getStreamUser) });
+
+    // Make sure the channel exists.
+    // If it doesn't, create it.
+    await StreamChat.getChannel({
+      channelId, channelType: CHANNEL_TYPE, options: {
+        members,
+        created_by: StreamChat.getStreamUser(currentPerson)
+      }
+    });
+
+    // Add group members not in channel
+    await StreamChat.addMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE });
+
+    // Remove channel members not in group
+    await StreamChat.removeMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE });
+
+    // Promote/demote members for moderation if necessary
+    await StreamChat.updateModerators({ channelId, groupLeaders: leaders, channelType: CHANNEL_TYPE });
+
+    return {
+      id: root.id,
+      channelId
+    }
   };
 
   resolveType({ groupTypeId, id }) {

@@ -11,8 +11,16 @@ export default gql`
         READ_GROUP
     }
 
+    enum HorizontalCardType {
+        DEFAULT
+        HIGHLIGHT
+        HIGHLIGHT_MEDIUM
+        HIGHLIGHT_SMALL
+    }
+
     extend type HorizontalCardListFeature {
         primaryAction: FeatureAction
+        cardType: HorizontalCardType
     }
 
     type ActionBarFeatureAction {

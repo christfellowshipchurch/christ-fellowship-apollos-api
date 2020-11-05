@@ -25,7 +25,7 @@ ROCK:
   SHARE_URL: https://christfellowship.church
   # This should match the timezone of the Rock server
   # TIMEZONE: "Etc/GMT+5"
-  TIMEZONE: 'America/New_York'
+  TIMEZONE: "America/New_York"
   DEEP_LINK_HOST:
   ROOT_API_URL: ${ROOT_URL}
   USE_PLUGIN: true
@@ -82,8 +82,8 @@ ANALYTICS:
 BIBLE_API:
   KEY: ${BIBLE_API_KEY}
   BIBLE_ID:
-    WEB: '9879dbb7cfe39e4d-01'
-    KJV: 'de4e12af7f28f599-02'
+    WEB: "9879dbb7cfe39e4d-01"
+    KJV: "de4e12af7f28f599-02"
 CLOUDINARY:
   # Cloudinary is used to improve image loading
   # value should look something like
@@ -123,7 +123,7 @@ ROCK_MAPPINGS:
       ContentChannelId: [45, 76]
     EventContentItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [23]
+      ContentChannelTypeId: [29]
     WebsitePagesContentItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [14]
@@ -156,6 +156,7 @@ ROCK_MAPPINGS:
   # Apollos will pull these content channels and expose them as events.
   EVENTS_CONTENT_CHANNEL_IDS:
     - 47
+    - 78
 
   # Apollos will pull content items from these channels and expose them on the user feed
   # However, it will not expose the channel itself.
@@ -206,25 +207,30 @@ ROCK_MAPPINGS:
   # when migrating from Arena to Rock, the Arena keys were kept
   # this configuration helps eliminate the need to remember specific Arena keys
   PERSON_ATTRIBUTES:
-    SALVATION_DATE: 'Arena-15-139'
-    BAPTISM_DATE: 'BaptismDate'
-    ETHNICITY: 'Ethnicity'
+    SALVATION_DATE: "Arena-15-139"
+    BAPTISM_DATE: "BaptismDate"
+    ETHNICITY: "Ethnicity"
   CONNECTION_STATUS:
     FIRST_CONNECTION:
-      KEY: 'Arena-15-135'
+      KEY: "Arena-15-135"
     ORIGINAL_ENTRY:
-      KEY: 'Arena-15-64'
-      VALUE: '65c8d8f1-491a-4335-bbdc-845ebc2887ab'
+      KEY: "Arena-15-64"
+      VALUE: "65c8d8f1-491a-4335-bbdc-845ebc2887ab"
 
+  # References a type of location that describes one or more specific locations
   LOCATION_TYPES:
     HOME_ADDRESS: 19
+
+  # References a specific location within Rock
+  LOCATION_IDS:
+    WEB_AND_APP: 190052
 
   WORKFLOW_IDS:
     RSVP: 232
     EMAIL_CAPTURE: 236
     PASSWORD_RESET_EMAIL: 327
     ADDRESS_UPDATE: 328
-    CHECK_IN: 411
+    CHECK_IN: 552
 
   GROUP_TYPE_IDS:
     DREAM_TEAM: 37
@@ -260,56 +266,56 @@ FEATURE_FEEDS:
       isCard: false
       primaryAction:
         action: OPEN_URL
-        icon: 'settings'
+        icon: "settings"
         relatedNode:
           __typename: Url
-          url: 'christfellowship://c/EditCurrentUser'
+          url: "christfellowship://c/EditCurrentUser"
     - type: ActionBar
       actions:
         - action: OPEN_URL
-          title: 'Groups'
-          icon: 'users'
+          title: "Groups"
+          icon: "users"
           theme:
             colors:
-              primary: '#00aeef'
+              primary: "#00aeef"
           relatedNode:
             __typename: Url
-            url: 'https://rock.gocf.org/groups'
+            url: "https://rock.gocf.org/groups"
         - action: OPEN_URL
-          title: 'Serve'
-          icon: 'handshake'
+          title: "Serve"
+          icon: "handshake"
           theme:
             colors:
-              primary: '#d52158'
+              primary: "#d52158"
           relatedNode:
             __typename: Url
-            url: 'https://rock.christfellowship.church/dreamteam'
+            url: "https://rock.christfellowship.church/dreamteam"
         - action: OPEN_URL
-          title: 'Give Now'
-          icon: 'envelope-open-dollar'
+          title: "Give Now"
+          icon: "envelope-open-dollar"
           theme:
             colors:
-              primary: '#1ec27f'
+              primary: "#1ec27f"
           relatedNode:
             __typename: Url
-            url: 'https://pushpay.com/g/christfellowship'
+            url: "https://cf.church/pushpay?feed=connect"
     - type: HorizontalCardList
       algorithms: [MY_GROUPS]
-      title: 'My Groups'
+      title: "My Groups"
       flagKey: GROUPS
     - type: HorizontalCardList
       algorithms: [MY_VOLUNTEER_GROUPS]
-      title: 'My Dream Teams'
+      title: "My Dream Teams"
       flagKey: VOLUNTEER_GROUPS
     - type: HorizontalCardList
       algorithms: [MY_PRAYERS]
-      title: 'My Prayers'
+      title: "My Prayers"
       primaryAction:
         action: OPEN_URL
-        title: 'See all'
+        title: "See all"
         relatedNode:
           __typename: Url
-          url: 'christfellowship://c/MyPrayerRequestsFeed'
+          url: "christfellowship://c/MyPrayerRequestsFeed"
   EVENTS_TAB:
     - type: VerticalCardList
       algorithms: [ALL_EVENTS]
@@ -320,16 +326,7 @@ FEATURE_FEEDS:
           arguments:
             contentChannelId: 76
     - type: ActionBar
-      actions:
-        - action: OPEN_URL
-          title: 'Give Now'
-          icon: 'envelope-open-dollar'
-          theme:
-            colors:
-              primary: '#1ec27f'
-          relatedNode:
-            __typename: Url
-            url: 'https://pushpay.com/g/christfellowship'
+      actions: []
   HOME_HEADER:
     - algorithms: [ALL_LIVE_CONTENT]
       type: LiveContentList
@@ -339,31 +336,33 @@ FEATURE_FEEDS:
       type: PrayerList
       title: Daily Prayer
 
-
-
 FEATURE_FLAGS:
   CHECK_IN:
-    status: 'LIVE'
+    status: "LIVE"
   GROUPS:
-    status: 'LIVE'
+    status: "LIVE"
   HOME_HEADER:
-    status: 'LIVE'
+    status: "LIVE"
+  GROUP_CHAT:
+    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    status: "LIVE"
   LIVE_STREAM_CHAT:
     securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
-    status: 'LIVE'
+    status: "LIVE"
+  LIVE_STREAM_CHAT_MODERATOR:
+    securityGroupId: 1054703 # CFDP Global Event Chat Moderators Group
+    status: "LIVE"
   LIVE_STREAM_UI:
     securityGroupId: 1014843 # CFDP Experimental Features
-    status: 'LIVE'
+    status: "LIVE"
   NOTIFICATION_CENTER:
     securityGroupId: 1014843 # CFDP Experimental Features
-    status: 'LIVE'
+    status: "LIVE"
   ROCK_DYNAMIC_FEED_WITH_PERSONAS:
-    status: 'LIVE'
+    status: "LIVE"
   VOLUNTEER_GROUPS:
     securityGroupId: 1052010 # CFDP Feature Flags/My Dream Teams
-    status: 'LIVE'
-  
-  
+    status: "LIVE"
 
 PAGE_BUILDER:
   locations:
@@ -391,7 +390,7 @@ PAGE_BUILDER:
               attributeKey: contentBlocks
 
 NOTIFICATIONS:
-  PRAYING: 'Your church family is praying for you right now. Thanks for sharing your request with us!'
+  PRAYING: "Your church family is praying for you right now. Thanks for sharing your request with us!"
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:
