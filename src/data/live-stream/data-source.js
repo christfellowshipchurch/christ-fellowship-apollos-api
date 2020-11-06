@@ -207,8 +207,6 @@ export default class LiveStream extends matrixItemDataSource {
       return true
     })
 
-    console.log({og: contentChannelItems.length, new: itemsBySecurityGroup.length})
-
     // Get Attribute Matrix Items from the "filtered" Attribute Matrix Guids
     const attributeMatrixItemPromises = await Promise.all(
       itemsBySecurityGroup.map(({ id, attributeValues }) => {
@@ -305,7 +303,7 @@ export default class LiveStream extends matrixItemDataSource {
       Cache.set({
         key: cachedKey,
         data: attributeMatrix,
-        expiresIn: 60 * 4 // 4 hour cache
+        expiresIn: 10 // 10 minute
       });
     }
 
