@@ -11,8 +11,26 @@ export default gql`
     READ_GROUP
   }
 
+  enum HorizontalCardType {
+    DEFAULT
+    HIGHLIGHT
+    HIGHLIGHT_MEDIUM
+    HIGHLIGHT_SMALL
+  }
+
   extend type HorizontalCardListFeature {
     primaryAction: FeatureAction
+    cardType: HorizontalCardType
+  }
+
+  type LiveStreamAction {
+    relatedNode: Node
+    action: ACTION_FEATURE_ACTION
+    title: String
+
+    duration: Int
+    image: String
+    start: Int
   }
 
   type ActionBarFeatureAction {
@@ -29,16 +47,6 @@ export default gql`
     order: Int
 
     actions: [ActionBarFeatureAction]
-  }
-
-  type LiveStreamAction {
-    relatedNode: Node
-    action: ACTION_FEATURE_ACTION
-    title: String
-
-    duration: Int
-    image: String
-    start: Int
   }
 
   type AvatarListFeature implements Feature & Node {

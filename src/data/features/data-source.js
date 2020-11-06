@@ -9,7 +9,6 @@ import {
 } from 'lodash'
 import moment from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
-import { createGlobalId } from '@apollosproject/server-core'
 
 const { ROCK_MAPPINGS, FEATURE_FLAGS, ROCK } = ApollosConfig
 const { createImageUrlFromGuid } = Utils
@@ -45,14 +44,14 @@ export default class Feature extends coreFeatures.dataSource {
         return accum;
     }, {})
 
-    /** Algorithms */
+    // MARK : - Algorithms
     async allEventsAlgorithm() {
         const { ContentItem } = this.context.dataSources
 
         const items = await ContentItem.getEvents()
 
         return items.map((item, i) => ({
-            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+            id: `${item.id}${i}`,
             title: item.title,
             relatedNode: { ...item, __type: ContentItem.resolveType(item) },
             image: ContentItem.getCoverImage(item),
@@ -100,7 +99,7 @@ export default class Feature extends coreFeatures.dataSource {
         const items = limit ? await cursor.top(limit).get() : await cursor.get();
 
         return items.map((item, i) => ({
-            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+            id: `${item.id}${i}`,
             title: item.title,
             subtitle: ContentItem.createSummary(item),
             relatedNode: { ...item, __type: ContentItem.resolveType(item) },
@@ -128,7 +127,7 @@ export default class Feature extends coreFeatures.dataSource {
         const items = limit ? await cursor.top(limit).get() : await cursor.get()
 
         return items.map((item, i) => ({
-            id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+            id: `${item.id}${i}`,
             title: item.title,
             subtitle: get(item, 'contentChannel.name'),
             relatedNode: { ...item, __type: ContentItem.resolveType(item) },
@@ -156,7 +155,7 @@ export default class Feature extends coreFeatures.dataSource {
                 }
 
                 return ({
-                    id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                    id: `${item.id}${i}`,
                     title: Group.getTitle(item),
                     relatedNode: {
                         __type: Group.resolveType(item),
@@ -195,7 +194,7 @@ export default class Feature extends coreFeatures.dataSource {
             }
 
             return ({
-                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                id: `${item.id}${i}`,
                 title: item.text,
                 relatedNode: {
                     __type: "PrayerRequest",
@@ -212,7 +211,7 @@ export default class Feature extends coreFeatures.dataSource {
     }
 
     async myVolunteerGroupsAlgorithm({ limit = null } = {}) {
-        const { Group, Auth, ContentItem } = this.context.dataSources
+        const { Group, Auth } = this.context.dataSources
 
         try {
             const { id } = await Auth.getCurrentPerson()
@@ -223,7 +222,7 @@ export default class Feature extends coreFeatures.dataSource {
 
             return groups.map((item, i) => {
                 return ({
-                    id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                    id: `${item.id}${i}`,
                     title: Group.getTitle(item),
                     relatedNode: {
                         __type: Group.resolveType(item),
@@ -253,7 +252,7 @@ export default class Feature extends coreFeatures.dataSource {
         const events = await this.context.dataSources.ContentItem.getEvents(limit)
 
         return events.map((event, i) => ({
-            id: createGlobalId(`${event.id}${i}`, 'ActionListAction'),
+            id: `${event.id}${i}`,
             title: event.title,
             relatedNode: { ...event, __type: 'EventContentItem' },
             image: event.coverImage,
@@ -267,7 +266,6 @@ export default class Feature extends coreFeatures.dataSource {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
             id: this.createFeatureId({
-                type: 'ActionBarFeature',
                 args: {
                     actions
                 },
@@ -279,10 +277,7 @@ export default class Feature extends coreFeatures.dataSource {
                     action.relatedNode &&
                     !action.relatedNode.id
                 ) {
-                    action.relatedNode.id = createGlobalId( // eslint-disable-line
-                        JSON.stringify(action.relatedNode),
-                        action.relatedNode.__typename
-                    );
+                    action.relatedNode.id = this.createFeatureId({ args: action.relatedNode});
                 }
 
                 return action
@@ -293,7 +288,7 @@ export default class Feature extends coreFeatures.dataSource {
     }
 
     async createAvatarListFeature({ algorithms, primaryAction, isCard }) {
-        const people = () => this.runAlgorithms({ algorithms });
+        const people = this.runAlgorithms({ algorithms });
 
         // Ensures that we have a generated ID for the Primary Action related node, if not provided.
         if (
@@ -301,17 +296,13 @@ export default class Feature extends coreFeatures.dataSource {
             primaryAction.relatedNode &&
             !primaryAction.relatedNode.id
         ) {
-            primaryAction.relatedNode.id = createGlobalId( // eslint-disable-line
-                JSON.stringify(primaryAction.relatedNode),
-                primaryAction.relatedNode.__typename
-            );
+            primaryAction.relatedNode.id = this.createFeatureId({ args: primaryAction.relatedNode });
         }
 
         return {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
             id: this.createFeatureId({
-                type: 'AvatarListFeature',
                 args: {
                     algorithms,
                     primaryAction,
@@ -331,10 +322,10 @@ export default class Feature extends coreFeatures.dataSource {
         hyphenatedTitle,
         title,
         subtitle,
-        primaryAction
+        primaryAction,
+        cardType
     }) {
-        // Generate a list of horizontal cards.
-        const cards = () => this.runAlgorithms({ algorithms });
+        const cards = this.runAlgorithms({ algorithms });
 
         // Ensures that we have a generated ID for the Primary Action related node, if not provided.
         if (
@@ -342,21 +333,18 @@ export default class Feature extends coreFeatures.dataSource {
             primaryAction.relatedNode &&
             !primaryAction.relatedNode.id
         ) {
-            primaryAction.relatedNode.id = createGlobalId( // eslint-disable-line
-                JSON.stringify(primaryAction.relatedNode),
-                primaryAction.relatedNode.__typename
-            );
+            primaryAction.relatedNode.id = this.createFeatureId({ args: primaryAction.relatedNode });
         }
 
         return {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
             id: this.createFeatureId({
-                type: 'HorizontalCardListFeature',
                 args: {
                     algorithms,
                     title,
                     subtitle,
+                    cardType
                 },
             }),
             cards,
@@ -364,19 +352,19 @@ export default class Feature extends coreFeatures.dataSource {
             title,
             subtitle,
             primaryAction,
+            cardType,
             // Typename is required so GQL knows specifically what Feature is being created
             __typename: 'HorizontalCardListFeature',
         };
     }
 
     async createLiveStreamListFeature({ algorithms, title, subtitle }) {
-        const liveStreams = () => this.runAlgorithms({ algorithms });
+        const liveStreams = this.runAlgorithms({ algorithms });
 
         return {
             // The Feature ID is based on all of the action ids, added together.
             // This is naive, and could be improved.
             id: this.createFeatureId({
-                type: 'LiveStreamListFeature',
                 args: {
                     algorithms,
                     title,
@@ -438,7 +426,76 @@ export default class Feature extends coreFeatures.dataSource {
     }
 
     getGiveFeedFeatures() {
-        return this.getFeedFeatures(get(ApollosConfig, 'FEATURE_FEEDS.GIVE_TAB', []));
+        const { clientVersion } = this.context;
+        const versionParse = split(clientVersion, '.').join('')
+        const config = get(ApollosConfig, 'FEATURE_FEEDS.GIVE_TAB', [])
+        const pushPayConfig = {
+            action: 'OPEN_URL',
+            title: "PushPay",
+            icon: "push-pay",
+            theme: {
+                colors: {
+                    primary: "#d52158"
+                }
+            },
+            relatedNode: {
+                __typename: 'Url',
+                url: "https://cf.church/pushpay?feed=give"
+            }
+        }
+        const payPalConfig = {
+            action: 'OPEN_URL',
+            title: "PayPal",
+            icon: "pay-pal",
+            theme: {
+                colors: {
+                    primary: "#179bd7"
+                }
+            },
+            relatedNode: {
+                __typename: 'Url',
+                url: "http://cf.church/paypal?feed=give"
+            }
+        }
+        const cashAppConfig = {
+            action: 'OPEN_URL',
+            title: "CashApp",
+            icon: "cash-app",
+            theme: {
+                colors: {
+                    primary: "#1ec27f"
+                }
+            },
+            relatedNode: {
+                __typename: 'Url',
+                url: "http://cf.church/cash-app?feed=give"
+            }
+        }
+        const venmoConfig = {
+            action: 'OPEN_URL',
+            title: "Venmo",
+            icon: "venmo",
+            theme: {
+                colors: {
+                    primary: "#00aeef"
+                }
+            },
+            relatedNode: {
+                __typename: 'Url',
+                url: "http://cf.church/venmo?feed=give"
+            }
+        }
+
+        const actionIndex = config.findIndex(item => item.type === 'ActionBar')
+
+        if (parseInt(versionParse) >= 540) {
+            config[actionIndex].actions = [pushPayConfig, payPalConfig, cashAppConfig, venmoConfig]
+        } else {
+            pushPayConfig.icon = "envelope-open-dollar"
+            config[actionIndex].actions = [pushPayConfig]
+        }
+
+        return this.getFeedFeatures(config);
     }
 
     async getHomeHeaderFeedFeatures() {
@@ -504,6 +561,10 @@ export default class Feature extends coreFeatures.dataSource {
             return true
         })
 
+        const { clientVersion } = this.context;
+        const versionParse = split(clientVersion, '.').join('')
+        const versionNumber = parseInt(versionParse)
+
         return Promise.all(
             filteredContentChannelItems.map((item) => {
                 const action = get(item, 'attributeValues.action.value', '')
@@ -521,6 +582,42 @@ export default class Feature extends coreFeatures.dataSource {
                             title: item.title,
                             subtitle: ContentItem.createSummary(item),
                         })
+                    case 'DefaultHorizontalCardList':
+                    case 'HighlightHorizontalCardList':
+                    case 'HighlightMediumHorizontalCardList':
+                    case 'HighlightSmallHorizontalCardList':
+                        /**
+                         * There was a bug in the Horizontal Card Feed that was resolved
+                         * in 5.4.0, so in order to help keep this from being an issue,
+                         * we'll just go ahead and resolve this to a Vertical List for 
+                         * any version less than 5.4.0
+                         */
+                        if (versionNumber >= 540) {
+                            // HorizontalCardList with Card Type override
+                            const getCardType = () => {
+                                switch (action) {
+                                    case 'HighlightHorizontalCardList':
+                                        return 'HIGHLIGHT';
+                                    case 'HighlightMediumHorizontalCardList':
+                                        return 'HIGHLIGHT_MEDIUM';
+                                    case 'HighlightSmallHorizontalCardList':
+                                        return 'HIGHLIGHT_SMALL';
+                                    default:
+                                        return 'DEFAULT'
+                                }
+                            }
+                            return this.createHorizontalCardListFeature({
+                                algorithms: [{
+                                    type: "CONTENT_CHILDREN",
+                                    arguments: {
+                                        contentChannelItemId: item.id,
+                                    }
+                                }],
+                                title: item.title,
+                                subtitle: ContentItem.createSummary(item),
+                                cardType: getCardType()
+                            });
+                        }
                     case 'READ_GLOBAL_CONTENT': // deprecated, old action
                     case 'VerticalCardList':
                     default:
@@ -529,7 +626,7 @@ export default class Feature extends coreFeatures.dataSource {
                             algorithms: [{
                                 type: "CONTENT_CHILDREN",
                                 arguments: {
-                                    contentChannelItemId: item.id
+                                    contentChannelItemId: item.id,
                                 }
                             }],
                             title: item.title,
@@ -584,12 +681,12 @@ export default class Feature extends coreFeatures.dataSource {
             }
 
             return {
-                id: createGlobalId(`${item.id}${i}`, 'ActionListAction'),
+                id: `${item.id}${i}`,
                 title: item.title,
                 subtitle: get(item, 'contentChannel.name'),
                 relatedNode: { ...item, __type: ContentItem.resolveType(item) },
                 image: ContentItem.getCoverImage(item),
-                action,
+                action: action.includes('Horizontal') ? 'VIEW_CHILDREN' : action,
             }
         })
 

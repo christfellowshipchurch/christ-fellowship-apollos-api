@@ -41,33 +41,7 @@ const resolver = {
         action: get(matrixItemAttributeValues, 'url.value', ''),
       }));
     },
-    label: async (
-      { attributeValues },
-      args,
-      { dataSources: { MatrixItem, Event, Schedule } }
-    ) => {
-      return '';
-      // Get Matrix Items
-      const matrixGuid = get(attributeValues, 'schedules.value', '');
-      const matrixItems = await MatrixItem.getItemsFromId(matrixGuid);
-
-      // Get Schedules
-      const schedules = await Schedule.getFromIds(
-        uniq(matrixItems.map((m) => get(item, 'attributeValues.schedule.value', '')))
-      );
-
-      // Sort by start date asc, take the first
-      const eventStart = first(
-        schedules.sort((a, b) => moment(a.effectiveStartDate).diff(b.effectiveStartDate))
-      );
-
-      // Sort by end date desc, take the first
-      const eventEnd = first(
-        schedules.sort((a, b) => moment(b.effectiveEndDate).diff(a.effectiveEndDate))
-      );
-
-      return '';
-    },
+    label: async ({ attributeValues }) => get(attributeValues, 'label.value', ''),
     eventGroupings: async (
       { attributeValues },
       args,
