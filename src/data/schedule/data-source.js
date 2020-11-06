@@ -275,7 +275,7 @@ export default class Schedule extends RockApolloDataSource {
      * 
      * Instead of using the "relative" time zone identifier (America/New_York), we calculate
      * the current offset of America/New_York (either +5 or -4) and then manually create the
-     * explicit offset time zone (GMT+5 or GMT+4) in order to resolve the discrepency
+     * explicit offset time zone (GMT+5 or GMT+4) in order to resolve the discrepancy
      */
     const iCalStart = iCal.match(/DTSTART:(\w+)/s);
     const iCalEnd = iCal.match(/DTEND:(\w+)/s);
