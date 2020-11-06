@@ -6,7 +6,7 @@ import { split, filter, get, find, flatten, flattenDeep, uniqBy } from 'lodash'
 
 import { getIdentifierType } from '../utils'
 
-const { ROCK } = ApollosConfig
+const { ROCK_MAPPINGS } = ApollosConfig
 
 export default class LiveStream extends matrixItemDataSource {
 
@@ -143,7 +143,7 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async byAttributeMatrixTemplate() {
-    const { Schedule } = this.context.dataSources
+    const { Schedule, Person } = this.context.dataSources
     const TEMPLATE_ID = 11
 
     // Get Attribute Matrix by Template Id
@@ -164,13 +164,11 @@ export default class LiveStream extends matrixItemDataSource {
     const contentChannelItems = flattenDeep(contentChannelItemPromises.filter(i => i.length))
 
     let personas = []
-    if (usePersonas) {
-      try {
-        personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
-      } catch (e) {
-        console.log("Events: Unable to retrieve personas for user.")
-        console.log(e)
-      }
+    try {
+      personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
+    } catch (e) {
+      console.log("Events: Unable to retrieve personas for user.")
+      console.log(e)
     }
 
     const itemsBySecurityGroup = contentChannelItems.filter(item => {
@@ -187,6 +185,8 @@ export default class LiveStream extends matrixItemDataSource {
         ','
       ).filter(dv => !!dv)
 
+      console.log({securityDataViews, personas})
+
       if (securityDataViews.length > 0) {
         /**
          * If there is at least 1 guid, we are going to check to see if the current user
@@ -196,8 +196,8 @@ export default class LiveStream extends matrixItemDataSource {
          * collection of items for the user's live streams
          */
         const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
-        
-        return userInSecurityDataViews.length === 0
+
+        return userInSecurityDataViews.length > 0
       }
 
       /**
@@ -206,6 +206,8 @@ export default class LiveStream extends matrixItemDataSource {
        */
       return true
     })
+
+    console.log({og: contentChannelItems.length, new: itemsBySecurityGroup.length})
 
     // Get Attribute Matrix Items from the "filtered" Attribute Matrix Guids
     const attributeMatrixItemPromises = await Promise.all(
