@@ -36,8 +36,9 @@ export default gql`
     action: ACTION_FEATURE_ACTION
     title: String
 
-    start: Int
     duration: Int
+    image: String
+    start: Int
   }
 
   type AvatarListFeature implements Feature & Node {
