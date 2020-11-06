@@ -1,7 +1,10 @@
-import { createGlobalId, resolverMerge } from '@apollosproject/server-core'
-import * as coreLiveStream from '@apollosproject/data-connector-church-online'
+import { createGlobalId, resolverMerge } from '@apollosproject/server-core';
+import * as coreLiveStream from '@apollosproject/data-connector-church-online';
+import { Utils } from '@apollosproject/data-connector-rock';
 import { get } from 'lodash';
-import moment from 'moment'
+import moment from 'moment';
+
+const { createImageUrlFromGuid } = Utils;
 
 const resolver = {
   LiveNode: {
@@ -17,13 +20,63 @@ const resolver = {
     isLive: ({ id, eventStartTime, eventEndTime }) =>
       moment().isBetween(eventStartTime, eventEndTime),
     media: ({ attributeValues }) => {
-      const liveStreamUrl = get(attributeValues, 'liveStreamUrl.value')
+      const liveStreamUrl = get(attributeValues, 'liveStreamUrl.value');
 
       if (liveStreamUrl) {
-        return { sources: [{ uri: liveStreamUrl }] }
+        return { sources: [{ uri: liveStreamUrl }] };
       }
 
-      return null
+      return null;
+    },
+    actions: async ({ id, guid }, args, { dataSources }) => {
+      const unresolvedNode = await dataSources.LiveStream.getRelatedNodeFromId(id);
+      // Get Matrix Items
+      const liveStreamActionsMatrixGuid = get(
+        unresolvedNode,
+        'attributeValues.liveStreamActions.value',
+        ''
+      );
+      const liveStreamActionsItems = await dataSources.MatrixItem.getItemsFromId(
+        liveStreamActionsMatrixGuid
+      );
+
+      const liveStreamDefaultActionItems = await dataSources.DefinedValueList.getByIdentifier(
+        367
+      );
+
+      const liveStreamDefaultActionItemsMapped = liveStreamDefaultActionItems.definedValues.map(
+        ({ attributeValues: defaultLiveStreamActionsItemsAttributeValues }) => ({
+          action: 'OPEN_URL',
+          image: get(defaultLiveStreamActionsItemsAttributeValues, 'image.value', null)
+            ? createImageUrlFromGuid(
+                defaultLiveStreamActionsItemsAttributeValues.image.value
+              )
+            : null,
+          relatedNode: {
+            __typename: 'Url',
+            url: get(defaultLiveStreamActionsItemsAttributeValues, 'url.value', null),
+          },
+          title: get(defaultLiveStreamActionsItemsAttributeValues, 'title.value', null),
+        })
+      );
+
+      const liveStreamActionsItemsMapped = liveStreamActionsItems.map(
+        ({ attributeValues: liveStreamActionsItemsAttributeValues }) => ({
+          action: 'OPEN_URL',
+          duration: get(liveStreamActionsItemsAttributeValues, 'duration.value', null),
+          image: get(liveStreamActionsItemsAttributeValues, 'image.value', null)
+            ? createImageUrlFromGuid(liveStreamActionsItemsAttributeValues.image.value)
+            : null,
+          relatedNode: {
+            __typename: 'Url',
+            url: get(liveStreamActionsItemsAttributeValues, 'url.value', null),
+          },
+          start: get(liveStreamActionsItemsAttributeValues, 'startTime.value', null),
+          title: get(liveStreamActionsItemsAttributeValues, 'title.value', null),
+        })
+      );
+
+      return liveStreamDefaultActionItemsMapped.concat(liveStreamActionsItemsMapped);
     },
     contentItem: ({ contentChannelItemId }, _, { models, dataSources }) => {
       if (contentChannelItemId) {
@@ -65,11 +118,15 @@ const resolver = {
         return null;
       }
     },
-    streamChatChannel: async ({ id, eventStartTime, eventEndTime }, _, { dataSources: { Flag } }) => {
+    streamChatChannel: async (
+      { id, eventStartTime, eventEndTime },
+      _,
+      { dataSources: { Flag } }
+    ) => {
       const featureFlag = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
       if (featureFlag !== 'LIVE') return null;
 
-      return { id: JSON.stringify({ id, eventStartTime, eventEndTime }) }
+      return { id: JSON.stringify({ id, eventStartTime, eventEndTime }) };
     },
     checkin: ({ attributeValues }, args, { dataSources: { CheckInable } }) => {
       const groupId = get(attributeValues, 'checkInGroup.value', '');
