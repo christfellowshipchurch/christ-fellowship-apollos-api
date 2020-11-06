@@ -32,7 +32,6 @@ export default class Schedule extends RockApolloDataSource {
     return this.request()
       .filter(getIdentifierType(id).query)
       .transform(result => {
-        console.log({result})
         if (result != null) {
           Cache.set({
             key: cachedKey,
@@ -216,7 +215,9 @@ export default class Schedule extends RockApolloDataSource {
     const nextStart = get(closestDate, 'start')
 
     return {
-      nextStart,
+      nextStart: moment(nextStart).isValid() 
+        ? moment.tz(nextStart, TIMEZONE).utc().format()
+        : null,
       startOffset: this.defaultStartOffsetMinutes,
       endOffset: this.defaultEndOffsetMinutes
     };
@@ -229,9 +230,9 @@ export default class Schedule extends RockApolloDataSource {
       return this.set({ hour, minute, seconds });
     };
     let nextStart = moment()
+      .tz(TIMEZONE)
       .weekday(weeklyDayOfWeek)
       .setTime(weeklyTimeOfDay)
-      .tz(TIMEZONE)
       .utc()
       .format();
 
@@ -252,26 +253,47 @@ export default class Schedule extends RockApolloDataSource {
 
   /** MARK: - iCalendar */
   /**
-   * @param {String} iCalendar string to parse.
-   * @param {Object} args Arguments to pass in to describe the parse.
-   * @param {Number} args.duration Manually set the duration of each instance of the event. Defaulted to the duration of the event set by the iCalendar string.
+   * @param {String}                iCalendar string to parse.
+   * @param {Object} args           Arguments to pass in to describe the parse.
+   * @param {Number} args.duration  Manually set the duration of each instance of the event. Defaulted to the duration of the event set by the iCalendar string.
    */
   parseiCalendar = async (iCal, args = {}) => {
     const duration = get(args, 'duration')
-    /** Before parsing the iCal object, we need to find and replace the start and end data/time
-     *  with one that specifies the current timezone of the event
+    /** 
+     * Before parsing the iCal object, we need to find and replace the start and end data/time
+     * with one that specifies the current timezone of the event
      *
-     *  Rock returns a DTSTART/DTEND in the following format: DTSTART:20200419T171500
-     *  which is ambiguous to the time zone, so node-ical will pick the local one
-     *  node-ical wants time zone specified in the following manner: DTSTART;TZID=America/New_York:20200419T171500
-     *  which we have to do manually
+     * Rock returns a DTSTART/DTEND in the following format: DTSTART:20200419T171500
+     * which is ambiguous to the time zone, so node-ical will pick the locale of the
+     * current machine in which the program is running.
+     * 
+     * When an event starts, the offset for the first date instance is what the parser
+     * uses for _all_ dates. This would mean that a repeated event set up before DLS
+     * would have an offset of -4 that carries with it into DLS. 
+     * 
+     * Ex: 4pm before DLS becomes 3pm after DLS
+     * 
+     * Instead of using the "relative" time zone identifier (America/New_York), we calculate
+     * the current offset of America/New_York (either +5 or -4) and then manually create the
+     * explicit offset time zone (GMT+5 or GMT+4) in order to resolve the discrepency
      */
     const iCalStart = iCal.match(/DTSTART:(\w+)/s);
     const iCalEnd = iCal.match(/DTEND:(\w+)/s);
-    const iCalAdjusted = iCal
-      .replace(iCalStart[0], `DTSTART;TZID=${TIMEZONE}:${iCalStart[1]}`)
-      .replace(iCalEnd[0], `DTEND;TZID=${TIMEZONE}:${iCalEnd[1]}`)
+    const iCalStamp = iCal.match(/DTSTAMP:(\w+)/s);
+    const getTimezoneOffset = () => {
+      function z(n) { return (n < 10 ? '0' : '') + n }
+      var offset = moment().tz(TIMEZONE).utcOffset();
+      var sign = offset < 0 ? '+' : '-';
+      offset = Math.abs(offset);
 
+      return `${sign}${offset / 60}`;
+    }
+    const offsetStr = getTimezoneOffset()
+
+    const iCalAdjusted = iCal
+      .replace(iCalStart[0], `DTSTART;TZID=Etc/GMT${offsetStr}:${iCalStart[1]}`)
+      .replace(iCalEnd[0], `DTEND;TZID=Etc/GMT${offsetStr}:${iCalEnd[1]}`)
+      .replace(iCalStamp[0], `DTSTAMP;TZID=Etc/GMT${offsetStr}:${iCalStamp[1]}`)
     const iCalEvents = Object.values(await ical.async.parseICS(iCalAdjusted))
 
     /** [{ start, end, ical }]
