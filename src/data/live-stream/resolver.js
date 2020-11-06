@@ -29,9 +29,7 @@ const resolver = {
       return null;
     },
     actions: async ({ id, guid }, args, { dataSources }) => {
-      const unresolvedNode = await dataSources.LiveStream.getRelatedNodeFromId(
-        id
-      );
+      const unresolvedNode = await dataSources.LiveStream.getRelatedNodeFromId(id);
       // Get Matrix Items
       const liveStreamActionsMatrixGuid = get(
         unresolvedNode,
@@ -42,64 +40,43 @@ const resolver = {
         liveStreamActionsMatrixGuid
       );
 
-      const defaultLiveStreamActions = [
-        {
-          title: 'Get Connected',
+      const liveStreamDefaultActionItems = await dataSources.DefinedValueList.getByIdentifier(
+        367
+      );
+
+      const liveStreamDefaultActionItemsMapped = liveStreamDefaultActionItems.definedValues.map(
+        ({ attributeValues: defaultLiveStreamActionsItemsAttributeValues }) => ({
           action: 'OPEN_URL',
+          image: get(defaultLiveStreamActionsItemsAttributeValues, 'image.value', null)
+            ? createImageUrlFromGuid(
+                defaultLiveStreamActionsItemsAttributeValues.image.value
+              )
+            : null,
           relatedNode: {
             __typename: 'Url',
-            url: 'https://rock.christfellowship.church/connect',
+            url: get(defaultLiveStreamActionsItemsAttributeValues, 'url.value', null),
           },
-        },
-        {
-          title: 'I Have Decided',
-          action: 'OPEN_URL',
-          relatedNode: {
-            __typename: 'Url',
-            url: 'https://rock.christfellowship.church/decision',
-          },
-        },
-        {
-          title: 'Give Online',
-          action: 'OPEN_URL',
-          relatedNode: {
-            __typename: 'Url',
-            url: 'https://pushpay.com/g/christfellowship',
-          },
-        },
-      ];
+          title: get(defaultLiveStreamActionsItemsAttributeValues, 'title.value', null),
+        })
+      );
 
       const liveStreamActionsItemsMapped = liveStreamActionsItems.map(
         ({ attributeValues: liveStreamActionsItemsAttributeValues }) => ({
           action: 'OPEN_URL',
-          duration: get(
-            liveStreamActionsItemsAttributeValues,
-            'duration.value',
-            null
-          ),
+          duration: get(liveStreamActionsItemsAttributeValues, 'duration.value', null),
           image: get(liveStreamActionsItemsAttributeValues, 'image.value', null)
-            ? createImageUrlFromGuid(
-                liveStreamActionsItemsAttributeValues.image.value
-              )
+            ? createImageUrlFromGuid(liveStreamActionsItemsAttributeValues.image.value)
             : null,
           relatedNode: {
             __typename: 'Url',
             url: get(liveStreamActionsItemsAttributeValues, 'url.value', null),
           },
-          start: get(
-            liveStreamActionsItemsAttributeValues,
-            'startTime.value',
-            null
-          ),
-          title: get(
-            liveStreamActionsItemsAttributeValues,
-            'title.value',
-            null
-          ),
+          start: get(liveStreamActionsItemsAttributeValues, 'startTime.value', null),
+          title: get(liveStreamActionsItemsAttributeValues, 'title.value', null),
         })
       );
 
-      return defaultLiveStreamActions.concat(liveStreamActionsItemsMapped);
+      return liveStreamDefaultActionItemsMapped.concat(liveStreamActionsItemsMapped);
     },
     contentItem: ({ contentChannelItemId }, _, { models, dataSources }) => {
       if (contentChannelItemId) {
@@ -146,9 +123,7 @@ const resolver = {
       _,
       { dataSources: { Flag } }
     ) => {
-      const featureFlag = await Flag.currentUserCanUseFeature(
-        'LIVE_STREAM_CHAT'
-      );
+      const featureFlag = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
       if (featureFlag !== 'LIVE') return null;
 
       return { id: JSON.stringify({ id, eventStartTime, eventEndTime }) };
