@@ -55,6 +55,7 @@ export default gql`
     type PeopleConnectionEdge {
         node: Person
         cursor: String
+        isGroupLeader: Boolean
     }
 
     type CommunicationPreferences {

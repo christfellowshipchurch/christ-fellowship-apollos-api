@@ -310,7 +310,7 @@ export default class GroupItem extends baseGroup.dataSource {
     // put back after "Id" is selected for the count
     const cursor = this.request('GroupMembers')
       .filter(`GroupId eq ${id}`)
-      .andFilter(`GroupRole/IsLeader eq ${isLeader}`)
+      .andFilter(isLeader === 'boolean' ? `GroupRole/IsLeader eq ${isLeader}` : null)
       .andFilter(`GroupMemberStatus eq '1'`)
       .expand('GroupRole, Person')
       .top(first)
@@ -319,12 +319,13 @@ export default class GroupItem extends baseGroup.dataSource {
         .filter(groupMember => {
           return !!groupMember.person
         })
-        .map(({ person }, i) => {
+        .map(({ person, groupRole }, i) => {
           return ({
             node: this.context.dataSources.Person.getFromId(person.id),
-            cursor: createCursor({ position: i + skip })
+            cursor: createCursor({ position: i + skip }),
+            isGroupLeader: groupRole.isLeader
           })
-        }))
+        }));
 
     return {
       getTotalCount: cursor.count,
