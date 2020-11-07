@@ -135,20 +135,31 @@ const resolver = {
     },
   },
   Query: {
-    floatLeftLiveStream: (root, args, { dataSources }) => ({
-      isLive: true,
-      eventStartTime: moment().add(15, 'minutes').utc().toISOString(),
-      title: 'Always Live',
-      contentItem: dataSources.ContentItem.getFromId(7565),
-      media: {
-        sources: [
-          {
-            uri:
-              'https://link.theplatform.com/s/IfSiAC/media/h9hnjqraubSs/file.m3u8?metafile=false&formats=m3u&auto=true',
-          },
-        ],
-      },
-    }),
+    floatLeftLiveStream: async (root, args, { dataSources }) => {
+      /**
+       * Beacuse the TV apps are a bit more sensative to errors, we
+       * want to capture all data fetching in a try catch with very,
+       * very explicit error handling and defaulting all return values
+       * to `null`
+       */
+      const { LiveStream } = dataSources
+      try {
+        /**
+         * getLiveStreams returns an array of Live Stream objects, but this
+         * specific endpoint only returns a single Live Stream. 
+         */
+        const allActiveLiveStreams = await LiveStream.getLiveStreams()
+
+        if (allActiveLiveStreams && allActiveLiveStreams.length > 0) {
+          return allActiveLiveStreams[0]
+        }
+      } catch (e) {
+        console.log("Error when fetching live streams for TV Apps")
+        console.log({ e })
+      }
+      
+      return null
+    },
     floatLeftEmptyLiveStream: (root, args, { dataSources }) => null,
   },
 };
