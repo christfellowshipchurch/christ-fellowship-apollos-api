@@ -142,9 +142,10 @@ export default class LiveStream extends matrixItemDataSource {
     return liveStreamContentItemsWithNextOccurrences;
   }
 
-  async byAttributeMatrixTemplate() {
+  async byAttributeMatrixTemplate(props) {
     const { Schedule, Person } = this.context.dataSources
     const TEMPLATE_ID = 11
+    const anonymously = get(props, 'anonymously', false)
 
     // Get Attribute Matrix by Template Id
     const attributeMatrices = await this.request('/AttributeMatrices')
@@ -164,11 +165,18 @@ export default class LiveStream extends matrixItemDataSource {
     const contentChannelItems = flattenDeep(contentChannelItemPromises.filter(i => i.length))
 
     let personas = []
-    try {
-      personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
-    } catch (e) {
-      console.log("Events: Unable to retrieve personas for user.")
-      console.log(e)
+
+    /**
+     * Only fetch user personas if we do _not_ want to make this request
+     * as an anonymous user
+     */
+    if (!anonymously) {
+      try {
+        personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
+      } catch (e) {
+        console.log("Events: Unable to retrieve personas for user.")
+        console.log(e)
+      }
     }
 
     const itemsBySecurityGroup = contentChannelItems.filter(item => {
@@ -192,7 +200,13 @@ export default class LiveStream extends matrixItemDataSource {
          * 
          * If there are no common guids, we return false to filter this option out of the
          * collection of items for the user's live streams
+         * 
+         * If there is at least 1 Guid and we want to make this request anonymously, just
+         * immediately return `false`
          */
+
+        if (anonymously) return false
+
         const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
 
         return userInSecurityDataViews.length > 0
@@ -252,7 +266,8 @@ export default class LiveStream extends matrixItemDataSource {
     return uniqBy(upcomingOrLive, (elem) => [elem.id, elem.eventStartTime, elem.eventEndTime].join())
   }
 
-  async getLiveStreams() {
+  async getLiveStreams(props) {
+    const anonymously = get(props, 'anonymously', false)
     const byContentItems = async () => {
       const liveStreamContentItems = await this.getLiveStreamContentItems()
 
@@ -295,16 +310,29 @@ export default class LiveStream extends matrixItemDataSource {
       return cachedValue;
     }
 
-    const attributeMatrix = await this.byAttributeMatrixTemplate()
+    /**
+     * Rock is returning 404's on Attribute Matrices for some reason,
+     * so we're going to just wrap this whole statement inside of a
+     * { try catch } so that we don't end up freaking out the system
+     * if Rock is unable to find a value.
+     */
+    try {
+      const attributeMatrix = await this.byAttributeMatrixTemplate({ anonymously })
 
-    if (attributeMatrix != null) {
-      Cache.set({
-        key: cachedKey,
-        data: attributeMatrix,
-        expiresIn: 60 // 60 minute
-      });
+      if (attributeMatrix != null) {
+        Cache.set({
+          key: cachedKey,
+          data: attributeMatrix,
+          expiresIn: 60 // 60 minute
+        });
+      }
+
+      return attributeMatrix.filter(i => !!i)
+    } catch (e) {
+      console.log("Error fetching Live Streams by Attribute Matrix Template")
+      console.log({ e })      
     }
 
-    return attributeMatrix.filter(i => !!i)
+    return null
   }
 }

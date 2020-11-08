@@ -148,7 +148,7 @@ const resolver = {
          * getLiveStreams returns an array of Live Stream objects, but this
          * specific endpoint only returns a single Live Stream. 
          */
-        const allActiveLiveStreams = await LiveStream.getLiveStreams()
+        const allActiveLiveStreams = await LiveStream.getLiveStreams({ anonymously: true })
 
         if (allActiveLiveStreams && allActiveLiveStreams.length > 0) {
           return allActiveLiveStreams[0]
