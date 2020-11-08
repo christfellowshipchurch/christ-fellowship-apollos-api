@@ -301,7 +301,7 @@ export default class LiveStream extends matrixItemDataSource {
       Cache.set({
         key: cachedKey,
         data: attributeMatrix,
-        expiresIn: 10 // 10 minute
+        expiresIn: 60 // 60 minute
       });
     }
 

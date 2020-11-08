@@ -60,6 +60,10 @@
           "name": "BIBLE_ID"
         },
         {
+          "valueFrom": "/prod/BUGSNAG_KEY",
+          "name": "BUGSNAG_KEY"
+        },
+        {
           "valueFrom": "ESV_KEY",
           "name": "ESV_KEY"
         },
