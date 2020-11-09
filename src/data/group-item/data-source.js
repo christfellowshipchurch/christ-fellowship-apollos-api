@@ -1,14 +1,22 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
+import { createGlobalId, createCursor, parseCursor } from '@apollosproject/server-core';
 import {
-  createGlobalId,
-  createCursor,
-  parseCursor
-} from '@apollosproject/server-core';
-import { get, mapValues, isNull, filter, head, chunk, flatten, take, difference } from 'lodash';
+  get,
+  mapValues,
+  isNull,
+  filter,
+  head,
+  chunk,
+  flatten,
+  take,
+  difference,
+  pick,
+  identity,
+} from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
-import crypto from 'crypto-js'
+import crypto from 'crypto-js';
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
 
@@ -101,9 +109,7 @@ export default class GroupItem extends baseGroup.dataSource {
       .andFilter(`GroupId eq ${groupId}`)
       .andFilter(`GroupMemberStatus eq '1'`)
       .get();
-    return Promise.all(
-      members.map(({ personId }) => Person.getFromId(personId))
-    );
+    return Promise.all(members.map(({ personId }) => Person.getFromId(personId)));
   };
 
   getLeaders = async (groupId) => {
@@ -127,17 +133,14 @@ export default class GroupItem extends baseGroup.dataSource {
     const { start } = await this.getDateTimeFromId(scheduleId);
 
     // Check to see if the current date is the date of the meeting before taking attendance.
-    if (moment(start).format('MMDDYYYY') !== moment().format('MMDDYYYY'))
-      return null;
+    if (moment(start).format('MMDDYYYY') !== moment().format('MMDDYYYY')) return null;
 
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
 
     const { locationId } = await this.request('Campuses')
       .filter(`Id eq ${campusId}`)
       .first();
-    const occurrenceDate = momentTz
-      .tz(start, ApollosConfig.ROCK.TIMEZONE)
-      .format('l LT');
+    const occurrenceDate = momentTz.tz(start, ApollosConfig.ROCK.TIMEZONE).format('l LT');
 
     try {
       console.log('Adding current user to attendance');
@@ -159,36 +162,75 @@ export default class GroupItem extends baseGroup.dataSource {
     }
   };
 
+  userIsLeader = async (groupId, userId) => {
+    const leaders = await this.request('GroupMembers')
+      .filter(`GroupId eq ${groupId}`)
+      .andFilter('GroupRole/IsLeader eq true')
+      .andFilter(`GroupMemberStatus eq '1'`)
+      .get();
+    const leaderIds = leaders.map(({ personId }) => personId);
+
+    return leaderIds.includes(userId);
+  };
+
+  updateTitle = async (id, title) => {
+    const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
+
+    if (this.userIsLeader(id, currentPerson.id)) {
+      // TODO - get API call
+      await this.patch(`/Groups/${id}`, { Title: title });
+    }
+  };
+
+  addResource = async ({ groupId, title, url }) => {
+    const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
+
+    if (this.userIsLeader(groupId, currentPerson.id)) {
+      // TODO - get API call
+      const data = pick({ Title: title, Url: url });
+      await this.put(`/Groups/${groupId}/Resources/AddResource`, data);
+    }
+  };
+
+  updateResource = async ({ groupId, resourceId, title, url }) => {
+    const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
+
+    if (this.userIsLeader(groupId, currentPerson.id)) {
+      // TODO - get API call
+      const updateData = pick({ Title: title, Url: url });
+      return this.patch(`/Groups/${groupId}/Resources/${resourceId}`, updateData);
+    }
+  };
+
   getByPerson = async ({
     personId,
     type = null,
     asLeader = false,
-    groupTypeIds = null
+    groupTypeIds = null,
   }) => {
     // Get the active groups that the person is a member of.
     // Conditionally filter that list of groups on whether or not your
     // role in that group is that of "Leader".
-    const _groupTypeIds = groupTypeIds || this.getGroupTypeIds()
-    const groupAssociationRequests = await Promise.all(chunk(_groupTypeIds, 3).map(
-      (groupTypeIds) => this.request('GroupMembers')
-        .expand('GroupRole')
-        .filter(
-          `PersonId eq ${personId} ${asLeader ? ' and GroupRole/IsLeader eq true' : ''
-          }`
-        )
-        // Do not include groups where user's status is Inactive or Pending
-        .andFilter(`GroupMemberStatus ne 'Inactive'`)
-        .andFilter(`GroupMemberStatus ne 'Pending'`)
-        // Filter by Group Type Id up here
-        .andFilter(
-          groupTypeIds
-            .map((id) => `(GroupRole/GroupTypeId eq ${id})`)
-            .join(' or ')
-        )
-        .get()
-    ))
+    const _groupTypeIds = groupTypeIds || this.getGroupTypeIds();
+    const groupAssociationRequests = await Promise.all(
+      chunk(_groupTypeIds, 3).map((groupTypeIds) =>
+        this.request('GroupMembers')
+          .expand('GroupRole')
+          .filter(
+            `PersonId eq ${personId} ${asLeader ? ' and GroupRole/IsLeader eq true' : ''}`
+          )
+          // Do not include groups where user's status is Inactive or Pending
+          .andFilter(`GroupMemberStatus ne 'Inactive'`)
+          .andFilter(`GroupMemberStatus ne 'Pending'`)
+          // Filter by Group Type Id up here
+          .andFilter(
+            groupTypeIds.map((id) => `(GroupRole/GroupTypeId eq ${id})`).join(' or ')
+          )
+          .get()
+      )
+    );
 
-    const groupAssociations = flatten(groupAssociationRequests)
+    const groupAssociations = flatten(groupAssociationRequests);
 
     // Get the actual group data for the groups above.
     const groups = await Promise.all(
@@ -201,9 +243,7 @@ export default class GroupItem extends baseGroup.dataSource {
     // Filter the groups to make sure we only pull those that are
     // active and NOT archived
     const filteredGroups = await Promise.all(
-      groups.filter(
-        (group) => group && group.isActive && !group.isArchived
-      )
+      groups.filter((group) => group && group.isActive && !group.isArchived)
     );
 
     // Remove the groups that aren't of the types we want and return.
@@ -217,8 +257,8 @@ export default class GroupItem extends baseGroup.dataSource {
   getMatrixItemsFromId = async (id) =>
     id
       ? this.request('/AttributeMatrixItems')
-        .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
-        .get()
+          .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+          .get()
       : [];
 
   groupTypeMap = {
@@ -234,7 +274,7 @@ export default class GroupItem extends baseGroup.dataSource {
     TableGetStronger: ROCK_MAPPINGS.TABLE_GET_STRONGER_GROUP_TYPE_ID,
     TableStudies: ROCK_MAPPINGS.TABLE_STUDIES_GROUP_TYPE_ID,
     YoungAdults: ROCK_MAPPINGS.YOUNG_ADULTS_GROUP_TYPE_ID,
-    DreamTeam: ROCK_MAPPINGS.GROUP_TYPE_IDS.DREAM_TEAM
+    DreamTeam: ROCK_MAPPINGS.GROUP_TYPE_IDS.DREAM_TEAM,
   };
 
   getGroupTypeIds = () => Object.values(this.groupTypeMap);
@@ -250,9 +290,7 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getContentChannelItem = (id) =>
-    this.request('ContentChannelItems')
-      .filter(getIdentifierType(id).query)
-      .first();
+    this.request('ContentChannelItems').filter(getIdentifierType(id).query).first();
 
   getPhoneNumbers = (id) =>
     this.request('PhoneNumbers')
@@ -315,16 +353,18 @@ export default class GroupItem extends baseGroup.dataSource {
       .expand('GroupRole, Person')
       .top(first)
       .skip(skip)
-      .transform((results) => results
-        .filter(groupMember => {
-          return !!groupMember.person
-        })
-        .map(({ person }, i) => {
-          return ({
-            node: this.context.dataSources.Person.getFromId(person.id),
-            cursor: createCursor({ position: i + skip })
+      .transform((results) =>
+        results
+          .filter((groupMember) => {
+            return !!groupMember.person;
           })
-        }))
+          .map(({ person }, i) => {
+            return {
+              node: this.context.dataSources.Person.getFromId(person.id),
+              cursor: createCursor({ position: i + skip }),
+            };
+          })
+      );
 
     return {
       getTotalCount: cursor.count,
@@ -342,33 +382,31 @@ export default class GroupItem extends baseGroup.dataSource {
         : members;
       let avatars = [];
       filteredMembers.map((member) =>
-        member.photo.guid
-          ? avatars.push(createImageUrlFromGuid(member.photo.guid))
-          : null
+        member.photo.guid ? avatars.push(createImageUrlFromGuid(member.photo.guid)) : null
       );
       return take(avatars, 15);
     } catch (e) {
-      console.log({ e })
+      console.log({ e });
     }
 
-    return []
+    return [];
   };
 
   groupPhoneNumbers = async (id) => {
     const members = await this.getMembers(id);
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
     const filteredMembers = filter(members, (o) => o.id !== currentPerson.id);
-    return Promise.all(
-      filteredMembers.map(({ id }) => this.getPhoneNumbers(id))
-    ).then((values) => {
-      const numbers = [];
-      values.map((o) => (o && o.number ? numbers.push(o.number) : null));
-      return numbers;
-    });
+    return Promise.all(filteredMembers.map(({ id }) => this.getPhoneNumbers(id))).then(
+      (values) => {
+        const numbers = [];
+        values.map((o) => (o && o.number ? numbers.push(o.number) : null));
+        return numbers;
+      }
+    );
   };
 
   getDateTimeFromId = async (id) => {
-    if (!id) return null
+    if (!id) return null;
 
     const schedule = await this.getScheduleFromId(id);
     const { iCalendarContent, weeklyDayOfWeek, weeklyTimeOfDay } = schedule;
@@ -414,11 +452,7 @@ export default class GroupItem extends baseGroup.dataSource {
   getGroupVideoCallParams = ({ attributeValues }) => {
     const zoomLink = get(attributeValues, 'zoom.value', '');
     // Returns a Defined Value Guid
-    const videoCallLabelText = get(
-      attributeValues,
-      'videoCallLabelText.value',
-      ''
-    );
+    const videoCallLabelText = get(attributeValues, 'videoCallLabelText.value', '');
     if (zoomLink != '') {
       const { DefinedValue } = this.context.dataSources;
       // Parse Zoom Meeting links that have ids and/or passwords.
@@ -439,10 +473,7 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
   };
 
-  getGroupParentVideoCallParams = async ({
-    parentGroupId,
-    attributeValues,
-  }) => {
+  getGroupParentVideoCallParams = async ({ parentGroupId, attributeValues }) => {
     const groupParent = await this.request('Groups').find(parentGroupId).get();
     const zoomLink = get(groupParent, 'attributeValues.zoom.value', '');
     // Returns a Defined Value Guid
@@ -496,69 +527,76 @@ export default class GroupItem extends baseGroup.dataSource {
     const channelId = crypto.SHA1(globalId).toString();
 
     const groupMembers = await this.getMembers(root.id);
-    const members = groupMembers.map(member => StreamChat.getStreamUserId(member.id));
+    const members = groupMembers.map((member) => StreamChat.getStreamUserId(member.id));
 
     const groupLeaders = await this.getLeaders(root.id);
-    const leaders = groupLeaders.map(leader => StreamChat.getStreamUserId(leader.id));
+    const leaders = groupLeaders.map((leader) => StreamChat.getStreamUserId(leader.id));
 
     // Create any Stream users that might not exist
     // We need to do this before we can create a channel 🙄
-    await StreamChat.createStreamUsers({ users: groupMembers.map(StreamChat.getStreamUser) });
+    await StreamChat.createStreamUsers({
+      users: groupMembers.map(StreamChat.getStreamUser),
+    });
 
     // Make sure the channel exists.
     // If it doesn't, create it.
     await StreamChat.getChannel({
-      channelId, channelType: CHANNEL_TYPE, options: {
+      channelId,
+      channelType: CHANNEL_TYPE,
+      options: {
         members,
-        created_by: StreamChat.getStreamUser(currentPerson)
-      }
+        created_by: StreamChat.getStreamUser(currentPerson),
+      },
     });
 
     // Add group members not in channel
-    await StreamChat.addMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE });
+    await StreamChat.addMembers({
+      channelId,
+      groupMembers: members,
+      channelType: CHANNEL_TYPE,
+    });
 
     // Remove channel members not in group
-    await StreamChat.removeMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE });
+    await StreamChat.removeMembers({
+      channelId,
+      groupMembers: members,
+      channelType: CHANNEL_TYPE,
+    });
 
     // Promote/demote members for moderation if necessary
-    await StreamChat.updateModerators({ channelId, groupLeaders: leaders, channelType: CHANNEL_TYPE });
+    await StreamChat.updateModerators({
+      channelId,
+      groupLeaders: leaders,
+      channelType: CHANNEL_TYPE,
+    });
 
     return {
       id: root.id,
-      channelId
-    }
+      channelId,
+    };
   };
 
   resolveType({ groupTypeId, id }) {
     // if we have defined an ContentChannelTypeId based maping in the YML file, use it!
     if (
       Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
-        ({ GroupTypeId }) =>
-          GroupTypeId &&
-          GroupTypeId.includes(groupTypeId)
+        ({ GroupTypeId }) => GroupTypeId && GroupTypeId.includes(groupTypeId)
       )
     ) {
       return Object.keys(ROCK_MAPPINGS.GROUP_ITEM).find((key) => {
         const value = ROCK_MAPPINGS.GROUP_ITEM[key];
-        return (
-          value.GroupTypeId &&
-          value.GroupTypeId.includes(groupTypeId)
-        );
+        return value.GroupTypeId && value.GroupTypeId.includes(groupTypeId);
       });
     }
     // if we have defined a GroupId based maping in the YML file, use it!
     if (
       Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
-        ({ GroupId }) =>
-          GroupId && GroupId.includes(id)
+        ({ GroupId }) => GroupId && GroupId.includes(id)
       )
     ) {
       return Object.keys(ROCK_MAPPINGS.GROUP_ITEM).find((key) => {
         const value = ROCK_MAPPINGS.GROUP_ITEM[key];
-        return (
-          value.GroupId &&
-          value.GroupId.includes(id)
-        );
+        return value.GroupId && value.GroupId.includes(id);
       });
     }
 
