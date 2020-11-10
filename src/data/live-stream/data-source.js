@@ -100,13 +100,13 @@ export default class LiveStream extends matrixItemDataSource {
   async getLiveStreamContentItems() {
     const { Cache } = this.context.dataSources;
     const cachedKey = `${process.env.CONTENT}_liveStreamContentItems`
-    // const cachedValue = await Cache.get({
-    //   key: cachedKey,
-    // });
+    const cachedValue = await Cache.get({
+      key: cachedKey,
+    });
 
-    // if (cachedValue) {
-    //   return cachedValue;
-    // }
+    if (cachedValue) {
+      return cachedValue;
+    }
 
     // Get Events
     const { ContentItem, Schedule } = this.context.dataSources;
@@ -133,13 +133,13 @@ export default class LiveStream extends matrixItemDataSource {
       }
     }))
 
-    // if (liveStreamContentItemsWithNextOccurrences != null) {
-    //   Cache.set({
-    //     key: cachedKey,
-    //     data: liveStreamContentItemsWithNextOccurrences,
-    //     expiresIn: 60 // one minute cache 
-    //   });
-    // }
+    if (liveStreamContentItemsWithNextOccurrences != null) {
+      await Cache.set({
+        key: cachedKey,
+        data: liveStreamContentItemsWithNextOccurrences,
+        expiresIn: 60 * 10 // ten minute cache 
+      });
+    }
 
     return liveStreamContentItemsWithNextOccurrences;
   }
@@ -296,7 +296,7 @@ export default class LiveStream extends matrixItemDataSource {
       const attributeMatrix = await this.byAttributeMatrixTemplate({ anonymously })
 
       if (attributeMatrix != null) {
-        Cache.set({
+        await Cache.set({
           key: cachedKey,
           data: attributeMatrix,
           expiresIn: 60 // 60 minute

@@ -234,7 +234,7 @@ export default class ContentItem extends coreContentItem.dataSource {
         .get()
 
       if (eventItems != null) {
-        Cache.set({
+        await Cache.set({
           key: cachedKey,
           data: eventItems,
           expiresIn: 60 * 5 // 5 minute cache 
