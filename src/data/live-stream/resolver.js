@@ -78,7 +78,7 @@ const resolver = {
 
       return liveStreamDefaultActionItemsMapped.concat(liveStreamActionsItemsMapped);
     },
-    contentItem: ({ contentChannelItemId }, _, { models, dataSources }) => {
+    contentItem: ({ contentChannelItemId }, _, { dataSources }) => {
       if (contentChannelItemId) {
         const { ContentItem } = dataSources;
 

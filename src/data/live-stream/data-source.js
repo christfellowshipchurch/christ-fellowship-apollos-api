@@ -1,12 +1,14 @@
 import { dataSource as matrixItemDataSource } from '../matrix-item'
-import moment from 'moment-timezone'
+import moment, { tz } from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
 import { split, filter, get, find, flatten, flattenDeep, uniqBy } from 'lodash'
 
 import { getIdentifierType } from '../utils'
+import WeekendServices from './weekend-services'
 
-const { ROCK_MAPPINGS } = ApollosConfig
+const { ROCK_MAPPINGS, ROCK } = ApollosConfig
+const { TIMEZONE } = ROCK
 
 export default class LiveStream extends matrixItemDataSource {
 
@@ -267,38 +269,12 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async getLiveStreams(props) {
-    const anonymously = get(props, 'anonymously', false)
-    const byContentItems = async () => {
-      const liveStreamContentItems = await this.getLiveStreamContentItems()
-
-      // Check the schedule on each event to see
-      // if it's currently live
-      const currentlyLiveContentItems = filter(liveStreamContentItems,
-        ({ nextOccurrences }) =>
-          find(nextOccurrences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end))
-      )
-
-      // Create the Live Stream object from the Content Items
-      // that are currently live and return active Live Streams
-      return currentlyLiveContentItems.map(contentItem => {
-        const { start, end } = find(contentItem.nextOccurrences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end))
-
-        return ({
-          eventStartTime: start,
-          eventEndTime: end,
-          media: {
-            sources: [{ uri: get(contentItem, 'attributeValues.liveStreamUri.value', '') }]
-          },
-          webViewUrl: get(contentItem, 'attributeValues.liveStreamUri.value', ''),
-          contentChannelItemId: contentItem.id,
-          attributeValues: {
-            liveStreamUrl: {
-              value: get(contentItem, 'attributeValues.liveStreamUri.value', '')
-            }
-          }
-        })
-      })
+    const dayOfWeek = moment().tz(TIMEZONE).format('dddd')
+    if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday') {
+      return this.weekendServiceIsLive(moment().utc().toISOString())
     }
+
+    const anonymously = get(props, 'anonymously', false)
 
     const { Cache } = this.context.dataSources;
     const cachedKey = `${process.env.CONTENT}_liveStreams`
@@ -334,5 +310,49 @@ export default class LiveStream extends matrixItemDataSource {
     }
 
     return null
+  }
+
+  weekendServiceIsLive(date) {
+    const mDate = moment(date).tz(TIMEZONE)
+
+    if (mDate.isValid()) {
+      const weekendService = WeekendServices.find(service => {
+        const { day, start, end } = service
+        const isDay = mDate.format('dddd').toLowerCase() === day
+        
+        const startTime = parseInt(`${start.hour}${start.minute}`)
+        const endTime = parseInt(`${end.hour}${end.minute}`)
+        const hourInt = parseInt(mDate.format('Hmm'))
+        
+        const isBetween = hourInt >= startTime && hourInt <= endTime
+        
+        return isDay && isBetween
+      })
+  
+      if (!!weekendService) {
+        return [{
+          isLive: true,
+          eventStartTime: moment()
+            .tz(TIMEZONE)
+            .hour(weekendService.start.hour)
+            .minute(weekendService.start.minute)
+            .utc().toISOString(),
+          eventEndTime: moment()
+            .tz(TIMEZONE)
+            .hour(weekendService.end.hour)
+            .minute(weekendService.end.minute)
+            .utc().toISOString(),
+          title: "Christ Fellowship Everywhere",
+          contentChannelItemId: 8377,
+          attributeValues: {
+            liveStreamUrl: {
+              value: "https://link.theplatform.com/s/IfSiAC/media/h9hnjqraubSs/file.m3u8?metafile=false&formats=m3u&auto=true"
+            }
+          }
+        }]
+      }
+    }
+
+    return []
   }
 }
