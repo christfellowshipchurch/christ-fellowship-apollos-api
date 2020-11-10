@@ -40,6 +40,16 @@ export default class LiveStream extends matrixItemDataSource {
   };
 
   getRelatedNodeFromId = async (id) => {
+    const { Cache } = this.context.dataSources;
+    const cachedKey = `liveStream-relatedNode-${id}`
+    const cachedValue = await Cache.get({
+      key: cachedKey,
+    });
+
+    if (cachedValue) {
+      return cachedValue;
+    }
+
     const attributeMatrixItem = await this.request(`/AttributeMatrixItems`)
       .expand('AttributeMatrix')
       .filter(`Id eq ${id}`)
@@ -67,10 +77,17 @@ export default class LiveStream extends matrixItemDataSource {
             const resolvedType = ContentItem.resolveType(contentItem)
             const globalId = createGlobalId(entityId, resolvedType)
 
-            return ({
-              ...contentItem,
-              globalId
-            })
+            const finalObject = { ...contentItem, globalId }
+
+            if (contentItem != null) {
+              await Cache.set({
+                key: cachedKey,
+                data: finalObject,
+                expiresIn: 60 * 60 // 1 hour cache
+              });
+            }
+
+            return finalObject
           default:
             return null
         }
