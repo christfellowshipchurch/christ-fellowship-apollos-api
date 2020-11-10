@@ -286,7 +286,11 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async getLiveStreams(props) {
-    const dayOfWeek = moment().tz(TIMEZONE).format('dddd')
+    console.log({ now: moment().format() })
+
+    const dayOfWeek = moment.tz(TIMEZONE).format('dddd').toLowerCase()
+
+
     if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday') {
       return this.weekendServiceIsLive(moment().utc().toISOString())
     }
