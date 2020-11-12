@@ -71,12 +71,12 @@ export default [
     {
         day: "thursday",
         start: {
-            hour: 8,
-            minute: 00
+            hour: 7,
+            minute: 55
         },
         end: {
             hour: 9,
-            minute: 00
+            minute: 15
         },
     },
 ]
