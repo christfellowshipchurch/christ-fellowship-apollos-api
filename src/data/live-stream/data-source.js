@@ -1,12 +1,14 @@
 import { dataSource as matrixItemDataSource } from '../matrix-item'
-import moment from 'moment-timezone'
+import moment, { tz } from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
 import { split, filter, get, find, flatten, flattenDeep, uniqBy } from 'lodash'
 
 import { getIdentifierType } from '../utils'
+import WeekendServices from './weekend-services'
 
-const { ROCK_MAPPINGS } = ApollosConfig
+const { ROCK_MAPPINGS, ROCK } = ApollosConfig
+const { TIMEZONE } = ROCK
 
 export default class LiveStream extends matrixItemDataSource {
 
@@ -38,6 +40,16 @@ export default class LiveStream extends matrixItemDataSource {
   };
 
   getRelatedNodeFromId = async (id) => {
+    const { Cache } = this.context.dataSources;
+    const cachedKey = `liveStream-relatedNode-${id}`
+    const cachedValue = await Cache.get({
+      key: cachedKey,
+    });
+
+    if (cachedValue) {
+      return cachedValue;
+    }
+
     const attributeMatrixItem = await this.request(`/AttributeMatrixItems`)
       .expand('AttributeMatrix')
       .filter(`Id eq ${id}`)
@@ -65,10 +77,17 @@ export default class LiveStream extends matrixItemDataSource {
             const resolvedType = ContentItem.resolveType(contentItem)
             const globalId = createGlobalId(entityId, resolvedType)
 
-            return ({
-              ...contentItem,
-              globalId
-            })
+            const finalObject = { ...contentItem, globalId }
+
+            if (contentItem != null) {
+              await Cache.set({
+                key: cachedKey,
+                data: finalObject,
+                expiresIn: 60 * 60 // 1 hour cache
+              });
+            }
+
+            return finalObject
           default:
             return null
         }
@@ -98,13 +117,13 @@ export default class LiveStream extends matrixItemDataSource {
   async getLiveStreamContentItems() {
     const { Cache } = this.context.dataSources;
     const cachedKey = `${process.env.CONTENT}_liveStreamContentItems`
-    // const cachedValue = await Cache.get({
-    //   key: cachedKey,
-    // });
+    const cachedValue = await Cache.get({
+      key: cachedKey,
+    });
 
-    // if (cachedValue) {
-    //   return cachedValue;
-    // }
+    if (cachedValue) {
+      return cachedValue;
+    }
 
     // Get Events
     const { ContentItem, Schedule } = this.context.dataSources;
@@ -131,13 +150,13 @@ export default class LiveStream extends matrixItemDataSource {
       }
     }))
 
-    // if (liveStreamContentItemsWithNextOccurrences != null) {
-    //   Cache.set({
-    //     key: cachedKey,
-    //     data: liveStreamContentItemsWithNextOccurrences,
-    //     expiresIn: 60 // one minute cache 
-    //   });
-    // }
+    if (liveStreamContentItemsWithNextOccurrences != null) {
+      await Cache.set({
+        key: cachedKey,
+        data: liveStreamContentItemsWithNextOccurrences,
+        expiresIn: 60 * 10 // ten minute cache 
+      });
+    }
 
     return liveStreamContentItemsWithNextOccurrences;
   }
@@ -267,38 +286,13 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async getLiveStreams(props) {
-    const anonymously = get(props, 'anonymously', false)
-    const byContentItems = async () => {
-      const liveStreamContentItems = await this.getLiveStreamContentItems()
+    const dayOfWeek = moment.tz(TIMEZONE).format('dddd').toLowerCase()
 
-      // Check the schedule on each event to see
-      // if it's currently live
-      const currentlyLiveContentItems = filter(liveStreamContentItems,
-        ({ nextOccurrences }) =>
-          find(nextOccurrences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end))
-      )
-
-      // Create the Live Stream object from the Content Items
-      // that are currently live and return active Live Streams
-      return currentlyLiveContentItems.map(contentItem => {
-        const { start, end } = find(contentItem.nextOccurrences, occurrence => moment().isBetween(occurrence.startWithOffset, occurrence.end))
-
-        return ({
-          eventStartTime: start,
-          eventEndTime: end,
-          media: {
-            sources: [{ uri: get(contentItem, 'attributeValues.liveStreamUri.value', '') }]
-          },
-          webViewUrl: get(contentItem, 'attributeValues.liveStreamUri.value', ''),
-          contentChannelItemId: contentItem.id,
-          attributeValues: {
-            liveStreamUrl: {
-              value: get(contentItem, 'attributeValues.liveStreamUri.value', '')
-            }
-          }
-        })
-      })
+    if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday') {
+      return this.weekendServiceIsLive(moment().utc().toISOString())
     }
+
+    const anonymously = get(props, 'anonymously', false)
 
     const { Cache } = this.context.dataSources;
     const cachedKey = `${process.env.CONTENT}_liveStreams`
@@ -320,7 +314,7 @@ export default class LiveStream extends matrixItemDataSource {
       const attributeMatrix = await this.byAttributeMatrixTemplate({ anonymously })
 
       if (attributeMatrix != null) {
-        Cache.set({
+        await Cache.set({
           key: cachedKey,
           data: attributeMatrix,
           expiresIn: 60 // 60 minute
@@ -334,5 +328,49 @@ export default class LiveStream extends matrixItemDataSource {
     }
 
     return null
+  }
+
+  weekendServiceIsLive(date) {
+    const mDate = moment(date).tz(TIMEZONE)
+
+    if (mDate.isValid()) {
+      const weekendService = WeekendServices.find(service => {
+        const { day, start, end } = service
+        const isDay = mDate.format('dddd').toLowerCase() === day
+        
+        const startTime = parseInt(`${start.hour}${start.minute}`)
+        const endTime = parseInt(`${end.hour}${end.minute}`)
+        const hourInt = parseInt(mDate.format('Hmm'))
+        
+        const isBetween = hourInt >= startTime && hourInt <= endTime
+        
+        return isDay && isBetween
+      })
+  
+      if (!!weekendService) {
+        return [{
+          isLive: true,
+          eventStartTime: moment()
+            .tz(TIMEZONE)
+            .hour(weekendService.start.hour)
+            .minute(weekendService.start.minute)
+            .utc().toISOString(),
+          eventEndTime: moment()
+            .tz(TIMEZONE)
+            .hour(weekendService.end.hour)
+            .minute(weekendService.end.minute)
+            .utc().toISOString(),
+          title: "Christ Fellowship Everywhere",
+          contentChannelItemId: 8377,
+          attributeValues: {
+            liveStreamUrl: {
+              value: "https://link.theplatform.com/s/IfSiAC/media/h9hnjqraubSs/file.m3u8?metafile=false&formats=m3u&auto=true"
+            }
+          }
+        }]
+      }
+    }
+
+    return []
   }
 }
