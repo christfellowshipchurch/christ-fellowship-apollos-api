@@ -68,4 +68,15 @@ export default [
             minute: 35
         },
     },
+    {
+        day: "thursday",
+        start: {
+            hour: 8,
+            minute: 00
+        },
+        end: {
+            hour: 9,
+            minute: 00
+        },
+    },
 ]
