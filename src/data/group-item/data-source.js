@@ -93,7 +93,7 @@ export default class GroupItem extends baseGroup.dataSource {
       .first();
 
     if (group) {
-      Cache.set({
+      await Cache.set({
         key: cachedKey,
         data: group,
         expiresIn: 60 * 60 * 12, // 12 hour cache
