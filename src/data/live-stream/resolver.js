@@ -100,8 +100,33 @@ const resolver = {
 
         // If we know that the related node is a content channel item, let's just query for that
         if (contentChannelItemId) {
-          const { ContentItem } = dataSources;
-          const contentItem = await ContentItem.getFromId(contentChannelItemId);
+          const { ContentItem, Cache } = dataSources;
+          const cachedKey = `liveStream-contentItem-${id}`
+          const cachedValue = await Cache.get({
+            key: cachedKey,
+          });
+          /**
+           * Set up an empty object to be used as our content item
+           */
+          const contentItem = {}
+
+          /**
+           * If Redis has this item stored already, don't make the request to
+           * Rock
+           */
+          if (cachedValue) {
+            contentItem = cachedValue
+          } else {
+            contentItem = await ContentItem.getFromId(contentChannelItemId);
+
+            if (contentItem != null) {
+              await Cache.set({
+                key: cachedKey,
+                data: contentItem,
+                expiresIn: 60 * 60 // 1 hour cache
+              });
+            }
+          }
 
           const resolvedType = ContentItem.resolveType(contentItem);
           globalId = createGlobalId(contentChannelItemId, resolvedType);

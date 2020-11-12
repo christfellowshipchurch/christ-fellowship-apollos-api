@@ -75,7 +75,7 @@ export default [
             minute: 55
         },
         end: {
-            hour: 9,
+            hour: 10,
             minute: 15
         },
     },
