@@ -22,7 +22,7 @@ export const groupSchema = gql`
     title: String
     url: String
     contentChannelItem: String
-    
+
     icon: String
     action: ACTION_FEATURE_ACTION
     relatedNode: Node
@@ -58,14 +58,9 @@ export const groupSchema = gql`
     groupResources: [Resource]
     coverImage: ImageMedia
 
-    people(
-      first: Int
-      after: String
-      isLeader: Boolean
-    ): PeopleConnection
-    
-    chatChannelId: String 
-      @deprecated(reason: "Use 'streamChatChannel' instead")
+    people(first: Int, after: String, isLeader: Boolean): PeopleConnection
+
+    chatChannelId: String @deprecated(reason: "Use 'streamChatChannel' instead")
 
     avatars: [String] @deprecated(reason: "Use people instead")
     leaders: [Person] @deprecated(reason: "Use people instead")
@@ -81,14 +76,9 @@ export const groupSchema = gql`
     coverImage: ImageMedia
     groupResources: [Resource]
 
-    people(
-      first: Int
-      after: String
-      isLeader: Boolean
-    ): PeopleConnection
+    people(first: Int, after: String, isLeader: Boolean): PeopleConnection
 
-    chatChannelId: String 
-      @deprecated(reason: "Use 'streamChatChannel' instead")
+    chatChannelId: String @deprecated(reason: "Use 'streamChatChannel' instead")
 
     allowMessages: String
     dateTime: DateTime
@@ -111,14 +101,9 @@ export const groupSchema = gql`
     coverImage: ImageMedia
     groupResources: [Resource]
 
-    people(
-      first: Int
-      after: String
-      isLeader: Boolean
-    ): PeopleConnection
+    people(first: Int, after: String, isLeader: Boolean): PeopleConnection
 
-    chatChannelId: String 
-      @deprecated(reason: "Use 'streamChatChannel' instead")
+    chatChannelId: String @deprecated(reason: "Use 'streamChatChannel' instead")
 
     avatars: [String] @deprecated(reason: "Use people instead")
     leaders: [Person] @deprecated(reason: "Use people instead")
@@ -138,6 +123,14 @@ export const groupSchema = gql`
 
   extend type Mutation {
     addMemberAttendance(id: ID!): Group
+  }
+
+  extend enum InteractionAction {
+    GROUP_READ_CONTENT
+    GROUP_READ_EVENT
+    GROUP_READ_PRAYER
+    GROUP_READ_GROUP
+    GROUP_OPEN_URL
   }
 `;
 
