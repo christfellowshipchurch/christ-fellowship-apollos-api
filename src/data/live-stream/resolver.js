@@ -29,6 +29,8 @@ const resolver = {
       return null;
     },
     actions: async ({ id, guid }, args, { dataSources }) => {
+      if (!id || id === "") return []
+
       const unresolvedNode = await dataSources.LiveStream.getRelatedNodeFromId(id);
       // Get Matrix Items
       const liveStreamActionsMatrixGuid = get(
@@ -78,7 +80,7 @@ const resolver = {
 
       return liveStreamDefaultActionItemsMapped.concat(liveStreamActionsItemsMapped);
     },
-    contentItem: ({ contentChannelItemId }, _, { models, dataSources }) => {
+    contentItem: ({ contentChannelItemId }, _, { dataSources }) => {
       if (contentChannelItemId) {
         const { ContentItem } = dataSources;
 
