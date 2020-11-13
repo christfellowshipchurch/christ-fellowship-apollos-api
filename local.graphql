@@ -4,6 +4,7 @@ enum ACTION_FEATURE_ACTION {
   READ_CONTENT
   READ_EVENT
   OPEN_URL
+  OPEN_NODE
   VIEW_CHILDREN
   READ_GLOBAL_CONTENT
   READ_PRAYER
@@ -124,6 +125,10 @@ type AudioMediaSource implements MediaSource {
   uri: String
 }
 
+interface AudioNode {
+  audios: [AudioMedia]
+}
+
 type AuthenticatedUser {
   id: ID!
   profile: Person
@@ -154,6 +159,8 @@ enum CacheControlScope {
 type CallToAction {
   call: String
   action: String
+  duration: Int
+  startTime: Int
 }
 
 type Campus implements Node {
@@ -202,6 +209,12 @@ type CampusPastor {
   photo: ImageMediaSource
 }
 
+interface Card {
+  title(hyphenated: Boolean): String
+  coverImage: ImageMedia
+  summary: String
+}
+
 type CardListItem {
   id: ID!
   hasAction: Boolean
@@ -219,24 +232,22 @@ enum CHAT_ROLES {
   USER
 }
 
-type ChatChannel {
-  name: String!
-  channelID: String!
-}
-
-interface ChatChannelNode {
-  chatChannel: ChatChannel
-}
-
 type CheckInable implements Node {
   id: ID!
   title: String
   message: String
   isCheckedIn: Boolean
+  options: [CheckInOption]
 }
 
 interface CheckInableNode {
   checkin: CheckInable
+}
+
+type CheckInOption implements Node {
+  id: ID!
+  startDateTime: String
+  isCheckedIn: Boolean
 }
 
 """A rgb color string"""
@@ -278,6 +289,11 @@ type ContentChannel implements Node {
   childContentChannels: [ContentChannel]
   childContentItemsConnection(first: Int, after: String): ContentItemsConnection
   iconName: String
+}
+
+interface ContentChildNode {
+  parentChannel: ContentChannel
+  siblingContentItemsConnection(first: Int, after: String): ContentItemsConnection
 }
 
 type ContentGridFeature implements PageBuilderFeature & Node {
@@ -323,7 +339,17 @@ input ContentItemsConnectionInput {
   after: String
 }
 
-type ContentSeriesContentItem implements ContentItem & Node {
+interface ContentNode {
+  title(hyphenated: Boolean): String
+  coverImage: ImageMedia
+  htmlContent: String
+}
+
+interface ContentParentNode {
+  childContentItemsConnection(first: Int, after: String): ContentItemsConnection
+}
+
+type ContentSeriesContentItem implements ContentItem & Node & FeaturesNode & LikableNode & ContentNode & Card & VideoNode & AudioNode & ContentChildNode & ContentParentNode & ThemedNode & ProgressNode & ShareableNode {
   id: ID!
   title(hyphenated: Boolean): String
   coverImage: ImageMedia
@@ -371,7 +397,7 @@ type Device implements Node {
   notificationsEnabled: Boolean!
 }
 
-type DevotionalContentItem implements ContentItem & Node {
+type DevotionalContentItem implements ContentItem & Node & LikableNode & ContentNode & Card & VideoNode & AudioNode & ContentChildNode & ContentParentNode & ThemedNode & ScriptureNode & ShareableNode {
   id: ID!
   title(hyphenated: Boolean): String
   coverImage: ImageMedia
@@ -426,7 +452,7 @@ type EventContentItem implements ContentItem & Node & CheckInableNode & LiveNode
   callsToAction: [CallToAction] @deprecated(reason: "Updating to use FeatureAction to better adhere to navigation standards. Please use 'actions' instead.")
   openLinksInNewTab: Boolean @deprecated(reason: "Label will now be explicitly defined on the API")
   hideLabel: Boolean @deprecated(reason: "Label will now be explicitly defined on the API")
-  events: [Event] @deprecated(reason: "We have updated the organization of the events schema. Please use 'categories' instead.")
+  events: [Event] @deprecated(reason: "We have updated the organization of the events schema. Please use 'eventGroupings' instead.")
   label: String
   eventGroupings: [EventGrouping]
   checkin: CheckInable
@@ -452,6 +478,10 @@ type FeatureAction {
   title: String
 }
 
+interface FeaturesNode {
+  features: [Feature]
+}
+
 enum FLAG_STATUS {
   LIVE
   DISABLED
@@ -471,23 +501,26 @@ enum GENDER {
   Unknown
 }
 
-type Group implements Node {
+type Group implements GroupItem & Node & CheckInableNode & StreamChatChannelNode {
   id: ID!
-  allowMessages: String
-  avatars: [String]
-  coverImage: ImageMedia
-  dateTime: DateTime
-  groupResources: [Resource]
+  title: String
+  summary: String
   groupType: String
-  leaders: [Person]
-  members: [Person]
+  coverImage: ImageMedia
+  groupResources: [Resource]
+  people(first: Int, after: String, isLeader: Boolean): PeopleConnection
+  chatChannelId: String @deprecated(reason: "Use 'streamChatChannel' instead")
+  allowMessages: String
+  dateTime: DateTime
   parentVideoCall: VideoCallParams
   phoneNumbers: [String]
   schedule: Schedule
-  summary: String
-  title: String
   videoCall: VideoCallParams
-  chatChannelId: String
+  avatars: [String] @deprecated(reason: "Use people instead")
+  leaders: [Person] @deprecated(reason: "Use people instead")
+  members: [Person] @deprecated(reason: "Use people instead")
+  checkin: CheckInable
+  streamChatChannel: StreamChatChannel
 }
 
 enum GROUP_TYPE {
@@ -503,6 +536,26 @@ enum GROUP_TYPE {
   TableGetStronger
   TableStudies
   YoungAdults
+  DreamTeam
+}
+
+input GroupFilterInput {
+  includeTypes: [GROUP_TYPE]
+  excludeTypes: [GROUP_TYPE]
+  asLeader: Boolean
+}
+
+interface GroupItem {
+  title: String
+  summary: String
+  groupType: String
+  groupResources: [Resource]
+  coverImage: ImageMedia
+  people(first: Int, after: String, isLeader: Boolean): PeopleConnection
+  chatChannelId: String @deprecated(reason: "Use 'streamChatChannel' instead")
+  avatars: [String] @deprecated(reason: "Use people instead")
+  leaders: [Person] @deprecated(reason: "Use people instead")
+  members: [Person] @deprecated(reason: "Use people instead")
 }
 
 type HeroListFeature implements Feature & Node {
@@ -522,6 +575,14 @@ type HorizontalCardListFeature implements Feature & Node {
   subtitle: String
   cards: [CardListItem]
   primaryAction: FeatureAction
+  cardType: HorizontalCardType
+}
+
+enum HorizontalCardType {
+  DEFAULT
+  HIGHLIGHT
+  HIGHLIGHT_MEDIUM
+  HIGHLIGHT_SMALL
 }
 
 type ImageMedia implements Media {
@@ -563,6 +624,14 @@ type InformationalContentItem implements ContentItem & Node {
 enum InteractionAction {
   VIEW
   COMPLETE
+  GROUP_READ_CONTENT
+  GROUP_READ_EVENT
+  GROUP_READ_PRAYER
+  GROUP_READ_GROUP
+  GROUP_OPEN_URL
+  LIVESTREAM_JOINED
+  LIVESTREAM_CLOSED
+  VIEWED_ACTION
   PRAY
 }
 
@@ -578,6 +647,11 @@ type InteractionResult {
 
 scalar InteractionValue
 
+interface LikableNode {
+  isLiked: Boolean
+  likedCount: Int
+}
+
 enum LIKE_OPERATION {
   Like
   Unlike
@@ -592,7 +666,7 @@ interface LiveNode {
   liveStream: LiveStream
 }
 
-type LiveStream implements Node & ChatChannelNode & CheckInableNode {
+type LiveStream implements Node & CheckInableNode & StreamChatChannelNode {
   id: ID!
   isLive: Boolean
   eventStartTime: String
@@ -601,8 +675,19 @@ type LiveStream implements Node & ChatChannelNode & CheckInableNode {
   webViewUrl: String
   contentItem: ContentItem @deprecated(reason: "LiveStreams are not limited to ContentItems. Please use 'relatedNode' instead.")
   relatedNode: Node
-  chatChannel: ChatChannel
+  chatChannelId: String @deprecated(reason: "Use 'streamChatChannel' instead")
+  actions: [LiveStreamAction]
   checkin: CheckInable
+  streamChatChannel: StreamChatChannel
+}
+
+type LiveStreamAction {
+  relatedNode: Node
+  action: ACTION_FEATURE_ACTION
+  title: String
+  duration: Int
+  image: String
+  start: Int
 }
 
 type LiveStreamListFeature implements Feature & Node {
@@ -619,7 +704,7 @@ interface Media {
   sources: [MediaSource]
 }
 
-type MediaContentItem implements ContentItem & Node {
+type MediaContentItem implements ContentItem & Node & LikableNode & ContentNode & Card & VideoNode & AudioNode & ContentChildNode & ContentParentNode & ThemedNode & ScriptureNode & ShareableNode {
   id: ID!
   title(hyphenated: Boolean): String
   coverImage: ImageMedia
@@ -707,8 +792,9 @@ type Mutation {
   authenticateWithSms(phoneNumber: String!, pin: String!): Authentication
   registerWithSms(phoneNumber: String!, pin: String!, userProfile: [UpdateProfileInput]): Authentication
   updateUserCampus(campusId: String!): Person
-  checkInCurrentUser(id: ID!): CheckInableNode
-  updateLikeEntity(input: LikeEntityInput!): ContentItem
+  checkInCurrentUser(id: ID!, optionIds: [ID]): CheckInable
+  updateLikeEntity(input: LikeEntityInput!): ContentItem @deprecated(reason: "Use the more general updateLikeNode instead")
+  updateLikeNode(input: LikeEntityInput!): Node
   addMemberAttendance(id: ID!): Group
   interactWithNode(action: InteractionAction!, nodeId: ID!, data: [InteractionDataField]): InteractionResult
   updateUserPushSettings(input: PushSettingsInput!): Person
@@ -783,6 +869,17 @@ enum PassType {
   GENERIC
 }
 
+type PeopleConnection {
+  edges: [PeopleConnectionEdge]
+  totalCount: Int
+  pageInfo: PaginationInfo
+}
+
+type PeopleConnectionEdge {
+  node: Person
+  cursor: String
+}
+
 type Person implements Node {
   id: ID!
   firstName: String
@@ -799,7 +896,7 @@ type Person implements Node {
   salvationDate: String
   communicationPreferences: CommunicationPreferences
   campus: Campus
-  groups(type: GROUP_TYPE, asLeader: Boolean): [Group]
+  groups(input: GroupFilterInput): [GroupItem]
   isGroupLeader: Boolean
   devices: [Device]
 }
@@ -836,6 +933,11 @@ type PrayerRequestsConnectionEdge {
 input PrayerRequestsConnectionInput {
   first: Int
   after: String
+}
+
+interface ProgressNode {
+  percentComplete: Float
+  upNext: ContentItem
 }
 
 input PushMessageInput {
@@ -891,10 +993,10 @@ type Query {
   userHeaderFeatures: [Feature]
   flagStatus(key: String!): FLAG_STATUS
   likedContent(first: Int, after: String): ContentItemsConnection
-  floatLeftLiveStream: LiveStream
-  floatLeftEmptyLiveStream: LiveStream
   liveStream: LiveStream @deprecated(reason: "Use liveStreams, there may be multiple.")
   liveStreams: [LiveStream]
+  floatLeftLiveStream: LiveStream
+  floatLeftEmptyLiveStream: LiveStream
   notificationCenter(first: Int, after: String): MessagesConnection
   metadata(relatedNode: ID!): [Metadata]
   pageBuilderFeatures(url: String!): [PageBuilderFeature]
@@ -949,6 +1051,10 @@ type ScriptureFeature implements Feature & Node {
   sharing: SharableFeature
 }
 
+interface ScriptureNode {
+  scriptures: [Scripture]
+}
+
 type SearchResult {
   cursor: String
   title: String
@@ -985,9 +1091,22 @@ type SharableFeature implements Sharable {
   url: String @deprecated(reason: "Not supported on a feature")
 }
 
+interface ShareableNode {
+  sharing: SharableContentItem
+}
+
 type SmsPinResult {
   success: Boolean
   userAuthStatus: USER_AUTH_STATUS
+}
+
+type StreamChatChannel implements Node {
+  id: ID!
+  channelId: String
+}
+
+interface StreamChatChannelNode {
+  streamChatChannel: StreamChatChannel
 }
 
 type TextFeature implements Feature & Node {
@@ -1010,6 +1129,10 @@ type ThemeColors {
   alert: Color
 }
 
+interface ThemedNode {
+  theme: Theme
+}
+
 enum ThemeType {
   LIGHT
   DARK
@@ -1021,7 +1144,7 @@ input TwilioNotifyPushInput {
   address: String
 }
 
-type UniversalContentItem implements ContentItem & Node {
+type UniversalContentItem implements ContentItem & Node & LikableNode & ContentNode & Card & VideoNode & AudioNode & ContentChildNode & ContentParentNode & ThemedNode & ShareableNode {
   id: ID!
   title(hyphenated: Boolean): String
   coverImage: ImageMedia
@@ -1116,6 +1239,26 @@ type VideoMedia implements Media {
 
 type VideoMediaSource implements MediaSource {
   uri: String
+}
+
+interface VideoNode {
+  videos: [VideoMedia]
+}
+
+type VolunteerGroup implements GroupItem & Node & CheckInableNode & StreamChatChannelNode {
+  id: ID!
+  title: String
+  summary: String
+  groupType: String
+  coverImage: ImageMedia
+  groupResources: [Resource]
+  people(first: Int, after: String, isLeader: Boolean): PeopleConnection
+  chatChannelId: String @deprecated(reason: "Use 'streamChatChannel' instead")
+  avatars: [String] @deprecated(reason: "Use people instead")
+  leaders: [Person] @deprecated(reason: "Use people instead")
+  members: [Person] @deprecated(reason: "Use people instead")
+  checkin: CheckInable
+  streamChatChannel: StreamChatChannel
 }
 
 type WebsiteBlockItem implements ContentItem & Node {
@@ -1244,7 +1387,7 @@ type WebviewFeature implements Feature & Node {
   url: String
 }
 
-type WeekendContentItem implements ContentItem & Node {
+type WeekendContentItem implements ContentItem & Node & FeaturesNode & LikableNode & ContentNode & Card & VideoNode & AudioNode & ContentChildNode & ContentParentNode & ThemedNode & ShareableNode {
   id: ID!
   title(hyphenated: Boolean): String
   coverImage: ImageMedia
