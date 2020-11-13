@@ -67,20 +67,13 @@ const resolver = {
 
       return null;
     },
-    updateGroupTitle: async (root, { title, id }, { dataSources }) => {
-      const globalId = parseGlobalId(id);
+    updateGroupCoverImage: async (root, { imageId, groupId }, { dataSources }) => {
+      const groupGlobalId = parseGlobalId(groupId);
       try {
-        return dataSources.Group.updateTitle(globalId.id, title);
-      } catch (e) {
-        console.log({ e });
-      }
-
-      return null;
-    },
-    addGroupResource: async (root, { groupId, title, url }, { dataSources }) => {
-      const globalId = parseGlobalId(groupId);
-      try {
-        return dataSources.Group.addResource({ groupId: globalId, title, url });
+        return dataSources.GroupItem.updateCoverImage({
+          groupId: groupGlobalId.id,
+          imageId,
+        });
       } catch (e) {
         console.log({ e });
       }

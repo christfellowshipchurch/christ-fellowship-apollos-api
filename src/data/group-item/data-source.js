@@ -176,18 +176,22 @@ export default class GroupItem extends baseGroup.dataSource {
   getCoverImages = async () => {
     const { DefinedValueList, ContentItem } = this.context.dataSources;
     const images = await DefinedValueList.getByIdentifier(368);
-    console.log(images.definedValues);
 
     return images.definedValues.map((image) => ({
       guid: image.attributeValues.image.value,
       image: ContentItem.getImages(image)[0],
     }));
   };
+
+  updateCoverImage = async ({ groupId, imageId }) => {
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
 
-    if (this.userIsLeader(id, currentPerson.id)) {
-      // TODO - get API call
-      await this.patch(`/Groups/${id}`, { Title: title });
+    if (this.userIsLeader(groupId, currentPerson.id)) {
+      const attributeKey = 'Image';
+      const attributeValue = imageId;
+      return this.post(
+        `/Groups/AttributeValue/${groupId}?attributeKey=${attributeKey}&attributeValue=${attributeValue}`
+      );
     }
   };
 
