@@ -86,11 +86,10 @@ const resolver = {
       { dataSources }
     ) => {
       const groupGlobalId = parseGlobalId(groupId);
-      const resourceGlobalId = parseGlobalId(groupId);
       try {
         return dataSources.Group.updateResource({
           groupId: groupGlobalId,
-          resourceId: resourceGlobalId,
+          resourceId: resourceId ? parseGlobalId(resourceId) : null,
           title,
           url,
         });

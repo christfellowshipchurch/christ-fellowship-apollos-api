@@ -223,21 +223,30 @@ export default class GroupItem extends baseGroup.dataSource {
 
   addResource = async ({ groupId, title, url }) => {
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
+    const group = await this.getFromId(groupId);
+    const resources = await this.getResources(group);
 
     if (this.userIsLeader(groupId, currentPerson.id)) {
       // TODO - get API call
       const data = pick({ Title: title, Url: url });
-      await this.put(`/Groups/${groupId}/Resources/AddResource`, data);
+      // await this.post(`/AttributeMatrixItems/AttributeValue/${groupId}`, {
+      //   attributeKey: 'resources',
+      //   attributeValue: updatedResources,
+      // });
     }
   };
 
   updateResource = async ({ groupId, resourceId, title, url }) => {
+    if (!resourceId) {
+      return this.addResource({ groupId, title, url });
+    }
+
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
 
     if (this.userIsLeader(groupId, currentPerson.id)) {
       // TODO - get API call
       const updateData = pick({ Title: title, Url: url });
-      return this.patch(`/Groups/${groupId}/Resources/${resourceId}`, updateData);
+      // return this.patch(`/Groups/${groupId}/Resources/${resourceId}`, updateData);
     }
   };
 
