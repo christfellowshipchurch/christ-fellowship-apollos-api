@@ -9,7 +9,7 @@ export default [
             minute: 55
         },
         end: {
-            hour: 18,
+            hour: 19,
             minute: 35
         },
     },
@@ -20,7 +20,7 @@ export default [
             minute: 55
         },
         end: {
-            hour: 21,
+            hour: 22,
             minute: 35
         },
     },
@@ -31,7 +31,7 @@ export default [
             minute: 55
         },
         end: {
-            hour: 7,
+            hour: 8,
             minute: 35
         },
     },
