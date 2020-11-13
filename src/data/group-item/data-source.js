@@ -173,7 +173,16 @@ export default class GroupItem extends baseGroup.dataSource {
     return leaderIds.includes(userId);
   };
 
-  updateTitle = async (id, title) => {
+  getCoverImages = async () => {
+    const { DefinedValueList, ContentItem } = this.context.dataSources;
+    const images = await DefinedValueList.getByIdentifier(368);
+    console.log(images.definedValues);
+
+    return images.definedValues.map((image) => ({
+      guid: image.attributeValues.image.value,
+      image: ContentItem.getImages(image)[0],
+    }));
+  };
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
 
     if (this.userIsLeader(id, currentPerson.id)) {

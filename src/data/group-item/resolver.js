@@ -108,6 +108,10 @@ const resolver = {
       return null;
     },
   },
+  Query: {
+    getGroupCoverImages: async (root, args, { dataSources }) =>
+      dataSources.GroupItem.getCoverImages(),
+  },
 };
 
 export default resolverMerge(resolver, baseGroup);

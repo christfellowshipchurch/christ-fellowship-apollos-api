@@ -123,9 +123,15 @@ export const groupSchema = gql`
 
   extend type Mutation {
     addMemberAttendance(id: ID!): Group
-    updateGroupTitle(title: String!, id: ID!): Group
-    addGroupResource(title: String, url: String, id: ID!): Group
-    updateGroupResource(title: String, url: String, resourceId: ID!, groupId: ID!): Group
+  }
+
+  type GroupCoverImage {
+    guid: String
+    image: ImageMedia
+  }
+
+  extend type Query {
+    getGroupCoverImages: [GroupCoverImage]
   }
 `;
 
