@@ -73,18 +73,10 @@ const EXCLUDE_IDS = [
 const CHANNEL_TYPE = 'group';
 
 export default class GroupItem extends baseGroup.dataSource {
-  getFromId = async (id) => {
+  updateCache = async (id) => {
     const { Cache } = this.context.dataSources;
     const identifier = getIdentifierType(id);
-
     const cachedKey = `group_${identifier.value}`;
-    const cachedValue = await Cache.get({
-      key: cachedKey,
-    });
-
-    if (cachedValue) {
-      return cachedValue;
-    }
 
     // Rock returns results as an array, so we want to grab the first
     const group = await this.request(`Groups`)
@@ -99,6 +91,24 @@ export default class GroupItem extends baseGroup.dataSource {
         expiresIn: 60 * 60 * 12, // 12 hour cache
       });
     }
+
+    return group;
+  };
+
+  getFromId = async (id) => {
+    const { Cache } = this.context.dataSources;
+    const identifier = getIdentifierType(id);
+
+    const cachedKey = `group_${identifier.value}`;
+    const cachedValue = await Cache.get({
+      key: cachedKey,
+    });
+
+    if (cachedValue) {
+      return cachedValue;
+    }
+
+    const group = await this.updateCache(id);
 
     return group;
   };
@@ -184,14 +194,30 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   updateCoverImage = async ({ groupId, imageId }) => {
-    const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
+    const { Auth, Cache, ContentItem } = this.context.dataSources;
+    const currentPerson = await Auth.getCurrentPerson();
 
     if (this.userIsLeader(groupId, currentPerson.id)) {
       const attributeKey = 'Image';
       const attributeValue = imageId;
-      return this.post(
+      await this.post(
         `/Groups/AttributeValue/${groupId}?attributeKey=${attributeKey}&attributeValue=${attributeValue}`
       );
+
+      // Set cover image cache to null and to expire immediately
+      // So we can set it properly through the ContentItem function
+      await Cache.set({
+        key: `contentItem:coverImage:${groupId}`,
+        data: null,
+        expiresIn: 1,
+      });
+
+      const group = await this.updateCache(groupId);
+
+      // Sets cover image cache
+      await ContentItem.getCoverImage(group);
+
+      return group;
     }
   };
 
