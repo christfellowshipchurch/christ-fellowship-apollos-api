@@ -346,6 +346,9 @@ FEATURE_FLAGS:
   GROUP_CHAT:
     securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
     status: "LIVE"
+  GROUP_CUSTOMIZATION:
+    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    status: "LIVE"
   LIVE_STREAM_CHAT:
     securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
     status: "LIVE"
