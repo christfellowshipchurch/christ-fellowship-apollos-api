@@ -370,44 +370,20 @@ export default class GroupItem extends baseGroup.dataSource {
   getDateTimeFromId = async (id) => {
     if (!id) return null
 
-    const schedule = await this.getScheduleFromId(id);
-    const { iCalendarContent, weeklyDayOfWeek, weeklyTimeOfDay } = schedule;
+    const schedule = await this.context.dataSources.Schedule.parseById(id);
 
-    // Use iCalendarContent if it exists else use weeklyDayOfWeek and weeklyTimeOfDay to create a start and end time for schedules.
-    if (iCalendarContent !== '') {
-      const occurrences = await this.context.dataSources.Schedule.getOccurrences(
-        schedule.id
-      );
-
-      if (!occurrences || !occurrences.length) {
-        return { start: null, end: null };
-      }
-
-      const nextOccurrence = head(occurrences);
-      return { start: nextOccurrence.start, end: nextOccurrence.end };
-    } else if (weeklyDayOfWeek !== null && weeklyTimeOfDay) {
-      const proto = Object.getPrototypeOf(moment());
-      proto.setTime = function (time) {
-        const [hour, minute, seconds] = time.split(':');
-        return this.set({ hour, minute, seconds });
-      };
-      const time = moment()
-        .weekday(weeklyDayOfWeek)
-        .setTime(weeklyTimeOfDay)
-        .tz(ApollosConfig.ROCK.TIMEZONE)
-        .utc()
-        .format();
-
-      // Adjust start/end date to be next meeting date.
-      const endOfMeetingDay = moment(time).endOf('day').utc().format();
+    if (schedule.nextStart) {
+      const { nextStart } = schedule
+      const endOfMeetingDay = moment(nextStart).endOf('day').utc().format();
       const isAfter = moment().isAfter(endOfMeetingDay);
       if (isAfter) {
         const nextMeetingTime = moment(time).add(7, 'd').utc().format();
         return { start: nextMeetingTime, end: nextMeetingTime };
       }
 
-      return { start: time, end: time };
+      return { start: nextStart, end: nextStart };
     }
+    
     return { start: null, end: null };
   };
 
