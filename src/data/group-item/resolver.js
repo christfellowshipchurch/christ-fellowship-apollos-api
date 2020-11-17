@@ -101,7 +101,7 @@ const resolver = {
     },
   },
   Query: {
-    getGroupCoverImages: async (root, args, { dataSources }) =>
+    groupCoverImages: async (root, args, { dataSources }) =>
       dataSources.GroupItem.getCoverImages(),
   },
 };
