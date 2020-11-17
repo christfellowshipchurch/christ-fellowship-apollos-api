@@ -370,7 +370,8 @@ export default class GroupItem extends baseGroup.dataSource {
   getDateTimeFromId = async (id) => {
     if (!id) return null
 
-    const schedule = await this.context.dataSources.Schedule.parseById(id);
+    const { Schedule } = this.context.dataSources
+    const schedule = await Schedule.parseById(id);
 
     if (schedule.nextStart) {
       const { nextStart } = schedule
@@ -472,10 +473,14 @@ export default class GroupItem extends baseGroup.dataSource {
     const channelId = crypto.SHA1(globalId).toString();
 
     const groupMembers = await this.getMembers(root.id);
-    const members = groupMembers.map(member => StreamChat.getStreamUserId(member.id));
+    const members = groupMembers
+      ? groupMembers.map(member => StreamChat.getStreamUserId(member.id))
+      : [];
 
     const groupLeaders = await this.getLeaders(root.id);
-    const leaders = groupLeaders.map(leader => StreamChat.getStreamUserId(leader.id));
+    const leaders = groupLeaders 
+      ? groupLeaders.map(leader => StreamChat.getStreamUserId(leader.id))
+      : [];
 
     // Create any Stream users that might not exist
     // We need to do this before we can create a channel 🙄
