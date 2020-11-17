@@ -1,19 +1,7 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId, createCursor, parseCursor } from '@apollosproject/server-core';
-import {
-  get,
-  mapValues,
-  isNull,
-  filter,
-  head,
-  chunk,
-  flatten,
-  take,
-  difference,
-  pick,
-  identity,
-} from 'lodash';
+import { get, isNull, filter, head, chunk, flatten, take } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
@@ -224,11 +212,12 @@ export default class GroupItem extends baseGroup.dataSource {
   addResource = async ({ groupId, title, url }) => {
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
     const group = await this.getFromId(groupId);
-    const resources = await this.getResources(group);
+    // const matrixAttributeValue = get(group, 'attributeValues.resources.value', '');
+    // console.log(getIdentifierType(matrixAttributeValue).query);
 
     if (this.userIsLeader(groupId, currentPerson.id)) {
       // TODO - get API call
-      const data = pick({ Title: title, Url: url });
+      const data = { Title: title, Url: url };
       // await this.post(`/AttributeMatrixItems/AttributeValue/${groupId}`, {
       //   attributeKey: 'resources',
       //   attributeValue: updatedResources,
@@ -370,6 +359,7 @@ export default class GroupItem extends baseGroup.dataSource {
           );
 
           return {
+            id: get(item, 'id'),
             title: get(item, 'attributeValues.title.value'),
             action: 'READ_CONTENT',
             relatedNode: {
@@ -380,6 +370,7 @@ export default class GroupItem extends baseGroup.dataSource {
         }
 
         return {
+          id: get(item, 'id'),
           title: get(item, 'attributeValues.title.value'),
           action: 'OPEN_URL',
           relatedNode: {
