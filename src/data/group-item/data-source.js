@@ -244,9 +244,20 @@ export default class GroupItem extends baseGroup.dataSource {
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
 
     if (this.userIsLeader(groupId, currentPerson.id)) {
-      // TODO - get API call
-      const updateData = pick({ Title: title, Url: url });
-      // return this.patch(`/Groups/${groupId}/Resources/${resourceId}`, updateData);
+      const updateData = { Title: title, Url: url };
+
+      // TODO: Is there a way to just post all the data at once?
+      // https://rock.christfellowship.church/api/docs/index#!/AttributeMatrixItems/PUTapi_AttributeMatrixItems_id isn't working...
+      for (const key in updateData) {
+        const value = updateData[key];
+        if (value) {
+          await this.post(
+            `/AttributeMatrixItems/AttributeValue/${resourceId}?attributeKey=${key}&attributeValue=${value}`
+          );
+        }
+      }
+
+      return this.updateCache(groupId);
     }
   };
 

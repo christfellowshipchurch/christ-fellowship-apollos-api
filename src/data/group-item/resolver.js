@@ -80,19 +80,19 @@ const resolver = {
 
       return null;
     },
-    updateGroupResource: async (
-      root,
-      { groupId, resourceId, title, url },
-      { dataSources }
-    ) => {
+    updateGroupResource: async (root, { groupId, id, title, url }, { dataSources }) => {
       const groupGlobalId = parseGlobalId(groupId);
       try {
-        return dataSources.Group.updateResource({
-          groupId: groupGlobalId,
-          resourceId: resourceId ? parseGlobalId(resourceId) : null,
-          title,
-          url,
-        });
+        if (id) {
+          return dataSources.Group.updateResource({
+            groupId: groupGlobalId.id,
+            resourceId: id,
+            title,
+            url,
+          });
+        } else {
+          return dataSources.Group.addResource({ groupId, title, url });
+        }
       } catch (e) {
         console.log({ e });
       }
