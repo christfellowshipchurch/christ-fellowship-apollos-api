@@ -133,7 +133,7 @@ export const groupSchema = gql`
   }
 
   extend type Query {
-    getGroupCoverImages: [GroupCoverImage]
+    groupCoverImages: [GroupCoverImage]
   }
 
   extend enum InteractionAction {
