@@ -135,6 +135,14 @@ export const groupSchema = gql`
   extend type Query {
     getGroupCoverImages: [GroupCoverImage]
   }
+
+  extend enum InteractionAction {
+    GROUP_READ_CONTENT
+    GROUP_READ_EVENT
+    GROUP_READ_PRAYER
+    GROUP_READ_GROUP
+    GROUP_OPEN_URL
+  }
 `;
 
 export default groupSchema;
