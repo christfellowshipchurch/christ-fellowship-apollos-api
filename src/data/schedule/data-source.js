@@ -213,10 +213,14 @@ export default class Schedule extends RockApolloDataSource {
       .sort(sortByTimeAsc)
     const closestDate = first(filteredDates)
     const nextStart = get(closestDate, 'start')
+    const nextEnd = get(closestDate, 'end')
 
     return {
       nextStart: moment(nextStart).isValid() 
         ? moment.tz(nextStart, TIMEZONE).utc().format()
+        : null,
+      nextEnd: moment(nextEnd).isValid() 
+        ? moment.tz(nextEnd, TIMEZONE).utc().format()
         : null,
       startOffset: this.defaultStartOffsetMinutes,
       endOffset: this.defaultEndOffsetMinutes

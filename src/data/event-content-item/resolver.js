@@ -97,6 +97,11 @@ const resolver = {
         };
       });
     },
+    liveStream: ({ id, attributeValues }, args, { dataSources: { LiveStream } }) => {
+      const attributeMatrixGuid = get(attributeValues, 'liveStreams.value')
+      
+      return LiveStream.byAttributeMatrixGuid(attributeMatrixGuid, { contentChannelItemId: id })
+    }
   },
 };
 

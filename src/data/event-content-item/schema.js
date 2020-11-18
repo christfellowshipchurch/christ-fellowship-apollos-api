@@ -32,31 +32,31 @@ export default gql`
     theme: Theme
 
     nextOccurrence: String
-    @deprecated(
-      reason: "Previously used to create a label on the client. Please use 'label' instead"
-    )
+      @deprecated(
+        reason: "Previously used to create a label on the client. Please use 'label' instead"
+      )
     startDate: String
-    @deprecated(
-      reason: "Previously used to create a label on the client. Please use 'label' instead"
-    )
+      @deprecated(
+        reason: "Previously used to create a label on the client. Please use 'label' instead"
+      )
     endDate: String
-    @deprecated(
-      reason: "Previously used to create a label on the client. Please use 'label' instead"
-    )
+      @deprecated(
+        reason: "Previously used to create a label on the client. Please use 'label' instead"
+      )
 
     tags: [String]
     callsToAction: [CallToAction]
-    @deprecated(
-      reason: "Updating to use FeatureAction to better adhere to navigation standards. Please use 'actions' instead."
-    )
+      @deprecated(
+        reason: "Updating to use FeatureAction to better adhere to navigation standards. Please use 'actions' instead."
+      )
     openLinksInNewTab: Boolean
-    @deprecated(reason: "Label will now be explicitly defined on the API")
+      @deprecated(reason: "Label will now be explicitly defined on the API")
     hideLabel: Boolean
-    @deprecated(reason: "Label will now be explicitly defined on the API")
+      @deprecated(reason: "Label will now be explicitly defined on the API")
     events: [Event]
-    @deprecated(
-      reason: "We have updated the organization of the events schema. Please use 'eventGroupings' instead."
-    )
+      @deprecated(
+        reason: "We have updated the organization of the events schema. Please use 'eventGroupings' instead."
+      )
 
     # This label is an additional
     label: String
