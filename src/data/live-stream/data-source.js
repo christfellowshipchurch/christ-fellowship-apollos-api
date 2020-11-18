@@ -2,7 +2,7 @@ import { dataSource as matrixItemDataSource } from '../matrix-item'
 import moment, { tz } from 'moment-timezone'
 import ApollosConfig from '@apollosproject/config'
 import { createGlobalId } from '@apollosproject/server-core'
-import { split, filter, get, find, flatten, flattenDeep, uniqBy } from 'lodash'
+import { split, filter, get, find, flatten, flattenDeep, uniqBy, first } from 'lodash'
 
 import { getIdentifierType } from '../utils'
 import WeekendServices from './weekend-services'
@@ -161,8 +161,50 @@ export default class LiveStream extends matrixItemDataSource {
     return liveStreamContentItemsWithNextOccurrences;
   }
 
+  async byAttributeMatrixGuid(attributeMatrixGuid, { contentChannelItemId }) {
+    const { Schedule } = this.context.dataSources
+
+    if (attributeMatrixGuid) {
+      const attributeItems = await this.request('/AttributeMatrixItems')
+        .expand('AttributeMatrix')
+        .filter(`AttributeMatrix/${getIdentifierType(attributeMatrixGuid).query}`)
+        .get()
+
+      const liveStreamData = await Promise.all(attributeItems.map(async item => {
+        const url = get(item, 'attributeValues.liveStreamUrl.value')
+        const scheduleGuid = get(item, 'attributeValues.schedule.value')
+        
+        if (scheduleGuid && scheduleGuid !== "" && url && url !== "") {
+          const schedule = await Schedule.getFromId(scheduleGuid)
+          if (schedule.length) {
+            const nextInstance = await Schedule._parseCustomSchedule(schedule[0].iCalendarContent)
+
+            return {
+              id: item.id,
+              contentChannelItemId,
+              eventStartTime: nextInstance.nextStart,
+              eventEndTime: nextInstance.nextEnd,
+              attributeValues: {
+                liveStreamUrl: {
+                  value: url
+                }
+              }
+            }
+          }
+        }
+
+        return null
+      }))
+      
+      return first(liveStreamData
+        .filter(ls => !!ls)
+        .sort((a, b) => moment(a).diff(b))
+      )
+    }
+  }
+
   async byAttributeMatrixTemplate(props) {
-    const { Schedule, Person } = this.context.dataSources
+    const { Schedule, Person, ContentItem } = this.context.dataSources
     const TEMPLATE_ID = 11
     const anonymously = get(props, 'anonymously', false)
 
@@ -178,6 +220,7 @@ export default class LiveStream extends matrixItemDataSource {
       const query = `attributeKey=${attributeKey}&value=${guid}`
 
       return this.request(`/ContentChannelItems/GetByAttributeValue?${query}`)
+        .filter(ContentItem.LIVE_CONTENT())
         .get()
     }))
 
@@ -193,7 +236,7 @@ export default class LiveStream extends matrixItemDataSource {
       try {
         personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
       } catch (e) {
-        console.log("Events: Unable to retrieve personas for user.")
+        console.log("Live Streams: Unable to retrieve personas for user.")
         console.log(e)
       }
     }
