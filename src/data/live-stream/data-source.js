@@ -203,10 +203,9 @@ export default class LiveStream extends matrixItemDataSource {
     }
   }
 
-  async byAttributeMatrixTemplate(props) {
-    const { Schedule, Person, ContentItem } = this.context.dataSources
+  async byAttributeMatrixTemplate() {
+    const { Schedule, ContentItem } = this.context.dataSources
     const TEMPLATE_ID = 11
-    const anonymously = get(props, 'anonymously', false)
 
     // Get Attribute Matrix by Template Id
     const attributeMatrices = await this.request('/AttributeMatrices')
@@ -219,80 +218,35 @@ export default class LiveStream extends matrixItemDataSource {
       const attributeKey = "LiveStreams"
       const query = `attributeKey=${attributeKey}&value=${guid}`
 
-      const liveContentFilter = ContentItem.LIVE_CONTENT();
-      console.log('[byAttributeMatrixTemplate] liveContentFilter: ', liveContentFilter);
-
       return this.request(`/ContentChannelItems/GetByAttributeValue?${query}`)
-        .filter(liveContentFilter)
+        .filter(ContentItem.LIVE_CONTENT())
         .get()
     }))
 
     const contentChannelItems = flattenDeep(contentChannelItemPromises.filter(i => i.length))
 
-    let personas = []
-
-    /**
-     * Only fetch user personas if we do _not_ want to make this request
-     * as an anonymous user
-     */
-    if (!anonymously) {
-      try {
-        personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
-      } catch (e) {
-        console.log("Live Streams: Unable to retrieve personas for user.")
-        console.log(e)
-      }
-    }
-
-    const itemsBySecurityGroup = contentChannelItems.filter(item => {
-      /**
-       * Get security data views for the given content channel item from
-       * an attribute value. Rock stores data views as a string of comma
-       * separated Guids
-       *
-       * Split the string by a comma so we can just work with an array of
-       * strings
-       */
-      const securityDataViews = split(
-        get(item, 'attributeValues.securityDataViews.value', ''),
-        ','
-      ).filter(dv => !!dv)
-
-      if (securityDataViews.length > 0) {
-        /**
-         * If there is at least 1 guid, we are going to check to see if the current user
-         * is in at least one of those security groups. If so, we're good to return `true`.
-         *
-         * If there are no common guids, we return false to filter this option out of the
-         * collection of items for the user's live streams
-         *
-         * If there is at least 1 Guid and we want to make this request anonymously, just
-         * immediately return `false`
-         */
-
-        if (anonymously) return false
-
-        const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
-
-        return userInSecurityDataViews.length > 0
-      }
-
-      /**
-       * If there are no security data views on this content item, that means
-       * that this item is globally accessible and we're good to return `true`
-       */
-      return true
-    })
-
     // Get Attribute Matrix Items from the "filtered" Attribute Matrix Guids
     const attributeMatrixItemPromises = await Promise.all(
-      itemsBySecurityGroup.map(({ id, attributeValues }) => {
+      contentChannelItems.map(({ id, attributeValues }) => {
         const attributeMatrixGuid = get(attributeValues, 'liveStreams.value')
+        /**
+         * Get security data views for the given content channel item from
+         * an attribute value. Rock stores data views as a string of comma
+         * separated Guids
+         *
+         * Split the string by a comma so we can just work with an array of
+         * strings
+         */
+        const securityDataViews = split(
+          get(attributeValues, 'securityDataViews.value', ''),
+          ','
+        ).filter(dv => !!dv)
+
         return this.request('/AttributeMatrixItems')
           .expand('AttributeMatrix')
           .filter(`AttributeMatrix/${getIdentifierType(attributeMatrixGuid).query}`)
           .transform((results) => results.map(n =>
-            ({ ...n, contentChannelItemId: id }))
+            ({ ...n, contentChannelItemId: id, securityDataViews }))
           )
           .get()
       })
@@ -332,6 +286,7 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async getLiveStreams(props) {
+    const { Person } = this.context.dataSources
     const dayOfWeek = moment.tz(TIMEZONE).format('dddd').toLowerCase()
 
     if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday') {
@@ -340,6 +295,47 @@ export default class LiveStream extends matrixItemDataSource {
 
     const anonymously = get(props, 'anonymously', false)
 
+    let personas = []
+    const filterByPersona = ({ securityDataViews, ...props }) => {
+      if (securityDataViews.length > 0) {
+        /**
+         * If there is at least 1 guid, we are going to check to see if the current user
+         * is in at least one of those security groups. If so, we're good to return `true`.
+         *
+         * If there are no common guids, we return false to filter this option out of the
+         * collection of items for the user's live streams
+         *
+         * If there is at least 1 Guid and we want to make this request anonymously, just
+         * immediately return `false`
+         */
+
+        if (anonymously) return false
+
+        const userInSecurityDataViews = personas.filter(({ guid }) => securityDataViews.includes(guid))
+
+        return userInSecurityDataViews.length > 0
+      }
+
+      /**
+       * If there are no security data views on this content item, that means
+       * that this item is globally accessible and we're good to return `true`
+       */
+      return true
+    }
+
+    /**
+     * Only fetch user personas if we do _not_ want to make this request
+     * as an anonymous user
+     */
+    if (!anonymously) {
+      try {
+        personas = await Person.getPersonas({ categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId })
+      } catch (e) {
+        console.log("Live Streams: Unable to retrieve personas for user.")
+        console.log(e)
+      }
+    }
+
     const { Cache } = this.context.dataSources;
     const cachedKey = `${process.env.CONTENT}_liveStreams`
     const cachedValue = await Cache.get({
@@ -347,8 +343,7 @@ export default class LiveStream extends matrixItemDataSource {
     });
 
     if (cachedValue) {
-      console.log(`[getLiveStreams] returning cachedValue for key "${cachedKey}": `, cachedValue);
-      return cachedValue;
+      return cachedValue.filter(filterByPersona);
     }
 
     /**
@@ -358,7 +353,7 @@ export default class LiveStream extends matrixItemDataSource {
      * if Rock is unable to find a value.
      */
     try {
-      const attributeMatrix = await this.byAttributeMatrixTemplate({ anonymously })
+      const attributeMatrix = await this.byAttributeMatrixTemplate()
 
       if (attributeMatrix != null) {
         await Cache.set({
@@ -368,8 +363,7 @@ export default class LiveStream extends matrixItemDataSource {
         });
       }
 
-      console.log(`[getLiveStreams] Found ${get(attributeMatrix, 'length', 0)} attributeMatrix items`);
-      return attributeMatrix.filter(i => !!i)
+      return attributeMatrix.filter(filterByPersona)
     } catch (e) {
       console.log("Error fetching Live Streams by Attribute Matrix Template")
       console.log({ e })
