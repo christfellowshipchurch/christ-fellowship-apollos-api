@@ -108,7 +108,7 @@ const resolver = {
           /**
            * Set up an empty object to be used as our content item
            */
-          const contentItem = {}
+          let contentItem = {}
 
           /**
            * If Redis has this item stored already, don't make the request to
@@ -173,7 +173,7 @@ const resolver = {
       try {
         /**
          * getLiveStreams returns an array of Live Stream objects, but this
-         * specific endpoint only returns a single Live Stream. 
+         * specific endpoint only returns a single Live Stream.
          */
         const allActiveLiveStreams = await LiveStream.getLiveStreams({ anonymously: true })
 
@@ -184,7 +184,7 @@ const resolver = {
         console.log("Error when fetching live streams for TV Apps")
         console.log({ e })
       }
-      
+
       return null
     },
     floatLeftEmptyLiveStream: (root, args, { dataSources }) => null,

@@ -154,7 +154,7 @@ export default class LiveStream extends matrixItemDataSource {
       await Cache.set({
         key: cachedKey,
         data: liveStreamContentItemsWithNextOccurrences,
-        expiresIn: 60 * 10 // ten minute cache 
+        expiresIn: 60 * 10 // ten minute cache
       });
     }
 
@@ -173,7 +173,7 @@ export default class LiveStream extends matrixItemDataSource {
       const liveStreamData = await Promise.all(attributeItems.map(async item => {
         const url = get(item, 'attributeValues.liveStreamUrl.value')
         const scheduleGuid = get(item, 'attributeValues.schedule.value')
-        
+
         if (scheduleGuid && scheduleGuid !== "" && url && url !== "") {
           const schedule = await Schedule.getFromId(scheduleGuid)
           if (schedule.length) {
@@ -195,7 +195,7 @@ export default class LiveStream extends matrixItemDataSource {
 
         return null
       }))
-      
+
       return first(liveStreamData
         .filter(ls => !!ls)
         .sort((a, b) => moment(a).diff(b))
@@ -218,8 +218,11 @@ export default class LiveStream extends matrixItemDataSource {
       const attributeKey = "LiveStreams"
       const query = `attributeKey=${attributeKey}&value=${guid}`
 
+      const liveContentFilter = ContentItem.LIVE_CONTENT();
+      console.log('[byAttributeMatrixTemplate] liveContentFilter: ', liveContentFilter);
+
       return this.request(`/ContentChannelItems/GetByAttributeValue?${query}`)
-        .filter(ContentItem.LIVE_CONTENT())
+        .filter(liveContentFilter)
         .get()
     }))
 
@@ -258,7 +261,7 @@ export default class LiveStream extends matrixItemDataSource {
     await Promise.all(attributeMatrixItems.map(async matrixItem => {
       const scheduleGuid = get(matrixItem, "attributeValues.schedule.value")
       if (scheduleGuid) {
-        // Do we need to filter this list by only getting Schedules that have an 
+        // Do we need to filter this list by only getting Schedules that have an
         // `EffectiveStartDate` in the past? Do we care about future schedules in
         // this context?
         const schedule = await this.request('/Schedules')
@@ -368,7 +371,7 @@ export default class LiveStream extends matrixItemDataSource {
       return attributeMatrix.filter(filterByPersona)
     } catch (e) {
       console.log("Error fetching Live Streams by Attribute Matrix Template")
-      console.log({ e })      
+      console.log({ e })
     }
 
     return null
@@ -381,16 +384,16 @@ export default class LiveStream extends matrixItemDataSource {
       const weekendService = WeekendServices.find(service => {
         const { day, start, end } = service
         const isDay = mDate.format('dddd').toLowerCase() === day
-        
+
         const startTime = parseInt(`${start.hour}${start.minute}`)
         const endTime = parseInt(`${end.hour}${end.minute}`)
         const hourInt = parseInt(mDate.format('Hmm'))
-        
+
         const isBetween = hourInt >= startTime && hourInt <= endTime
-        
+
         return isDay && isBetween
       })
-  
+
       if (!!weekendService) {
         return [{
           isLive: true,
