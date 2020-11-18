@@ -45,7 +45,7 @@ export default gql`
 
   extend type Query {
     liveStream: LiveStream @deprecated(reason: "Use liveStreams, there may be multiple.")
-    liveStreams: [LiveStream] @cacheControl(maxAge: 10)
+    liveStreams: [LiveStream] @cacheControl(maxAge: 0)
 
     floatLeftLiveStream: LiveStream
     floatLeftEmptyLiveStream: LiveStream
