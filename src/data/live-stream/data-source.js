@@ -173,7 +173,7 @@ export default class LiveStream extends matrixItemDataSource {
       const liveStreamData = await Promise.all(attributeItems.map(async item => {
         const url = get(item, 'attributeValues.liveStreamUrl.value')
         const scheduleGuid = get(item, 'attributeValues.schedule.value')
-        
+
         if (scheduleGuid && scheduleGuid !== "" && url && url !== "") {
           const schedule = await Schedule.getFromId(scheduleGuid)
           if (schedule.length) {
@@ -195,7 +195,7 @@ export default class LiveStream extends matrixItemDataSource {
 
         return null
       }))
-      
+
       return first(liveStreamData
         .filter(ls => !!ls)
         .sort((a, b) => moment(a).diff(b))
@@ -329,7 +329,6 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async getLiveStreams(props) {
-    return [];
     const dayOfWeek = moment.tz(TIMEZONE).format('dddd').toLowerCase()
 
     if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday') {
