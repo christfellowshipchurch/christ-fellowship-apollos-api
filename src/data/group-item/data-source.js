@@ -1,19 +1,7 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId, createCursor, parseCursor } from '@apollosproject/server-core';
-import {
-  get,
-  mapValues,
-  isNull,
-  filter,
-  head,
-  chunk,
-  flatten,
-  take,
-  difference,
-  pick,
-  identity,
-} from 'lodash';
+import { get, isNull, filter, head, chunk, flatten, take } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
@@ -229,11 +217,12 @@ export default class GroupItem extends baseGroup.dataSource {
   addResource = async ({ groupId, title, url }) => {
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
     const group = await this.getFromId(groupId);
-    const resources = await this.getResources(group);
+    // const matrixAttributeValue = get(group, 'attributeValues.resources.value', '');
+    // console.log(getIdentifierType(matrixAttributeValue).query);
 
     if (this.userIsLeader(groupId, currentPerson.id)) {
       // TODO - get API call
-      const data = pick({ Title: title, Url: url });
+      const data = { Title: title, Url: url };
       // await this.post(`/AttributeMatrixItems/AttributeValue/${groupId}`, {
       //   attributeKey: 'resources',
       //   attributeValue: updatedResources,
@@ -249,9 +238,20 @@ export default class GroupItem extends baseGroup.dataSource {
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
 
     if (this.userIsLeader(groupId, currentPerson.id)) {
-      // TODO - get API call
-      const updateData = pick({ Title: title, Url: url });
-      // return this.patch(`/Groups/${groupId}/Resources/${resourceId}`, updateData);
+      const updateData = { Title: title, Url: url };
+
+      // TODO: Is there a way to just post all the data at once?
+      // https://rock.christfellowship.church/api/docs/index#!/AttributeMatrixItems/PUTapi_AttributeMatrixItems_id isn't working...
+      for (const key in updateData) {
+        const value = updateData[key];
+        if (value) {
+          await this.post(
+            `/AttributeMatrixItems/AttributeValue/${resourceId}?attributeKey=${key}&attributeValue=${value}`
+          );
+        }
+      }
+
+      return this.updateCache(groupId);
     }
   };
 
@@ -364,6 +364,7 @@ export default class GroupItem extends baseGroup.dataSource {
           );
 
           return {
+            id: get(item, 'id'),
             title: get(item, 'attributeValues.title.value'),
             action: 'READ_CONTENT',
             relatedNode: {
@@ -374,6 +375,7 @@ export default class GroupItem extends baseGroup.dataSource {
         }
 
         return {
+          id: get(item, 'id'),
           title: get(item, 'attributeValues.title.value'),
           action: 'OPEN_URL',
           relatedNode: {
@@ -461,44 +463,21 @@ export default class GroupItem extends baseGroup.dataSource {
   getDateTimeFromId = async (id) => {
     if (!id) return null;
 
-    const schedule = await this.getScheduleFromId(id);
-    const { iCalendarContent, weeklyDayOfWeek, weeklyTimeOfDay } = schedule;
+    const { Schedule } = this.context.dataSources;
+    const schedule = await Schedule.parseById(id);
 
-    // Use iCalendarContent if it exists else use weeklyDayOfWeek and weeklyTimeOfDay to create a start and end time for schedules.
-    if (iCalendarContent !== '') {
-      const occurrences = await this.context.dataSources.Schedule.getOccurrences(
-        schedule.id
-      );
-
-      if (!occurrences || !occurrences.length) {
-        return { start: null, end: null };
-      }
-
-      const nextOccurrence = head(occurrences);
-      return { start: nextOccurrence.start, end: nextOccurrence.end };
-    } else if (weeklyDayOfWeek !== null && weeklyTimeOfDay) {
-      const proto = Object.getPrototypeOf(moment());
-      proto.setTime = function (time) {
-        const [hour, minute, seconds] = time.split(':');
-        return this.set({ hour, minute, seconds });
-      };
-      const time = moment()
-        .weekday(weeklyDayOfWeek)
-        .setTime(weeklyTimeOfDay)
-        .tz(ApollosConfig.ROCK.TIMEZONE)
-        .utc()
-        .format();
-
-      // Adjust start/end date to be next meeting date.
-      const endOfMeetingDay = moment(time).endOf('day').utc().format();
+    if (schedule.nextStart) {
+      const { nextStart } = schedule;
+      const endOfMeetingDay = moment(nextStart).endOf('day').utc().format();
       const isAfter = moment().isAfter(endOfMeetingDay);
       if (isAfter) {
         const nextMeetingTime = moment(time).add(7, 'd').utc().format();
         return { start: nextMeetingTime, end: nextMeetingTime };
       }
 
-      return { start: time, end: time };
+      return { start: nextStart, end: nextStart };
     }
+
     return { start: null, end: null };
   };
 
@@ -580,10 +559,14 @@ export default class GroupItem extends baseGroup.dataSource {
     const channelId = crypto.SHA1(globalId).toString();
 
     const groupMembers = await this.getMembers(root.id);
-    const members = groupMembers.map((member) => StreamChat.getStreamUserId(member.id));
+    const members = groupMembers
+      ? groupMembers.map((member) => StreamChat.getStreamUserId(member.id))
+      : [];
 
     const groupLeaders = await this.getLeaders(root.id);
-    const leaders = groupLeaders.map((leader) => StreamChat.getStreamUserId(leader.id));
+    const leaders = groupLeaders
+      ? groupLeaders.map((leader) => StreamChat.getStreamUserId(leader.id))
+      : [];
 
     // Create any Stream users that might not exist
     // We need to do this before we can create a channel 🙄

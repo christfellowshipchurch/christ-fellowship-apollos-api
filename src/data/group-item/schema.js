@@ -19,6 +19,7 @@ export const groupSchema = gql`
   }
 
   type Resource {
+    id: Int
     title: String
     url: String
     contentChannelItem: String
