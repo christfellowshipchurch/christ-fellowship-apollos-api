@@ -218,11 +218,8 @@ export default class LiveStream extends matrixItemDataSource {
       const attributeKey = "LiveStreams"
       const query = `attributeKey=${attributeKey}&value=${guid}`
 
-      const liveContentFilter = ContentItem.LIVE_CONTENT();
-      console.log('[byAttributeMatrixTemplate] liveContentFilter: ', liveContentFilter);
-
       return this.request(`/ContentChannelItems/GetByAttributeValue?${query}`)
-        .filter(liveContentFilter)
+        .filter(ContentItem.LIVE_CONTENT())
         .get()
     }))
 
@@ -236,7 +233,7 @@ export default class LiveStream extends matrixItemDataSource {
          * Get security data views for the given content channel item from
          * an attribute value. Rock stores data views as a string of comma
          * separated Guids
-         * 
+         *
          * Split the string by a comma so we can just work with an array of
          * strings
          */
@@ -306,10 +303,10 @@ export default class LiveStream extends matrixItemDataSource {
         /**
          * If there is at least 1 guid, we are going to check to see if the current user
          * is in at least one of those security groups. If so, we're good to return `true`.
-         * 
+         *
          * If there are no common guids, we return false to filter this option out of the
          * collection of items for the user's live streams
-         * 
+         *
          * If there is at least 1 Guid and we want to make this request anonymously, just
          * immediately return `false`
          */
