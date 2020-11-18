@@ -297,8 +297,6 @@ export default class LiveStream extends matrixItemDataSource {
 
     let personas = []
     const filterByPersona = ({ securityDataViews, ...props }) => {
-      console.log({ securityDataViews, personas })
-
       if (securityDataViews.length > 0) {
         /**
          * If there is at least 1 guid, we are going to check to see if the current user
