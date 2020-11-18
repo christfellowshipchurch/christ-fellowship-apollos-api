@@ -71,6 +71,7 @@ const EXCLUDE_IDS = [
 ];
 
 const CHANNEL_TYPE = 'group';
+const GROUP_COVER_IMAGES_DEFINED_TYPE_ID = get(ApollosConfig, 'ROCK_MAPPINGS.DEFINED_TYPES.GROUP_COVER_IMAGES');
 
 export default class GroupItem extends baseGroup.dataSource {
   updateCache = async (id) => {
@@ -185,12 +186,16 @@ export default class GroupItem extends baseGroup.dataSource {
 
   getCoverImages = async () => {
     const { DefinedValueList, ContentItem } = this.context.dataSources;
-    const images = await DefinedValueList.getByIdentifier(368);
+    const images = await DefinedValueList.getByIdentifier(GROUP_COVER_IMAGES_DEFINED_TYPE_ID);
+    console.log('[rkd] images:', JSON.stringify(images, null, 2));
 
-    return images.definedValues.map((image) => ({
-      guid: image.attributeValues.image.value,
-      image: ContentItem.getImages(image)[0],
-    }));
+    return images.definedValues.map((image) => {
+      console.log('--> ContentItem.getImages(image): ', ContentItem.getImages(image)[0]);
+      return {
+        guid: image.attributeValues.image.value,
+        name: image.value, // The attribute value's name/label at top level
+        image: ContentItem.getImages(image)[0],
+      }});
   };
 
   updateCoverImage = async ({ groupId, imageId }) => {

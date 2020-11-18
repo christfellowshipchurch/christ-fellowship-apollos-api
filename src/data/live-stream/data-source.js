@@ -154,7 +154,7 @@ export default class LiveStream extends matrixItemDataSource {
       await Cache.set({
         key: cachedKey,
         data: liveStreamContentItemsWithNextOccurrences,
-        expiresIn: 60 * 10 // ten minute cache 
+        expiresIn: 60 * 10 // ten minute cache
       });
     }
 
@@ -203,7 +203,7 @@ export default class LiveStream extends matrixItemDataSource {
        * Get security data views for the given content channel item from
        * an attribute value. Rock stores data views as a string of comma
        * separated Guids
-       * 
+       *
        * Split the string by a comma so we can just work with an array of
        * strings
        */
@@ -216,10 +216,10 @@ export default class LiveStream extends matrixItemDataSource {
         /**
          * If there is at least 1 guid, we are going to check to see if the current user
          * is in at least one of those security groups. If so, we're good to return `true`.
-         * 
+         *
          * If there are no common guids, we return false to filter this option out of the
          * collection of items for the user's live streams
-         * 
+         *
          * If there is at least 1 Guid and we want to make this request anonymously, just
          * immediately return `false`
          */
@@ -258,7 +258,7 @@ export default class LiveStream extends matrixItemDataSource {
     await Promise.all(attributeMatrixItems.map(async matrixItem => {
       const scheduleGuid = get(matrixItem, "attributeValues.schedule.value")
       if (scheduleGuid) {
-        // Do we need to filter this list by only getting Schedules that have an 
+        // Do we need to filter this list by only getting Schedules that have an
         // `EffectiveStartDate` in the past? Do we care about future schedules in
         // this context?
         const schedule = await this.request('/Schedules')
@@ -286,6 +286,7 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async getLiveStreams(props) {
+    return [];
     const dayOfWeek = moment.tz(TIMEZONE).format('dddd').toLowerCase()
 
     if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday') {
@@ -324,7 +325,7 @@ export default class LiveStream extends matrixItemDataSource {
       return attributeMatrix.filter(i => !!i)
     } catch (e) {
       console.log("Error fetching Live Streams by Attribute Matrix Template")
-      console.log({ e })      
+      console.log({ e })
     }
 
     return null
@@ -337,16 +338,16 @@ export default class LiveStream extends matrixItemDataSource {
       const weekendService = WeekendServices.find(service => {
         const { day, start, end } = service
         const isDay = mDate.format('dddd').toLowerCase() === day
-        
+
         const startTime = parseInt(`${start.hour}${start.minute}`)
         const endTime = parseInt(`${end.hour}${end.minute}`)
         const hourInt = parseInt(mDate.format('Hmm'))
-        
+
         const isBetween = hourInt >= startTime && hourInt <= endTime
-        
+
         return isDay && isBetween
       })
-  
+
       if (!!weekendService) {
         return [{
           isLive: true,
