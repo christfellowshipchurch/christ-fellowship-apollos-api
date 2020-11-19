@@ -396,6 +396,12 @@ NOTIFICATIONS:
   PRAYING: 'Your church family is praying for you right now. Thanks for sharing your request with us!'
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
+ROCK_ENTITY_IDS:
+  CONTENT_CHANNEL_ITEM: 208
+  DEFINED_VALUE: 31
+  GROUP: 16
+
+# Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:
   TEXT: 1
   MULTI_SELECT: 2
