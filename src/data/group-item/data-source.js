@@ -1,6 +1,11 @@
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
-import { createGlobalId, createCursor, parseCursor } from '@apollosproject/server-core';
+import {
+  createGlobalId,
+  createCursor,
+  parseCursor,
+  parseGlobalId,
+} from '@apollosproject/server-core';
 import { get, isNull, filter, head, chunk, flatten, take } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
@@ -59,7 +64,10 @@ const EXCLUDE_IDS = [
 ];
 
 const CHANNEL_TYPE = 'group';
-const GROUP_COVER_IMAGES_DEFINED_TYPE_ID = get(ApollosConfig, 'ROCK_MAPPINGS.DEFINED_TYPES.GROUP_COVER_IMAGES');
+const GROUP_COVER_IMAGES_DEFINED_TYPE_ID = get(
+  ApollosConfig,
+  'ROCK_MAPPINGS.DEFINED_TYPES.GROUP_COVER_IMAGES'
+);
 
 export default class GroupItem extends baseGroup.dataSource {
   updateCache = async (id) => {
@@ -174,7 +182,9 @@ export default class GroupItem extends baseGroup.dataSource {
 
   getCoverImages = async () => {
     const { DefinedValueList, ContentItem } = this.context.dataSources;
-    const images = await DefinedValueList.getByIdentifier(GROUP_COVER_IMAGES_DEFINED_TYPE_ID);
+    const images = await DefinedValueList.getByIdentifier(
+      GROUP_COVER_IMAGES_DEFINED_TYPE_ID
+    );
     console.log('[rkd] images:', JSON.stringify(images, null, 2));
 
     return images.definedValues.map((image) => {
@@ -183,14 +193,16 @@ export default class GroupItem extends baseGroup.dataSource {
         guid: image.attributeValues.image.value,
         name: image.value, // The attribute value's name/label at top level
         image: ContentItem.getImages(image)[0],
-      }});
+      };
+    });
   };
 
   updateCoverImage = async ({ groupId, imageId }) => {
     const { Auth, Cache, ContentItem } = this.context.dataSources;
     const currentPerson = await Auth.getCurrentPerson();
 
-    if (this.userIsLeader(groupId, currentPerson.id)) {
+    const groupGlobalId = parseGlobalId(groupId)?.id;
+    if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
       const attributeKey = 'Image';
       const attributeValue = imageId;
       await this.post(
@@ -200,12 +212,12 @@ export default class GroupItem extends baseGroup.dataSource {
       // Set cover image cache to null and to expire immediately
       // So we can set it properly through the ContentItem function
       await Cache.set({
-        key: `contentItem:coverImage:${groupId}`,
+        key: `contentItem:coverImage:${groupGlobalId}`,
         data: null,
         expiresIn: 1,
       });
 
-      const group = await this.updateCache(groupId);
+      const group = await this.updateCache(groupGlobalId);
 
       // Sets cover image cache
       await ContentItem.getCoverImage(group);
@@ -214,44 +226,74 @@ export default class GroupItem extends baseGroup.dataSource {
     }
   };
 
-  addResource = async ({ groupId, title, url }) => {
-    const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
-    const group = await this.getFromId(groupId);
-    // const matrixAttributeValue = get(group, 'attributeValues.resources.value', '');
-    // console.log(getIdentifierType(matrixAttributeValue).query);
+  addResource = async ({ groupId, title, url, contentItemId }) => {
+    const { Auth, Url } = this.context.dataSources;
+    const currentPerson = await Auth.getCurrentPerson();
 
-    if (this.userIsLeader(groupId, currentPerson.id)) {
-      // TODO - get API call
-      const data = { Title: title, Url: url };
-      // await this.post(`/AttributeMatrixItems/AttributeValue/${groupId}`, {
-      //   attributeKey: 'resources',
-      //   attributeValue: updatedResources,
-      // });
+    const groupGlobalId = parseGlobalId(groupId)?.id;
+    if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
+      const data = {
+        SourceEntityTypeId: ApollosConfig.ROCK_ENTITY_IDS.GROUP,
+        SourceEntityId: groupGlobalId,
+        IsSystem: false,
+        QualifierValue: 'APOLLOS_GROUP_RESOURCE',
+      };
+
+      if (contentItemId) {
+        data.TargetEntityTypeId = ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM;
+        data.TargetEntityId = parseGlobalId(contentItemId)?.id;
+      } else if (title && url) {
+        const definedValueId = await Url.addToMasterList({ title, url });
+        data.TargetEntityTypeId = ApollosConfig.ROCK_ENTITY_IDS.DEFINED_VALUE;
+        data.TargetEntityId = definedValueId;
+      } else {
+        return null;
+      }
+
+      await this.post('/RelatedEntities', data);
+
+      return this.updateCache(groupGlobalId);
     }
   };
 
-  updateResource = async ({ groupId, resourceId, title, url }) => {
+  updateResource = async ({ groupId, resourceId, title, url, contentItemId }) => {
     if (!resourceId) {
-      return this.addResource({ groupId, title, url });
+      return this.addResource({ groupId, title, url, contentItemId });
     }
 
-    const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
+    const { Auth, Url } = this.context.dataSources;
+    const currentPerson = await Auth.getCurrentPerson();
 
-    if (this.userIsLeader(groupId, currentPerson.id)) {
-      const updateData = { Title: title, Url: url };
+    const groupGlobalId = parseGlobalId(groupId)?.id;
+    if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
+      const data = {};
 
-      // TODO: Is there a way to just post all the data at once?
-      // https://rock.christfellowship.church/api/docs/index#!/AttributeMatrixItems/PUTapi_AttributeMatrixItems_id isn't working...
-      for (const key in updateData) {
-        const value = updateData[key];
-        if (value) {
-          await this.post(
-            `/AttributeMatrixItems/AttributeValue/${resourceId}?attributeKey=${key}&attributeValue=${value}`
-          );
-        }
+      if (contentItemId) {
+        data.TargetEntityId = parseGlobalId(contentItemId)?.id;
+      } else if (title && url) {
+        const definedValueId = await Url.addToMasterList({ title, url });
+        data.TargetEntityId = definedValueId;
+      } else {
+        return null;
       }
 
-      return this.updateCache(groupId);
+      await this.patch(`/RelatedEntities/${resourceId}`, data);
+
+      return this.updateCache(groupGlobalId);
+    }
+  };
+
+  removeResource = async ({ groupId, id }) => {
+    if (!groupId || !id) return null;
+
+    const { Auth } = this.context.dataSources;
+    const currentPerson = await Auth.getCurrentPerson();
+
+    const groupGlobalId = parseGlobalId(groupId)?.id;
+    if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
+      await this.delete(`/RelatedEntities/${id}`);
+
+      return this.updateCache(groupGlobalId);
     }
   };
 
@@ -350,7 +392,7 @@ export default class GroupItem extends baseGroup.dataSource {
       .filter(`(PersonId eq ${id}) and (IsMessagingEnabled eq true)`)
       .first();
 
-  getResources = async ({ attributeValues }) => {
+  getGroupResources = async ({ attributeValues }) => {
     const { ContentItem } = this.context.dataSources;
     const matrixAttributeValue = get(attributeValues, 'resources.value', '');
 
@@ -386,6 +428,62 @@ export default class GroupItem extends baseGroup.dataSource {
         };
       })
     );
+  };
+
+  getResources = async (id) => {
+    const { ContentItem, Url } = this.context.dataSources;
+
+    return this.request('/RelatedEntities')
+      .filter(`SourceEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.GROUP}`)
+      .andFilter(`SourceEntityId eq ${id}`)
+      .andFilter(`QualifierValue eq 'APOLLOS_GROUP_RESOURCE'`)
+      .transform(async (results) =>
+        results
+          .map(async (entity) => {
+            const { targetEntityId, targetEntityTypeId } = entity;
+
+            switch (targetEntityTypeId) {
+              case ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
+                const contentItem = await ContentItem.getFromId(targetEntityId);
+                console.log(contentItem);
+
+                return {
+                  action: 'READ_CONTENT',
+                  title:
+                    get(contentItem, 'attributeValues.titleOverride.value') ||
+                    get(contentItem, 'title'),
+                  id: entity.id,
+                  relatedNode: {
+                    ...contentItem,
+                    __type: ContentItem.resolveType(contentItem),
+                  },
+                };
+              case ApollosConfig.ROCK_ENTITY_IDS.DEFINED_VALUE:
+                const definedValue = await Url.getFromMasterList(targetEntityId);
+
+                return {
+                  action: 'OPEN_URL',
+                  title: get(definedValue, 'title'),
+                  id: entity.id,
+                  relatedNode: {
+                    ...definedValue,
+                    __type: 'Url',
+                  },
+                };
+              default:
+                return null;
+            }
+          })
+          .filter((entity) => !!entity)
+      )
+      .get();
+  };
+
+  getResourceOptions = async () => {
+    const { ContentItem } = this.context.dataSources;
+    const options = await ContentItem.byContentChannelId(79).get();
+
+    return options;
   };
 
   async paginateMembersById({ after, first = 20, id, isLeader = false }) {

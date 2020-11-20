@@ -12,7 +12,8 @@ const defaultResolvers = {
   groupType: ({ groupTypeId }, args, { dataSources }) =>
     dataSources.GroupItem.getGroupTypeFromId(groupTypeId),
   groupResources: (root, args, { dataSources }) =>
-    dataSources.GroupItem.getResources(root),
+    dataSources.GroupItem.getGroupResources(root),
+  resources: ({ id }, args, { dataSources }) => dataSources.GroupItem.getResources(id),
   coverImage: (root, args, { dataSources: { ContentItem } }) =>
     ContentItem.getCoverImage(root),
   avatars: ({ id }, args, { dataSources }) => dataSources.GroupItem.getAvatars(id),
@@ -68,10 +69,9 @@ const resolver = {
       return null;
     },
     updateGroupCoverImage: async (root, { imageId, groupId }, { dataSources }) => {
-      const groupGlobalId = parseGlobalId(groupId);
       try {
         return dataSources.GroupItem.updateCoverImage({
-          groupId: groupGlobalId.id,
+          groupId,
           imageId,
         });
       } catch (e) {
@@ -80,18 +80,22 @@ const resolver = {
 
       return null;
     },
-    updateGroupResource: async (root, { groupId, id, title, url }, { dataSources }) => {
+    updateGroupResourceUrl: async (
+      root,
+      { groupId, id, title, url },
+      { dataSources }
+    ) => {
       const groupGlobalId = parseGlobalId(groupId);
       try {
         if (id) {
-          return dataSources.Group.updateResource({
-            groupId: groupGlobalId.id,
+          return dataSources.GroupItem.updateResource({
+            groupId,
             resourceId: id,
             title,
             url,
           });
         } else {
-          return dataSources.Group.addResource({ groupId, title, url });
+          return dataSources.GroupItem.addResource({ groupId, title, url });
         }
       } catch (e) {
         console.log({ e });
@@ -99,10 +103,39 @@ const resolver = {
 
       return null;
     },
+    updateGroupResourceContentItem: async (
+      root,
+      { groupId, id, contentItemId },
+      { dataSources }
+    ) => {
+      try {
+        if (id) {
+          return dataSources.GroupItem.updateResource({
+            groupId,
+            resourceId: id,
+            contentItemId,
+          });
+        } else {
+          return dataSources.GroupItem.addResource({
+            groupId,
+            contentItemId,
+          });
+        }
+      } catch (e) {
+        console.log({ e });
+      }
+
+      return null;
+    },
+    removeGroupResource: async (root, { groupId, id }, { dataSources }) => {
+      dataSources.GroupItem.removeResource({ groupId, id });
+    },
   },
   Query: {
     groupCoverImages: async (root, args, { dataSources }) =>
       dataSources.GroupItem.getCoverImages(),
+    groupResourceOptions: async (root, args, { dataSources }) =>
+      dataSources.GroupItem.getResourceOptions(),
   },
 };
 

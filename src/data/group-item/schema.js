@@ -56,7 +56,8 @@ export const groupSchema = gql`
     title: String
     summary: String
     groupType: String
-    groupResources: [Resource]
+    groupResources: [Resource] @deprecated(reason: "Use resources instead")
+    resources: [Resource]
     coverImage: ImageMedia
 
     people(first: Int, after: String, isLeader: Boolean): PeopleConnection
@@ -75,7 +76,8 @@ export const groupSchema = gql`
     summary: String
     groupType: String
     coverImage: ImageMedia
-    groupResources: [Resource]
+    groupResources: [Resource] @deprecated(reason: "Use resources instead")
+    resources: [Resource]
 
     people(first: Int, after: String, isLeader: Boolean): PeopleConnection
 
@@ -100,7 +102,8 @@ export const groupSchema = gql`
     summary: String
     groupType: String
     coverImage: ImageMedia
-    groupResources: [Resource]
+    groupResources: [Resource] @deprecated(reason: "Use resources instead")
+    resources: [Resource]
 
     people(first: Int, after: String, isLeader: Boolean): PeopleConnection
 
@@ -125,7 +128,9 @@ export const groupSchema = gql`
   extend type Mutation {
     addMemberAttendance(id: ID!): Group
     updateGroupCoverImage(imageId: String, groupId: ID!): Group
-    updateGroupResource(title: String!, url: String!, id: ID, groupId: ID!): Group
+    updateGroupResourceUrl(title: String!, url: String!, id: ID, groupId: ID!): Group
+    updateGroupResourceContentItem(contentItemId: ID!, id: ID, groupId: ID!): Group
+    removeGroupResource(id: ID!, groupId: ID!): Group
   }
 
   type GroupCoverImage {
@@ -136,6 +141,7 @@ export const groupSchema = gql`
 
   extend type Query {
     groupCoverImages: [GroupCoverImage]
+    groupResourceOptions: [ContentItem]
   }
 
   extend enum InteractionAction {
