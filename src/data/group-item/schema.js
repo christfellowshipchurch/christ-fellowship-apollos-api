@@ -141,7 +141,10 @@ export const groupSchema = gql`
 
   extend type Query {
     groupCoverImages: [GroupCoverImage]
-    groupResourceOptions: [ContentItem]
+    groupResourceOptions(
+      groupId: ID!
+      input: ContentItemsConnectionInput
+    ): ContentItemsConnection
   }
 
   extend enum InteractionAction {

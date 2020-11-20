@@ -134,8 +134,11 @@ const resolver = {
   Query: {
     groupCoverImages: async (root, args, { dataSources }) =>
       dataSources.GroupItem.getCoverImages(),
-    groupResourceOptions: async (root, args, { dataSources }) =>
-      dataSources.GroupItem.getResourceOptions(),
+    groupResourceOptions: async (
+      root,
+      { groupId, input: { first, after } = {} },
+      { dataSources }
+    ) => dataSources.GroupItem.getResourceOptions({ groupId, first, after }),
   },
 };
 
