@@ -206,7 +206,7 @@ export default class GroupItem extends baseGroup.dataSource {
       const attributeKey = 'Image';
       const attributeValue = imageId;
       await this.post(
-        `/Groups/AttributeValue/${groupId}?attributeKey=${attributeKey}&attributeValue=${attributeValue}`
+        `/Groups/AttributeValue/${groupGlobalId}?attributeKey=${attributeKey}&attributeValue=${attributeValue}`
       );
 
       // Set cover image cache to null and to expire immediately
