@@ -286,14 +286,18 @@ export default class GroupItem extends baseGroup.dataSource {
   removeResource = async ({ groupId, id }) => {
     if (!groupId || !id) return null;
 
-    const { Auth } = this.context.dataSources;
-    const currentPerson = await Auth.getCurrentPerson();
+    try {
+      const { Auth } = this.context.dataSources;
+      const currentPerson = await Auth.getCurrentPerson();
 
-    const groupGlobalId = parseGlobalId(groupId)?.id;
-    if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
-      await this.delete(`/RelatedEntities/${id}`);
+      const groupGlobalId = parseGlobalId(groupId)?.id;
+      if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
+        await this.delete(`/RelatedEntities/${id}`);
 
-      return this.updateCache(groupGlobalId);
+        return this.updateCache(groupGlobalId);
+      }
+    } catch (e) {
+      console.log(e);
     }
   };
 
@@ -445,7 +449,6 @@ export default class GroupItem extends baseGroup.dataSource {
             switch (targetEntityTypeId) {
               case ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
                 const contentItem = await ContentItem.getFromId(targetEntityId);
-                console.log(contentItem);
 
                 return {
                   action: 'READ_CONTENT',

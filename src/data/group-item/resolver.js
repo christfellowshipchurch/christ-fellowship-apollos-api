@@ -128,7 +128,11 @@ const resolver = {
       return null;
     },
     removeGroupResource: async (root, { groupId, id }, { dataSources }) => {
-      dataSources.GroupItem.removeResource({ groupId, id });
+      try {
+        dataSources.GroupItem.removeResource({ groupId, id });
+      } catch (e) {
+        console.log({ e });
+      }
     },
   },
   Query: {
