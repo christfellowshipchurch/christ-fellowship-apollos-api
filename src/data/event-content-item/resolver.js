@@ -8,6 +8,8 @@ import sanitizeHtml from '../sanitize-html';
 import { sharingResolver } from '../content-item/resolver';
 import deprecatedResolvers from './deprecated-resolvers';
 
+import campusSortOrder from '../campus/campus-sort-order'
+
 const resolver = {
   EventContentItem: {
     ...coreContentItem.resolver.ContentItem,
@@ -95,6 +97,19 @@ const resolver = {
             );
           },
         };
+      })
+      .sort((a, b) => {
+        /**
+         * If an order for a given name doesn't exist in our ordering file,
+         * we just shoot it to the bottom of the list
+         */
+        const aOrder = get(campusSortOrder, `${a.name}`, 1000)
+        const bOrder = get(campusSortOrder, `${b.name}`, 1000)
+
+        if (aOrder - bOrder < 0) return -1
+        if (aOrder - bOrder > 0) return 1
+
+        return 0
       });
     },
     liveStream: ({ id, attributeValues }, args, { dataSources: { LiveStream } }) => {
