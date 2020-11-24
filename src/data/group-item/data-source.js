@@ -515,34 +515,20 @@ export default class GroupItem extends baseGroup.dataSource {
   }
 
   // TODO: use groupId to filter results
-  getResourceOptions = async ({ groupId, after, first }) => {
-    let skip = 0;
-    if (after) {
-      const parsed = parseCursor(after);
-      if (parsed && Object.hasOwnProperty.call(parsed, 'position')) {
-        skip = parsed.position + 1;
-      } else {
-        throw new Error(`An invalid 'after' cursor was provided: ${after}`);
-      }
-    }
+  getResourceOptions = async (groupId) => {
 
-    let cursor = this.context.dataSources.ContentItem.byContentChannelId(79);
+    const groupResources = await this.request('/RelatedEntities')
+      .filter(`SourceEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.GROUP}`)
+      .andFilter(`SourceEntityId eq ${groupId}`)
+      .andFilter(`TargetEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM}`)
+      .andFilter(`QualifierValue eq 'APOLLOS_GROUP_RESOURCE'`)
+      .get()
 
-    if (first !== undefined) {
-      cursor = cursor.top(first);
-    }
-
-    cursor = cursor.skip(skip).transform((results) =>
-      results.map((result, i) => ({
-        node: result,
-        cursor: createCursor({ position: i + skip }),
-      }))
-    );
-
-    return {
-      getTotalCount: cursor.count,
-      edges: cursor.get(),
-    };
+    const filter = groupResources.map((f) => `(Id ne ${f.targetEntityId})`).join(' and ');
+    
+    return this.request('/ContentChannelItems')
+      .filter(`ContentChannelId eq 79`)
+      .andFilter(filter)
   };
 
   async paginateMembersById({ after, first = 20, id, isLeader = false }) {
