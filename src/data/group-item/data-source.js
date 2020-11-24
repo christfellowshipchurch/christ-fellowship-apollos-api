@@ -70,7 +70,7 @@ const GROUP_COVER_IMAGES_DEFINED_TYPE_ID = get(
 );
 
 export default class GroupItem extends baseGroup.dataSource {
-  updateCache = async (id) => {
+  async updateCache(id) {
     const { Cache } = this.context.dataSources;
     const identifier = getIdentifierType(id);
     const cachedKey = `group_${identifier.value}`;
@@ -90,7 +90,7 @@ export default class GroupItem extends baseGroup.dataSource {
     }
 
     return group;
-  };
+  }
 
   getFromId = async (id) => {
     const { Cache } = this.context.dataSources;
@@ -185,10 +185,8 @@ export default class GroupItem extends baseGroup.dataSource {
     const images = await DefinedValueList.getByIdentifier(
       GROUP_COVER_IMAGES_DEFINED_TYPE_ID
     );
-    console.log('[rkd] images:', JSON.stringify(images, null, 2));
 
     return images.definedValues.map((image) => {
-      console.log('--> ContentItem.getImages(image): ', ContentItem.getImages(image)[0]);
       return {
         guid: image.attributeValues.image.value,
         name: image.value, // The attribute value's name/label at top level
@@ -226,7 +224,7 @@ export default class GroupItem extends baseGroup.dataSource {
     }
   };
 
-  addResource = async ({ groupId, title, url, contentItemId }) => {
+  async addResource({ groupId, title, url, contentItemId }) {
     const { Auth, Url } = this.context.dataSources;
     const currentPerson = await Auth.getCurrentPerson();
 
@@ -254,10 +252,10 @@ export default class GroupItem extends baseGroup.dataSource {
 
       return this.updateCache(groupGlobalId);
     }
-  };
+  }
 
-  updateResource = async ({ groupId, resourceId, title, url, contentItemId }) => {
-    if (!resourceId) {
+  async updateResource({ groupId, relatedNodeId, title, url, contentItemId }) {
+    if (!relatedNodeId) {
       return this.addResource({ groupId, title, url, contentItemId });
     }
 
@@ -266,25 +264,27 @@ export default class GroupItem extends baseGroup.dataSource {
 
     const groupGlobalId = parseGlobalId(groupId)?.id;
     if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
-      const data = {};
+      const entity = await this.groupResourceEntity({ groupId, relatedNodeId });
+      if (entity) {
+        const data = {};
 
-      if (contentItemId) {
-        data.TargetEntityId = parseGlobalId(contentItemId)?.id;
-      } else if (title && url) {
-        const definedValueId = await Url.addToMasterList({ title, url });
-        data.TargetEntityId = definedValueId;
-      } else {
-        return null;
+        if (contentItemId) {
+          data.TargetEntityId = parseGlobalId(contentItemId)?.id;
+        } else if (title && url) {
+          const definedValueId = await Url.addToMasterList({ title, url });
+          data.TargetEntityId = definedValueId;
+        } else {
+          return null;
+        }
+
+        await this.patch(`/RelatedEntities/${entity.id}`, data);
+        return this.updateCache(groupGlobalId);
       }
-
-      await this.patch(`/RelatedEntities/${resourceId}`, data);
-
-      return this.updateCache(groupGlobalId);
     }
-  };
+  }
 
-  removeResource = async ({ groupId, id }) => {
-    if (!groupId || !id) return null;
+  async removeResource({ groupId, relatedNodeId }) {
+    if (!groupId || !relatedNodeId) return null;
 
     try {
       const { Auth } = this.context.dataSources;
@@ -292,14 +292,45 @@ export default class GroupItem extends baseGroup.dataSource {
 
       const groupGlobalId = parseGlobalId(groupId)?.id;
       if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
-        await this.delete(`/RelatedEntities/${id}`);
-
-        return this.updateCache(groupGlobalId);
+        const entity = await this.groupResourceEntity({ groupId, relatedNodeId });
+        if (entity) {
+          await this.delete(`/RelatedEntities/${entity.id}`);
+          return this.updateCache(groupGlobalId);
+        }
       }
+
+      return null;
     } catch (e) {
       console.log(e);
     }
-  };
+  }
+
+  async groupResourceEntity({ groupId, relatedNodeId }) {
+    const groupGlobalId = parseGlobalId(groupId)?.id;
+    const relatedNodeGlobalId = parseGlobalId(relatedNodeId);
+    let entityTypeId;
+    switch (relatedNodeGlobalId.__type) {
+      case 'Url':
+        entityTypeId = ApollosConfig.ROCK_ENTITY_IDS.DEFINED_VALUE;
+        break;
+      case 'MediaContentItem':
+        entityTypeId = ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM;
+        break;
+      default:
+        break;
+    }
+    if (entityTypeId) {
+      return await this.request('/RelatedEntities')
+        .filter(`SourceEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.GROUP}`)
+        .andFilter(`SourceEntityId eq ${groupGlobalId}`)
+        .andFilter(`QualifierValue eq 'APOLLOS_GROUP_RESOURCE'`)
+        .andFilter(`TargetEntityTypeId eq ${entityTypeId}`)
+        .andFilter(`TargetEntityId eq ${relatedNodeGlobalId.id}`)
+        .first();
+    }
+
+    return null;
+  }
 
   getByPerson = async ({
     personId,
@@ -396,7 +427,7 @@ export default class GroupItem extends baseGroup.dataSource {
       .filter(`(PersonId eq ${id}) and (IsMessagingEnabled eq true)`)
       .first();
 
-  getGroupResources = async ({ attributeValues }) => {
+  async getGroupResources({ attributeValues }) {
     const { ContentItem } = this.context.dataSources;
     const matrixAttributeValue = get(attributeValues, 'resources.value', '');
 
@@ -432,9 +463,9 @@ export default class GroupItem extends baseGroup.dataSource {
         };
       })
     );
-  };
+  }
 
-  getResources = async (id) => {
+  async getResources(id) {
     const { ContentItem, Url } = this.context.dataSources;
 
     return this.request('/RelatedEntities')
@@ -449,16 +480,17 @@ export default class GroupItem extends baseGroup.dataSource {
             switch (targetEntityTypeId) {
               case ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
                 const contentItem = await ContentItem.getFromId(targetEntityId);
+                const resolvedType = ContentItem.resolveType(contentItem);
 
                 return {
                   action: 'READ_CONTENT',
                   title:
                     get(contentItem, 'attributeValues.titleOverride.value') ||
                     get(contentItem, 'title'),
-                  id: entity.id,
                   relatedNode: {
                     ...contentItem,
-                    __type: ContentItem.resolveType(contentItem),
+                    id: contentItem.id,
+                    __type: resolvedType,
                   },
                 };
               case ApollosConfig.ROCK_ENTITY_IDS.DEFINED_VALUE:
@@ -467,9 +499,9 @@ export default class GroupItem extends baseGroup.dataSource {
                 return {
                   action: 'OPEN_URL',
                   title: get(definedValue, 'title'),
-                  id: entity.id,
                   relatedNode: {
                     ...definedValue,
+                    id: definedValue.id,
                     __type: 'Url',
                   },
                 };
@@ -480,7 +512,7 @@ export default class GroupItem extends baseGroup.dataSource {
           .filter((entity) => !!entity)
       )
       .get();
-  };
+  }
 
   // TODO: use groupId to filter results
   getResourceOptions = async ({ groupId, after, first }) => {
@@ -506,7 +538,6 @@ export default class GroupItem extends baseGroup.dataSource {
         cursor: createCursor({ position: i + skip }),
       }))
     );
-    const data = await cursor.get();
 
     return {
       getTotalCount: cursor.count,

@@ -82,15 +82,14 @@ const resolver = {
     },
     updateGroupResourceUrl: async (
       root,
-      { groupId, id, title, url },
+      { groupId, relatedNodeId, title, url },
       { dataSources }
     ) => {
-      const groupGlobalId = parseGlobalId(groupId);
       try {
-        if (id) {
+        if (relatedNodeId) {
           return dataSources.GroupItem.updateResource({
             groupId,
-            resourceId: id,
+            relatedNodeId,
             title,
             url,
           });
@@ -105,14 +104,14 @@ const resolver = {
     },
     updateGroupResourceContentItem: async (
       root,
-      { groupId, id, contentItemId },
+      { groupId, relatedNodeId, contentItemId },
       { dataSources }
     ) => {
       try {
-        if (id) {
+        if (relatedNodeId) {
           return dataSources.GroupItem.updateResource({
             groupId,
-            resourceId: id,
+            relatedNodeId,
             contentItemId,
           });
         } else {
@@ -127,9 +126,9 @@ const resolver = {
 
       return null;
     },
-    removeGroupResource: async (root, { groupId, id }, { dataSources }) => {
+    removeGroupResource: async (root, { groupId, relatedNodeId }, { dataSources }) => {
       try {
-        dataSources.GroupItem.removeResource({ groupId, id });
+        return dataSources.GroupItem.removeResource({ groupId, relatedNodeId });
       } catch (e) {
         console.log({ e });
       }

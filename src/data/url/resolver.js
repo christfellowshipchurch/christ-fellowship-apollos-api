@@ -1,10 +1,9 @@
 import { createGlobalId } from '@apollosproject/server-core';
 
 const resolver = {
-    Url: {
-        id: ({ url }, args, context, { parentType }) =>
-            createGlobalId(url, parentType.name),
-    },
-}
+  Url: {
+    id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
+  },
+};
 
-export default resolver
+export default resolver;

@@ -27,6 +27,7 @@ export default class Url extends RockApolloDataSource {
     return {
       url: get(definedValue, 'description'),
       title: get(definedValue, 'value'),
+      id: get(definedValue, 'id'),
     };
   }
 
