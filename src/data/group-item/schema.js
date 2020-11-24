@@ -143,7 +143,7 @@ export const groupSchema = gql`
   }
 
   type GroupCoverImage {
-    id: String
+    guid: String
     name: String
     image: ImageMedia
   }
