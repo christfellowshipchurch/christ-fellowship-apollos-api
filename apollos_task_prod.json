@@ -126,6 +126,18 @@
         {
           "valueFrom": "/prod/STREAM_CHAT_API_KEY",
           "name": "STREAM_CHAT_API_KEY"
+        },
+        {
+          "valueFrom": "/prod/ENGINE_API_KEY",
+          "name": "ENGINE_API_KEY"
+        },
+        {
+          "valueFrom": "/prod/ENGINE_SCHEMA_TAG",
+          "name": "ENGINE_SCHEMA_TAG"
+        },
+        {
+          "valueFrom": "/prod/APOLLO_SCHEMA_REPORTING",
+          "name": "APOLLO_SCHEMA_REPORTING"
         }
       ],
       "mountPoints": [],
