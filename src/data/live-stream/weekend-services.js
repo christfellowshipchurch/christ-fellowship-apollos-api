@@ -67,16 +67,5 @@ export default [
       hour: 13,
       minute: 35,
     },
-  },
-  {
-    day: 'wednesday',
-    start: {
-      hour: 15,
-      minute: 30,
-    },
-    end: {
-      hour: 16,
-      minute: 30,
-    },
-  },
+  }
 ];
