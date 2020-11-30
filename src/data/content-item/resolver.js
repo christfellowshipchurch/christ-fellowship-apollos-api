@@ -6,6 +6,7 @@ import { resolverMerge } from '@apollosproject/server-core'
 import Hypher from 'hypher';
 import english from 'hyphenation.en-us';
 import moment from 'moment'
+import momentTz from 'moment-timezone'
 import {
   get,
   has,
@@ -23,6 +24,8 @@ import * as WebsiteFeature from '../website-feature'
 import * as WebsiteGroupContentItem from '../website-group-content-item'
 import * as WebsitePagesContentItem from '../website-pages-content-item'
 import { parseRockKeyValuePairs } from '../utils'
+
+import ApollosConfig from '@apollosproject/config'
 
 const { createImageUrlFromGuid } = Utils
 const hypher = new Hypher(english);
@@ -78,6 +81,7 @@ const titleResolver = {
   htmlContent: ({ content }) => sanitizeHtml(content),
 }
 
+
 const resolverExtensions = {
   ...titleResolver,
   sharing: (root, args, { dataSources: { ContentItem } }, { parentType }) => ({
@@ -93,8 +97,12 @@ const resolverExtensions = {
   },
   estimatedTime: ({ attributeValues }) =>
     get(attributeValues, 'estimatedTime.value', null),
-  publishDate: ({ startDateTime }) =>
-    moment(startDateTime).toISOString(),
+  publishDate: ({ startDateTime }) => {
+    if(!!startDateTime && startDateTime !== '' && moment(startDateTime).isValid()){
+      return momentTz.tz(startDateTime, ApollosConfig.ROCK.TIMEZONE).utc().toISOString()
+    }
+    return moment().utc().toISOString()
+  },
   author: async ({ attributeValues }, args, { dataSources }) => {
     if (get(attributeValues, 'author.value', null)) {
       const { id } = await dataSources.Person.getFromAliasId(attributeValues.author.value)
