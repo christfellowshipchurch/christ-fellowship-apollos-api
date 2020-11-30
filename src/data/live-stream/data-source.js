@@ -309,7 +309,7 @@ export default class LiveStream extends matrixItemDataSource {
     const { Person } = this.context.dataSources;
     const dayOfWeek = moment.tz(TIMEZONE).format('dddd').toLowerCase();
 
-    if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday') {
+    if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday' || dayOfWeek === 'wednesday') {
       return this.weekendServiceIsLive(moment().utc().toISOString());
     }
 
