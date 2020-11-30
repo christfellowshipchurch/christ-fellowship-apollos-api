@@ -99,10 +99,9 @@ const resolverExtensions = {
     get(attributeValues, 'estimatedTime.value', null),
   publishDate: ({ startDateTime }) => {
     if(!!startDateTime && startDateTime !== '' && moment(startDateTime).isValid()){
-      const startTimeWithTz = momentTz.tz(startDateTime, ApollosConfig.ROCK.TIMEZONE)
-      return moment(startTimeWithTz).utc().toISOString()
+      return momentTz.tz(startDateTime, ApollosConfig.ROCK.TIMEZONE).utc().toISOString()
     }
-    return moment(startTimeWithTz).utc().toISOString()
+    return moment().utc().toISOString()
   },
   author: async ({ attributeValues }, args, { dataSources }) => {
     if (get(attributeValues, 'author.value', null)) {
