@@ -106,6 +106,34 @@
         {
           "valueFrom": "/prod/JOBS_PASSWORD",
           "name": "JOBS_PASSWORD"
+        },
+        {
+          "valueFrom": "/dev/APOLLOS_SECRET",
+          "name": "APOLLOS_SECRET"
+        },
+        {
+          "valueFrom": "/dev/STREAM_CHAT_APP_ID",
+          "name": "STREAM_CHAT_APP_ID"
+        },
+        {
+          "valueFrom": "/dev/STREAM_CHAT_SECRET",
+          "name": "STREAM_CHAT_SECRET"
+        },
+        {
+          "valueFrom": "/dev/STREAM_CHAT_API_KEY",
+          "name": "STREAM_CHAT_API_KEY"
+        },
+        {
+          "valueFrom": "/dev/ENGINE_API_KEY",
+          "name": "ENGINE_API_KEY"
+        },
+        {
+          "valueFrom": "/dev/ENGINE_SCHEMA_TAG",
+          "name": "ENGINE_SCHEMA_TAG"
+        },
+        {
+          "valueFrom": "/dev/APOLLO_SCHEMA_REPORTING",
+          "name": "APOLLO_SCHEMA_REPORTING"
         }
       ],
       "mountPoints": [],

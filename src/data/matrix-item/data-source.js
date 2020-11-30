@@ -9,6 +9,7 @@ export default class MatrixItem extends RockApolloDataSource {
         id
             ? this.request('/AttributeMatrixItems')
                 .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+                .orderBy("Order")
                 .get()
             : [];
 }

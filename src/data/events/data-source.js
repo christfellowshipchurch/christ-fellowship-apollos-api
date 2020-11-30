@@ -8,6 +8,21 @@ import ApollosConfig from '@apollosproject/config'
 
 export default class Event extends scheduleDataSource {
 
+  getFromId = (id) => {
+    const decoded = JSON.parse(id)
+
+    return this.request()
+      .filter(`Id eq ${decoded.id}`)
+      .transform((result) =>
+        result.map((node, i) => ({
+          ...node,
+          start: decoded.start,
+          end: decoded.end,
+        }))
+      )
+      .first()
+  };
+
   parseScheduleAsEvents = async (schedule) => {
     // parseiCalendar returns an array of objects and mapping each schedule
     // will result in an array of arrays of objects: 
@@ -19,6 +34,7 @@ export default class Event extends scheduleDataSource {
     // events that end today or before today
     return scheduleOccurrences.map(o => ({
       ...o,
+      id: schedule.id,
       name: schedule.name,
       description: schedule.description,
       attributeValues: schedule.attributeValues,

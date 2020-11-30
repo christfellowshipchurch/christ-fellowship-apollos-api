@@ -62,6 +62,9 @@ typings/
 .env
 .envExample
 
+# shared secrets
+.env.shared
+
 # next.js build output
 .next
 
@@ -71,6 +74,8 @@ build/
 # storybook
 storyLoader.js
 *.xcworkspacedata
+
+.vscode
 
 # sublime text settings
 *.sublime-project

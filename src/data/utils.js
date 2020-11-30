@@ -63,6 +63,7 @@ export const createVideoUrlFromGuid = (uri) =>
 const contentSingleTag = (strings, id) => `christfellowship://c/ContentSingle?itemId=${strings[0]}${id}`
 const contentFeedTag = (strings, id) => `christfellowship://c/ContentFeed?itemId=${strings[0]}${id}&nested=true`
 export const generateAppLinkFromUrl = async (uri, context) => {
+  const externalLinks = ['cf.church/pushpay', 'cf.church/paypal', 'cf.church/venmo', 'cf.church/cash-app']
   const parsedUrl = URL.parse(uri)
   const host = parsedUrl.host
 
@@ -91,7 +92,7 @@ export const generateAppLinkFromUrl = async (uri, context) => {
           return contentFeedTag`UniversalContentItem:${id}`
       }
     }
-  } else if (host === "pushpay.com") {
+  } else if (host === "pushpay.com" || externalLinks.includes(`${parsedUrl.host}${parsedUrl.pathname}`)) {
     return `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}?mobileApp=external&${parsedUrl.query || ''}`
   }
 

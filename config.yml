@@ -14,6 +14,9 @@ APP:
   ROOT_API_URL: ${ROOT_URL}
   JOBS_USERNAME: ${JOBS_USERNAME}
   JOBS_PASSWORD: ${JOBS_PASSWORD}
+BUGSNAG:
+  ## Optional, but you'll need to remove references to @apollosproject/bugsnag if you don't wish to use.
+  API_KEY: ${BUGSNAG_KEY}
 ROCK:
   API_URL: ${ROCK_API}/api
   API_TOKEN: ${ROCK_TOKEN}
@@ -22,18 +25,20 @@ ROCK:
   SHARE_URL: https://christfellowship.church
   # This should match the timezone of the Rock server
   # TIMEZONE: "Etc/GMT+5"
-  TIMEZONE: "America/New_York"
-  DEEP_LINK_HOST: 
+  TIMEZONE: 'America/New_York'
+  DEEP_LINK_HOST:
   ROOT_API_URL: ${ROOT_URL}
   USE_PLUGIN: true
   SHOW_INACTIVE_CONTENT: ${ROCK_SHOW_INACTIVE_CONTENT}
+  APOLLOS_SECRET: ${APOLLOS_SECRET}
 ONE_SIGNAL:
   APP_ID: 7ab9baa8-8f28-41b9-b258-37662276aea4
   REST_KEY: ${ONE_SIGNAL_REST_KEY}
 CHURCH_ONLINE:
   URL: https://live.gochristfellowship.com/api/v1/
   # MEDIA_URLS: [https://christfellow2-lh.akamaihd.net/i/christfellow_1@144364/master.m3u8]
-  MEDIA_URLS: [http://link.theplatform.com/s/IfSiAC/bD1fN9vCet4B?mbr=true@144364/master.m3u8]
+  MEDIA_URLS:
+    [http://link.theplatform.com/s/IfSiAC/bD1fN9vCet4B?mbr=true@144364/master.m3u8]
   WEB_VIEW_URL: https://live.gochristfellowship.com/
 ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
@@ -45,6 +50,13 @@ ALGOLIA:
       - title
       - htmlContent
       - unordered(summary)
+
+# Stream Chat https://getstream.io
+STREAM:
+  CHAT_SECRET: ${STREAM_CHAT_SECRET}
+  CHAT_API_KEY: ${STREAM_CHAT_API_KEY}
+  CHAT_APP_ID: ${STREAM_CHAT_APP_ID}
+
 TWILIO:
   NOTIFY_SID: ${TWILIO_NOTIFY_SID}
   ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
@@ -106,10 +118,10 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
     InformationalContentItem:
       EntityType: ContentChannelItem
-      ContentChannelId: [45]
+      ContentChannelId: [45, 76]
     EventContentItem:
       EntityType: ContentChannelItem
-      ContentChannelTypeId: [23]
+      ContentChannelTypeId: [29]
     WebsitePagesContentItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [14]
@@ -125,6 +137,11 @@ ROCK_MAPPINGS:
     WebsiteFeature:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [21]
+  GROUP_ITEM:
+    Group:
+      EntityType: Group
+    VolunteerGroup:
+      GroupTypeId: [37]
 
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews
@@ -137,6 +154,7 @@ ROCK_MAPPINGS:
   # Apollos will pull these content channels and expose them as events.
   EVENTS_CONTENT_CHANNEL_IDS:
     - 47
+    - 78
 
   # Apollos will pull content items from these channels and expose them on the user feed
   # However, it will not expose the channel itself.
@@ -181,40 +199,59 @@ ROCK_MAPPINGS:
   DEFINED_TYPES:
     ETHNICITY: 277
     STATES: 28
+    NOTIFICATION_CENTER: 355
+    GROUP_COVER_IMAGES: 368
+    URLS: 369
 
   # List of attribute keys for Profile information
   # when migrating from Arena to Rock, the Arena keys were kept
   # this configuration helps eliminate the need to remember specific Arena keys
   PERSON_ATTRIBUTES:
-    SALVATION_DATE: "Arena-15-139"
-    BAPTISM_DATE: "BaptismDate"
-    ETHNICITY: "Ethnicity"
+    SALVATION_DATE: 'Arena-15-139'
+    BAPTISM_DATE: 'BaptismDate'
+    ETHNICITY: 'Ethnicity'
   CONNECTION_STATUS:
     FIRST_CONNECTION:
-      KEY: "Arena-15-135"
+      KEY: 'Arena-15-135'
     ORIGINAL_ENTRY:
-      KEY: "Arena-15-64"
-      VALUE: "65c8d8f1-491a-4335-bbdc-845ebc2887ab"
+      KEY: 'Arena-15-64'
+      VALUE: '65c8d8f1-491a-4335-bbdc-845ebc2887ab'
 
+  # References a type of location that describes one or more specific locations
   LOCATION_TYPES:
     HOME_ADDRESS: 19
+
+  # References a specific location within Rock
+  LOCATION_IDS:
+    WEB_AND_APP: 190052
 
   WORKFLOW_IDS:
     RSVP: 232
     EMAIL_CAPTURE: 236
     PASSWORD_RESET_EMAIL: 327
     ADDRESS_UPDATE: 328
-    CHECK_IN: 411
+    CHECK_IN: 552
 
-  SERVING_GROUP_TYPE_ID: 23
-  COMMUNITY_GROUP_TYPE_ID: 25
-  FAMILY_GROUP_TYPE_ID: 10
+  GROUP_TYPE_IDS:
+    DREAM_TEAM: 37
+
+  ADULT_GROUP_TYPE_ID: 31
+  CFE_JOURNEY_EXPERIENCE_GROUP_TYPE_ID: 124
+  FREEDOM_GROUP_TYPE_ID: 92
+  GET_STRONGER_GROUP_TYPE_ID: 101
+  HUB_MARRIAGE_STUDIES_GROUP_TYPE_ID: 90
+  HUB_STUDIES_GROUP_TYPE_ID: 85
+  MARRIAGE_STUDIES_GROUP_TYPE_ID: 89
+  STUDENTS_GROUP_TYPE_ID: 76
+  STUDIES_GROUP_TYPE_ID: 86
+  TABLE_GET_STRONGER_GROUP_TYPE_ID: 121
+  TABLE_STUDIES_GROUP_TYPE_ID: 94
+  YOUNG_ADULTS_GROUP_TYPE_ID: 73
+
   DEFAULT_CAMPUS_ID: 9
   HOME_FEATURES_CHANNEL_ID: 64
   GENERAL_PRAYER_CATEGORY_ID: 580
 
-# TODO : @caleb "I would like to not have to manually put the index in the GLOBAL_CONTENT feature"
-# NOTE : GLOBAL_CONTENT uses a 0 based index
 HOME_FEATURES:
   - title: Dynamic Rock Feed
     algorithms:
@@ -222,35 +259,120 @@ HOME_FEATURES:
         arguments:
           contentChannelId: 64
 
-HOME_HEADER_FEATURES:
-  - algorithms: [ALL_LIVE_CONTENT]
-    type: LiveContentList
-    title: Live Now
-  - algorithms: [DAILY_PRAYER]
-    isCard: false
-    type: PrayerList
-    title: Daily Prayer
+FEATURE_FEEDS:
+  CONNECT_TAB:
+    - type: AvatarList
+      algorithms: [CURRENT_USER]
+      isCard: false
+      primaryAction:
+        action: OPEN_URL
+        icon: 'settings'
+        relatedNode:
+          __typename: Url
+          url: 'christfellowship://c/EditCurrentUser'
+    - type: ActionBar
+      actions:
+        - action: OPEN_URL
+          title: 'Groups'
+          icon: 'users'
+          theme:
+            colors:
+              primary: '#00aeef'
+          relatedNode:
+            __typename: Url
+            url: 'https://rock.gocf.org/groups'
+        - action: OPEN_URL
+          title: 'Serve'
+          icon: 'handshake'
+          theme:
+            colors:
+              primary: '#d52158'
+          relatedNode:
+            __typename: Url
+            url: 'https://rock.christfellowship.church/dreamteam'
+        - action: OPEN_URL
+          title: 'Give Now'
+          icon: 'envelope-open-dollar'
+          theme:
+            colors:
+              primary: '#1ec27f'
+          relatedNode:
+            __typename: Url
+            url: 'https://cf.church/pushpay?feed=connect'
+    - type: HorizontalCardList
+      algorithms: [MY_GROUPS]
+      title: 'My Groups'
+      flagKey: GROUPS
+    - type: HorizontalCardList
+      algorithms: [MY_VOLUNTEER_GROUPS]
+      title: 'My Dream Teams'
+      flagKey: VOLUNTEER_GROUPS
+    - type: HorizontalCardList
+      algorithms: [MY_PRAYERS]
+      title: 'My Prayers'
+      primaryAction:
+        action: OPEN_URL
+        title: 'See all'
+        relatedNode:
+          __typename: Url
+          url: 'christfellowship://c/MyPrayerRequestsFeed'
+  EVENTS_TAB:
+    - type: VerticalCardList
+      algorithms: [ALL_EVENTS]
+  GIVE_TAB:
+    - type: HeroList
+      algorithms:
+        - type: CONTENT_CHANNEL
+          arguments:
+            contentChannelId: 76
+    - type: ActionBar
+      actions: []
+  HOME_HEADER:
+    - algorithms: [ALL_LIVE_CONTENT]
+      type: LiveContentList
+      title: Live Now
+    - algorithms: [DAILY_PRAYER]
+      isCard: false
+      type: PrayerList
+      title: Daily Prayer
 
 FEATURE_FLAGS:
-  LIVE_STREAM_UI:
-    securityGroupId: 1014843
-    status: "LIVE"
-  ROCK_DYNAMIC_FEED_WITH_PERSONAS:
-    status: "LIVE"
   CHECK_IN:
-    securityGroupId: 1014843
-    status: "LIVE"
+    status: 'LIVE'
+  GROUPS:
+    status: 'LIVE'
   HOME_HEADER:
-    # TODO : add this back when done testing
-    # securityGroupId: 1014843
-    status: "LIVE"
+    status: 'LIVE'
+  GROUP_CHAT:
+    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    status: 'LIVE'
+  GROUP_CUSTOMIZATION:
+    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    status: 'LIVE'
+  LIVE_STREAM_CHAT:
+    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    status: 'LIVE'
+  LIVE_STREAM_CHAT_MODERATOR:
+    securityGroupId: 1054703 # CFDP Global Event Chat Moderators Group
+    status: 'LIVE'
+  LIVE_STREAM_UI:
+    securityGroupId: 1014843 # CFDP Experimental Features
+    status: 'LIVE'
+  NOTIFICATION_CENTER:
+    securityGroupId: 1014843 # CFDP Experimental Features
+    status: 'LIVE'
+  ROCK_DYNAMIC_FEED_WITH_PERSONAS:
+    status: 'LIVE'
+  VOLUNTEER_GROUPS:
+    securityGroupId: 1052010 # CFDP Feature Flags/My Dream Teams
+    status: 'LIVE'
 
 PAGE_BUILDER:
   locations:
     contentChannelId: 72
     buildingBlocks:
       - type: MetadataFeature
-        algorithms: 
+        algorithms:
           - type: CAMPUS_META
             arguments:
               attributeKey: metadata
@@ -270,9 +392,14 @@ PAGE_BUILDER:
             arguments:
               attributeKey: contentBlocks
 
-
 NOTIFICATIONS:
   PRAYING: 'Your church family is praying for you right now. Thanks for sharing your request with us!'
+
+# Default mapping of field types -> ids. There's probably no reason to edit this.
+ROCK_ENTITY_IDS:
+  CONTENT_CHANNEL_ITEM: 208
+  DEFINED_VALUE: 31
+  GROUP: 16
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:
