@@ -100,7 +100,9 @@ export default class Feature extends coreFeatures.dataSource {
 
         return items.map((item, i) => ({
             id: `${item.id}${i}`,
-            title: item.title,
+            title: get(item, 'attributeValues.cardTitle.value', '') !== ""
+                ? get(item, 'attributeValues.cardTitle.value', item.title)
+                : item.title,
             subtitle: ContentItem.createSummary(item),
             relatedNode: { ...item, __type: ContentItem.resolveType(item) },
             image: ContentItem.getCoverImage(item),
