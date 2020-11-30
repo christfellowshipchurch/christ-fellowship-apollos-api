@@ -19,6 +19,7 @@ export const groupSchema = gql`
   }
 
   type Resource {
+    id: String
     title: String
     url: String
     contentChannelItem: String
@@ -55,7 +56,8 @@ export const groupSchema = gql`
     title: String
     summary: String
     groupType: String
-    groupResources: [Resource]
+    groupResources: [Resource] @deprecated(reason: "Use resources instead")
+    resources: [FeatureAction]
     coverImage: ImageMedia
 
     people(first: Int, after: String, isLeader: Boolean): PeopleConnection
@@ -74,7 +76,8 @@ export const groupSchema = gql`
     summary: String
     groupType: String
     coverImage: ImageMedia
-    groupResources: [Resource]
+    groupResources: [Resource] @deprecated(reason: "Use resources instead")
+    resources: [FeatureAction]
 
     people(first: Int, after: String, isLeader: Boolean): PeopleConnection
 
@@ -99,7 +102,8 @@ export const groupSchema = gql`
     summary: String
     groupType: String
     coverImage: ImageMedia
-    groupResources: [Resource]
+    groupResources: [Resource] @deprecated(reason: "Use resources instead")
+    resources: [FeatureAction]
 
     people(first: Int, after: String, isLeader: Boolean): PeopleConnection
 
@@ -123,6 +127,33 @@ export const groupSchema = gql`
 
   extend type Mutation {
     addMemberAttendance(id: ID!): Group
+    updateGroupCoverImage(imageId: String, groupId: ID!): Group
+    updateGroupResourceUrl(
+      title: String!
+      url: String!
+      relatedNodeId: ID
+      groupId: ID!
+    ): Group
+    updateGroupResourceContentItem(
+      contentItemId: ID!
+      relatedNodeId: ID
+      groupId: ID!
+    ): Group
+    removeGroupResource(relatedNodeId: ID!, groupId: ID!): Group
+  }
+
+  type GroupCoverImage {
+    guid: String
+    name: String
+    image: ImageMedia
+  }
+
+  extend type Query {
+    groupCoverImages: [GroupCoverImage]
+    groupResourceOptions(
+      groupId: ID!
+      input: ContentItemsConnectionInput
+    ): ContentItemsConnection
   }
 
   extend enum InteractionAction {

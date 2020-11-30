@@ -55,6 +55,7 @@ import * as Schedule from './schedule';
 import * as Search from './search';
 import * as StreamChat from './stream-chat';
 import * as TwilioNotify from './twilio-notify';
+import * as Url from './url'
 import * as WebsiteContentItem from './website-content-item';
 import * as WebsiteFeature from './website-feature';
 import * as WebsiteGroupContentItem from './website-group-content-item';
@@ -110,6 +111,7 @@ const data = {
   Template,
   Theme,
   TwilioNotify,
+  Url,
   WebsiteContentItem: {
     dataSource: WebsiteContentItem.dataSource,
   },
