@@ -1,4 +1,4 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
 export default gql`
   ## Describes where and when a collection of events is happening
@@ -8,7 +8,7 @@ export default gql`
   }
 
   extend type Query {
-    getEventContentByTitle(title:String!): EventContentItem
+    getEventContentByTitle(title: String!): EventContentItem
   }
 
   type EventContentItem implements ContentItem & Node {
@@ -31,29 +31,38 @@ export default gql`
     parentChannel: ContentChannel
     theme: Theme
 
-    nextOccurrence: String 
-      @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
-    startDate: String 
-      @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
-    endDate: String 
-      @deprecated(reason: "Previously used to create a label on the client. Please use 'label' instead")
+    nextOccurrence: String
+      @deprecated(
+        reason: "Previously used to create a label on the client. Please use 'label' instead"
+      )
+    startDate: String
+      @deprecated(
+        reason: "Previously used to create a label on the client. Please use 'label' instead"
+      )
+    endDate: String
+      @deprecated(
+        reason: "Previously used to create a label on the client. Please use 'label' instead"
+      )
 
     tags: [String]
-    callsToAction: [CallToAction] 
-      @deprecated(reason: "Updating to use FeatureAction to better adhere to navigation standards. Please use 'actions' instead.")
-    openLinksInNewTab: Boolean 
+    callsToAction: [CallToAction]
+      @deprecated(
+        reason: "Updating to use FeatureAction to better adhere to navigation standards. Please use 'actions' instead."
+      )
+    openLinksInNewTab: Boolean
       @deprecated(reason: "Label will now be explicitly defined on the API")
-    hideLabel: Boolean 
+    hideLabel: Boolean
       @deprecated(reason: "Label will now be explicitly defined on the API")
-    events: [Event] 
-      @deprecated(reason: "We have updated the organization of the events schema. Please use 'eventGroupings' instead.")
+    events: [Event]
+      @deprecated(
+        reason: "We have updated the organization of the events schema. Please use 'eventGroupings' instead."
+      )
 
     # This label is an additional
     label: String
     eventGroupings: [EventGrouping]
   }
-`
-
+`;
 
 // sharing: SharableContentItem
 //     isLiked: Boolean @cacheControl(maxAge: 0)

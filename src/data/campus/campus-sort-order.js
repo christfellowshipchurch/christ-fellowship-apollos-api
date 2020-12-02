@@ -1,0 +1,15 @@
+export default {
+    "Palm Beach Gardens": 0,
+    "Port St. Lucie": 1,
+    "Royal Palm Beach": 2,
+    "Boynton Beach": 3,
+    "Downtown West Palm Beach": 4,
+    "Jupiter": 5,
+    "Stuart": 6,
+    "Okeechobee": 7,
+    "Belle Glade": 8,
+    "Vero Beach": 9,
+    "Riviera Beach": 10,
+    "En Español Palm Beach Gardens": 11,
+    "En Español Royal Palm Beach": 12,
+}

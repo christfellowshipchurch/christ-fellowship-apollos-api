@@ -1,6 +1,6 @@
 {
   "name": "apollos-church-api",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "private": true,
   "main": "lib/index.js",
   "scripts": {
@@ -32,21 +32,21 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@apollosproject/bugsnag": "1.5.0",
-    "@apollosproject/config": "1.5.0",
-    "@apollosproject/data-connector-algolia-search": "1.5.0",
-    "@apollosproject/data-connector-analytics": "1.5.0",
-    "@apollosproject/data-connector-bible": "1.5.0",
-    "@apollosproject/data-connector-church-online": "1.5.0",
-    "@apollosproject/data-connector-cloudinary": "1.5.0",
-    "@apollosproject/data-connector-onesignal": "1.5.0",
-    "@apollosproject/data-connector-passes": "1.5.0",
-    "@apollosproject/data-connector-redis-cache": "1.5.0",
-    "@apollosproject/data-connector-rock": "1.5.0",
-    "@apollosproject/data-connector-twilio": "1.5.0",
-    "@apollosproject/data-schema": "1.5.0",
-    "@apollosproject/rock-apollo-data-source": "1.5.0",
-    "@apollosproject/server-core": "1.5.0",
+    "@apollosproject/bugsnag": "^1.6.0",
+    "@apollosproject/config": "^1.6.0",
+    "@apollosproject/data-connector-algolia-search": "^1.6.0",
+    "@apollosproject/data-connector-analytics": "^1.6.0",
+    "@apollosproject/data-connector-bible": "^1.6.0",
+    "@apollosproject/data-connector-church-online": "^1.6.0",
+    "@apollosproject/data-connector-cloudinary": "^1.6.0",
+    "@apollosproject/data-connector-onesignal": "^1.6.0",
+    "@apollosproject/data-connector-passes": "^1.6.0",
+    "@apollosproject/data-connector-redis-cache": "^1.6.0",
+    "@apollosproject/data-connector-rock": "^1.6.0",
+    "@apollosproject/data-connector-twilio": "^1.6.0",
+    "@apollosproject/data-schema": "^1.6.0",
+    "@apollosproject/rock-apollo-data-source": "^1.6.0",
+    "@apollosproject/server-core": "^1.6.0",
     "apollo-server": "^2.14.2",
     "apollo-server-express": "2.14.2",
     "color": "3.0.0",
@@ -74,9 +74,9 @@
     "yup": "^0.27.0"
   },
   "devDependencies": {
-    "@apollosproject/apollo-server-env-mock": "^1.4.3",
-    "@apollosproject/babel-preset-apollos": "^1.4.3",
-    "@apollosproject/eslint-config": "1.4.3",
+    "@apollosproject/apollo-server-env-mock": "^1.6.0",
+    "@apollosproject/babel-preset-apollos": "^1.6.0",
+    "@apollosproject/eslint-config": "^1.6.0",
     "@babel/cli": "^7.4.5",
     "@babel/core": "^7.4.5",
     "@babel/node": "7.4.5",
@@ -96,7 +96,7 @@
     "eslint-plugin-jest": "^21.15.2",
     "eslint-plugin-prettier": "^2.6.0",
     "get-graphql-schema": "^2.1.2",
-    "graphql-schema-linter": "^0.2.0",
+    "linkemon": "^0.1.1",
     "nodemon": "^2.0.2"
   }
 }

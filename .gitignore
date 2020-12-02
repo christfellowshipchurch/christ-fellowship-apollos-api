@@ -62,6 +62,9 @@ typings/
 .env
 .envExample
 
+# shared secrets
+.env.shared
+
 # next.js build output
 .next
 
