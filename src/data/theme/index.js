@@ -19,9 +19,18 @@ export const schema = gql`
   type ThemeColors {
     primary: Color
     secondary: Color
+    tertiary: Color
     screen: Color
     paper: Color
     alert: Color
+    text: TextColors
+  }
+
+  type TextColors {
+    primary: Color
+    secondary: Color
+    tertiary: Color
+    link: Color
   }
 `;
 
@@ -29,4 +38,4 @@ export const resolver = {
   Color: colorScalarType,
 };
 
-export class model { } // todo
+export class model {} // todo
