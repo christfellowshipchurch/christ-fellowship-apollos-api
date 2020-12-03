@@ -207,7 +207,7 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async byAttributeMatrixTemplate() {
-    const { Schedule, ContentItem } = this.context.dataSources;
+    const { Schedule, ContentItem, Cache } = this.context.dataSources;
     const TEMPLATE_ID = 11;
 
     // Get Attribute Matrix by Template Id
@@ -218,13 +218,28 @@ export default class LiveStream extends matrixItemDataSource {
 
     // Get Content Channel Items where Attribute Value is equal to Attribute Matrix Guid
     const contentChannelItemPromises = await Promise.all(
-      attributeMatrices.map(({ guid }) => {
+      attributeMatrices.map(async ({ guid }) => {
         const attributeKey = 'LiveStreams';
-        const query = `attributeKey=${attributeKey}&value=${guid}`;
+        const cachedKey = `${process.env.CONTENT}__${attributeKey}_${guid}`;
+        const cachedValue = await Cache.get({
+          key: cachedKey,
+        });
 
-        return this.request(`/ContentChannelItems/GetByAttributeValue?${query}`)
-          .filter(ContentItem.LIVE_CONTENT())
-          .get();
+        if (cachedValue) {
+          return cachedValue;
+        }
+
+        const contentItems = await ContentItem.byAttributeValue(attributeKey, guid).get();
+
+        if (contentItems) {
+          await Cache.set({
+            key: cachedKey,
+            data: contentItems,
+            expiresIn: 60 * 15, // 15 minute cache
+          });
+        }
+
+        return contentItems;
       })
     );
 

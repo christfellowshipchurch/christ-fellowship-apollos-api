@@ -236,7 +236,7 @@ export default class PageBuilder extends Feature.dataSource {
       } else {
         contentChannelItem = ContentItem.getFromAttributeValue(attributeKey, page)
           .filter(`ContentChannelId eq ${contentChannelId}`)
-          .get();
+          .first();
 
         if (contentChannelItem) {
           await Cache.set({
