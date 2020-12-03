@@ -144,6 +144,13 @@ export default class ContentItem extends coreContentItem.dataSource {
     return contentItem;
   };
 
+  byAttributeValue = async (key, value) => {
+    const requestBase = 'ContentChannelItems/GetByAttributeValue';
+    return this.request(
+      `${requestBase}?attributeKey=${key}&value=${value}&loadAttributes=expanded`
+    );
+  };
+
   attributeIsRedirect = ({ key, attributeValues, attributes }) =>
     key.toLowerCase().includes('redirect') &&
     typeof attributeValues[key].value === 'string' &&
