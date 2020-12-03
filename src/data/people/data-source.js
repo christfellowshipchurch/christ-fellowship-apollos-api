@@ -282,8 +282,8 @@ export default class Person extends corePerson.dataSource {
             firstName: get(reducedInput, 'firstName', null),
             lastName: get(reducedInput, 'lastName', null),
 
-            adults: get(reducedInput, 'adults', 1),
-            children: get(reducedInput, 'children', 0),
+            // adults: get(reducedInput, 'adults', 1),
+            // children: get(reducedInput, 'children', 0),
 
             visitDate: get(reducedInput, 'visitDate', null),
             visitTime: get(reducedInput, 'visitTime', null),
@@ -299,14 +299,16 @@ export default class Person extends corePerson.dataSource {
             && attributes.visitTime
             && attributes.email) {
             try {
+
+            // TEMPORARY - Not using phone number for RSVP: //
+
                 // Check for a valid phone number
-                const {
-                    valid,
-                    numericOnlyPhoneNumber
-                } = this.context.dataSources.PhoneNumber.parsePhoneNumber(get(reducedInput, 'phoneNumber', ''))
+                // const {
+                //     valid,
+                //     numericOnlyPhoneNumber
+                // } = this.context.dataSources.PhoneNumber.parsePhoneNumber(get(reducedInput, 'phoneNumber', ''))
 
 
-                if (valid) {
                     // Get the Campus Guid from the campus name
                     const { guid } = await this.context.dataSources.Campus.getByName(
                         get(reducedInput, 'campus', '')
@@ -317,14 +319,14 @@ export default class Person extends corePerson.dataSource {
                             id: get(ApollosConfig, 'ROCK_MAPPINGS.WORKFLOW_IDS.RSVP'),
                             attributes: {
                                 ...attributes,
-                                phoneNumber: numericOnlyPhoneNumber,
+                                // phoneNumber: numericOnlyPhoneNumber,
                                 campus: guid
                             }
                         })
 
                         return workflow.status
                     }
-                }
+
             } catch (e) {
                 console.log({ e })
             }
