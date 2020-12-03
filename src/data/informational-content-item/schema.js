@@ -1,8 +1,8 @@
-import { ContentItem } from '@apollosproject/data-connector-rock'
-import gql from 'graphql-tag'
+import { ContentItem } from '@apollosproject/data-connector-rock';
+import gql from 'graphql-tag';
 
 export default gql`
-  type InformationalContentItem implements ContentItem & Node {
+  type InformationalContentItem implements ContentItem & Node & ThemedNode {
     id: ID!
     title(hyphenated: Boolean): String
     coverImage: ImageMedia
@@ -11,14 +11,8 @@ export default gql`
     audios: [AudioMedia]
     htmlContent: String
     summary: String
-    childContentItemsConnection(
-      first: Int
-      after: String
-    ): ContentItemsConnection
-    siblingContentItemsConnection(
-      first: Int
-      after: String
-    ): ContentItemsConnection
+    childContentItemsConnection(first: Int, after: String): ContentItemsConnection
+    siblingContentItemsConnection(first: Int, after: String): ContentItemsConnection
     parentChannel: ContentChannel
     theme: Theme
 
@@ -26,8 +20,7 @@ export default gql`
     redirectUrl: String
     callsToAction: [CallToAction]
   }
-`
-
+`;
 
 // sharing: SharableContentItem
 //     isLiked: Boolean @cacheControl(maxAge: 0)
