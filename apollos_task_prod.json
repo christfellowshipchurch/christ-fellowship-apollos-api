@@ -27,7 +27,7 @@
         },
         {
           "name": "ROCK_API",
-          "value": "https://rock.gocf.org"
+          "value": "https://rock-api.christfellowship.church"
         },
         {
           "name": "ROCK_SHOW_INACTIVE_CONTENT",
@@ -151,9 +151,7 @@
   ],
   "volumes": [],
   "placementConstraints": [],
-  "requiresCompatibilities": [
-    "EC2"
-  ],
+  "requiresCompatibilities": ["EC2"],
   "cpu": null,
   "memory": null,
   "tags": [
