@@ -3,12 +3,13 @@ import ApollosConfig from '@apollosproject/config';
 import {
   createGlobalId,
   createCursor,
-  parseCursor
+  parseCursor,
+  parseGlobalId,
 } from '@apollosproject/server-core';
-import { get, mapValues, isNull, filter, head, chunk, flatten, take, difference } from 'lodash';
+import { get, isNull, filter, head, chunk, flatten, take, result } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
-import crypto from 'crypto-js'
+import crypto from 'crypto-js';
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
 
@@ -63,8 +64,34 @@ const EXCLUDE_IDS = [
 ];
 
 const CHANNEL_TYPE = 'group';
+const GROUP_COVER_IMAGES_DEFINED_TYPE_ID = get(
+  ApollosConfig,
+  'ROCK_MAPPINGS.DEFINED_TYPES.GROUP_COVER_IMAGES'
+);
 
 export default class GroupItem extends baseGroup.dataSource {
+  async updateCache(id) {
+    const { Cache } = this.context.dataSources;
+    const identifier = getIdentifierType(id);
+    const cachedKey = `group_${identifier.value}`;
+
+    // Rock returns results as an array, so we want to grab the first
+    const group = await this.request(`Groups`)
+      .filter(identifier.query)
+      .expand('Members')
+      .first();
+
+    if (group) {
+      await Cache.set({
+        key: cachedKey,
+        data: group,
+        expiresIn: 60 * 60 * 12, // 12 hour cache
+      });
+    }
+
+    return group;
+  }
+
   getFromId = async (id) => {
     const { Cache } = this.context.dataSources;
     const identifier = getIdentifierType(id);
@@ -78,19 +105,7 @@ export default class GroupItem extends baseGroup.dataSource {
       return cachedValue;
     }
 
-    // Rock returns results as an array, so we want to grab the first
-    const group = await this.request(`Groups`)
-      .filter(identifier.query)
-      .expand('Members')
-      .first();
-
-    if (group) {
-      Cache.set({
-        key: cachedKey,
-        data: group,
-        expiresIn: 60 * 60 * 12, // 12 hour cache
-      });
-    }
+    const group = await this.updateCache(id);
 
     return group;
   };
@@ -101,9 +116,7 @@ export default class GroupItem extends baseGroup.dataSource {
       .andFilter(`GroupId eq ${groupId}`)
       .andFilter(`GroupMemberStatus eq '1'`)
       .get();
-    return Promise.all(
-      members.map(({ personId }) => Person.getFromId(personId))
-    );
+    return Promise.all(members.map(({ personId }) => Person.getFromId(personId)));
   };
 
   getLeaders = async (groupId) => {
@@ -127,17 +140,14 @@ export default class GroupItem extends baseGroup.dataSource {
     const { start } = await this.getDateTimeFromId(scheduleId);
 
     // Check to see if the current date is the date of the meeting before taking attendance.
-    if (moment(start).format('MMDDYYYY') !== moment().format('MMDDYYYY'))
-      return null;
+    if (moment(start).format('MMDDYYYY') !== moment().format('MMDDYYYY')) return null;
 
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
 
     const { locationId } = await this.request('Campuses')
       .filter(`Id eq ${campusId}`)
       .first();
-    const occurrenceDate = momentTz
-      .tz(start, ApollosConfig.ROCK.TIMEZONE)
-      .format('l LT');
+    const occurrenceDate = momentTz.tz(start, ApollosConfig.ROCK.TIMEZONE).format('l LT');
 
     try {
       console.log('Adding current user to attendance');
@@ -159,36 +169,198 @@ export default class GroupItem extends baseGroup.dataSource {
     }
   };
 
+  userIsLeader = async (groupId, userId) => {
+    const leaders = await this.request('GroupMembers')
+      .filter(`GroupId eq ${groupId}`)
+      .andFilter('GroupRole/IsLeader eq true')
+      .andFilter(`GroupMemberStatus eq '1'`)
+      .get();
+    const leaderIds = leaders.map(({ personId }) => personId);
+
+    return leaderIds.includes(userId);
+  };
+
+  getCoverImages = async () => {
+    const { DefinedValueList, ContentItem } = this.context.dataSources;
+    const images = await DefinedValueList.getByIdentifier(
+      GROUP_COVER_IMAGES_DEFINED_TYPE_ID
+    );
+
+    return images.definedValues.map((image) => {
+      return {
+        guid: image.attributeValues.image.value,
+        name: image.value, // The attribute value's name/label at top level
+        image: ContentItem.getImages(image)[0],
+      };
+    });
+  };
+
+  updateCoverImage = async ({ groupId, imageId }) => {
+    const { Auth, Cache, ContentItem } = this.context.dataSources;
+    const currentPerson = await Auth.getCurrentPerson();
+
+    const groupGlobalId = parseGlobalId(groupId)?.id;
+    if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
+      const attributeKey = 'Image';
+      const attributeValue = imageId;
+      await this.post(
+        `/Groups/AttributeValue/${groupGlobalId}?attributeKey=${attributeKey}&attributeValue=${attributeValue}`
+      );
+
+      // Set cover image cache to null and to expire immediately
+      // So we can set it properly through the ContentItem function
+      await Cache.set({
+        key: `contentItem:coverImage:${groupGlobalId}`,
+        data: null,
+        expiresIn: 1,
+      });
+
+      const group = await this.updateCache(groupGlobalId);
+
+      // Sets cover image cache
+      await ContentItem.getCoverImage(group);
+
+      return group;
+    }
+  };
+
+  async addResource({ groupId, title, url, contentItemId }) {
+    const { Auth, Url } = this.context.dataSources;
+    const currentPerson = await Auth.getCurrentPerson();
+
+    const groupGlobalId = parseGlobalId(groupId)?.id;
+    if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
+      const data = {
+        SourceEntityTypeId: ApollosConfig.ROCK_ENTITY_IDS.GROUP,
+        SourceEntityId: groupGlobalId,
+        IsSystem: false,
+        QualifierValue: 'APOLLOS_GROUP_RESOURCE',
+      };
+
+      if (contentItemId) {
+        data.TargetEntityTypeId = ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM;
+        data.TargetEntityId = parseGlobalId(contentItemId)?.id;
+      } else if (title && url) {
+        const definedValueId = await Url.addToMasterList({ title, url });
+        data.TargetEntityTypeId = ApollosConfig.ROCK_ENTITY_IDS.DEFINED_VALUE;
+        data.TargetEntityId = definedValueId;
+      } else {
+        return null;
+      }
+
+      await this.post('/RelatedEntities', data);
+
+      return this.updateCache(groupGlobalId);
+    }
+  }
+
+  async updateResource({ groupId, relatedNodeId, title, url, contentItemId }) {
+    if (!relatedNodeId) {
+      return this.addResource({ groupId, title, url, contentItemId });
+    }
+
+    const { Auth, Url } = this.context.dataSources;
+    const currentPerson = await Auth.getCurrentPerson();
+
+    const groupGlobalId = parseGlobalId(groupId)?.id;
+    if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
+      const entity = await this.groupResourceEntity({ groupId, relatedNodeId });
+      if (entity) {
+        const data = {};
+
+        if (contentItemId) {
+          data.TargetEntityId = parseGlobalId(contentItemId)?.id;
+        } else if (title && url) {
+          const definedValueId = await Url.addToMasterList({ title, url });
+          data.TargetEntityId = definedValueId;
+        } else {
+          return null;
+        }
+
+        await this.patch(`/RelatedEntities/${entity.id}`, data);
+        return this.updateCache(groupGlobalId);
+      }
+    }
+  }
+
+  async removeResource({ groupId, relatedNodeId }) {
+    if (!groupId || !relatedNodeId) return null;
+
+    try {
+      const { Auth } = this.context.dataSources;
+      const currentPerson = await Auth.getCurrentPerson();
+
+      const groupGlobalId = parseGlobalId(groupId)?.id;
+      if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
+        const entity = await this.groupResourceEntity({ groupId, relatedNodeId });
+        if (entity) {
+          await this.delete(`/RelatedEntities/${entity.id}`);
+          return this.updateCache(groupGlobalId);
+        }
+      }
+
+      return null;
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async groupResourceEntity({ groupId, relatedNodeId }) {
+    const groupGlobalId = parseGlobalId(groupId)?.id;
+    const relatedNodeGlobalId = parseGlobalId(relatedNodeId);
+    let entityTypeId;
+    switch (relatedNodeGlobalId.__type) {
+      case 'Url':
+        entityTypeId = ApollosConfig.ROCK_ENTITY_IDS.DEFINED_VALUE;
+        break;
+      case 'MediaContentItem':
+        entityTypeId = ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM;
+        break;
+      default:
+        break;
+    }
+    if (entityTypeId) {
+      return await this.request('/RelatedEntities')
+        .filter(`SourceEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.GROUP}`)
+        .andFilter(`SourceEntityId eq ${groupGlobalId}`)
+        .andFilter(`QualifierValue eq 'APOLLOS_GROUP_RESOURCE'`)
+        .andFilter(`TargetEntityTypeId eq ${entityTypeId}`)
+        .andFilter(`TargetEntityId eq ${relatedNodeGlobalId.id}`)
+        .first();
+    }
+
+    return null;
+  }
+
   getByPerson = async ({
     personId,
     type = null,
     asLeader = false,
-    groupTypeIds = null
+    groupTypeIds = null,
   }) => {
     // Get the active groups that the person is a member of.
     // Conditionally filter that list of groups on whether or not your
     // role in that group is that of "Leader".
-    const _groupTypeIds = groupTypeIds || this.getGroupTypeIds()
-    const groupAssociationRequests = await Promise.all(chunk(_groupTypeIds, 3).map(
-      (groupTypeIds) => this.request('GroupMembers')
-        .expand('GroupRole')
-        .filter(
-          `PersonId eq ${personId} ${asLeader ? ' and GroupRole/IsLeader eq true' : ''
-          }`
-        )
-        // Do not include groups where user's status is Inactive or Pending
-        .andFilter(`GroupMemberStatus ne 'Inactive'`)
-        .andFilter(`GroupMemberStatus ne 'Pending'`)
-        // Filter by Group Type Id up here
-        .andFilter(
-          groupTypeIds
-            .map((id) => `(GroupRole/GroupTypeId eq ${id})`)
-            .join(' or ')
-        )
-        .get()
-    ))
+    const _groupTypeIds = groupTypeIds || this.getGroupTypeIds();
+    const groupAssociationRequests = await Promise.all(
+      chunk(_groupTypeIds, 3).map((groupTypeIds) =>
+        this.request('GroupMembers')
+          .expand('GroupRole')
+          .filter(
+            `PersonId eq ${personId} ${asLeader ? ' and GroupRole/IsLeader eq true' : ''}`
+          )
+          // Do not include groups where user's status is Inactive or Pending
+          .andFilter(`GroupMemberStatus ne 'Inactive'`)
+          .andFilter(`GroupMemberStatus ne 'Pending'`)
+          // Filter by Group Type Id up here
+          .andFilter(
+            groupTypeIds.map((id) => `(GroupRole/GroupTypeId eq ${id})`).join(' or ')
+          )
+          .get()
+      )
+    );
 
-    const groupAssociations = flatten(groupAssociationRequests)
+    const groupAssociations = flatten(groupAssociationRequests);
 
     // Get the actual group data for the groups above.
     const groups = await Promise.all(
@@ -201,9 +373,7 @@ export default class GroupItem extends baseGroup.dataSource {
     // Filter the groups to make sure we only pull those that are
     // active and NOT archived
     const filteredGroups = await Promise.all(
-      groups.filter(
-        (group) => group && group.isActive && !group.isArchived
-      )
+      groups.filter((group) => group && group.isActive && !group.isArchived)
     );
 
     // Remove the groups that aren't of the types we want and return.
@@ -217,8 +387,8 @@ export default class GroupItem extends baseGroup.dataSource {
   getMatrixItemsFromId = async (id) =>
     id
       ? this.request('/AttributeMatrixItems')
-        .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
-        .get()
+          .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+          .get()
       : [];
 
   groupTypeMap = {
@@ -234,7 +404,7 @@ export default class GroupItem extends baseGroup.dataSource {
     TableGetStronger: ROCK_MAPPINGS.TABLE_GET_STRONGER_GROUP_TYPE_ID,
     TableStudies: ROCK_MAPPINGS.TABLE_STUDIES_GROUP_TYPE_ID,
     YoungAdults: ROCK_MAPPINGS.YOUNG_ADULTS_GROUP_TYPE_ID,
-    DreamTeam: ROCK_MAPPINGS.GROUP_TYPE_IDS.DREAM_TEAM
+    DreamTeam: ROCK_MAPPINGS.GROUP_TYPE_IDS.DREAM_TEAM,
   };
 
   getGroupTypeIds = () => Object.values(this.groupTypeMap);
@@ -250,16 +420,14 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getContentChannelItem = (id) =>
-    this.request('ContentChannelItems')
-      .filter(getIdentifierType(id).query)
-      .first();
+    this.request('ContentChannelItems').filter(getIdentifierType(id).query).first();
 
   getPhoneNumbers = (id) =>
     this.request('PhoneNumbers')
       .filter(`(PersonId eq ${id}) and (IsMessagingEnabled eq true)`)
       .first();
 
-  getResources = async ({ attributeValues }) => {
+  async getGroupResources({ attributeValues }) {
     const { ContentItem } = this.context.dataSources;
     const matrixAttributeValue = get(attributeValues, 'resources.value', '');
 
@@ -273,6 +441,7 @@ export default class GroupItem extends baseGroup.dataSource {
           );
 
           return {
+            id: get(item, 'id'),
             title: get(item, 'attributeValues.title.value'),
             action: 'READ_CONTENT',
             relatedNode: {
@@ -283,6 +452,7 @@ export default class GroupItem extends baseGroup.dataSource {
         }
 
         return {
+          id: get(item, 'id'),
           title: get(item, 'attributeValues.title.value'),
           action: 'OPEN_URL',
           relatedNode: {
@@ -293,6 +463,72 @@ export default class GroupItem extends baseGroup.dataSource {
         };
       })
     );
+  }
+
+  async getResources(id) {
+    const { ContentItem, Url } = this.context.dataSources;
+
+    return this.request('/RelatedEntities')
+      .filter(`SourceEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.GROUP}`)
+      .andFilter(`SourceEntityId eq ${id}`)
+      .andFilter(`QualifierValue eq 'APOLLOS_GROUP_RESOURCE'`)
+      .transform(async (results) =>
+        results
+          .map(async (entity) => {
+            const { targetEntityId, targetEntityTypeId } = entity;
+
+            switch (targetEntityTypeId) {
+              case ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
+                const contentItem = await ContentItem.getFromId(targetEntityId);
+                const resolvedType = ContentItem.resolveType(contentItem);
+
+                return {
+                  action: 'READ_CONTENT',
+                  title:
+                    get(contentItem, 'attributeValues.titleOverride.value') ||
+                    get(contentItem, 'title'),
+                  relatedNode: {
+                    ...contentItem,
+                    id: contentItem.id,
+                    __type: resolvedType,
+                  },
+                };
+              case ApollosConfig.ROCK_ENTITY_IDS.DEFINED_VALUE:
+                const definedValue = await Url.getFromMasterList(targetEntityId);
+
+                return {
+                  action: 'OPEN_URL',
+                  title: get(definedValue, 'title'),
+                  relatedNode: {
+                    ...definedValue,
+                    id: definedValue.id,
+                    __type: 'Url',
+                  },
+                };
+              default:
+                return null;
+            }
+          })
+          .filter((entity) => !!entity)
+      )
+      .get();
+  }
+
+  // TODO: use groupId to filter results
+  getResourceOptions = async (groupId) => {
+
+    const groupResources = await this.request('/RelatedEntities')
+      .filter(`SourceEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.GROUP}`)
+      .andFilter(`SourceEntityId eq ${groupId}`)
+      .andFilter(`TargetEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM}`)
+      .andFilter(`QualifierValue eq 'APOLLOS_GROUP_RESOURCE'`)
+      .get()
+
+    const filter = groupResources.map((f) => `(Id ne ${f.targetEntityId})`).join(' and ');
+    
+    return this.request('/ContentChannelItems')
+      .filter(`ContentChannelId eq 79`)
+      .andFilter(filter)
   };
 
   async paginateMembersById({ after, first = 20, id, isLeader = false }) {
@@ -315,16 +551,18 @@ export default class GroupItem extends baseGroup.dataSource {
       .expand('GroupRole, Person')
       .top(first)
       .skip(skip)
-      .transform((results) => results
-        .filter(groupMember => {
-          return !!groupMember.person
-        })
-        .map(({ person }, i) => {
-          return ({
-            node: this.context.dataSources.Person.getFromId(person.id),
-            cursor: createCursor({ position: i + skip })
+      .transform((results) =>
+        results
+          .filter((groupMember) => {
+            return !!groupMember.person;
           })
-        }))
+          .map(({ person }, i) => {
+            return {
+              node: this.context.dataSources.Person.getFromId(person.id),
+              cursor: createCursor({ position: i + skip }),
+            };
+          })
+      );
 
     return {
       getTotalCount: cursor.count,
@@ -342,83 +580,54 @@ export default class GroupItem extends baseGroup.dataSource {
         : members;
       let avatars = [];
       filteredMembers.map((member) =>
-        member.photo.guid
-          ? avatars.push(createImageUrlFromGuid(member.photo.guid))
-          : null
+        member.photo.guid ? avatars.push(createImageUrlFromGuid(member.photo.guid)) : null
       );
       return take(avatars, 15);
     } catch (e) {
-      console.log({ e })
+      console.log({ e });
     }
 
-    return []
+    return [];
   };
 
   groupPhoneNumbers = async (id) => {
     const members = await this.getMembers(id);
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
     const filteredMembers = filter(members, (o) => o.id !== currentPerson.id);
-    return Promise.all(
-      filteredMembers.map(({ id }) => this.getPhoneNumbers(id))
-    ).then((values) => {
-      const numbers = [];
-      values.map((o) => (o && o.number ? numbers.push(o.number) : null));
-      return numbers;
-    });
+    return Promise.all(filteredMembers.map(({ id }) => this.getPhoneNumbers(id))).then(
+      (values) => {
+        const numbers = [];
+        values.map((o) => (o && o.number ? numbers.push(o.number) : null));
+        return numbers;
+      }
+    );
   };
 
   getDateTimeFromId = async (id) => {
-    if (!id) return null
+    if (!id) return null;
 
-    const schedule = await this.getScheduleFromId(id);
-    const { iCalendarContent, weeklyDayOfWeek, weeklyTimeOfDay } = schedule;
+    const { Schedule } = this.context.dataSources;
+    const schedule = await Schedule.parseById(id);
 
-    // Use iCalendarContent if it exists else use weeklyDayOfWeek and weeklyTimeOfDay to create a start and end time for schedules.
-    if (iCalendarContent !== '') {
-      const occurrences = await this.context.dataSources.Schedule.getOccurrences(
-        schedule.id
-      );
-
-      if (!occurrences || !occurrences.length) {
-        return { start: null, end: null };
-      }
-
-      const nextOccurrence = head(occurrences);
-      return { start: nextOccurrence.start, end: nextOccurrence.end };
-    } else if (weeklyDayOfWeek !== null && weeklyTimeOfDay) {
-      const proto = Object.getPrototypeOf(moment());
-      proto.setTime = function (time) {
-        const [hour, minute, seconds] = time.split(':');
-        return this.set({ hour, minute, seconds });
-      };
-      const time = moment()
-        .weekday(weeklyDayOfWeek)
-        .setTime(weeklyTimeOfDay)
-        .tz(ApollosConfig.ROCK.TIMEZONE)
-        .utc()
-        .format();
-
-      // Adjust start/end date to be next meeting date.
-      const endOfMeetingDay = moment(time).endOf('day').utc().format();
+    if (schedule.nextStart) {
+      const { nextStart } = schedule;
+      const endOfMeetingDay = moment(nextStart).endOf('day').utc().format();
       const isAfter = moment().isAfter(endOfMeetingDay);
       if (isAfter) {
         const nextMeetingTime = moment(time).add(7, 'd').utc().format();
         return { start: nextMeetingTime, end: nextMeetingTime };
       }
 
-      return { start: time, end: time };
+      return { start: nextStart, end: nextStart };
     }
+
     return { start: null, end: null };
   };
 
   getGroupVideoCallParams = ({ attributeValues }) => {
     const zoomLink = get(attributeValues, 'zoom.value', '');
     // Returns a Defined Value Guid
-    const videoCallLabelText = get(
-      attributeValues,
-      'videoCallLabelText.value',
-      ''
-    );
+    const videoCallLabelText = get(attributeValues, 'videoCallLabelText.value', '');
     if (zoomLink != '') {
       const { DefinedValue } = this.context.dataSources;
       // Parse Zoom Meeting links that have ids and/or passwords.
@@ -439,10 +648,7 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
   };
 
-  getGroupParentVideoCallParams = async ({
-    parentGroupId,
-    attributeValues,
-  }) => {
+  getGroupParentVideoCallParams = async ({ parentGroupId, attributeValues }) => {
     const groupParent = await this.request('Groups').find(parentGroupId).get();
     const zoomLink = get(groupParent, 'attributeValues.zoom.value', '');
     // Returns a Defined Value Guid
@@ -496,69 +702,80 @@ export default class GroupItem extends baseGroup.dataSource {
     const channelId = crypto.SHA1(globalId).toString();
 
     const groupMembers = await this.getMembers(root.id);
-    const members = groupMembers.map(member => StreamChat.getStreamUserId(member.id));
+    const members = groupMembers
+      ? groupMembers.map((member) => StreamChat.getStreamUserId(member.id))
+      : [];
 
     const groupLeaders = await this.getLeaders(root.id);
-    const leaders = groupLeaders.map(leader => StreamChat.getStreamUserId(leader.id));
+    const leaders = groupLeaders
+      ? groupLeaders.map((leader) => StreamChat.getStreamUserId(leader.id))
+      : [];
 
     // Create any Stream users that might not exist
     // We need to do this before we can create a channel 🙄
-    await StreamChat.createStreamUsers({ users: groupMembers.map(StreamChat.getStreamUser) });
+    await StreamChat.createStreamUsers({
+      users: groupMembers.map(StreamChat.getStreamUser),
+    });
 
     // Make sure the channel exists.
     // If it doesn't, create it.
     await StreamChat.getChannel({
-      channelId, channelType: CHANNEL_TYPE, options: {
+      channelId,
+      channelType: CHANNEL_TYPE,
+      options: {
         members,
-        created_by: StreamChat.getStreamUser(currentPerson)
-      }
+        created_by: StreamChat.getStreamUser(currentPerson),
+      },
     });
 
     // Add group members not in channel
-    await StreamChat.addMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE });
+    await StreamChat.addMembers({
+      channelId,
+      groupMembers: members,
+      channelType: CHANNEL_TYPE,
+    });
 
     // Remove channel members not in group
-    await StreamChat.removeMembers({ channelId, groupMembers: members, channelType: CHANNEL_TYPE });
+    await StreamChat.removeMembers({
+      channelId,
+      groupMembers: members,
+      channelType: CHANNEL_TYPE,
+    });
 
     // Promote/demote members for moderation if necessary
-    await StreamChat.updateModerators({ channelId, groupLeaders: leaders, channelType: CHANNEL_TYPE });
+    await StreamChat.updateModerators({
+      channelId,
+      groupLeaders: leaders,
+      channelType: CHANNEL_TYPE,
+    });
 
     return {
       id: root.id,
-      channelId
-    }
+      channelId,
+    };
   };
 
   resolveType({ groupTypeId, id }) {
     // if we have defined an ContentChannelTypeId based maping in the YML file, use it!
     if (
       Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
-        ({ GroupTypeId }) =>
-          GroupTypeId &&
-          GroupTypeId.includes(groupTypeId)
+        ({ GroupTypeId }) => GroupTypeId && GroupTypeId.includes(groupTypeId)
       )
     ) {
       return Object.keys(ROCK_MAPPINGS.GROUP_ITEM).find((key) => {
         const value = ROCK_MAPPINGS.GROUP_ITEM[key];
-        return (
-          value.GroupTypeId &&
-          value.GroupTypeId.includes(groupTypeId)
-        );
+        return value.GroupTypeId && value.GroupTypeId.includes(groupTypeId);
       });
     }
     // if we have defined a GroupId based maping in the YML file, use it!
     if (
       Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
-        ({ GroupId }) =>
-          GroupId && GroupId.includes(id)
+        ({ GroupId }) => GroupId && GroupId.includes(id)
       )
     ) {
       return Object.keys(ROCK_MAPPINGS.GROUP_ITEM).find((key) => {
         const value = ROCK_MAPPINGS.GROUP_ITEM[key];
-        return (
-          value.GroupId &&
-          value.GroupId.includes(id)
-        );
+        return value.GroupId && value.GroupId.includes(id);
       });
     }
 

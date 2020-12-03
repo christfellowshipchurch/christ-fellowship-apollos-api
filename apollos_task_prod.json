@@ -27,7 +27,7 @@
         },
         {
           "name": "ROCK_API",
-          "value": "https://rock.gocf.org"
+          "value": "https://rock-api.christfellowship.church"
         },
         {
           "name": "ROCK_SHOW_INACTIVE_CONTENT",
@@ -58,6 +58,10 @@
         {
           "valueFrom": "BIBLE_ID",
           "name": "BIBLE_ID"
+        },
+        {
+          "valueFrom": "/prod/BUGSNAG_KEY",
+          "name": "BUGSNAG_KEY"
         },
         {
           "valueFrom": "ESV_KEY",
@@ -122,6 +126,18 @@
         {
           "valueFrom": "/prod/STREAM_CHAT_API_KEY",
           "name": "STREAM_CHAT_API_KEY"
+        },
+        {
+          "valueFrom": "/prod/ENGINE_API_KEY",
+          "name": "ENGINE_API_KEY"
+        },
+        {
+          "valueFrom": "/prod/ENGINE_SCHEMA_TAG",
+          "name": "ENGINE_SCHEMA_TAG"
+        },
+        {
+          "valueFrom": "/prod/APOLLO_SCHEMA_REPORTING",
+          "name": "APOLLO_SCHEMA_REPORTING"
         }
       ],
       "mountPoints": [],
@@ -135,9 +151,7 @@
   ],
   "volumes": [],
   "placementConstraints": [],
-  "requiresCompatibilities": [
-    "EC2"
-  ],
+  "requiresCompatibilities": ["EC2"],
   "cpu": null,
   "memory": null,
   "tags": [

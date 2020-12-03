@@ -27,7 +27,7 @@
         },
         {
           "name": "ROCK_API",
-          "value": "https://rock.gocf.org"
+          "value": "https://rock-api.christfellowship.church"
         },
         {
           "name": "ROCK_SHOW_INACTIVE_CONTENT",
@@ -122,6 +122,18 @@
         {
           "valueFrom": "/dev/STREAM_CHAT_API_KEY",
           "name": "STREAM_CHAT_API_KEY"
+        },
+        {
+          "valueFrom": "/dev/ENGINE_API_KEY",
+          "name": "ENGINE_API_KEY"
+        },
+        {
+          "valueFrom": "/dev/ENGINE_SCHEMA_TAG",
+          "name": "ENGINE_SCHEMA_TAG"
+        },
+        {
+          "valueFrom": "/dev/APOLLO_SCHEMA_REPORTING",
+          "name": "APOLLO_SCHEMA_REPORTING"
         }
       ],
       "mountPoints": [],
@@ -135,9 +147,7 @@
   ],
   "volumes": [],
   "placementConstraints": [],
-  "requiresCompatibilities": [
-    "EC2"
-  ],
+  "requiresCompatibilities": ["EC2"],
   "cpu": null,
   "memory": null,
   "tags": [
