@@ -221,7 +221,7 @@ export default class PageBuilder extends Feature.dataSource {
        *  TODO : figure out a more mature way of handling what happens when more than 1
        *          content item is returned
        */
-      const { ContentItem, Cache } = this.contex.dataSources;
+      const { ContentItem, Cache } = this.context.dataSources;
       const { contentChannelId } = configuration;
       const attributeKey = get(configuration, 'queryAttribute', 'url');
       let contentChannelItem = null;
@@ -234,7 +234,7 @@ export default class PageBuilder extends Feature.dataSource {
       if (cachedValue) {
         contentChannelItem = cachedValue;
       } else {
-        contentChannelItem = ContentItem.getFromAttributeValue(attributeKey, page)
+        contentChannelItem = await ContentItem.byAttributeValue(attributeKey, page)
           .filter(`ContentChannelId eq ${contentChannelId}`)
           .first();
 
