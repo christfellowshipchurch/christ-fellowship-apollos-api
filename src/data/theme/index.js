@@ -20,17 +20,25 @@ export const schema = gql`
     primary: Color
     secondary: Color
     tertiary: Color
+
+    alert: Color
+    warning: Color
+    success: Color
+    wordOfChrist: Color
+
     screen: Color
     paper: Color
-    alert: Color
-    text: TextColors
-  }
 
-  type TextColors {
-    primary: Color
-    secondary: Color
-    tertiary: Color
-    link: Color
+    black: Color
+    white: Color
+
+    darkPrimary: Color
+    darkSecondary: Color
+    darkTertiary: Color
+
+    lightPrimary: Color
+    lightSecondary: Color
+    lightTertiary: Color
   }
 `;
 
