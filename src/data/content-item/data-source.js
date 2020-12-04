@@ -131,6 +131,7 @@ export default class ContentItem extends coreContentItem.dataSource {
       return cachedValue;
     }
 
+    // Triggering build
     const contentItem = await this.request().find(id).get();
 
     if (contentItem) {
