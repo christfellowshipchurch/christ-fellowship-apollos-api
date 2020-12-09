@@ -572,7 +572,7 @@ export default class GroupItem extends baseGroup.dataSource {
       key: cachedKey,
     });
 
-    if (!cachedValue) {
+    if (!edges) {
       edges = await cursor.get();
 
       await Cache.set({
