@@ -129,3 +129,7 @@ export const generateAppLinkFromUrl = async (uri, context) => {
   console.log('defualt');
   return uri;
 };
+
+export const isRequired = (method, param) => {
+  throw new Error(`${method} : ${param} is required`);
+};
