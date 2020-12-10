@@ -96,18 +96,14 @@ export default class GroupItem extends baseGroup.dataSource {
     const { Cache } = this.context.dataSources;
     const identifier = getIdentifierType(id);
 
-    const cachedKey = `group_${identifier.value}`;
-    const cachedValue = await Cache.get({
-      key: cachedKey,
+    const groupQuery = () =>
+      this.request(`Groups`).filter(identifier.query).expand('Members').first();
+
+    return Cache.request(groupQuery, {
+      key: Cache.KEY_TEMPLATES.group`${identifier.value}`,
+      data: group,
+      expiresIn: 60 * 60 * 12, // 12 hour cache
     });
-
-    if (cachedValue) {
-      return cachedValue;
-    }
-
-    const group = await this.updateCache(id);
-
-    return group;
   };
 
   getMembers = async (groupId) => {
@@ -516,19 +512,20 @@ export default class GroupItem extends baseGroup.dataSource {
 
   // TODO: use groupId to filter results
   getResourceOptions = async (groupId) => {
-
     const groupResources = await this.request('/RelatedEntities')
       .filter(`SourceEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.GROUP}`)
       .andFilter(`SourceEntityId eq ${groupId}`)
-      .andFilter(`TargetEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM}`)
+      .andFilter(
+        `TargetEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM}`
+      )
       .andFilter(`QualifierValue eq 'APOLLOS_GROUP_RESOURCE'`)
-      .get()
+      .get();
 
     const filter = groupResources.map((f) => `(Id ne ${f.targetEntityId})`).join(' and ');
-    
+
     return this.request('/ContentChannelItems')
       .filter(`ContentChannelId eq 79`)
-      .andFilter(filter)
+      .andFilter(filter);
   };
 
   async paginateMembersById({ after, first = 20, id, isLeader = false }) {

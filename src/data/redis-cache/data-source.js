@@ -8,6 +8,7 @@ export default class Cache extends RedisCache.dataSource {
   KEY_TEMPLATES = {
     contentItem: (_, id) => `${process.env.CONTENT}_contentItem_${id}`,
     eventContentItems: `${process.env.CONTENT}_eventContentItems`,
+    group: (_, id) => `${process.env.CONTENT}_group_${id}`,
   };
 
   /**
