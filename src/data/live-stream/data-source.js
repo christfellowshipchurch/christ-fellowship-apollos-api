@@ -114,8 +114,6 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async getStreamChatChannel(root) {
-    console.log('[rkd] getStreamChatChannel:', getStreamChatChannel);
-    // TODO : break up this logic and move it to the StreamChat DataSource
     const { Auth, StreamChat, Flag } = this.context.dataSources;
     const featureFlagStatus = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
 
@@ -124,7 +122,6 @@ export default class LiveStream extends matrixItemDataSource {
     }
 
     const resolvedType = this.resolveType(root);
-    console.log('[rkd] resolvedType:', resolvedType);
     const globalId = createGlobalId(root.id, resolvedType);
     const channelId = crypto.SHA1(globalId).toString();
     return {
