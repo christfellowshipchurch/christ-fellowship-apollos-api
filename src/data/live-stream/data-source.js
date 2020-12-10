@@ -104,53 +104,44 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async getLiveStreamContentItems() {
-    const { Cache } = this.context.dataSources;
-    const cachedKey = `${process.env.CONTENT}_liveStreamContentItems`;
-    const cachedValue = await Cache.get({
-      key: cachedKey,
-    });
+    const request = async () => {
+      // Get Events
+      const { ContentItem, Schedule } = this.context.dataSources;
+      const eventContentItems = await ContentItem.getEvents();
 
-    if (cachedValue) {
-      return cachedValue;
-    }
+      // Filter events that don't have a Live Stream url
+      const liveStreamContentItems = filter(eventContentItems, (event) => {
+        const uri = get(event, 'attributeValues.liveStreamUri.value', '');
 
-    // Get Events
-    const { ContentItem, Schedule } = this.context.dataSources;
-    const eventContentItems = await ContentItem.getEvents();
-
-    // Filter events that don't have a Live Stream url
-    const liveStreamContentItems = filter(eventContentItems, (event) => {
-      const uri = get(event, 'attributeValues.liveStreamUri.value', '');
-
-      return uri && uri !== '' && uri.startsWith('http');
-    });
-
-    // Add the nextOccurrence to the Rock Object to make
-    // it easier to access this data in the return object
-    const liveStreamContentItemsWithNextOccurrences = await Promise.all(
-      liveStreamContentItems.map(async (contentItem) => {
-        const schedules = split(
-          get(contentItem, 'attributeValues.schedules.value', ''),
-          ','
-        );
-        const nextOccurrences = await Schedule.getOccurrencesFromIds(schedules);
-
-        return {
-          ...contentItem,
-          nextOccurrences: nextOccurrences.filter((o) => !!o),
-        };
-      })
-    );
-
-    if (liveStreamContentItemsWithNextOccurrences != null) {
-      await Cache.set({
-        key: cachedKey,
-        data: liveStreamContentItemsWithNextOccurrences,
-        expiresIn: 60 * 10, // ten minute cache
+        return uri && uri !== '' && uri.startsWith('http');
       });
-    }
 
-    return liveStreamContentItemsWithNextOccurrences;
+      // Add the nextOccurrence to the Rock Object to make
+      // it easier to access this data in the return object
+      const liveStreamContentItemsWithNextOccurrences = await Promise.all(
+        liveStreamContentItems.map(async (contentItem) => {
+          const schedules = split(
+            get(contentItem, 'attributeValues.schedules.value', ''),
+            ','
+          );
+          const nextOccurrences = await Schedule.getOccurrencesFromIds(schedules);
+
+          return {
+            ...contentItem,
+            nextOccurrences: nextOccurrences.filter((o) => !!o),
+          };
+        })
+      );
+
+      return liveStreamContentItemsWithNextOccurrences;
+    };
+
+    const { Cache } = this.context.dataSources;
+
+    return Cache.request(request, {
+      key: Cache.KEY_TEMPLATES.liveStreamContentItems,
+      expiresIn: 60 * 10, // 10 minute cache
+    });
   }
 
   async byAttributeMatrixGuid(attributeMatrixGuid, { contentChannelItemId }) {
@@ -211,25 +202,13 @@ export default class LiveStream extends matrixItemDataSource {
       attributeMatrices.map(async ({ guid }) => {
         const attributeKey = 'LiveStreams';
         const cachedKey = `${process.env.CONTENT}__${attributeKey}_${guid}`;
-        const cachedValue = await Cache.get({
+        const getContentItems = () =>
+          ContentItem.byAttributeValue(attributeKey, guid).get();
+
+        return Cache.request(getContentItems, {
           key: cachedKey,
+          expiresIn: 60 * 15, // 15 minute cache
         });
-
-        if (cachedValue) {
-          return cachedValue;
-        }
-
-        const contentItems = await ContentItem.byAttributeValue(attributeKey, guid).get();
-
-        if (contentItems) {
-          await Cache.set({
-            key: cachedKey,
-            data: contentItems,
-            expiresIn: 60 * 15, // 15 minute cache
-          });
-        }
-
-        return contentItems;
       })
     );
 
@@ -365,40 +344,30 @@ export default class LiveStream extends matrixItemDataSource {
       }
     }
 
-    const { Cache } = this.context.dataSources;
-    const cachedKey = `${process.env.CONTENT}_liveStreams`;
-    const cachedValue = await Cache.get({
-      key: cachedKey,
-    });
-
-    if (cachedValue) {
-      return cachedValue.filter(filterByPersona);
-    }
-
     /**
      * Rock is returning 404's on Attribute Matrices for some reason,
      * so we're going to just wrap this whole statement inside of a
      * { try catch } so that we don't end up freaking out the system
      * if Rock is unable to find a value.
      */
-    try {
-      const attributeMatrix = await this.byAttributeMatrixTemplate();
-
-      if (attributeMatrix != null) {
-        await Cache.set({
-          key: cachedKey,
-          data: attributeMatrix,
-          expiresIn: 60, // 60 minute
-        });
+    const liveStreamRequest = () => {
+      try {
+        return this.byAttributeMatrixTemplate();
+      } catch (e) {
+        console.log('Error fetching Live Streams by Attribute Matrix Template');
+        console.log({ e });
       }
 
-      return attributeMatrix.filter(filterByPersona);
-    } catch (e) {
-      console.log('Error fetching Live Streams by Attribute Matrix Template');
-      console.log({ e });
-    }
+      return [];
+    };
 
-    return null;
+    const { Cache } = this.context.dataSources;
+    const liveStreams = await Cache.request(liveStreamRequest, {
+      key: Cache.KEY_TEMPLATES.liveStreams,
+      expiresIn: 60 * 10, // 10 minute cache
+    });
+
+    return typeof Array.isArray(liveStreams) ? liveStreams.filter(filterByPersona) : [];
   }
 
   weekendServiceIsLive(date) {
