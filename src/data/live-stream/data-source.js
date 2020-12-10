@@ -40,7 +40,6 @@ export default class LiveStream extends matrixItemDataSource {
 
   getRelatedNodeFromId = async (id) => {
     const request = async () => {
-      console.log('Checking');
       const attributeMatrixItem = await this.request(`/AttributeMatrixItems`)
         .expand('AttributeMatrix')
         .filter(`Id eq ${id}`)
