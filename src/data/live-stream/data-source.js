@@ -39,61 +39,52 @@ export default class LiveStream extends matrixItemDataSource {
   };
 
   getRelatedNodeFromId = async (id) => {
-    const { Cache } = this.context.dataSources;
-    const cachedKey = `liveStream-relatedNode-${id}`;
-    const cachedValue = await Cache.get({
-      key: cachedKey,
-    });
-
-    if (cachedValue) {
-      return cachedValue;
-    }
-
-    const attributeMatrixItem = await this.request(`/AttributeMatrixItems`)
-      .expand('AttributeMatrix')
-      .filter(`Id eq ${id}`)
-      .select(`AttributeMatrix/Guid`)
-      .first();
-    const { attributeMatrix } = attributeMatrixItem;
-
-    if (attributeMatrix) {
-      const attributeValue = await this.request('/AttributeValues')
-        .expand('Attribute')
-        .filter(`Value eq '${attributeMatrix.guid}'`)
-        .andFilter(`(Attribute/EntityTypeId eq 208)`) // append for specific EntityTypes that are supported
-        .select('EntityId, Attribute/EntityTypeId')
+    const request = async () => {
+      console.log('Checking');
+      const attributeMatrixItem = await this.request(`/AttributeMatrixItems`)
+        .expand('AttributeMatrix')
+        .filter(`Id eq ${id}`)
+        .select(`AttributeMatrix/Guid`)
         .first();
+      const { attributeMatrix } = attributeMatrixItem;
 
-      if (attributeValue) {
-        const { ContentItem } = this.context.dataSources;
-        const { entityId, attribute } = attributeValue;
-        const { entityTypeId } = attribute;
+      if (attributeMatrix) {
+        const attributeValue = await this.request('/AttributeValues')
+          .expand('Attribute')
+          .filter(`Value eq '${attributeMatrix.guid}'`)
+          .andFilter(`(Attribute/EntityTypeId eq 208)`) // append for specific EntityTypes that are supported
+          .select('EntityId, Attribute/EntityTypeId')
+          .first();
 
-        switch (entityTypeId) {
-          case 208: // Entity Type Id for Content Item
-            const contentItem = await ContentItem.getFromId(entityId);
+        if (attributeValue) {
+          const { ContentItem } = this.context.dataSources;
+          const { entityId, attribute } = attributeValue;
+          const { entityTypeId } = attribute;
 
-            const resolvedType = ContentItem.resolveType(contentItem);
-            const globalId = createGlobalId(entityId, resolvedType);
+          switch (entityTypeId) {
+            case 208: // Entity Type Id for Content Item
+              const contentItem = await ContentItem.getFromId(entityId);
 
-            const finalObject = { ...contentItem, globalId };
+              const resolvedType = ContentItem.resolveType(contentItem);
+              const globalId = createGlobalId(entityId, resolvedType);
 
-            if (contentItem != null) {
-              await Cache.set({
-                key: cachedKey,
-                data: finalObject,
-                expiresIn: 60 * 60, // 1 hour cache
-              });
-            }
+              const finalObject = { ...contentItem, globalId };
 
-            return finalObject;
-          default:
-            return null;
+              return finalObject;
+            default:
+              return null;
+          }
         }
       }
-    }
 
-    return null;
+      return null;
+    };
+
+    const { Cache } = this.context.dataSources;
+    return Cache.request(request, {
+      key: Cache.KEY_TEMPLATES.liveStreamRelatedNode`${id}`,
+      expiresIn: 60 * 60 * 12, // 12 hour cache
+    });
   };
 
   async getLiveStream() {
