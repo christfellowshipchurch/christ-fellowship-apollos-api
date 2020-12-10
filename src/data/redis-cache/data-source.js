@@ -10,6 +10,9 @@ export default class Cache extends RedisCache.dataSource {
     eventContentItems: `${process.env.CONTENT}_eventContentItems`,
     group: (_, id) => `${process.env.CONTENT}_group_${id}`,
     liveStreamRelatedNode: (_, id) => `liveStream-relatedNode-${id}`,
+    liveStreamContentItems: `${process.env.CONTENT}_liveStreamContentItems`,
+    liveStreams: `${process.env.CONTENT}_liveStreams`,
+    attributeMatrix: (_, id) => `attribute_matrix_${id}`,
   };
 
   /**
