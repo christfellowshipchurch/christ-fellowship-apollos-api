@@ -1,6 +1,6 @@
 import CacheDS from '../data-source';
 
-describe('the matrix item data source', () => {
+describe('the redis cache data source', () => {
   let Cache;
   let requestArgs;
   let requestNumber = 0;
