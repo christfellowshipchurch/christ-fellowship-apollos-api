@@ -1,5 +1,16 @@
+import ApollosConfig from '@apollosproject/config';
 import * as RedisCache from '@apollosproject/data-connector-redis-cache';
-import { isRequired } from '../utils';
+import { keys, get } from 'lodash';
+import { isRequired, isType } from '../utils';
+
+const { ROCK_ENTITY_IDS, PAGE_BUILDER } = ApollosConfig;
+
+const parseKey = (key) => {
+  if (Array.isArray(key)) {
+    return key.join(':');
+  }
+  return key;
+};
 
 export default class Cache extends RedisCache.dataSource {
   DEFAULT_TIMEOUT = 60 * 60; // 1 hour cache
@@ -15,8 +26,12 @@ export default class Cache extends RedisCache.dataSource {
     pathnameId: (_, pathname) => `${process.env.CONTENT}_${pathname}`,
   };
 
+  initialize({ context }) {
+    this.context = context;
+  }
+
   /**
-   * For a given request
+   * Makes a request and return the cached value if it exists. If it does not exist in the cache, it will cache the value.
    * @param {function}  request         Async method whose return value gets cached.
    * @param {object}    args
    * @param {string}    args.key        Key for the value when stored in Redis.
@@ -26,38 +41,103 @@ export default class Cache extends RedisCache.dataSource {
     requestMethod = isRequired('Cache.request', 'requestMethod'),
     { key = isRequired('Cache.request', 'args.key'), expiresIn = this.DEFAULT_TIMEOUT }
   ) {
-    if (typeof requestMethod === 'function') {
-      if (typeof key === 'string') {
-        const cachedValue = await this.get({
-          key,
-        });
+    if (
+      isType(requestMethod, 'requestMethod', 'function') &&
+      isType(key, 'key', 'string')
+    ) {
+      const cachedValue = await this.get({
+        key,
+      });
 
-        if (cachedValue) {
-          return cachedValue;
-        }
-
-        const data = await requestMethod();
-
-        if (data) {
-          await this.set({
-            key,
-            data,
-            expiresIn,
-          });
-        }
-
-        return data;
-      } else {
-        throw new TypeError(
-          `'key' value of ${key} should be a string, not a ${typeof key}`,
-          'redis-cache/data-source.js'
-        );
+      if (cachedValue) {
+        return cachedValue;
       }
-    } else {
-      throw new TypeError(
-        `'key' value of ${requestMethod} should be a string, not a ${typeof requestMethod}`,
-        'redis-cache/data-source.js'
-      );
+
+      const data = await requestMethod();
+
+      if (data) {
+        await this.set({
+          key,
+          data,
+          expiresIn,
+        });
+      }
+
+      return data;
+    }
+  }
+
+  async delete({ key }, callback) {
+    return this.safely(() => this.redis.del(parseKey(key), callback));
+  }
+
+  async updateRockEntity({
+    entityId = isRequired('Cache.updateRockEntity', 'entityId'),
+    entityTypeId = isRequired('Cache.updateRockEntity', 'entityTypeId'),
+  }) {
+    if (
+      isType(entityId, 'entityId', 'number') &&
+      isType(entityTypeId, 'entityTypeId', 'number')
+    ) {
+      switch (entityTypeId) {
+        case ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
+          const { ContentItem } = this.context.dataSources;
+
+          // Delete the existing Content Item
+          await this.delete({ key: this.KEY_TEMPLATES.contentItem`${entityId}` });
+
+          /**
+           * Request the full Content Item from ContentItem data source so that it gets cached
+           * consistently.
+           */
+          const contentItem = await ContentItem.getFromId(entityId);
+          const typename = ContentItem.resolveType(contentItem);
+
+          if (typename === 'EventContentItem') {
+            /**
+             * For Event Content Items, we're less surgical with our caching,
+             * so let's clear out the entire Events cache and refetch
+             */
+            await this.delete(this.KEY_TEMPLATES.eventContentItems);
+            ContentItem.getEvents();
+          }
+
+          /**
+           * Look to see if this Content Item is in a Page Builder Content Channel
+           * and update the `pathnameId` in Redis if so.
+           */
+          keys(PAGE_BUILDER).forEach((key) => {
+            const configuration = PAGE_BUILDER[key];
+            if (
+              configuration.contentChannelId &&
+              contentItem.contentChannelId === configuration.contentChannelId
+            ) {
+              const queryAttribute = get(configuration, 'queryAttribute', 'url');
+              const page = get(contentItem, `attributeValues.${queryAttribute}.value`);
+              if (page) {
+                const pathname = `${key}/${page}`;
+                this.set({
+                  key: this.KEY_TEMPLATES.pathnameId`${pathname}`,
+                  data: contentItem.id,
+                  expiresIn: 60 * 60 * 12, // 12 hour cache
+                });
+              }
+            }
+          });
+
+          return 'Success';
+        default:
+          return 'Failed';
+      }
+    }
+  }
+
+  flushFor(system, args) {
+    switch (system) {
+      case 'ROCK':
+        return this.updateRockEntity(args);
+      default:
+        return;
     }
   }
 }

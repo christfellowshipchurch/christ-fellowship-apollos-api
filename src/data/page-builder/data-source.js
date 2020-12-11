@@ -213,7 +213,7 @@ export default class PageBuilder extends Feature.dataSource {
 
     return {
       ...configuration,
-      pathname,
+      pathname: pathToPage.join('/'),
       page,
       queryAttribute: get(configuration, 'queryAttribute', 'url'),
     };
@@ -228,18 +228,14 @@ export default class PageBuilder extends Feature.dataSource {
       pathname,
     } = this.getConfigurationFromUrl(url);
 
-    console.log({ contentChannelId, queryAttribute, page, pathname });
-
     if (contentChannelId) {
       const request = async () => {
-        const cotnentItem = await ContentItem.byAttributeValue(queryAttribute, page)
+        const contentItem = await ContentItem.byAttributeValue(queryAttribute, page)
           .filter(`ContentChannelId eq ${contentChannelId}`)
           .select('Id')
           .first();
 
-        console.log({ cotnentItem });
-
-        return cotnentItem.id;
+        return contentItem.id;
       };
 
       return Cache.request(request, {

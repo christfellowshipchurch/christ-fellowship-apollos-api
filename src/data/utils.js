@@ -133,3 +133,13 @@ export const generateAppLinkFromUrl = async (uri, context) => {
 export const isRequired = (method, param) => {
   throw new Error(`${method} : ${param} is required`);
 };
+
+export const isType = (param, name, type) => {
+  if (typeof param === type) {
+    return true;
+  }
+
+  throw new TypeError(
+    `'${name}' value of ${param} should be a ${type}, not a ${typeof requestMethod}`
+  );
+};

@@ -3,6 +3,6 @@ import gql from 'graphql-tag';
 
 export default gql`
   extend type Mutation {
-    flush: String
+    flushRock(entityId: Int!, entityTypeId: Int!, key: String!): String
   }
 `;
