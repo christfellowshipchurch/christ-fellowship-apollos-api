@@ -2,8 +2,7 @@ import * as RedisCache from '@apollosproject/data-connector-redis-cache';
 import { isRequired } from '../utils';
 
 export default class Cache extends RedisCache.dataSource {
-  // 1 hour cache
-  DEFAULT_TIMEOUT = 60 * 60;
+  DEFAULT_TIMEOUT = 60 * 60; // 1 hour cache
 
   KEY_TEMPLATES = {
     contentItem: (_, id) => `${process.env.CONTENT}_contentItem_${id}`,
@@ -13,6 +12,7 @@ export default class Cache extends RedisCache.dataSource {
     liveStreamContentItems: `${process.env.CONTENT}_liveStreamContentItems`,
     liveStreams: `${process.env.CONTENT}_liveStreams`,
     attributeMatrix: (_, id) => `attribute_matrix_${id}`,
+    pathnameId: (_, pathname) => `${process.env.CONTENT}_${pathname}`,
   };
 
   /**
