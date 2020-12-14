@@ -101,7 +101,6 @@ export default class GroupItem extends baseGroup.dataSource {
 
     return Cache.request(groupQuery, {
       key: Cache.KEY_TEMPLATES.group`${identifier.value}`,
-      data: group,
       expiresIn: 60 * 60 * 12, // 12 hour cache
     });
   };
