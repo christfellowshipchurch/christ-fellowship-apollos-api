@@ -2,9 +2,11 @@ import URL from 'url';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
 import { Utils } from '@apollosproject/data-connector-rock';
-import { get, last, dropRight } from 'lodash';
+import { get, last, dropRight, forEach } from 'lodash';
 
 import CHRISTMAS_DEVO_IDS from './christmas-devo';
+
+const { createImageUrlFromGuid } = Utils;
 
 /*
  Splits up a Rock Key Value paired string where | splits pairs and ^ splits key and value
@@ -55,6 +57,29 @@ export const createVideoUrlFromGuid = (uri) =>
   uri.startsWith('http')
     ? Utils.enforceProtocol(uri)
     : `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`;
+
+/**
+ * Helper method for generating an image url from a Rock Image Guid.
+ * @param {string}  guid Rock Guid for the iamge
+ * @param {object}  args List of arguments can be found here: https://imageresizing.net/docs/v4/docs/basics
+ */
+export const rockImageUrl = (guid = isRequired(), args) => {
+  const mode = `mode=${get(args, 'mode', 'crop')}`;
+  const imageUrl = createImageUrlFromGuid(guid);
+
+  if (imageUrl.includes('/GetImage.ashx')) {
+    let params = [mode];
+    forEach(args, (value, key) => {
+      params.push(`${key}=${value}`);
+    });
+    const parsedUrl = URL.parse(imageUrl);
+    const preParam = `${parsedUrl.protocol}${parsedUrl.host}${parsedUrl.pathname}`;
+
+    return `${preParam}?${parsedUrl.query}&${params.join('&')}`;
+  }
+
+  return imageUrl;
+};
 
 /*
   Accepts a string url that is read and determined if a deep link can be
