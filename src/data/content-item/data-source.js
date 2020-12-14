@@ -122,27 +122,10 @@ export default class ContentItem extends coreContentItem.dataSource {
   getFromId = async (id) => {
     const { Cache } = this.context.dataSources;
 
-    const cachedKey = `${process.env.CONTENT}_contentItem_${id}`;
-    const cachedValue = await Cache.get({
-      key: cachedKey,
+    return Cache.request(() => this.request().find(id).get(), {
+      key: Cache.KEY_TEMPLATES.contentItem`${id}`,
+      expiresIn: 60 * 60 * 12, // 12 hour cache
     });
-
-    if (cachedValue) {
-      return cachedValue;
-    }
-
-    // Triggering build
-    const contentItem = await this.request().find(id).get();
-
-    if (contentItem) {
-      await Cache.set({
-        key: cachedKey,
-        data: contentItem,
-        expiresIn: 60 * 15, // 15 minute cache
-      });
-    }
-
-    return contentItem;
   };
 
   byAttributeValue = (key, value) => {
@@ -260,27 +243,20 @@ export default class ContentItem extends coreContentItem.dataSource {
     }
 
     const { Cache } = this.context.dataSources;
-    const cachedKey = `${process.env.CONTENT}_eventContentItems`;
-    let eventItems = await Cache.get({
-      key: cachedKey,
-    });
 
-    if (!eventItems) {
-      eventItems = await this.request(`ContentChannelItems`)
-        .filterOneOf(contentChannelTypes.map((n) => `ContentChannelTypeId eq ${n}`))
-        .andFilter(this.LIVE_CONTENT())
-        .orderBy('Order')
-        .top(limit)
-        .get();
-
-      if (eventItems != null) {
-        await Cache.set({
-          key: cachedKey,
-          data: eventItems,
-          expiresIn: 60 * 5, // 5 minute cache
-        });
+    const eventItems = await Cache.request(
+      () =>
+        this.request(`ContentChannelItems`)
+          .filterOneOf(contentChannelTypes.map((n) => `ContentChannelTypeId eq ${n}`))
+          .andFilter(this.LIVE_CONTENT())
+          .orderBy('Order')
+          .top(limit)
+          .get(),
+      {
+        key: Cache.KEY_TEMPLATES.eventContentItems,
+        expiresIn: 60 * 60 * 12, // 12 hour cache
       }
-    }
+    );
 
     return eventItems
       .map((event) => {

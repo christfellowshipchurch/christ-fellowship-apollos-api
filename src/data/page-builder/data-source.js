@@ -3,7 +3,7 @@ import ApollosConfig from '@apollosproject/config';
 import { get, dropRight, last, first, mapValues, flatten } from 'lodash';
 import URL from 'url';
 
-import { getIdentifierType } from '../utils';
+import { getIdentifierType, isRequired } from '../utils';
 
 const { PAGE_BUILDER } = ApollosConfig;
 
@@ -194,7 +194,7 @@ export default class PageBuilder extends Feature.dataSource {
     };
   }
 
-  async buildForUrl(url) {
+  getConfigurationFromUrl(url) {
     /** Parse the URL and get the pathname */
     const parsedUrl = URL.parse(url);
     const { pathname } = parsedUrl;
@@ -211,60 +211,66 @@ export default class PageBuilder extends Feature.dataSource {
     const page = last(paths);
     const configuration = get(PAGE_BUILDER, `${pathToPage.join('.')}`, {});
 
-    if (configuration.contentChannelId) {
-      /** Get the name of the attribute that we want to use to query for pages for
-       *  this specific configuration
-       *
-       *  Create the request URL and then get the first result of the return value
-       *  since Rock returns to us an array of objects.
-       *
-       *  TODO : figure out a more mature way of handling what happens when more than 1
-       *          content item is returned
-       */
-      const { ContentItem, Cache } = this.context.dataSources;
-      const { contentChannelId } = configuration;
-      const attributeKey = get(configuration, 'queryAttribute', 'url');
-      let contentChannelItem = null;
+    return {
+      ...configuration,
+      pathname: pathToPage.join('/'),
+      page,
+      queryAttribute: get(configuration, 'queryAttribute', 'url'),
+    };
+  }
 
-      const cachedKey = `${process.env.CONTENT}_contentChannelId_${contentChannelId}_${attributeKey}_${page}`;
-      const cachedValue = await Cache.get({
-        key: cachedKey,
-      });
+  getContentItemIdByUrl(url = isRequired()) {
+    const { Cache, ContentItem } = this.context.dataSources;
+    const {
+      contentChannelId,
+      queryAttribute,
+      page,
+      pathname,
+    } = this.getConfigurationFromUrl(url);
 
-      if (cachedValue) {
-        contentChannelItem = cachedValue;
-      } else {
-        contentChannelItem = await ContentItem.byAttributeValue(attributeKey, page)
+    if (contentChannelId) {
+      const request = async () => {
+        const contentItem = await ContentItem.byAttributeValue(queryAttribute, page)
           .filter(`ContentChannelId eq ${contentChannelId}`)
+          .select('Id')
           .first();
 
-        if (contentChannelItem) {
-          await Cache.set({
-            key: cachedKey,
-            data: contentChannelItem,
-            expiresIn: 60 * 15, // 15 minute cache
-          });
-        }
-      }
+        return contentItem.id;
+      };
 
-      if (configuration.buildingBlocks) {
-        return Promise.all(
-          configuration.buildingBlocks.map((blockConfig) => {
-            const configWithContentChannelItem = { ...blockConfig, contentChannelItem };
-            switch (configWithContentChannelItem.type) {
-              case 'MetadataFeature':
-                return this.createMetadataFeature(configWithContentChannelItem);
-              case 'ContentGridFeature':
-                return this.createContentGridFeature(configWithContentChannelItem);
-              case 'CampusContentFeature':
-                return this.createCampusContentFeature(configWithContentChannelItem);
-              case 'ContentBlockFeature':
-              default:
-                return this.createContentBlockFeature(configWithContentChannelItem);
-            }
-          })
-        );
-      }
+      return Cache.request(request, {
+        key: Cache.KEY_TEMPLATES.pathnameId`${pathname}`,
+        expiresIn: 60 * 60 * 12, // 12 hour cache
+      });
+    }
+
+    return null;
+  }
+
+  async buildForUrl(url) {
+    const { ContentItem } = this.context.dataSources;
+    const contentChannelItemId = await this.getContentItemIdByUrl(url);
+    const configuration = this.getConfigurationFromUrl(url);
+
+    if (configuration.buildingBlocks && contentChannelItemId) {
+      const contentChannelItem = await ContentItem.getFromId(contentChannelItemId);
+
+      return Promise.all(
+        configuration.buildingBlocks.map((blockConfig) => {
+          const configWithContentChannelItem = { ...blockConfig, contentChannelItem };
+          switch (configWithContentChannelItem.type) {
+            case 'MetadataFeature':
+              return this.createMetadataFeature(configWithContentChannelItem);
+            case 'ContentGridFeature':
+              return this.createContentGridFeature(configWithContentChannelItem);
+            case 'CampusContentFeature':
+              return this.createCampusContentFeature(configWithContentChannelItem);
+            case 'ContentBlockFeature':
+            default:
+              return this.createContentBlockFeature(configWithContentChannelItem);
+          }
+        })
+      );
     }
   }
 }

@@ -7,31 +7,27 @@ export default class MatrixItem extends RockApolloDataSource {
 
   getItemsFromId = async (id) => {
     const { Cache } = this.context.dataSources;
-    const cachedKey = `attribute_matrix_${id}`;
-    const cachedValue = await Cache.get({
-      key: cachedKey,
-    });
+    const request = () =>
+      this.request('/AttributeMatrixItems')
+        .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+        .orderBy('Order')
+        .transform((results) => {
+          if (results) {
+            Cache.set({
+              key: cachedKey,
+              data: results,
+            });
+          }
 
-    if (cachedValue) {
-      return cachedValue;
-    }
+          return results;
+        })
+        .get();
 
     return id
-      ? this.request('/AttributeMatrixItems')
-          .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
-          .orderBy('Order')
-          .transform((results) => {
-            if (results) {
-              Cache.set({
-                key: cachedKey,
-                data: results,
-                expiresIn: 60 * 60, // 1 hour cache
-              });
-            }
-
-            return results;
-          })
-          .get()
+      ? Cache.request(request, {
+          key: Cache.KEY_TEMPLATES.attributeMatrix`${id}`,
+          expiresIn: 60 * 60, // 1 hour cache
+        })
       : [];
   };
 }
