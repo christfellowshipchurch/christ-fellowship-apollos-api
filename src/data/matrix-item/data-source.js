@@ -11,16 +11,6 @@ export default class MatrixItem extends RockApolloDataSource {
       this.request('/AttributeMatrixItems')
         .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
         .orderBy('Order')
-        .transform((results) => {
-          if (results) {
-            Cache.set({
-              key: cachedKey,
-              data: results,
-            });
-          }
-
-          return results;
-        })
         .get();
 
     return id
