@@ -91,9 +91,14 @@ export default class Cache extends RedisCache.dataSource {
            * consistently.
            */
           const contentItem = await ContentItem.getFromId(entityId);
-          const typename = ContentItem.resolveType(contentItem);
 
-          if (typename === 'EventContentItem') {
+          if (
+            get(
+              ROCK_MAPPINGS,
+              'CONTENT_ITEM.EventContentItem.ContentChannelTypeId',
+              []
+            ).includes(contentItem.contentChannelTypeId)
+          ) {
             /**
              * For Event Content Items, we're less surgical with our caching,
              * so let's clear out the entire Events cache and refetch
