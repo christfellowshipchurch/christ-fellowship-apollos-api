@@ -194,10 +194,7 @@ export default class PageBuilder extends Feature.dataSource {
     };
   }
 
-  getConfigurationFromUrl(url) {
-    /** Parse the URL and get the pathname */
-    const parsedUrl = URL.parse(url);
-    const { pathname } = parsedUrl;
+  getConfigurationFromUrl(pathname) {
     /** Split the pathname by the / so that we can get the page that we want to query
      *  as well as the path to the config object for that path to get the Content Channel
      *  where those pages live.
@@ -213,20 +210,20 @@ export default class PageBuilder extends Feature.dataSource {
 
     return {
       ...configuration,
-      pathname: pathToPage.join('/'),
+      pathname: paths.join('/'),
       page,
       queryAttribute: get(configuration, 'queryAttribute', 'url'),
     };
   }
 
-  getContentItemIdByUrl(url = isRequired()) {
+  getContentItemIdByUrl(pathname = isRequired()) {
     const { Cache, ContentItem } = this.context.dataSources;
     const {
       contentChannelId,
       queryAttribute,
       page,
-      pathname,
-    } = this.getConfigurationFromUrl(url);
+      pathname: cleanedPathname,
+    } = this.getConfigurationFromUrl(pathname);
 
     if (contentChannelId) {
       const request = async () => {
@@ -239,7 +236,7 @@ export default class PageBuilder extends Feature.dataSource {
       };
 
       return Cache.request(request, {
-        key: Cache.KEY_TEMPLATES.pathnameId`${pathname}`,
+        key: Cache.KEY_TEMPLATES.pathnameId`${cleanedPathname}`,
         expiresIn: 60 * 60 * 12, // 12 hour cache
       });
     }
@@ -247,10 +244,10 @@ export default class PageBuilder extends Feature.dataSource {
     return null;
   }
 
-  async buildForUrl(url) {
+  async buildForUrl(pathname) {
     const { ContentItem } = this.context.dataSources;
-    const contentChannelItemId = await this.getContentItemIdByUrl(url);
-    const configuration = this.getConfigurationFromUrl(url);
+    const contentChannelItemId = await this.getContentItemIdByUrl(pathname);
+    const configuration = this.getConfigurationFromUrl(pathname);
 
     if (configuration.buildingBlocks && contentChannelItemId) {
       const contentChannelItem = await ContentItem.getFromId(contentChannelItemId);
