@@ -1,4 +1,9 @@
-import { parseRockKeyValuePairs, getIdentifierType, isRequired } from '../utils';
+import {
+  parseRockKeyValuePairs,
+  getIdentifierType,
+  isRequired,
+  rockImageUrl,
+} from '../utils';
 
 describe('ParseRockKeyValuePairs', () => {
   /* Test different use cases for parsing Key Value pairs that get passed from Rock */
@@ -53,6 +58,18 @@ describe('ParseRockKeyValuePairs', () => {
 
 describe('Is Required', () => {
   const testMethod = (param = isRequired()) => param;
+
+  it('Throws an error when a parameter is not passed', () => {
+    expect(testMethod).toThrow(Error);
+  });
+
+  it("Doesn't throw any error when a parameter is passed", () => {
+    expect(testMethod('success')).toBe('success');
+  });
+});
+
+describe('Rock Image Url', () => {
+  const testGuid = '3376aa0d-5610-4a8a-ae24-046250ebf297';
 
   it('Throws an error when a parameter is not passed', () => {
     expect(testMethod).toThrow(Error);

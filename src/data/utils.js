@@ -64,8 +64,13 @@ export const createVideoUrlFromGuid = (uri) =>
  * @param {object}  args List of arguments can be found here: https://imageresizing.net/docs/v4/docs/basics
  */
 export const rockImageUrl = (guid = isRequired(), args) => {
+  let imageUrl = '';
   const mode = `mode=${get(args, 'mode', 'crop')}`;
-  const imageUrl = createImageUrlFromGuid(guid);
+  const identifierType = getIdentifierType(guid);
+
+  if (identifierType.type === 'guid') {
+    imageUrl = createImageUrlFromGuid(guid);
+  }
 
   if (imageUrl.includes('/GetImage.ashx')) {
     let params = [mode];
