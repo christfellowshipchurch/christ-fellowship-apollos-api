@@ -74,7 +74,7 @@ const resolver = {
             h: 150,
             w: 150,
             format: 'jpg',
-            quality: 80,
+            quality: 70,
           }
         ),
       };

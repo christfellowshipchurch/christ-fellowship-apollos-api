@@ -1,8 +1,10 @@
+import ApollosConfig from '@apollosproject/config';
 import {
   parseRockKeyValuePairs,
   getIdentifierType,
   isRequired,
   rockImageUrl,
+  isValidUrl,
 } from '../utils';
 
 describe('ParseRockKeyValuePairs', () => {
@@ -71,11 +73,54 @@ describe('Is Required', () => {
 describe('Rock Image Url', () => {
   const testGuid = '3376aa0d-5610-4a8a-ae24-046250ebf297';
 
-  it('Throws an error when a parameter is not passed', () => {
-    expect(testMethod).toThrow(Error);
+  beforeEach(() => {
+    // reset cloudinary config
+    ApollosConfig.loadJs({
+      ROCK: {
+        IMAGE_URL: 'https://cloudfront.christfellowship.church/GetImage.ashx',
+      },
+    });
+  });
+  afterEach(() => {
+    ApollosConfig.loadJs({
+      ROCK: {
+        IMAGE_URL: 'https://cloudfront.christfellowship.church/GetImage.ashx',
+      },
+    });
   });
 
-  it("Doesn't throw any error when a parameter is passed", () => {
-    expect(testMethod('success')).toBe('success');
+  it('Generates a URL with the additional query params', () => {
+    const url = rockImageUrl(testGuid, {
+      h: 150,
+      w: 150,
+    });
+
+    expect(url).toBe(
+      `https://cloudfront.christfellowship.church/GetImage.ashx?guid=${testGuid}&mode=crop&h=150&w=150`
+    );
+  });
+
+  it('Returns a url if function is given a url', () => {
+    const url = 'https://christfellowship.church';
+    expect(rockImageUrl(url)).toBe(url);
+  });
+
+  it('Throws an error if no valid url or guid is passed in as a param', () => {
+    const url = 'invalid str';
+    const testMethod = () => rockImageUrl(url);
+    expect(testMethod).toThrow(Error);
+  });
+});
+
+describe('Is Valid Url', () => {
+  const validUrl = 'https://christfellowship.church';
+  const invalidUrl = 'some-random-string';
+
+  it('Returns true for a valid url', () => {
+    expect(isValidUrl(validUrl)).toBe(true);
+  });
+
+  it('Returns false for a invalid url', () => {
+    expect(isValidUrl(invalidUrl)).toBe(false);
   });
 });
