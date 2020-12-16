@@ -216,7 +216,7 @@ export default class ContentItem extends coreContentItem.dataSource {
       .filterOneOf(ids.map((n) => `ContentChannelTypeId eq ${n}`))
       .get();
 
-  async getEventContentIds() {
+  async getEventContentIds(limit) {
     const { Cache } = this.context.dataSources;
     const contentChannelTypes = get(
       ROCK_MAPPINGS,
@@ -237,7 +237,7 @@ export default class ContentItem extends coreContentItem.dataSource {
           .select('Id')
           .orderBy('Order')
           .top(limit)
-          .transform((results) => results.filter((item) => !item.id).map(({ id }) => id))
+          .transform((results) => results.filter((item) => !!item.id).map(({ id }) => id))
           .get(),
       {
         key: Cache.KEY_TEMPLATES.eventContentItems,
@@ -272,7 +272,7 @@ export default class ContentItem extends coreContentItem.dataSource {
       }
     }
 
-    const eventIds = await this.getEventContentIds();
+    const eventIds = await this.getEventContentIds(limit);
     const contentItems = await Promise.all(eventIds.map((id) => this.getFromId(id)));
 
     return contentItems
