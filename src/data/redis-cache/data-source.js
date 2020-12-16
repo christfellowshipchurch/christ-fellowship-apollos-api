@@ -3,7 +3,7 @@ import * as RedisCache from '@apollosproject/data-connector-redis-cache';
 import { keys, get } from 'lodash';
 import { isRequired, isType } from '../utils';
 
-const { ROCK_ENTITY_IDS, PAGE_BUILDER } = ApollosConfig;
+const { ROCK_ENTITY_IDS, PAGE_BUILDER, ROCK_MAPPINGS } = ApollosConfig;
 
 const parseKey = (key) => {
   if (Array.isArray(key)) {
@@ -104,7 +104,7 @@ export default class Cache extends RedisCache.dataSource {
              * so let's clear out the entire Events cache and refetch
              */
             await this.delete(this.KEY_TEMPLATES.eventContentItems);
-            ContentItem.getEvents();
+            await ContentItem.getEvents();
           }
 
           /**
