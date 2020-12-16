@@ -92,8 +92,6 @@ export default class Cache extends RedisCache.dataSource {
            */
           const contentItem = await ContentItem.getFromId(entityId);
 
-          console.log({ contentItem });
-
           if (
             get(
               ROCK_MAPPINGS,
@@ -105,6 +103,7 @@ export default class Cache extends RedisCache.dataSource {
              * For Event Content Items, we're less surgical with our caching,
              * so let's clear out the entire Events cache and refetch
              */
+
             await this.delete(this.KEY_TEMPLATES.eventContentItems);
             await ContentItem.getEventContentIds();
           }

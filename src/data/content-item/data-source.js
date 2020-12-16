@@ -218,6 +218,16 @@ export default class ContentItem extends coreContentItem.dataSource {
 
   async getEventContentIds() {
     const { Cache } = this.context.dataSources;
+    const contentChannelTypes = get(
+      ROCK_MAPPINGS,
+      'CONTENT_ITEM.EventContentItem.ContentChannelTypeId',
+      []
+    );
+
+    if (contentChannelTypes.length === 0) {
+      console.warn('No Content Channel Types were found for events');
+      return [];
+    }
 
     return Cache.request(
       () =>
