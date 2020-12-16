@@ -103,8 +103,7 @@ export default class Cache extends RedisCache.dataSource {
              * For Event Content Items, we're less surgical with our caching,
              * so let's clear out the entire Events cache and refetch
              */
-
-            await this.delete(this.KEY_TEMPLATES.eventContentItems);
+            await this.delete({ key: this.KEY_TEMPLATES.eventContentItems });
             await ContentItem.getEventContentIds();
           }
 
