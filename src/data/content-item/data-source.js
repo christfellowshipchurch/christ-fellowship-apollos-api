@@ -244,21 +244,25 @@ export default class ContentItem extends coreContentItem.dataSource {
 
     const { Cache } = this.context.dataSources;
 
-    const eventItems = await Cache.request(
+    const eventIds = await Cache.request(
       () =>
         this.request(`ContentChannelItems`)
           .filterOneOf(contentChannelTypes.map((n) => `ContentChannelTypeId eq ${n}`))
           .andFilter(this.LIVE_CONTENT())
+          .select('Id')
           .orderBy('Order')
           .top(limit)
+          .transform((results) => results.map(({ id }) => id))
           .get(),
       {
         key: Cache.KEY_TEMPLATES.eventContentItems,
-        expiresIn: 60 * 60 * 12, // 12 hour cache
+        expiresIn: 60 * 60, // 1 hour cache
       }
     );
 
-    return eventItems
+    const contentItems = await Promise.all(eventIds.map((id) => this.getFromId(id)));
+
+    return contentItems
       .map((event) => {
         const securityDataViews = split(
           get(event, 'attributeValues.securityDataViews.value', ''),

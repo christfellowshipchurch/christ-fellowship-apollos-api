@@ -4,6 +4,13 @@ export default gql`
   type StreamChatChannel implements Node {
     id: ID!
     channelId: String
+    channelType: StreamChatChannelType
+  }
+
+  enum StreamChatChannelType {
+    LIVESTREAM
+    MESSAGING
+    GROUP
   }
 
   interface StreamChatChannelNode {
