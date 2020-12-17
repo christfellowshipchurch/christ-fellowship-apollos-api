@@ -126,7 +126,7 @@ export const generateAppLinkFromUrl = async (uri, context) => {
       const regex = /(day)\d+/g;
       const christmasUrl = pathParts[0].match(regex);
 
-      if (christmasUrl.length > 0) {
+      if (christmasUrl && christmasUrl.length > 0) {
         const itemId = CHRISTMAS_DEVO_IDS[pathParts];
         return contentSingleTag`DevotionalContentItem:${itemId}`;
       }
