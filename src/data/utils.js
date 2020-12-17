@@ -2,9 +2,11 @@ import URL from 'url';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
 import { Utils } from '@apollosproject/data-connector-rock';
-import { get, last, dropRight } from 'lodash';
+import { get, last, dropRight, forEach } from 'lodash';
 
 import CHRISTMAS_DEVO_IDS from './christmas-devo';
+
+const { createImageUrlFromGuid } = Utils;
 
 /*
  Splits up a Rock Key Value paired string where | splits pairs and ^ splits key and value
@@ -55,6 +57,39 @@ export const createVideoUrlFromGuid = (uri) =>
   uri.startsWith('http')
     ? Utils.enforceProtocol(uri)
     : `${ApollosConfig.ROCK.FILE_URL}?guid=${uri}`;
+
+/**
+ * Helper method for generating an image url from a Rock Image Guid.
+ * @param {string}  guid Rock Guid for the iamge
+ * @param {object}  args List of arguments can be found here: https://imageresizing.net/docs/v4/docs/basics
+ */
+export const rockImageUrl = (guid = isRequired(), args) => {
+  const mode = `mode=${get(args, 'mode', 'crop')}`;
+  const identifierType = getIdentifierType(guid);
+
+  if (identifierType.type === 'guid') {
+    const imageUrl = createImageUrlFromGuid(guid);
+
+    if (imageUrl.includes('/GetImage.ashx')) {
+      let params = [mode];
+      forEach(args, (value, key) => {
+        params.push(`${key}=${value}`);
+      });
+      const parsedUrl = URL.parse(imageUrl);
+      const preParam = `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
+
+      return `${preParam}?${parsedUrl.query}&${params.join('&')}`;
+    }
+  }
+
+  if (isValidUrl(guid)) {
+    return guid;
+  }
+
+  throw new Error(
+    'Invalid prop passed to rockImageUrl. Must be either a guid or valid url'
+  );
+};
 
 /*
   Accepts a string url that is read and determined if a deep link can be
@@ -142,4 +177,22 @@ export const isType = (param, name, type) => {
   throw new TypeError(
     `'${name}' value of ${param} should be a ${type}, not a ${typeof requestMethod}`
   );
+};
+
+/**
+ * Checks if the given string is a valid url
+ * @param {string} url
+ * @return {boolean}
+ */
+export const isValidUrl = (str) => {
+  var pattern = new RegExp(
+    '^(https?:\\/\\/)?' + // protocol
+      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+      '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+      '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+      '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+      '(\\#[-a-z\\d_]*)?$',
+    'i'
+  ); // fragment locator
+  return !!pattern.test(str);
 };
