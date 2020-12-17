@@ -145,16 +145,8 @@ const resolver = {
         return null;
       }
     },
-    streamChatChannel: async (
-      { id, eventStartTime, eventEndTime },
-      _,
-      { dataSources: { Flag } }
-    ) => {
-      const featureFlag = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
-      if (featureFlag !== 'LIVE') return null;
-
-      return { id: JSON.stringify({ id, eventStartTime, eventEndTime }) };
-    },
+    streamChatChannel: async (root, _, { dataSources }) =>
+      dataSources.LiveStream.getStreamChatChannel(root),
     checkin: ({ attributeValues }, args, { dataSources: { CheckInable } }) => {
       const groupId = get(attributeValues, 'checkInGroup.value', '');
 
