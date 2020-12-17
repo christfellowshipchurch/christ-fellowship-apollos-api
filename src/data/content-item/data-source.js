@@ -216,6 +216,36 @@ export default class ContentItem extends coreContentItem.dataSource {
       .filterOneOf(ids.map((n) => `ContentChannelTypeId eq ${n}`))
       .get();
 
+  async getEventContentIds(limit) {
+    const { Cache } = this.context.dataSources;
+    const contentChannelTypes = get(
+      ROCK_MAPPINGS,
+      'CONTENT_ITEM.EventContentItem.ContentChannelTypeId',
+      []
+    );
+
+    if (contentChannelTypes.length === 0) {
+      console.warn('No Content Channel Types were found for events');
+      return [];
+    }
+
+    return Cache.request(
+      () =>
+        this.request(`ContentChannelItems`)
+          .filterOneOf(contentChannelTypes.map((n) => `ContentChannelTypeId eq ${n}`))
+          .andFilter(this.LIVE_CONTENT())
+          .select('Id')
+          .orderBy('Order')
+          .top(limit)
+          .transform((results) => results.filter((item) => !!item.id).map(({ id }) => id))
+          .get(),
+      {
+        key: Cache.KEY_TEMPLATES.eventContentItems,
+        expiresIn: 60 * 60, // 1 hour cache
+      }
+    );
+  }
+
   getEvents = async (limit) => {
     const { Person } = this.context.dataSources;
     const contentChannelTypes = get(
@@ -242,23 +272,10 @@ export default class ContentItem extends coreContentItem.dataSource {
       }
     }
 
-    const { Cache } = this.context.dataSources;
+    const eventIds = await this.getEventContentIds(limit);
+    const contentItems = await Promise.all(eventIds.map((id) => this.getFromId(id)));
 
-    const eventItems = await Cache.request(
-      () =>
-        this.request(`ContentChannelItems`)
-          .filterOneOf(contentChannelTypes.map((n) => `ContentChannelTypeId eq ${n}`))
-          .andFilter(this.LIVE_CONTENT())
-          .orderBy('Order')
-          .top(limit)
-          .get(),
-      {
-        key: Cache.KEY_TEMPLATES.eventContentItems,
-        expiresIn: 60 * 60 * 12, // 12 hour cache
-      }
-    );
-
-    return eventItems
+    return contentItems
       .map((event) => {
         const securityDataViews = split(
           get(event, 'attributeValues.securityDataViews.value', ''),

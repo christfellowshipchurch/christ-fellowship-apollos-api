@@ -683,7 +683,7 @@ export default class GroupItem extends baseGroup.dataSource {
     return name;
   };
 
-  getChatChannelId = async (root) => {
+  getStreamChatChannel = async (root) => {
     // TODO : break up this logic and move it to the StreamChat DataSource
     const { Auth, StreamChat, Flag } = this.context.dataSources;
     const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
@@ -748,7 +748,8 @@ export default class GroupItem extends baseGroup.dataSource {
     return {
       id: root.id,
       channelId,
-    };
+      channelType: CHANNEL_TYPE,
+    }
   };
 
   resolveType({ groupTypeId, id }) {

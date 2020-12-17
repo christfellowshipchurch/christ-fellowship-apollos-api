@@ -103,6 +103,24 @@ export default class LiveStream extends matrixItemDataSource {
     };
   }
 
+  async getStreamChatChannel(root) {
+    const { Auth, StreamChat, Flag } = this.context.dataSources;
+    const featureFlagStatus = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
+
+    if (featureFlagStatus !== 'LIVE') {
+      return null;
+    }
+
+    const resolvedType = this.resolveType(root);
+    const globalId = createGlobalId(root.id, resolvedType);
+    const channelId = crypto.SHA1(globalId).toString();
+    return {
+      id: root.id,
+      channelId,
+      channelType: CHANNEL_TYPE,
+    }
+};
+
   async getLiveStreamContentItems() {
     const request = async () => {
       // Get Events

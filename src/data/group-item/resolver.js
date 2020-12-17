@@ -27,8 +27,8 @@ const defaultResolvers = {
     }),
   chatChannelId: (root, args, { dataSources }) => null, // Deprecated
   streamChatChannel: async (root, args, { dataSources }) =>
-    dataSources.GroupItem.getChatChannelId(root),
-};
+    dataSources.GroupItem.getStreamChatChannel(root)
+}
 
 const resolver = {
   GroupItem: {
