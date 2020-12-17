@@ -1,7 +1,7 @@
 import { Person as corePerson } from '@apollosproject/data-connector-rock';
 import { resolverMerge, withEdgePagination } from '@apollosproject/server-core';
 import ApollosConfig from '@apollosproject/config';
-import { get, filter, find, difference } from 'lodash';
+import { get, filter, find, difference, isEmpty } from 'lodash';
 import { Utils } from '@apollosproject/data-connector-rock';
 import { rockImageUrl } from '../utils';
 
@@ -69,7 +69,7 @@ const resolver = {
 
       return {
         uri: rockImageUrl(
-          guid && guid !== '' ? guid : '0ad7f78a-1e6b-46ad-a8be-baa0dbaaba8e',
+          isEmpty(guid) !== '' ? guid : '0ad7f78a-1e6b-46ad-a8be-baa0dbaaba8e',
           {
             h: 150,
             w: 150,
