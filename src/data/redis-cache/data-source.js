@@ -17,6 +17,7 @@ export default class Cache extends RedisCache.dataSource {
 
   KEY_TEMPLATES = {
     contentItem: (_, id) => `${process.env.CONTENT}_contentItem_${id}`,
+    contentItemChildren: (_, id) => `${process.env.CONTENT}_contentItem_${id}_children`,
     eventContentItems: `${process.env.CONTENT}_eventContentItems`,
     group: (_, id) => `${process.env.CONTENT}_group_${id}`,
     liveStreamRelatedNode: (_, id) => `liveStream-relatedNode-${id}`,
@@ -26,6 +27,9 @@ export default class Cache extends RedisCache.dataSource {
     pathnameId: (_, pathname) => `${process.env.CONTENT}_${pathname}`,
     personas: (_, id) => `${process.env.CONTENT}_personas_${id}`,
     rockConstant: (_, name) => `${process.env.CONTENT}_rock_constant_${name}`,
+    rockFeed: (_, id) => `${process.env.CONTENT}_rockFeed_${id}`,
+    contentChannelItemIds: (_, id) =>
+      `${process.env.CONTENT}_contentChannelItemIds_${id}`,
   };
 
   initialize({ context }) {
@@ -83,7 +87,7 @@ export default class Cache extends RedisCache.dataSource {
     ) {
       switch (entityTypeId) {
         case ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
-          const { ContentItem } = this.context.dataSources;
+          const { ContentItem, ContentChannel } = this.context.dataSources;
 
           // Delete the existing Content Item
           await this.delete({ key: this.KEY_TEMPLATES.contentItem`${entityId}` });
@@ -131,6 +135,38 @@ export default class Cache extends RedisCache.dataSource {
               }
             }
           });
+
+          /**
+           * Look to see if this Content Item is cached as a part of a Content Channel
+           * Items Id cache and update if so
+           */
+          const contentChannelIds = await this.get({
+            key: this.KEY_TEMPLATES
+              .contentChannelItemIds`${contentItem.contentChannelId}`,
+          });
+
+          if (contentChannelIds) {
+            await this.delete({
+              key: this.KEY_TEMPLATES
+                .contentChannelItemIds`${contentItem.contentChannelId}`,
+            });
+            ContentChannel.getContentItemIds(contentItem.contentChannelId);
+          }
+
+          /**
+           * Look to see if this Content Item has it's childre cached and flush
+           * that if so
+           */
+          const childrenIds = await this.get({
+            key: this.KEY_TEMPLATES.contentItemChildren`${contentItem.id}`,
+          });
+
+          if (childrenIds) {
+            await this.delete({
+              key: this.KEY_TEMPLATES.contentItemChildren`${contentItem.id}`,
+            });
+            ContentChannel.getContentItemIds(contentItem.contentChannelId);
+          }
 
           return 'Success';
         default:
