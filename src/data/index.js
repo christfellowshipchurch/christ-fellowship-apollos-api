@@ -1,9 +1,6 @@
 import { gql } from 'apollo-server';
 
-import {
-  createApolloServerConfig,
-  Interfaces,
-} from '@apollosproject/server-core';
+import { createApolloServerConfig, Interfaces } from '@apollosproject/server-core';
 
 import * as Analytics from '@apollosproject/data-connector-analytics';
 import * as Scripture from '@apollosproject/data-connector-bible';
@@ -25,6 +22,7 @@ import * as Theme from './theme';
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
 import * as OneSignalWithRock from './oneSignalWithRock';
 
+//
 // TODO : use when 1.7.0 goes into production
 // import * as ActionAlgorithm from './action-algorithms';
 import * as AdditionalEndpoint from './additional-endpoints';
@@ -42,7 +40,7 @@ import * as Event from './events';
 import * as Feature from './features';
 import * as Flag from './flag';
 import * as Group from './groups';
-import * as GroupItem from './group-item'
+import * as GroupItem from './group-item';
 import * as LiveStream from './live-stream';
 import * as MatrixItem from './matrix-item';
 import * as Message from './message';
@@ -55,7 +53,7 @@ import * as Schedule from './schedule';
 import * as Search from './search';
 import * as StreamChat from './stream-chat';
 import * as TwilioNotify from './twilio-notify';
-import * as Url from './url'
+import * as Url from './url';
 import * as WebsiteContentItem from './website-content-item';
 import * as WebsiteFeature from './website-feature';
 import * as WebsiteGroupContentItem from './website-group-content-item';
@@ -140,14 +138,7 @@ const {
   setupJobs,
 } = createApolloServerConfig(data);
 
-export {
-  dataSources,
-  resolvers,
-  schema,
-  context,
-  applyServerMiddleware,
-  setupJobs,
-};
+export { dataSources, resolvers, schema, context, applyServerMiddleware, setupJobs };
 
 // the upload Scalar is added
 export const testSchema = [

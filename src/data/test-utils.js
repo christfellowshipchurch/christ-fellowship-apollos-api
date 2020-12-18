@@ -8,8 +8,6 @@ export const buildGetMock = (response, dataSource) => {
       );
     });
   }
-  get.mockReturnValue(
-    new Promise((resolve) => resolve(dataSource.normalize(response)))
-  );
+  get.mockReturnValue(new Promise((resolve) => resolve(dataSource.normalize(response))));
   return get;
 };

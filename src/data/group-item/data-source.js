@@ -96,18 +96,13 @@ export default class GroupItem extends baseGroup.dataSource {
     const { Cache } = this.context.dataSources;
     const identifier = getIdentifierType(id);
 
-    const cachedKey = `group_${identifier.value}`;
-    const cachedValue = await Cache.get({
-      key: cachedKey,
+    const groupQuery = () =>
+      this.request(`Groups`).filter(identifier.query).expand('Members').first();
+
+    return Cache.request(groupQuery, {
+      key: Cache.KEY_TEMPLATES.group`${identifier.value}`,
+      expiresIn: 60 * 60 * 12, // 12 hour cache
     });
-
-    if (cachedValue) {
-      return cachedValue;
-    }
-
-    const group = await this.updateCache(id);
-
-    return group;
   };
 
   getMembers = async (groupId) => {
@@ -705,7 +700,7 @@ export default class GroupItem extends baseGroup.dataSource {
     return name;
   };
 
-  getChatChannelId = async (root) => {
+  getStreamChatChannel = async (root) => {
     // TODO : break up this logic and move it to the StreamChat DataSource
     const { Auth, StreamChat, Flag } = this.context.dataSources;
     const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
@@ -770,7 +765,8 @@ export default class GroupItem extends baseGroup.dataSource {
     return {
       id: root.id,
       channelId,
-    };
+      channelType: CHANNEL_TYPE,
+    }
   };
 
   resolveType({ groupTypeId, id }) {
