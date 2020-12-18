@@ -2,7 +2,7 @@ import { ContentChannel as coreContentChannel } from '@apollosproject/data-conne
 import ApollosConfig from '@apollosproject/config';
 import { isEmpty } from 'lodash';
 
-import { createVideoUrlFromGuid } from '../utils';
+import { isRequired } from '../utils';
 
 const { ROCK_MAPPINGS } = ApollosConfig;
 
@@ -37,7 +37,9 @@ export default class ContentChannel extends coreContentChannel.dataSource {
     return [...result, ...channels];
   };
 
-  async getFeatures(contentChannelId) {
+  async getFeatures(
+    contentChannelId = isRequired('ContentChannel.getFeatures', 'contentChannelId')
+  ) {
     if (!contentChannelId) {
       return [];
     }
