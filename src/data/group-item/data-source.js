@@ -562,20 +562,10 @@ export default class GroupItem extends baseGroup.dataSource {
 
     const { Cache } = this.context.dataSources;
     const cachedKey = `group_${id}_cursor_${after}`;
-
-    let edges = await Cache.get({
+    const edges = Cache.request(() => cursor.get(), {
       key: cachedKey,
+      expiresIn: 60 * 60 * 12, // 12 hour cache
     });
-
-    if (!edges) {
-      edges = await cursor.get();
-
-      await Cache.set({
-        key: cachedKey,
-        data: edges,
-        expiresIn: 60 * 60, // 1 hour cache
-      });
-    }
 
     return {
       getTotalCount: cursor.count,
@@ -766,7 +756,7 @@ export default class GroupItem extends baseGroup.dataSource {
       id: root.id,
       channelId,
       channelType: CHANNEL_TYPE,
-    }
+    };
   };
 
   resolveType({ groupTypeId, id }) {
