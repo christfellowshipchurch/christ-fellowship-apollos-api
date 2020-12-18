@@ -26,6 +26,9 @@ export default class Cache extends RedisCache.dataSource {
     pathnameId: (_, pathname) => `${process.env.CONTENT}_${pathname}`,
     personas: (_, id) => `${process.env.CONTENT}_personas_${id}`,
     rockConstant: (_, name) => `${process.env.CONTENT}_rock_constant_${name}`,
+    rockFeed: (_, id) => `${process.env.CONTENT}_rockFeed_${id}`,
+    contentChannelItemIds: (_, id) =>
+      `${process.env.CONTENT}_contentChannelItemIds_${id}`,
   };
 
   initialize({ context }) {
@@ -83,7 +86,7 @@ export default class Cache extends RedisCache.dataSource {
     ) {
       switch (entityTypeId) {
         case ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
-          const { ContentItem } = this.context.dataSources;
+          const { ContentItem, ContentChannel } = this.context.dataSources;
 
           // Delete the existing Content Item
           await this.delete({ key: this.KEY_TEMPLATES.contentItem`${entityId}` });
@@ -131,6 +134,23 @@ export default class Cache extends RedisCache.dataSource {
               }
             }
           });
+
+          /**
+           * Look to see if this Content Item is cached as a part of a Content Channel
+           * Items Id cache and update if so
+           */
+          const contentChannelIds = await this.get({
+            key: this.KEY_TEMPLATES
+              .contentChannelItemIds`${contentItem.contentChannelId}`,
+          });
+
+          if (contentChannelIds) {
+            await this.delete({
+              key: this.KEY_TEMPLATES
+                .contentChannelItemIds`${contentItem.contentChannelId}`,
+            });
+            ContentChannel.getContentItemIds(contentItem.contentChannelId);
+          }
 
           return 'Success';
         default:
