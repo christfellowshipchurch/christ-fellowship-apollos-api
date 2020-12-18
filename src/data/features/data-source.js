@@ -127,7 +127,7 @@ export default class Feature extends coreFeatures.dataSource {
   }
 
   async getHomeFeedFeatures(features) {
-    const { Flag, ActionAlgorithm } = this.context.dataSources;
+    const { Flag } = this.context.dataSources;
     const featuresFilteredByPermissions = await Promise.all(
       features.map(async (feature) => {
         const flagKey = get(feature, 'flagKey');
@@ -141,8 +141,6 @@ export default class Feature extends coreFeatures.dataSource {
         return feature;
       })
     );
-
-    console.log({ ActionAlgorithm });
 
     return Promise.all(
       featuresFilteredByPermissions
