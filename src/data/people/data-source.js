@@ -406,16 +406,16 @@ export default class Person extends corePerson.dataSource {
     return 'Failed';
   };
 
-  // superGetPersonas = this.getPersonas;
-  // getPersonas = async ({ categoryId }) => {
-  //   const { Cache, Auth } = this.context.dataSources;
-  //   // Get current user
-  //   const { id } = await Auth.getCurrentPerson();
-  //   const request = () => this.superGetPersonas({ categoryId });
+  superGetPersonas = this.getPersonas;
+  getPersonas = async ({ categoryId }) => {
+    const { Cache, Auth } = this.context.dataSources;
+    // Get current user
+    const { id } = await Auth.getCurrentPerson();
+    const request = () => this.superGetPersonas({ categoryId });
 
-  //   return Cache.request(request, {
-  //     key: Cache.KEY_TEMPLATES.personas`${id}`,
-  //     duration: 60 * 60 * 6, // 6 hour cache
-  //   });
-  // };
+    return Cache.request(request, {
+      key: Cache.KEY_TEMPLATES.personas`${id}`,
+      duration: 60 * 60 * 6, // 6 hour cache
+    });
+  };
 }
