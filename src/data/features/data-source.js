@@ -533,7 +533,6 @@ export default class Feature extends coreFeatures.dataSource {
 
     const { ContentItem, ContentChannel, Person } = this.context.dataSources;
     const contentItemIds = await ContentChannel.getContentItemIds(contentChannelId);
-    console.log({ contentItemIds });
     /**
      * You may be tempted to replace the following method with ContentItem.getFromIds
      * which wouldn't be wrong, but would also negate the extensive Redis Cache used
@@ -671,13 +670,17 @@ export default class Feature extends coreFeatures.dataSource {
     }
 
     const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === 'LIVE';
-    const { ContentItem, Person } = this.context.dataSources;
-    const contentChannelItems = await this.request('ContentChannelItems')
-      .filter(`ContentChannelId eq ${contentChannelId}`)
-      .andFilter(ContentItem.LIVE_CONTENT())
-      .cache({ ttl: 60 })
-      .orderBy('Order', 'asc')
-      .get();
+    const { ContentItem, ContentChannel, Person } = this.context.dataSources;
+    const contentItemIds = await ContentChannel.getContentItemIds(contentChannelId);
+    /**
+     * You may be tempted to replace the following method with ContentItem.getFromIds
+     * which wouldn't be wrong, but would also negate the extensive Redis Cache used
+     * on each individual Content Item. While not programatically the _best_ way to
+     * handle this given the Content Item API, it's actually more performant.
+     */
+    const contentChannelItems = await Promise.all(
+      contentItemIds.map((id) => ContentItem.getFromId(id))
+    );
     let personas = [];
 
     if (usePersonas) {
