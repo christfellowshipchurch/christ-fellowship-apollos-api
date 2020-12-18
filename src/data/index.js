@@ -7,11 +7,9 @@ import * as Scripture from '@apollosproject/data-connector-bible';
 import * as OneSignal from '@apollosproject/data-connector-onesignal';
 import * as Pass from '@apollosproject/data-connector-passes';
 import {
-  ActionAlgorithm,
   AuthSms,
   BinaryFiles,
   Followings,
-  FeatureFeed,
   Interactions,
   PersonalDevice,
   RockConstants,
@@ -24,9 +22,7 @@ import * as Theme from './theme';
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
 import * as OneSignalWithRock from './oneSignalWithRock';
 
-//
-// TODO : use when 1.7.0 goes into production
-// import * as ActionAlgorithm from './action-algorithms';
+import * as ActionAlgorithm from './action-algorithms';
 import * as AdditionalEndpoint from './additional-endpoints';
 import * as Address from './address';
 import * as Auth from './auth';
@@ -40,6 +36,7 @@ import * as DefinedValue from './defined-value';
 import * as DefinedValueList from './defined-value-list';
 import * as Event from './events';
 import * as Feature from './features';
+import * as FeatureFeed from './feature-feed';
 import * as Flag from './flag';
 import * as Group from './groups';
 import * as GroupItem from './group-item';

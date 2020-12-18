@@ -6,6 +6,7 @@ import ApollosConfig from '@apollosproject/config';
 import express from 'express';
 import { RockLoggingExtension } from '@apollosproject/rock-apollo-data-source';
 import { BugsnagPlugin } from '@apollosproject/bugsnag';
+import { get } from 'lodash';
 import {
   resolvers,
   schema,
