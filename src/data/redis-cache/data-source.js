@@ -24,6 +24,8 @@ export default class Cache extends RedisCache.dataSource {
     liveStreams: `${process.env.CONTENT}_liveStreams`,
     attributeMatrix: (_, id) => `attribute_matrix_${id}`,
     pathnameId: (_, pathname) => `${process.env.CONTENT}_${pathname}`,
+    personas: (_, id) => `${process.env.CONTENT}_personas_${id}`,
+    rockConstant: (_, name) => `${process.env.CONTENT}_rock_constant_${name}`,
   };
 
   initialize({ context }) {
