@@ -63,7 +63,7 @@ export const createVideoUrlFromGuid = (uri) =>
  * @param {string}  guid Rock Guid for the iamge
  * @param {object}  args List of arguments can be found here: https://imageresizing.net/docs/v4/docs/basics
  */
-export const rockImageUrl = (guid = isRequired(), args) => {
+export const rockImageUrl = (guid = isRequired('rockImageUrl', 'guid'), args) => {
   const mode = `mode=${get(args, 'mode', 'crop')}`;
   const identifierType = getIdentifierType(guid);
 
