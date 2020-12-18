@@ -12,7 +12,6 @@ import {
   Followings,
   Interactions,
   PersonalDevice,
-  RockConstants,
   Sharable,
   Template,
 } from '@apollosproject/data-connector-rock';
@@ -49,6 +48,7 @@ import * as PageBuilder from './page-builder';
 import * as Person from './people';
 import * as PhoneNumber from './phone-number';
 import * as PrayerRequest from './prayer-request';
+import * as RockConstants from './rock-constants';
 import * as Schedule from './schedule';
 import * as Search from './search';
 import * as StreamChat from './stream-chat';
