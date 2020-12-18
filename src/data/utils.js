@@ -63,7 +63,7 @@ export const createVideoUrlFromGuid = (uri) =>
  * @param {string}  guid Rock Guid for the iamge
  * @param {object}  args List of arguments can be found here: https://imageresizing.net/docs/v4/docs/basics
  */
-export const rockImageUrl = (guid = isRequired(), args) => {
+export const rockImageUrl = (guid = isRequired('rockImageUrl', 'guid'), args) => {
   const mode = `mode=${get(args, 'mode', 'crop')}`;
   const identifierType = getIdentifierType(guid);
 
@@ -126,7 +126,7 @@ export const generateAppLinkFromUrl = async (uri, context) => {
       const regex = /(day)\d+/g;
       const christmasUrl = pathParts[0].match(regex);
 
-      if (christmasUrl.length > 0) {
+      if (christmasUrl && christmasUrl.length > 0) {
         const itemId = CHRISTMAS_DEVO_IDS[pathParts];
         return contentSingleTag`DevotionalContentItem:${itemId}`;
       }

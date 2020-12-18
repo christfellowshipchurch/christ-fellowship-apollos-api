@@ -560,9 +560,16 @@ export default class GroupItem extends baseGroup.dataSource {
           })
       );
 
+    const { Cache } = this.context.dataSources;
+    const cachedKey = `group_${id}_cursor_${after}`;
+    const edges = Cache.request(() => cursor.get(), {
+      key: cachedKey,
+      expiresIn: 60 * 60 * 12, // 12 hour cache
+    });
+
     return {
       getTotalCount: cursor.count,
-      edges: cursor.get(),
+      edges,
     };
   }
 
@@ -749,7 +756,7 @@ export default class GroupItem extends baseGroup.dataSource {
       id: root.id,
       channelId,
       channelType: CHANNEL_TYPE,
-    }
+    };
   };
 
   resolveType({ groupTypeId, id }) {
