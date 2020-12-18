@@ -36,7 +36,7 @@ import * as DefinedValue from './defined-value';
 import * as DefinedValueList from './defined-value-list';
 import * as Event from './events';
 import * as Feature from './features';
-import * as FeatureFeed from './feature-feed';
+import * as FeatureFeed from './feature-feeds';
 import * as Flag from './flag';
 import * as Group from './groups';
 import * as GroupItem from './group-item';

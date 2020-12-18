@@ -37,9 +37,9 @@ export default class ContentChannel extends coreContentChannel.dataSource {
     return [...result, ...channels];
   };
 
-  async getFeatures(
+  getFeatures = async (
     contentChannelId = isRequired('ContentChannel.getFeatures', 'contentChannelId')
-  ) {
+  ) => {
     if (!contentChannelId) {
       return [];
     }
@@ -168,5 +168,5 @@ export default class ContentChannel extends coreContentChannel.dataSource {
         }
       })
     );
-  }
+  };
 }
