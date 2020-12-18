@@ -18,14 +18,8 @@ export default gql`
     audios: [AudioMedia]
     htmlContent: String
     summary: String
-    childContentItemsConnection(
-      first: Int
-      after: String
-    ): ContentItemsConnection
-    siblingContentItemsConnection(
-      first: Int
-      after: String
-    ): ContentItemsConnection
+    childContentItemsConnection(first: Int, after: String): ContentItemsConnection
+    siblingContentItemsConnection(first: Int, after: String): ContentItemsConnection
     parentChannel: ContentChannel
     theme: Theme
 
@@ -35,6 +29,7 @@ export default gql`
     callToAction: CallToAction
     secondaryCallToAction: CallToAction
     subtitle: String
+    publishDate: String
 
     openLinksInNewTab: Boolean
   }

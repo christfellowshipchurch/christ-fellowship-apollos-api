@@ -7,9 +7,11 @@ import * as Scripture from '@apollosproject/data-connector-bible';
 import * as OneSignal from '@apollosproject/data-connector-onesignal';
 import * as Pass from '@apollosproject/data-connector-passes';
 import {
+  ActionAlgorithm,
   AuthSms,
   BinaryFiles,
   Followings,
+  FeatureFeed,
   Interactions,
   PersonalDevice,
   RockConstants,
@@ -64,7 +66,7 @@ import * as Workflow from './workflow';
 
 // MARK : - Please keep in alphabetical order
 const data = {
-  // ActionAlgorithm,
+  ActionAlgorithm,
   AdditionalEndpoint,
   Address,
   Analytics,
@@ -81,6 +83,7 @@ const data = {
   DefinedValueList,
   Event,
   Feature,
+  FeatureFeed,
   Flag,
   Followings,
   Group,

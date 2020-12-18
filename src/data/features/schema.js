@@ -19,7 +19,6 @@ export default gql`
   }
 
   extend type HorizontalCardListFeature {
-    primaryAction: FeatureAction
     cardType: HorizontalCardType
   }
 
@@ -33,20 +32,8 @@ export default gql`
     start: Int
   }
 
-  type ActionBarFeatureAction {
-    relatedNode: Node
-    action: ACTION_FEATURE_ACTION
-    title: String
-
-    icon: String
+  extend type ActionBarAction {
     theme: Theme
-  }
-
-  type ActionBarFeature implements Feature & Node {
-    id: ID!
-    order: Int
-
-    actions: [ActionBarFeatureAction]
   }
 
   type AvatarListFeature implements Feature & Node {
@@ -55,7 +42,7 @@ export default gql`
 
     people: [Person]
     isCard: Boolean
-    primaryAction: ActionBarFeatureAction
+    primaryAction: ActionBarAction
   }
 
   type LiveStreamListFeature implements Feature & Node {
