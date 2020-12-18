@@ -1,5 +1,5 @@
 import { Feature as coreFeatures, Utils } from '@apollosproject/data-connector-rock';
-import { get, split, flattenDeep } from 'lodash';
+import { get, split, flattenDeep, take } from 'lodash';
 import moment from 'moment-timezone';
 import ApollosConfig from '@apollosproject/config';
 
@@ -91,23 +91,23 @@ export default class Feature extends coreFeatures.dataSource {
 
   async contentChildrenAlgorithm({ contentChannelItemId, limit = 10 }) {
     const { ContentItem } = this.context.dataSources;
-    const cursor = (
-      await ContentItem.getCursorByParentContentItemId(contentChannelItemId)
-    ).expand('ContentChannel');
-    const items = limit ? await cursor.top(limit).get() : await cursor.get();
+    const childrenIds = await ContentItem.getChildrenIds(contentChannelItemId);
 
-    return items.map((item, i) => ({
-      id: `${item.id}${i}`,
-      title:
-        get(item, 'attributeValues.cardTitle.value', '') !== ''
-          ? get(item, 'attributeValues.cardTitle.value', item.title)
-          : item.title,
-      subtitle: ContentItem.createSummary(item),
-      relatedNode: { ...item, __type: ContentItem.resolveType(item) },
-      image: ContentItem.getCoverImage(item),
-      action: 'READ_CONTENT',
-      summary: ContentItem.createSummary(item),
-    }));
+    return take(childrenIds, limit).map(async (id, i) => {
+      const item = await ContentItem.getFromId(id);
+      return {
+        id: `${item.id}${i}`,
+        title:
+          get(item, 'attributeValues.cardTitle.value', '') !== ''
+            ? get(item, 'attributeValues.cardTitle.value', item.title)
+            : item.title,
+        subtitle: ContentItem.createSummary(item),
+        relatedNode: { ...item, __type: ContentItem.resolveType(item) },
+        image: ContentItem.getCoverImage(item),
+        action: 'READ_CONTENT',
+        summary: ContentItem.createSummary(item),
+      };
+    });
   }
 
   async globalContentAlgorithm({ index = 0, limit = null } = {}) {

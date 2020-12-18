@@ -17,6 +17,7 @@ export default class Cache extends RedisCache.dataSource {
 
   KEY_TEMPLATES = {
     contentItem: (_, id) => `${process.env.CONTENT}_contentItem_${id}`,
+    contentItemChildren: (_, id) => `${process.env.CONTENT}_contentItem_${id}_children`,
     eventContentItems: `${process.env.CONTENT}_eventContentItems`,
     group: (_, id) => `${process.env.CONTENT}_group_${id}`,
     liveStreamRelatedNode: (_, id) => `liveStream-relatedNode-${id}`,
@@ -148,6 +149,21 @@ export default class Cache extends RedisCache.dataSource {
             await this.delete({
               key: this.KEY_TEMPLATES
                 .contentChannelItemIds`${contentItem.contentChannelId}`,
+            });
+            ContentChannel.getContentItemIds(contentItem.contentChannelId);
+          }
+
+          /**
+           * Look to see if this Content Item has it's childre cached and flush
+           * that if so
+           */
+          const childrenIds = await this.get({
+            key: this.KEY_TEMPLATES.contentItemChildren`${contentItem.id}`,
+          });
+
+          if (childrenIds) {
+            await this.delete({
+              key: this.KEY_TEMPLATES.contentItemChildren`${contentItem.id}`,
             });
             ContentChannel.getContentItemIds(contentItem.contentChannelId);
           }
