@@ -400,6 +400,7 @@ ROCK_ENTITY_IDS:
   CONTENT_CHANNEL_ITEM: 208
   DEFINED_VALUE: 31
   GROUP: 16
+  PRAYER_REQUEST: 33
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:
