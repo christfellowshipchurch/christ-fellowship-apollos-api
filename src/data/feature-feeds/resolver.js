@@ -11,6 +11,18 @@ const resolver = {
         type: 'contentChannel',
         args: { contentChannelId: CONTENT_CHANNEL_FEEDS.HOME_FEEDS, ...args },
       }),
+    connectFeedFeatures: async (root, args, { dataSources: { Feature } }) =>
+      Feature.getConnectFeedFeatures(),
+    eventsFeedFeatures: async (root, args, { dataSources: { Feature } }) =>
+      Feature.getEventsFeedFeatures(),
+    giveFeedFeatures: (root, args, { dataSources: { FeatureFeed } }) =>
+      console.log({ FeatureFeed }) ||
+      FeatureFeed.getFeed({
+        type: 'apollosConfig',
+        args: { section: 'FEATURE_FEEDS.GIVE', ...args },
+      }),
+    userHeaderFeatures: async (root, args, { dataSources: { Feature, Flag } }) =>
+      Feature.getHomeHeaderFeedFeatures(),
   },
 };
 

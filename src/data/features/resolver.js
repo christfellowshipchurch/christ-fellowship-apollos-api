@@ -15,21 +15,6 @@ const resolver = {
     id: ({ id }) => createGlobalId(id, 'LiveStreamListFeature'),
   },
   Query: {
-    connectFeedFeatures: async (root, args, { dataSources: { Feature } }) =>
-      Feature.getConnectFeedFeatures(),
-    eventsFeedFeatures: async (root, args, { dataSources: { Feature } }) =>
-      Feature.getEventsFeedFeatures(),
-    giveFeedFeatures: async (root, args, { dataSources: { Feature } }) =>
-      Feature.getGiveFeedFeatures(),
-    userHeaderFeatures: async (root, args, { dataSources: { Feature, Flag } }) => {
-      const status = await Flag.currentUserCanUseFeature('HOME_HEADER');
-
-      if (status === 'LIVE') {
-        return Feature.getHomeHeaderFeedFeatures();
-      }
-
-      return [];
-    },
     userFeedFeatures: async (root, args, { clientVersion, dataSources: { Feature } }) => {
       // 5.0.x and 5.1.x use a different client side UI set that is not compatible
       // with Core Apollos 1.4.3. In order to combat that, we check the version of the client

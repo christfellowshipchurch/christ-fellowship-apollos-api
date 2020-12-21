@@ -52,11 +52,4 @@ export default gql`
     subtitle: String
     liveStreams: [LiveStream]
   }
-
-  extend type Query {
-    connectFeedFeatures: [Feature] @cacheControl(maxAge: 0)
-    eventsFeedFeatures: [Feature] @cacheControl(maxAge: 0)
-    giveFeedFeatures: [Feature] @cacheControl(maxAge: 0)
-    userHeaderFeatures: [Feature] @cacheControl(maxAge: 0)
-  }
 `;
