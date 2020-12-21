@@ -561,7 +561,7 @@ export default class GroupItem extends baseGroup.dataSource {
       );
 
     const { Cache } = this.context.dataSources;
-    const cachedKey = `group_${id}_cursor_${after}`;
+    const cachedKey = `${id}_${first}_${skip}_${isLeader}`;
     const edges = Cache.request(() => cursor.get(), {
       key: cachedKey,
       expiresIn: 60 * 60 * 12, // 12 hour cache

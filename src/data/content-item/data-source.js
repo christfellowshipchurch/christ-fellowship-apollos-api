@@ -404,4 +404,25 @@ export default class ContentItem extends coreContentItem.dataSource {
       associations.map(({ contentChannelItemId }) => contentChannelItemId)
     ).transform((results) => results.sort(this.sortByAssociationOrder(associations)));
   };
+
+  /**
+   * Gets the Ids of all Child Content Items for a given Content Channel Item Id
+   * @param {number} id - Rock Id of the Parent Content Channel Item
+   * @return {array}
+   */
+  getChildrenIds = async (id) => {
+    const { Cache } = this.context.dataSources;
+    const request = async () => {
+      const cursor = (await this.getCursorByParentContentItemId(id))
+        .expand('ContentChannel')
+        .transform((results) => results.filter((item) => !!item.id).map(({ id }) => id));
+
+      return cursor.get();
+    };
+
+    return Cache.request(request, {
+      key: Cache.KEY_TEMPLATES.contentItemChildren`${id}`,
+      expiresIn: 60 * 60 * 12, // 12 hour cache,
+    });
+  };
 }
