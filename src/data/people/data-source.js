@@ -37,7 +37,7 @@ export default class Person extends corePerson.dataSource {
     const { Cache } = this.context.dataSources;
     // Fetch the PersonAlias, selecting only the PersonId.
     const getPersonId = async () => {
-      const personAlias = this.request('/PersonAlias')
+      const personAlias = await this.request('/PersonAlias')
         .filter(getIdentifierType(aliasId).query)
         .select('PersonId')
         .first();
