@@ -118,8 +118,8 @@ export default class LiveStream extends matrixItemDataSource {
       id: root.id,
       channelId,
       channelType: CHANNEL_TYPE,
-    }
-};
+    };
+  }
 
   async getLiveStreamContentItems() {
     const request = async () => {
@@ -178,9 +178,9 @@ export default class LiveStream extends matrixItemDataSource {
 
           if (scheduleGuid && scheduleGuid !== '' && url && url !== '') {
             const schedule = await Schedule.getFromId(scheduleGuid);
-            if (schedule.length) {
+            if (schedule) {
               const nextInstance = await Schedule._parseCustomSchedule(
-                schedule[0].iCalendarContent
+                schedule.iCalendarContent
               );
 
               return {

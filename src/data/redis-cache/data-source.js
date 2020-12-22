@@ -30,10 +30,11 @@ export default class Cache extends RedisCache.dataSource {
     pathnameId: (_, pathname) => `${process.env.CONTENT}_${pathname}`,
     personas: (_, id) => `${process.env.CONTENT}_personas_${id}`,
     person: (_, id) => `${process.env.CONTENT}_person_${id}`,
+    personAlias: (_, id) => `${process.env.CONTENT}_person_alias_${id}`,
     personGroups: (_, personId) => `${process.env.CONTENT}_person_groups_${personId}`,
     personPrayers: (_, personId) =>
       `${process.env.CONTENT}_person_prayer_requests_${personId}`,
-    prayerRequest: (_, id) => `${process.env.CONTENT}_prayer_requests_${id}`,
+    prayerRequest: (_, id) => `${process.env.CONTENT}_prayer_request_${id}`,
     rockConstant: (_, name) => `${process.env.CONTENT}_rock_constant_${name}`,
     rockFeed: (_, id) => `${process.env.CONTENT}_rockFeed_${id}`,
     schedule: (_, id) => `${process.env.CONTENT}_schedule_${id}`,

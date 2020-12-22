@@ -143,6 +143,29 @@ ROCK_MAPPINGS:
     VolunteerGroup:
       GroupTypeId: [37]
 
+  GROUP:
+    LEADER_ROLE_IDS:
+      - 47
+      - 50
+      - 63
+      - 97
+      - 99
+      - 101
+      - 106
+      - 107
+      - 151
+      - 192
+      - 195
+      - 237
+      - 240
+      - 244
+      - 250
+      - 257
+      - 272
+      - 290
+      - 292
+      - 344
+
   DATAVIEW_CATEGORIES:
     # Id of the category used to store all persona dataviews
     PersonaId: 537

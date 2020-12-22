@@ -33,16 +33,25 @@ export default class Person extends corePerson.dataSource {
     });
   };
 
-  getFromAliasId = async (id) => {
+  getFromAliasId = async (aliasId) => {
+    const { Cache } = this.context.dataSources;
     // Fetch the PersonAlias, selecting only the PersonId.
-    const personAlias = await this.request('/PersonAlias')
-      .filter(getIdentifierType(id).query)
-      .select('PersonId')
-      .first();
+    const getPersonId = async () => {
+      const personAlias = this.request('/PersonAlias')
+        .filter(getIdentifierType(aliasId).query)
+        .select('PersonId')
+        .first();
+
+      return personAlias ? personAlias.personId : null;
+    };
+    const personId = await Cache.request(getPersonId, {
+      key: Cache.KEY_TEMPLATES.personAlias`${aliasId}`,
+      expiresIn: 60 * 60 * 24, // 24 hour cache
+    });
 
     // If we have a personAlias, return him.
-    if (personAlias) {
-      return this.getFromId(personAlias.personId);
+    if (personId) {
+      return this.getFromId(personId);
     }
     // Otherwise, return null.
     return null;

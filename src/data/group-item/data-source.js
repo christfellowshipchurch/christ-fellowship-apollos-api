@@ -13,6 +13,8 @@ import crypto from 'crypto-js';
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
 
+const { GROUP } = ROCK_MAPPINGS;
+const { LEADER_ROLE_IDS } = GROUP;
 const { createImageUrlFromGuid } = Utils;
 
 /** TEMPORARY FIX
@@ -342,11 +344,7 @@ export default class GroupItem extends baseGroup.dataSource {
       const groupAssociationRequests = await Promise.all(
         chunk(_groupTypeIds, 3).map((groupTypeIds) =>
           this.request('GroupMembers')
-            .filter(
-              `PersonId eq ${personId} ${
-                asLeader ? ' and GroupRole/IsLeader eq true' : ''
-              }`
-            )
+            .filter(`PersonId eq ${personId}`)
             // Do not include groups where user's status is Inactive or Pending
             .andFilter(`GroupMemberStatus ne 'Inactive'`)
             .andFilter(`GroupMemberStatus ne 'Pending'`)
@@ -361,7 +359,7 @@ export default class GroupItem extends baseGroup.dataSource {
       const groupAssociations = flatten(groupAssociationRequests);
       return groupAssociations.map(({ groupId, groupRoleId }) => ({
         groupId,
-        isLeader: groupRoleId === 99,
+        isLeader: LEADER_ROLE_IDS.includes(groupRoleId),
       }));
     };
 

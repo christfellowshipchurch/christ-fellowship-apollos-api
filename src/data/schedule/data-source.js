@@ -3,7 +3,7 @@ import ApollosConfig from '@apollosproject/config';
 import ical from 'node-ical';
 import moment from 'moment-timezone';
 import { filter, split, flatten, first, get, toNumber } from 'lodash';
-import { getIdentifierType } from '../utils';
+import { getIdentifierType, isRequired } from '../utils';
 
 const { ROCK, ROCK_MAPPINGS } = ApollosConfig;
 const { TIMEZONE } = ROCK;
@@ -18,9 +18,9 @@ export default class Schedule extends RockApolloDataSource {
   defaultEndOffsetMinutes = 60 * 12; // 8 hours
 
   /** MARK: - Getters */
-  getFromId = async (id) => {
+  getFromId = async (id = isRequired('Schedule.getFromId', 'id')) => {
     const { Cache } = this.context.dataSources;
-    const request = () => this.request().filter(getIdentifierType(id).query).get();
+    const request = () => this.request().filter(getIdentifierType(id).query).first();
 
     return Cache.request(request, {
       key: Cache.KEY_TEMPLATES.schedule`${id}`,

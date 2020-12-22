@@ -1,5 +1,5 @@
 import { Feature as coreFeatures, Utils } from '@apollosproject/data-connector-rock';
-import { get, split, flattenDeep, take } from 'lodash';
+import { get, split, flattenDeep, take, isEmpty } from 'lodash';
 import moment from 'moment-timezone';
 import ApollosConfig from '@apollosproject/config';
 
@@ -139,7 +139,7 @@ export default class Feature extends coreFeatures.dataSource {
   }
 
   async myGroupsAlgorithm({ limit = null } = {}) {
-    const { Group, Auth, ContentItem } = this.context.dataSources;
+    const { Group, Auth, ContentItem, Schedule } = this.context.dataSources;
 
     try {
       // Exclude Dream Team
@@ -151,8 +151,8 @@ export default class Feature extends coreFeatures.dataSource {
       const groups = await Group.getByPerson({ personId: id, groupTypeIds });
 
       return groups.map((item, i) => {
-        const getScheduleFriendlyText = async () => {
-          const schedule = await Group.getScheduleFromId(item.scheduleId);
+        const getScheduleFriendlyText = async (scheduleId) => {
+          const schedule = await Schedule.getFromId(scheduleId);
 
           return schedule.friendlyScheduleText;
         };
@@ -166,7 +166,9 @@ export default class Feature extends coreFeatures.dataSource {
           },
           image: ContentItem.getCoverImage(item),
           action: 'READ_GROUP',
-          subtitle: getScheduleFriendlyText(),
+          subtitle: isEmpty(item.scheduleId)
+            ? null
+            : getScheduleFriendlyText(item.scheduleId),
         };
       });
     } catch (e) {
