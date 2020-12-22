@@ -22,19 +22,36 @@ export default class Person extends corePerson.dataSource {
 
   // Overrides the Core method to allow for the Id
   //  passed to be either an int or guid
-  getFromId = (id) =>
-    this.request().filter(getIdentifierType(id).query).expand('Photo').first();
+  getFromId = (id) => {
+    const { Cache } = this.context.dataSources;
+    const request = () =>
+      this.request().filter(getIdentifierType(id).query).expand('Photo').first();
 
-  getFromAliasId = async (id) => {
+    return Cache.request(request, {
+      key: Cache.KEY_TEMPLATES.person`${id}`,
+      expiresIn: 60 * 60, // 1 hour cache
+    });
+  };
+
+  getFromAliasId = async (aliasId) => {
+    const { Cache } = this.context.dataSources;
     // Fetch the PersonAlias, selecting only the PersonId.
-    const personAlias = await this.request('/PersonAlias')
-      .filter(getIdentifierType(id).query)
-      .select('PersonId')
-      .first();
+    const getPersonId = async () => {
+      const personAlias = await this.request('/PersonAlias')
+        .filter(getIdentifierType(aliasId).query)
+        .select('PersonId')
+        .first();
+
+      return personAlias ? personAlias.personId : null;
+    };
+    const personId = await Cache.request(getPersonId, {
+      key: Cache.KEY_TEMPLATES.personAlias`${aliasId}`,
+      expiresIn: 60 * 60 * 24, // 24 hour cache
+    });
 
     // If we have a personAlias, return him.
-    if (personAlias) {
-      return this.getFromId(personAlias.personId);
+    if (personId) {
+      return this.getFromId(personId);
     }
     // Otherwise, return null.
     return null;
