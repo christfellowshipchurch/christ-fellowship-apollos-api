@@ -37,9 +37,8 @@ export default class Schedule extends RockApolloDataSource {
     if (id) {
       // getFromId returns an array with 1 result, so we
       // just need to grab the first
-      const scheduleArr = await this.getFromId(id);
+      const schedule = await this.getFromId(id);
 
-      const schedule = first(scheduleArr);
       if (schedule) {
         const occurrences = await this.parseiCalendar(schedule.iCalendarContent);
         const filteredOccurrences = filter(occurrences, ({ end }) => {
@@ -125,7 +124,7 @@ export default class Schedule extends RockApolloDataSource {
 
     if (!schedule) return null;
 
-    return this.parse(first(schedule));
+    return this.parse(schedule);
   }
 
   async _parseNamedSchedule(id) {
