@@ -118,8 +118,8 @@ export default class LiveStream extends matrixItemDataSource {
       id: root.id,
       channelId,
       channelType: CHANNEL_TYPE,
-    }
-};
+    };
+  }
 
   async getLiveStreamContentItems() {
     const request = async () => {
@@ -311,7 +311,7 @@ export default class LiveStream extends matrixItemDataSource {
     const { Person } = this.context.dataSources;
     const dayOfWeek = moment.tz(TIMEZONE).format('dddd').toLowerCase();
 
-    if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday' || dayOfWeek === 'wednesday') {
+    if (dayOfWeek === 'wednesday' || dayOfWeek === 'thursday') {
       return this.weekendServiceIsLive(moment().utc().toISOString());
     }
 
@@ -391,6 +391,8 @@ export default class LiveStream extends matrixItemDataSource {
   weekendServiceIsLive(date) {
     const mDate = moment(date).tz(TIMEZONE);
 
+    console.log({ mDate });
+
     if (mDate.isValid()) {
       const weekendService = WeekendServices.find((service) => {
         const { day, start, end } = service;
@@ -421,8 +423,8 @@ export default class LiveStream extends matrixItemDataSource {
               .minute(weekendService.end.minute)
               .utc()
               .toISOString(),
-            title: 'Christ Fellowship Everywhere',
-            contentChannelItemId: 8377,
+            title: 'Christmas at Christ Fellowship',
+            contentChannelItemId: 8876,
             attributeValues: {
               liveStreamUrl: {
                 value:
