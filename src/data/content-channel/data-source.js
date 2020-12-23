@@ -50,7 +50,7 @@ export default class ContentChannel extends coreContentChannel.dataSource {
 
     return Cache.request(request, {
       key: Cache.KEY_TEMPLATES.contentChannelItemIds`${contentChannelId}`,
-      expiresIn: 60 * 60 * 12, // 12 hour cache
+      expiresIn: 60 * 60 * 1, // 1 hour cache
     });
   };
 }
