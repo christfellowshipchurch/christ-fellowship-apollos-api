@@ -3,68 +3,46 @@
  */
 export default [
   {
-    day: 'wednesday',
+    day: 'sunday',
     start: {
-      hour: 17,
+      hour: 8,
+      minute: 25,
+    },
+    end: {
+      hour: 9,
+      minute: 50,
+    },
+  },
+  {
+    day: 'sunday',
+    start: {
+      hour: 9,
       minute: 59,
     },
     end: {
-      hour: 19,
+      hour: 11,
       minute: 25,
     },
   },
   {
-    day: 'wednesday',
+    day: 'sunday',
     start: {
-      hour: 19,
-      minute: 59,
+      hour: 11,
+      minute: 45,
     },
     end: {
-      hour: 21,
-      minute: 25,
-    },
-  },
-  {
-    day: 'thursday',
-    start: {
       hour: 13,
-      minute: 59,
-    },
-    end: {
-      hour: 15,
-      minute: 25,
+      minute: 10,
     },
   },
   {
-    day: 'thursday',
+    day: 'sunday',
     start: {
-      hour: 15,
+      hour: 16,
       minute: 59,
     },
     end: {
-      hour: 17,
-      minute: 25,
-    },
-  },
-  {
-    day: 'thursday',
-    start: {
-      hour: 17,
-      minute: 59,
-    },
-    end: {
-      hour: 19,
-      minute: 25,
-    },
-  },
-  {
-    day: 'thursday',
-    start: {
-      hour: 19,
-      minute: 59,
-    },
-    end: {
-      hour: 21,
+      hour: 18,
       minute: 25,
     },
   },
