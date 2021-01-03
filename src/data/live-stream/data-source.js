@@ -421,8 +421,8 @@ export default class LiveStream extends matrixItemDataSource {
               .minute(weekendService.end.minute)
               .utc()
               .toISOString(),
-            title: 'Christmas at Christ Fellowship',
-            contentChannelItemId: 8876,
+            title: 'Tune In Online',
+            contentChannelItemId: 8377,
             attributeValues: {
               liveStreamUrl: {
                 value:
