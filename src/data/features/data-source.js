@@ -1,5 +1,5 @@
 import { Feature as coreFeatures, Utils } from '@apollosproject/data-connector-rock';
-import { get, split, flattenDeep, take } from 'lodash';
+import { get, split, flattenDeep, take, isEmpty } from 'lodash';
 import moment from 'moment-timezone';
 import ApollosConfig from '@apollosproject/config';
 
@@ -139,7 +139,7 @@ export default class Feature extends coreFeatures.dataSource {
   }
 
   async myGroupsAlgorithm({ limit = null } = {}) {
-    const { Group, Auth, ContentItem } = this.context.dataSources;
+    const { Group, Auth, ContentItem, Schedule } = this.context.dataSources;
 
     try {
       // Exclude Dream Team
@@ -147,13 +147,12 @@ export default class Feature extends coreFeatures.dataSource {
         (key) => key !== 'DreamTeam'
       );
       const groupTypeIds = groupTypeKeys.map((key) => Group.groupTypeMap[key]);
-
       const { id } = await Auth.getCurrentPerson();
       const groups = await Group.getByPerson({ personId: id, groupTypeIds });
 
       return groups.map((item, i) => {
-        const getScheduleFriendlyText = async () => {
-          const schedule = await Group.getScheduleFromId(item.scheduleId);
+        const getScheduleFriendlyText = async (scheduleId) => {
+          const schedule = await Schedule.getFromId(scheduleId);
 
           return schedule.friendlyScheduleText;
         };
@@ -167,7 +166,9 @@ export default class Feature extends coreFeatures.dataSource {
           },
           image: ContentItem.getCoverImage(item),
           action: 'READ_GROUP',
-          subtitle: getScheduleFriendlyText(),
+          subtitle: isEmpty(item.scheduleId)
+            ? null
+            : getScheduleFriendlyText(item.scheduleId),
         };
       });
     } catch (e) {
@@ -180,14 +181,14 @@ export default class Feature extends coreFeatures.dataSource {
   }
 
   async myPrayersAlgorithm({ limit = 5 } = {}) {
-    const { PrayerRequest, Person } = this.context.dataSources;
-    const cursor = await PrayerRequest.byCurrentUser();
-    const items = await cursor.top(limit).get();
+    const { Auth, PrayerRequest, Person } = this.context.dataSources;
+    const { id } = await Auth.getCurrentPerson();
+    const prayerIds = await PrayerRequest.getIdsByPerson(id);
 
-    return items.map((item, i) => {
-      const getProfileImage = async () => {
-        const root = await Person.getFromAliasId(item.requestedByPersonAliasId);
-
+    return take(prayerIds, limit).map(async (id, i) => {
+      const prayerRequest = await PrayerRequest.getFromId(id);
+      const getProfileImage = async (prayer) => {
+        const root = await Person.getFromAliasId(prayer.requestedByPersonAliasId);
         const guid = get(root, 'photo.guid');
 
         return {
@@ -203,15 +204,15 @@ export default class Feature extends coreFeatures.dataSource {
       };
 
       return {
-        id: `${item.id}${i}`,
-        title: item.text,
+        id: `${id}${i}`,
+        title: prayerRequest.text,
         relatedNode: {
           __type: 'PrayerRequest',
-          ...item,
+          ...prayerRequest,
         },
-        image: getProfileImage(),
+        image: getProfileImage(prayerRequest),
         action: 'READ_PRAYER',
-        subtitle: moment(item.enteredDateTime).tz(ROCK.TIMEZONE).utc().format(),
+        subtitle: moment(prayerRequest.enteredDateTime).tz(ROCK.TIMEZONE).utc().format(),
       };
     });
   }

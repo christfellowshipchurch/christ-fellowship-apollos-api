@@ -1,5 +1,6 @@
 import ApollosConfig from '@apollosproject/config';
 import * as RedisCache from '@apollosproject/data-connector-redis-cache';
+import { PrayerRequest } from '@apollosproject/data-connector-rock';
 import { keys, get } from 'lodash';
 import { isRequired, isType } from '../utils';
 
@@ -16,20 +17,27 @@ export default class Cache extends RedisCache.dataSource {
   DEFAULT_TIMEOUT = 60 * 60; // 1 hour cache
 
   KEY_TEMPLATES = {
+    attributeMatrix: (_, id) => `attribute_matrix_${id}`,
+    contentChannelItemIds: (_, id) =>
+      `${process.env.CONTENT}_contentChannelItemIds_${id}`,
     contentItem: (_, id) => `${process.env.CONTENT}_contentItem_${id}`,
     contentItemChildren: (_, id) => `${process.env.CONTENT}_contentItem_${id}_children`,
     eventContentItems: `${process.env.CONTENT}_eventContentItems`,
     group: (_, id) => `${process.env.CONTENT}_group_${id}`,
-    liveStreamRelatedNode: (_, id) => `liveStream-relatedNode-${id}`,
     liveStreamContentItems: `${process.env.CONTENT}_liveStreamContentItems`,
+    liveStreamRelatedNode: (_, id) => `liveStream-relatedNode-${id}`,
     liveStreams: `${process.env.CONTENT}_liveStreams`,
-    attributeMatrix: (_, id) => `attribute_matrix_${id}`,
     pathnameId: (_, pathname) => `${process.env.CONTENT}_${pathname}`,
     personas: (_, id) => `${process.env.CONTENT}_personas_${id}`,
+    person: (_, id) => `${process.env.CONTENT}_person_${id}`,
+    personAlias: (_, id) => `${process.env.CONTENT}_person_alias_${id}`,
+    personGroups: (_, personId) => `${process.env.CONTENT}_person_groups_${personId}`,
+    personPrayers: (_, personId) =>
+      `${process.env.CONTENT}_person_prayer_requests_${personId}`,
+    prayerRequest: (_, id) => `${process.env.CONTENT}_prayer_request_${id}`,
     rockConstant: (_, name) => `${process.env.CONTENT}_rock_constant_${name}`,
     rockFeed: (_, id) => `${process.env.CONTENT}_rockFeed_${id}`,
-    contentChannelItemIds: (_, id) =>
-      `${process.env.CONTENT}_contentChannelItemIds_${id}`,
+    schedule: (_, id) => `${process.env.CONTENT}_schedule_${id}`,
   };
 
   initialize({ context }) {
@@ -169,6 +177,35 @@ export default class Cache extends RedisCache.dataSource {
           }
 
           return 'Success';
+        case ROCK_ENTITY_IDS.PRAYER_REQUEST:
+          const { Auth, PrayerRequest } = this.context.dataSources;
+          if (entityId > 0) {
+            // Delete the existing Prayer Request
+            await this.delete({ key: this.KEY_TEMPLATES.prayerRequest`${entityId}` });
+
+            /**
+             * Request the full Content Item from ContentItem data source so that it gets cached
+             * consistently.
+             */
+            await PrayerRequest.getFromId(entityId);
+          }
+
+          /**
+           * If there is a user currently logged in, that means that they most
+           * likely are flushing the cache after adding a new prayer request.
+           *
+           * In this case, let's go ahead and kill the cache for that user in order
+           * to update it with their new request
+           */
+          try {
+            const { id } = Auth.getCurrentUser;
+            await this.delete({ key: this.KEY_TEMPLATES.personPrayers`${id}` });
+            await PrayerRequest.getIdsByPerson(id);
+          } catch (e) {
+            console.log(
+              'No user logged in when flushing a prayer request cache. Ignoring user cached data'
+            );
+          }
         default:
           return 'Failed';
       }
