@@ -1,8 +1,9 @@
 import { dataSource as matrixItemDataSource } from '../matrix-item';
-import moment, { tz } from 'moment-timezone';
+import moment from 'moment-timezone';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
-import { split, filter, get, find, flatten, flattenDeep, uniqBy, first } from 'lodash';
+import crypto from 'crypto-js';
+import { split, filter, get, flattenDeep, uniqBy, first } from 'lodash';
 
 import { getIdentifierType } from '../utils';
 import WeekendServices from './weekend-services';
@@ -104,20 +105,22 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async getStreamChatChannel(root) {
-    const { Auth, StreamChat, Flag } = this.context.dataSources;
+    const { Flag } = this.context.dataSources;
     const featureFlagStatus = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
 
     if (featureFlagStatus !== 'LIVE') {
       return null;
     }
 
-    const resolvedType = this.resolveType(root);
-    const globalId = createGlobalId(root.id, resolvedType);
+    const { id, eventStartTime, eventEndTime } = root;
+    const derivedId = JSON.stringify({ id, eventStartTime, eventEndTime });
+    const globalId = createGlobalId(derivedId, 'LiveStream');
     const channelId = crypto.SHA1(globalId).toString();
+
     return {
       id: root.id,
       channelId,
-      channelType: CHANNEL_TYPE,
+      channelType: 'livestream',
     };
   }
 

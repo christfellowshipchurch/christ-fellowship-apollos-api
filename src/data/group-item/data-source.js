@@ -65,7 +65,6 @@ const EXCLUDE_IDS = [
   1032489,
 ];
 
-const CHANNEL_TYPE = 'group';
 const GROUP_COVER_IMAGES_DEFINED_TYPE_ID = get(
   ApollosConfig,
   'ROCK_MAPPINGS.DEFINED_TYPES.GROUP_COVER_IMAGES'
@@ -716,6 +715,7 @@ export default class GroupItem extends baseGroup.dataSource {
     // TODO : break up this logic and move it to the StreamChat DataSource
     const { Auth, StreamChat, Flag } = this.context.dataSources;
     const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
+    const CHANNEL_TYPE = StreamChat.channelType.GROUP;
 
     if (featureFlagStatus !== 'LIVE') {
       return null;
