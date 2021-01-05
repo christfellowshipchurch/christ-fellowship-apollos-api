@@ -13,6 +13,8 @@ import crypto from 'crypto-js';
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
 
+const { GROUP } = ROCK_MAPPINGS;
+const { LEADER_ROLE_IDS } = GROUP;
 const { createImageUrlFromGuid } = Utils;
 
 /** TEMPORARY FIX
@@ -333,42 +335,56 @@ export default class GroupItem extends baseGroup.dataSource {
     asLeader = false,
     groupTypeIds = null,
   }) => {
-    // Get the active groups that the person is a member of.
-    // Conditionally filter that list of groups on whether or not your
-    // role in that group is that of "Leader".
-    const _groupTypeIds = groupTypeIds || this.getGroupTypeIds();
-    const groupAssociationRequests = await Promise.all(
-      chunk(_groupTypeIds, 3).map((groupTypeIds) =>
-        this.request('GroupMembers')
-          .expand('GroupRole')
-          .filter(
-            `PersonId eq ${personId} ${asLeader ? ' and GroupRole/IsLeader eq true' : ''}`
-          )
-          // Do not include groups where user's status is Inactive or Pending
-          .andFilter(`GroupMemberStatus ne 'Inactive'`)
-          .andFilter(`GroupMemberStatus ne 'Pending'`)
-          // Filter by Group Type Id up here
-          .andFilter(
-            groupTypeIds.map((id) => `(GroupRole/GroupTypeId eq ${id})`).join(' or ')
-          )
-          .get()
-      )
-    );
+    const { Cache } = this.context.dataSources;
+    const request = async () => {
+      // Get the active groups that the person is a member of.
+      // Conditionally filter that list of groups on whether or not your
+      // role in that group is that of "Leader".
+      const _groupTypeIds = groupTypeIds || this.getGroupTypeIds();
+      const groupAssociationRequests = await Promise.all(
+        chunk(_groupTypeIds, 3).map((groupTypeIds) =>
+          this.request('GroupMembers')
+            .filter(`PersonId eq ${personId}`)
+            // Do not include groups where user's status is Inactive or Pending
+            .andFilter(`GroupMemberStatus ne 'Inactive'`)
+            .andFilter(`GroupMemberStatus ne 'Pending'`)
+            // Filter by Group Type Id up here
+            .andFilter(
+              groupTypeIds.map((id) => `(GroupRole/GroupTypeId eq ${id})`).join(' or ')
+            )
+            .get()
+        )
+      );
 
-    const groupAssociations = flatten(groupAssociationRequests);
+      const groupAssociations = flatten(groupAssociationRequests);
+      return groupAssociations.map(({ groupId, groupRoleId }) => ({
+        groupId,
+        isLeader: LEADER_ROLE_IDS.includes(groupRoleId),
+      }));
+    };
+
+    const groupIds = await Cache.request(request, {
+      key: Cache.KEY_TEMPLATES.personGroups`${personId}`,
+      expiresIn: 60 * 60 * 12, // 12 hour cache
+    });
 
     // Get the actual group data for the groups above.
     const groups = await Promise.all(
-      groupAssociations
+      groupIds
         // Temp solution for protected group ids
         .filter(({ groupId }) => !EXCLUDE_IDS.includes(groupId))
+        // If `asLeader`, return only those you are a leader of, otherwise return everything
+        .filter(({ isLeader }) => {
+          if (asLeader) return isLeader;
+          return true;
+        })
         .map(({ groupId: id }) => this.getFromId(id))
     );
 
     // Filter the groups to make sure we only pull those that are
     // active and NOT archived
-    const filteredGroups = await Promise.all(
-      groups.filter((group) => group && group.isActive && !group.isArchived)
+    const filteredGroups = groups.filter(
+      (group) => group && group.isActive && !group.isArchived
     );
 
     // Remove the groups that aren't of the types we want and return.
@@ -538,9 +554,17 @@ export default class GroupItem extends baseGroup.dataSource {
       }
     }
 
-    // temporarily store the select parameter to
-    // put back after "Id" is selected for the count
-    const cursor = this.request('GroupMembers')
+    /**
+     * Cache the Person Id's for the current group based on the Group Members
+     * Table.
+     *
+     * It's kind of naiive, but the cache is super specific and will take into
+     * consideration the id, isLeader flag, first, and skip (from the cursor).
+     * This could likely be streamlined at some point in time, but I'm fairly
+     * confident that Rock could not handle the load of grabbing more than ~40
+     * group members, so let's not push it unecessarily.
+     */
+    const personIdsCursor = this.request('GroupMembers')
       .filter(`GroupId eq ${id}`)
       .andFilter(`GroupRole/IsLeader eq ${isLeader}`)
       .andFilter(`GroupMemberStatus eq '1'`)
@@ -552,24 +576,22 @@ export default class GroupItem extends baseGroup.dataSource {
           .filter((groupMember) => {
             return !!groupMember.person;
           })
-          .map(({ person }, i) => {
-            return {
-              node: this.context.dataSources.Person.getFromId(person.id),
-              cursor: createCursor({ position: i + skip }),
-            };
-          })
+          .map(({ person }) => person.id)
       );
 
     const { Cache } = this.context.dataSources;
-    const cachedKey = `group_${id}_cursor_${after}`;
-    const edges = Cache.request(() => cursor.get(), {
+    const cachedKey = `group_member_ids_${id}_${isLeader}_${first}_${skip}`;
+    const personIds = await Cache.request(() => personIdsCursor.get(), {
       key: cachedKey,
       expiresIn: 60 * 60 * 12, // 12 hour cache
     });
 
     return {
-      getTotalCount: cursor.count,
-      edges,
+      getTotalCount: personIdsCursor.count,
+      edges: personIds.map((id, i) => ({
+        node: this.context.dataSources.Person.getFromId(id),
+        cursor: createCursor({ position: i + skip }),
+      })),
     };
   }
 

@@ -121,8 +121,8 @@ export default class LiveStream extends matrixItemDataSource {
       id: root.id,
       channelId,
       channelType: 'livestream',
-    }
-};
+    };
+  }
 
   async getLiveStreamContentItems() {
     const request = async () => {
@@ -181,9 +181,9 @@ export default class LiveStream extends matrixItemDataSource {
 
           if (scheduleGuid && scheduleGuid !== '' && url && url !== '') {
             const schedule = await Schedule.getFromId(scheduleGuid);
-            if (schedule.length) {
+            if (schedule) {
               const nextInstance = await Schedule._parseCustomSchedule(
-                schedule[0].iCalendarContent
+                schedule.iCalendarContent
               );
 
               return {
@@ -314,7 +314,7 @@ export default class LiveStream extends matrixItemDataSource {
     const { Person } = this.context.dataSources;
     const dayOfWeek = moment.tz(TIMEZONE).format('dddd').toLowerCase();
 
-    if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday' || dayOfWeek === 'wednesday') {
+    if (dayOfWeek === 'sunday') {
       return this.weekendServiceIsLive(moment().utc().toISOString());
     }
 
@@ -424,7 +424,7 @@ export default class LiveStream extends matrixItemDataSource {
               .minute(weekendService.end.minute)
               .utc()
               .toISOString(),
-            title: 'Christ Fellowship Everywhere',
+            title: 'Tune In Online',
             contentChannelItemId: 8377,
             attributeValues: {
               liveStreamUrl: {
