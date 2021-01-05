@@ -1,10 +1,10 @@
 import { ContentChannel as coreContentChannel } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
-import { isEmpty } from 'lodash';
+import { isEmpty, split, get } from 'lodash';
 
 import { isRequired } from '../utils';
 
-const { ROCK_MAPPINGS } = ApollosConfig;
+const { ROCK_MAPPINGS, FEATURE_FLAGS } = ApollosConfig;
 
 export default class ContentChannel extends coreContentChannel.dataSource {
   getEventChannels = () => {};
@@ -44,7 +44,7 @@ export default class ContentChannel extends coreContentChannel.dataSource {
       return [];
     }
 
-    const { ContentItem, Person } = this.context.dataSources;
+    const { ContentItem, Feature, Person } = this.context.dataSources;
     const contentChannelItems = await this.request('ContentChannelItems')
       .filter(`ContentChannelId eq ${contentChannelId}`)
       .andFilter(ContentItem.LIVE_CONTENT())
@@ -97,9 +97,9 @@ export default class ContentChannel extends coreContentChannel.dataSource {
         switch (
           action // TODO : support multiple algorithms from Rock
         ) {
-          case 'VIEW_CHILDREN': // deprecated, old action
+          case 'VIEW_CHILDREN': // ! deprecated, old action
           case 'HeroList':
-            return this.createHeroListFeature({
+            return Feature.createHeroListFeature({
               algorithms: [
                 {
                   type: 'CONTENT_CHILDREN',
@@ -115,45 +115,24 @@ export default class ContentChannel extends coreContentChannel.dataSource {
           case 'HighlightHorizontalCardList':
           case 'HighlightMediumHorizontalCardList':
           case 'HighlightSmallHorizontalCardList':
-            /**
-             * There was a bug in the Horizontal Card Feed that was resolved
-             * in 5.4.0, so in order to help keep this from being an issue,
-             * we'll just go ahead and resolve this to a Vertical List for
-             * any version less than 5.4.0
-             */
-            if (versionNumber >= 540) {
-              // HorizontalCardList with Card Type override
-              const getCardType = () => {
-                switch (action) {
-                  case 'HighlightHorizontalCardList':
-                    return 'HIGHLIGHT';
-                  case 'HighlightMediumHorizontalCardList':
-                    return 'HIGHLIGHT_MEDIUM';
-                  case 'HighlightSmallHorizontalCardList':
-                    return 'HIGHLIGHT_SMALL';
-                  default:
-                    return 'DEFAULT';
-                }
-              };
-              return this.createHorizontalCardListFeature({
-                algorithms: [
-                  {
-                    type: 'CONTENT_CHILDREN',
-                    arguments: {
-                      contentChannelItemId: item.id,
-                    },
+            return Feature.createHorizontalCardListFeature({
+              algorithms: [
+                {
+                  type: 'CONTENT_CHILDREN',
+                  arguments: {
+                    contentChannelItemId: item.id,
                   },
-                ],
-                title: item.title,
-                subtitle: ContentItem.createSummary(item),
-                cardType: getCardType(),
-              });
-            }
-          case 'READ_GLOBAL_CONTENT': // deprecated, old action
+                },
+              ],
+              title: item.title,
+              subtitle: ContentItem.createSummary(item),
+              cardType: getCardType(),
+            });
+          case 'READ_GLOBAL_CONTENT': // ! deprecated, old action
           case 'VerticalCardList':
           default:
             // VerticalCardList with the CONTENT_CHILDREN as default
-            return this.createVerticalCardListFeature({
+            return Feature.createVerticalCardListFeature({
               algorithms: [
                 {
                   type: 'CONTENT_CHILDREN',

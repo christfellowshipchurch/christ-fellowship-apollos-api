@@ -6,6 +6,9 @@ export default gql`
     connectFeedFeatures: [Feature] @cacheControl(maxAge: 0)
     eventsFeedFeatures: [Feature] @cacheControl(maxAge: 0)
     giveFeedFeatures: FeatureFeed @cacheControl(maxAge: 0)
-    userHeaderFeatures: [Feature] @cacheControl(maxAge: 0)
+    userHeaderFeatures: [Feature]
+    @cacheControl(maxAge: 0)
+    @deprecated(reason: "Please use homeHeaderFeatures instead")
+    homeHeaderFeatures: FeatureFeed @cacheControl(maxAge: 0)
   }
 `;
