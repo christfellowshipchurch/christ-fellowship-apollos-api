@@ -1,10 +1,10 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
 export default gql`
   type StreamChatChannel implements Node {
     id: ID!
     channelId: String
-    channelType: StreamChatChannelType
+    channelType: String
   }
 
   enum StreamChatChannelType {
@@ -28,4 +28,4 @@ export default gql`
   extend type VolunteerGroup implements StreamChatChannelNode {
     streamChatChannel: StreamChatChannel
   }
-`
+`;
