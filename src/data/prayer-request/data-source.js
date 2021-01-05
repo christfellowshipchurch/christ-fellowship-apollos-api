@@ -19,7 +19,19 @@ export default class PrayerRequest extends corePrayerRequest.dataSource {
   };
 
   addPrayer = async (args) => {
-    await this.baseAddPrayer(args);
+    const { Cache, Auth } = this.context.dataSources;
+    const { id } = await Auth.getCurrentPerson();
+
+    const prayerSubmission = await this.baseAddPrayer(args);
+
+    Cache.delete(
+      {
+        key: Cache.KEY_TEMPLATES.personPrayers`${id}`,
+      },
+      () => this.getIdsByPerson(id)
+    );
+
+    return prayerSubmission;
   };
 
   byDailyPrayerFeed = async () => {
