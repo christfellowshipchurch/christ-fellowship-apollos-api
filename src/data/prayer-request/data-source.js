@@ -7,8 +7,12 @@ const { ROCK, ROCK_MAPPINGS } = ApollosConfig;
 export default class PrayerRequest extends corePrayerRequest.dataSource {
   baseByDailyPrayerFeed = this.byDailyPrayerFeed;
 
-  byDailyPrayerFeed = async () => {
-    const requestBuilder = await this.baseByDailyPrayerFeed();
+  /**
+   * Override method for building a request to get the Daily Prayer Feed
+   * @param {object} props Catch all for any props passed into the method by Core Packages
+   */
+  byDailyPrayerFeed = async (props) => {
+    const requestBuilder = await this.baseByDailyPrayerFeed(props);
 
     return requestBuilder.andFilter(
       `CategoryId eq ${ROCK_MAPPINGS.GENERAL_PRAYER_CATEGORY_ID}`

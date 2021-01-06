@@ -18,14 +18,15 @@ const resolver = {
     giveFeedFeatures: (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
         type: 'apollosConfig',
-        args: { section: 'FEATURE_FEEDS.GIVE', ...args },
+        args: { section: 'GIVE_FEATURES', ...args },
       }),
+    // ! Deprecated. Please use homeHeaderFeedFeatures instead
     userHeaderFeatures: async (root, args, { dataSources: { Feature, Flag } }) =>
       Feature.getHomeHeaderFeedFeatures(),
-    homeHeaderFeatures: async (root, args, { dataSources: { FeatureFeed } }) =>
+    homeHeaderFeedFeatures: async (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
         type: 'apollosConfig',
-        args: { section: 'FEATURE_FEEDS.HOME_HEADER', ...args },
+        args: { section: 'HOME_HEADER_FEATURES', ...args },
       }),
   },
 };

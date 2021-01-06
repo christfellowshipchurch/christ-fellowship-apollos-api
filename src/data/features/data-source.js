@@ -6,6 +6,23 @@ const { ROCK_MAPPINGS, FEATURE_FLAGS } = ApollosConfig;
 
 export default class Feature extends coreFeatures.dataSource {
   expanded = true;
+  superGetFeatures = this.getFeatures;
+
+  FEATURE_MAP = Object.entries({
+    // We need to make sure `this` refers to the class, not the `FEATURE_MAP` object.
+    ActionBar: this.createActionBarFeature,
+    ActionList: this.createActionListFeature,
+    HeroList: this.createHeroListFeature,
+    HorizontalCardList: this.createHorizontalCardListFeature,
+    PrayerList: this.createPrayerListFeature,
+    LiveContentList: this.createLiveStreamListFeature,
+    VerticalCardList: this.createVerticalCardListFeature,
+  }).reduce((accum, [key, value]) => {
+    // convenciance code to make sure all methods are bound to the Features dataSource
+    // eslint-disable-next-line
+    accum[key] = value.bind(this);
+    return accum;
+  }, {});
 
   /** Create Features */
   createActionBarFeature({ actions }) {
@@ -122,6 +139,33 @@ export default class Feature extends coreFeatures.dataSource {
   }
 
   /** Create Feeds */
+  getFeatures = async (featuresConfig = [], args = {}) => {
+    return Promise.all(
+      featuresConfig.map((featureConfig) => {
+        const featureMap = this.FEATURE_MAP || {};
+        // Lookup the feature function, based on the name, and run it.
+        if (typeof featureMap === 'object') {
+          const finalConfig = { ...featureConfig, ...args };
+
+          // ! Deprecation of the 'Hero List Feature' in favor of 'Hero List'
+          if (featureConfig.type === 'HeroListFeature') {
+            console.warn(
+              'Deprecated: Please use the name "HeroList" instead. You used "HeroListFeature"'
+            );
+            return featureMap['HeroList'](finalConfig);
+          }
+
+          const featureMethod = get(
+            featureMap,
+            finalConfig.type,
+            featureMap['ActionList']
+          );
+          return featureMethod(finalConfig);
+        }
+      })
+    );
+  };
+
   getEventsFeedFeatures() {
     return this.getFeedFeatures(get(ApollosConfig, 'FEATURE_FEEDS.EVENTS_TAB', []));
   }

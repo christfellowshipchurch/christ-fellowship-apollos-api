@@ -6,8 +6,6 @@ export default class FeatureFeed extends coreFeatureFeed.dataSource {
   getFeed = async ({ type = '', args = {} }) => {
     const { ContentChannel } = this.context.dataSources;
 
-    console.log({ args });
-
     if (type === 'contentChannel') {
       return {
         __typename: 'FeatureFeed',
