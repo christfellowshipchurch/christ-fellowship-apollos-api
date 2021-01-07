@@ -6,28 +6,31 @@ const { CONTENT_CHANNEL_FEEDS } = ApollosConfig;
 
 const resolver = {
   Query: {
-    homeFeedFeatures: (root, args, { dataSources: { FeatureFeed } }) =>
+    eventsFeedFeatures: async (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
-        type: 'contentChannel',
-        args: { contentChannelId: CONTENT_CHANNEL_FEEDS.HOME_FEED, ...args },
+        type: 'apollosConfig',
+        args: { section: 'EVENTS_TAB', ...args },
       }),
-    connectFeedFeatures: async (root, args, { dataSources: { Feature } }) =>
-      Feature.getConnectFeedFeatures(),
-    eventsFeedFeatures: async (root, args, { dataSources: { Feature } }) =>
-      Feature.getEventsFeedFeatures(),
     giveFeedFeatures: (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
         type: 'apollosConfig',
         args: { section: 'GIVE_FEATURES', ...args },
       }),
-    // ! Deprecated. Please use homeHeaderFeedFeatures instead
-    userHeaderFeatures: async (root, args, { dataSources: { Feature, Flag } }) =>
-      Feature.getHomeHeaderFeedFeatures(),
+    homeFeedFeatures: (root, args, { dataSources: { FeatureFeed } }) =>
+      FeatureFeed.getFeed({
+        type: 'contentChannel',
+        args: { contentChannelId: CONTENT_CHANNEL_FEEDS.HOME_FEED, ...args },
+      }),
     homeHeaderFeedFeatures: async (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
         type: 'apollosConfig',
         args: { section: 'HOME_HEADER_FEATURES', ...args },
       }),
+    connectFeedFeatures: async (root, args, { dataSources: { Feature } }) =>
+      Feature.getConnectFeedFeatures(),
+    // ! Deprecated. Please use homeHeaderFeedFeatures instead
+    userHeaderFeatures: async (root, args, { dataSources: { Feature, Flag } }) =>
+      Feature.getHomeHeaderFeedFeatures(),
   },
 };
 

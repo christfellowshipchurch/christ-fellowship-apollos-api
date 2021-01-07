@@ -256,6 +256,9 @@ CONTENT_CHANNEL_FEEDS:
   HOME_FEED: 64
 
 # Feature Feed Configuration
+EVENTS_TAB:
+  - type: VerticalCardList
+    algorithms: [ALL_EVENTS]
 HOME_FEATURES:
   - title: Dynamic Rock Feed
     algorithms:
