@@ -1,6 +1,8 @@
 import { ContentItem } from '@apollosproject/data-connector-rock';
 import gql from 'graphql-tag';
 
+import { addInterfacesForEachContentItemType } from '@apollosproject/data-schema/lib/utils';
+
 import * as EventContentItem from '../event-content-item';
 import * as InformationalContentItem from '../informational-content-item';
 import * as WebsiteContentItem from '../website-content-item';
@@ -61,4 +63,19 @@ export default gql`
     featuredEvents: ContentItemsConnection
     sermons(first: Int, after: String): ContentItemsConnection
   }
+
+  # Maps to each type implementing each interface.
+  # Reduces visual fluff in this file. No magic.
+  ${addInterfacesForEachContentItemType(
+    [
+      'ContentNode',
+      'Card',
+      'VideoNode',
+      'AudioNode',
+      'ContentChildNode',
+      'ContentParentNode',
+      'ThemedNode',
+    ],
+    ['EventContentItem', 'InformationalContentItem']
+  )}
 `;
