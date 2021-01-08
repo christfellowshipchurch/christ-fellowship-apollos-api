@@ -49,10 +49,6 @@ export default class Feature extends coreFeatures.dataSource {
   }
 
   async createAvatarListFeature({ algorithms, primaryAction, isCard }) {
-    console.log('.............');
-    console.log('HELLO THERE');
-    console.log('.............');
-
     const { ActionAlgorithm } = this.context.dataSources;
     const people = ActionAlgorithm.runAlgorithms({ algorithms });
 
@@ -62,8 +58,6 @@ export default class Feature extends coreFeatures.dataSource {
         args: primaryAction.relatedNode,
       });
     }
-
-    console.log({ people, algorithms });
 
     return {
       // The Feature ID is based on all of the action ids, added together.
