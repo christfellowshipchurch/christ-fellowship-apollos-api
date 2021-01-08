@@ -6,6 +6,11 @@ const { CONTENT_CHANNEL_FEEDS } = ApollosConfig;
 
 const resolver = {
   Query: {
+    connectFeedFeatures: async (root, args, { dataSources: { FeatureFeed } }) =>
+      FeatureFeed.getFeed({
+        type: 'apollosConfig',
+        args: { section: 'CONNECT_TAB', ...args },
+      }),
     eventsFeedFeatures: async (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
         type: 'apollosConfig',
@@ -26,8 +31,6 @@ const resolver = {
         type: 'apollosConfig',
         args: { section: 'HOME_HEADER_FEATURES', ...args },
       }),
-    connectFeedFeatures: async (root, args, { dataSources: { Feature } }) =>
-      Feature.getConnectFeedFeatures(),
     // ! Deprecated. Please use homeHeaderFeedFeatures instead
     userHeaderFeatures: async (root, args, { dataSources: { Feature, Flag } }) =>
       Feature.getHomeHeaderFeedFeatures(),
