@@ -225,6 +225,7 @@ ROCK_MAPPINGS:
     NOTIFICATION_CENTER: 355
     GROUP_COVER_IMAGES: 368
     URLS: 369
+    LINK_TREE: 374
 
   # List of attribute keys for Profile information
   # when migrating from Arena to Rock, the Arena keys were kept
