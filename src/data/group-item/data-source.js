@@ -6,7 +6,7 @@ import {
   parseCursor,
   parseGlobalId,
 } from '@apollosproject/server-core';
-import { get, isNull, filter, head, chunk, flatten, take, result } from 'lodash';
+import { get, isNull, filter, head, chunk, flatten, take, uniqBy } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
@@ -110,9 +110,13 @@ export default class GroupItem extends baseGroup.dataSource {
     const { Person } = this.context.dataSources;
     const members = await this.request('GroupMembers')
       .andFilter(`GroupId eq ${groupId}`)
+      .andFilter('GroupRole/IsLeader eq false')
       .andFilter(`GroupMemberStatus eq '1'`)
       .get();
-    return Promise.all(members.map(({ personId }) => Person.getFromId(personId)));
+    const uniqueMembers = uniqBy(members, 'personId');
+    return Promise.all(
+      uniqueMembers.map(({ personId }) => Person.getFromId(personId))
+    );
   };
 
   getLeaders = async (groupId) => {
@@ -123,8 +127,9 @@ export default class GroupItem extends baseGroup.dataSource {
       .andFilter(`GroupMemberStatus eq '1'`)
       .expand('GroupRole')
       .get();
+    const uniqueMembers = uniqBy(members, 'personId');
     const leaders = await Promise.all(
-      members.map(({ personId }) => Person.getFromId(personId))
+      uniqueMembers.map(({ personId }) => Person.getFromId(personId))
     );
     return leaders.length ? leaders : null;
   };
@@ -397,8 +402,8 @@ export default class GroupItem extends baseGroup.dataSource {
   getMatrixItemsFromId = async (id) =>
     id
       ? this.request('/AttributeMatrixItems')
-          .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
-          .get()
+        .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+        .get()
       : [];
 
   groupTypeMap = {
@@ -557,11 +562,11 @@ export default class GroupItem extends baseGroup.dataSource {
      * Cache the Person Id's for the current group based on the Group Members
      * Table.
      *
-     * It's kind of naiive, but the cache is super specific and will take into
+     * It's kind of naive, but the cache is super specific and will take into
      * consideration the id, isLeader flag, first, and skip (from the cursor).
      * This could likely be streamlined at some point in time, but I'm fairly
      * confident that Rock could not handle the load of grabbing more than ~40
-     * group members, so let's not push it unecessarily.
+     * group members, so let's not push it unnecessarily.
      */
     const personIdsCursor = this.request('GroupMembers')
       .filter(`GroupId eq ${id}`)
@@ -570,13 +575,16 @@ export default class GroupItem extends baseGroup.dataSource {
       .expand('GroupRole, Person')
       .top(first)
       .skip(skip)
-      .transform((results) =>
-        results
+      .transform((results) => {
+        const resultIds = results
           .filter((groupMember) => {
             return !!groupMember.person;
           })
           .map(({ person }) => person.id)
-      );
+        ;
+
+        return uniqBy(resultIds);
+      })
 
     const { Cache } = this.context.dataSources;
     const cachedKey = `group_member_ids_${id}_${isLeader}_${first}_${skip}`;
@@ -782,7 +790,7 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   resolveType({ groupTypeId, id }) {
-    // if we have defined an ContentChannelTypeId based maping in the YML file, use it!
+    // if we have defined an ContentChannelTypeId based mapping in the YML file, use it!
     if (
       Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
         ({ GroupTypeId }) => GroupTypeId && GroupTypeId.includes(groupTypeId)
@@ -793,7 +801,7 @@ export default class GroupItem extends baseGroup.dataSource {
         return value.GroupTypeId && value.GroupTypeId.includes(groupTypeId);
       });
     }
-    // if we have defined a GroupId based maping in the YML file, use it!
+    // if we have defined a GroupId based mapping in the YML file, use it!
     if (
       Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
         ({ GroupId }) => GroupId && GroupId.includes(id)
