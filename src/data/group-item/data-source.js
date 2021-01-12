@@ -113,9 +113,7 @@ export default class GroupItem extends baseGroup.dataSource {
       .andFilter('GroupRole/IsLeader eq false')
       .andFilter(`GroupMemberStatus eq '1'`)
       .get();
-    console.log('[rkd] members:', members);
     const uniqueMembers = uniqBy(members, 'personId');
-    console.log('[rkd] uniqueMembers:', uniqueMembers);
     return Promise.all(
       uniqueMembers.map(({ personId }) => Person.getFromId(personId))
     );
