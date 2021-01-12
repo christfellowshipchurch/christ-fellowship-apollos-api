@@ -6,7 +6,7 @@ import {
   parseCursor,
   parseGlobalId,
 } from '@apollosproject/server-core';
-import { get, isNull, filter, head, chunk, flatten, take, result } from 'lodash';
+import { get, isNull, filter, head, chunk, flatten, take, uniqBy } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
@@ -110,9 +110,13 @@ export default class GroupItem extends baseGroup.dataSource {
     const { Person } = this.context.dataSources;
     const members = await this.request('GroupMembers')
       .andFilter(`GroupId eq ${groupId}`)
+      .andFilter('GroupRole/IsLeader eq false')
       .andFilter(`GroupMemberStatus eq '1'`)
       .get();
-    return Promise.all(members.map(({ personId }) => Person.getFromId(personId)));
+    const uniqueMembers = uniqBy(members, 'personId');
+    return Promise.all(
+      uniqueMembers.map(({ personId }) => Person.getFromId(personId))
+    );
   };
 
   getLeaders = async (groupId) => {
@@ -123,8 +127,9 @@ export default class GroupItem extends baseGroup.dataSource {
       .andFilter(`GroupMemberStatus eq '1'`)
       .expand('GroupRole')
       .get();
+    const uniqueMembers = uniqBy(members, 'personId');
     const leaders = await Promise.all(
-      members.map(({ personId }) => Person.getFromId(personId))
+      uniqueMembers.map(({ personId }) => Person.getFromId(personId))
     );
     return leaders.length ? leaders : null;
   };
@@ -397,8 +402,8 @@ export default class GroupItem extends baseGroup.dataSource {
   getMatrixItemsFromId = async (id) =>
     id
       ? this.request('/AttributeMatrixItems')
-          .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
-          .get()
+        .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+        .get()
       : [];
 
   groupTypeMap = {
