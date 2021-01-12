@@ -10,13 +10,17 @@ export default class DefinedValueList extends RockApolloDataSource {
   expanded = true;
 
   getLinks = async () => {
-    const definedValues = await this.request()
-      .filter(`DefinedTypeId eq ${DEFINED_TYPES.LINK_TREE}`)
-      .andFilter('IsActive eq true')
-      .orderBy('Order')
-      .get();
-
-    console.log({ definedValues });
+    const { Cache } = this.context.dataSources;
+    const request = () =>
+      this.request()
+        .filter(`DefinedTypeId eq ${DEFINED_TYPES.LINK_TREE}`)
+        .andFilter('IsActive eq true')
+        .orderBy('Order')
+        .get();
+    const definedValues = await Cache.request(request, {
+      key: Cache.KEY_TEMPLATES.linkTree,
+      expiresIn: 60 * 20, // 20 minute cache
+    });
 
     return definedValues
       .filter(
