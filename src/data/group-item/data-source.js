@@ -113,7 +113,9 @@ export default class GroupItem extends baseGroup.dataSource {
       .andFilter('GroupRole/IsLeader eq false')
       .andFilter(`GroupMemberStatus eq '1'`)
       .get();
+    console.log('[rkd] members:', members);
     const uniqueMembers = uniqBy(members, 'personId');
+    console.log('[rkd] uniqueMembers:', uniqueMembers);
     return Promise.all(
       uniqueMembers.map(({ personId }) => Person.getFromId(personId))
     );
@@ -562,11 +564,11 @@ export default class GroupItem extends baseGroup.dataSource {
      * Cache the Person Id's for the current group based on the Group Members
      * Table.
      *
-     * It's kind of naiive, but the cache is super specific and will take into
+     * It's kind of naive, but the cache is super specific and will take into
      * consideration the id, isLeader flag, first, and skip (from the cursor).
      * This could likely be streamlined at some point in time, but I'm fairly
      * confident that Rock could not handle the load of grabbing more than ~40
-     * group members, so let's not push it unecessarily.
+     * group members, so let's not push it unnecessarily.
      */
     const personIdsCursor = this.request('GroupMembers')
       .filter(`GroupId eq ${id}`)
@@ -575,13 +577,16 @@ export default class GroupItem extends baseGroup.dataSource {
       .expand('GroupRole, Person')
       .top(first)
       .skip(skip)
-      .transform((results) =>
-        results
+      .transform((results) => {
+        const resultIds = results
           .filter((groupMember) => {
             return !!groupMember.person;
           })
           .map(({ person }) => person.id)
-      );
+        ;
+
+        return uniqBy(resultIds);
+      })
 
     const { Cache } = this.context.dataSources;
     const cachedKey = `group_member_ids_${id}_${isLeader}_${first}_${skip}`;
@@ -787,7 +792,7 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   resolveType({ groupTypeId, id }) {
-    // if we have defined an ContentChannelTypeId based maping in the YML file, use it!
+    // if we have defined an ContentChannelTypeId based mapping in the YML file, use it!
     if (
       Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
         ({ GroupTypeId }) => GroupTypeId && GroupTypeId.includes(groupTypeId)
@@ -798,7 +803,7 @@ export default class GroupItem extends baseGroup.dataSource {
         return value.GroupTypeId && value.GroupTypeId.includes(groupTypeId);
       });
     }
-    // if we have defined a GroupId based maping in the YML file, use it!
+    // if we have defined a GroupId based mapping in the YML file, use it!
     if (
       Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
         ({ GroupId }) => GroupId && GroupId.includes(id)
