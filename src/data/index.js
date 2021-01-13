@@ -40,6 +40,7 @@ import * as Feature from './features';
 import * as Flag from './flag';
 import * as Group from './groups';
 import * as GroupItem from './group-item';
+import * as LinkTree from './link-tree';
 import * as LiveStream from './live-stream';
 import * as MatrixItem from './matrix-item';
 import * as Message from './message';
@@ -88,6 +89,7 @@ const data = {
   GroupItem,
   Interactions,
   Interfaces,
+  LinkTree,
   LiveStream,
   MatrixItem,
   Message,

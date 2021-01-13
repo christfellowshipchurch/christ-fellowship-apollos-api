@@ -24,6 +24,7 @@ export default class Cache extends RedisCache.dataSource {
     contentItemChildren: (_, id) => `${process.env.CONTENT}_contentItem_${id}_children`,
     eventContentItems: `${process.env.CONTENT}_eventContentItems`,
     group: (_, id) => `${process.env.CONTENT}_group_${id}`,
+    linkTree: 'linkTree',
     liveStreamContentItems: `${process.env.CONTENT}_liveStreamContentItems`,
     liveStreamRelatedNode: (_, id) => `liveStream-relatedNode-${id}`,
     liveStreams: `${process.env.CONTENT}_liveStreams`,
