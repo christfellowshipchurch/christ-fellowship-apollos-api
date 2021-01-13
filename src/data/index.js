@@ -31,6 +31,7 @@ import * as Browse from './browse';
 import * as Cache from './redis-cache';
 import * as Campus from './campus';
 import * as CheckInable from './checkinable';
+import * as Communities from './communities';
 import * as ContentChannel from './content-channel';
 import * as ContentItem from './content-item';
 import * as DefinedValue from './defined-value';
@@ -76,6 +77,7 @@ const data = {
   Cache,
   Campus,
   CheckInable,
+  Communities,
   ContentChannel,
   ContentItem,
   DefinedValue,
