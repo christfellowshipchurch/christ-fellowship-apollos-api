@@ -12,7 +12,7 @@ const resolver = {
                 switch (action) {
                     case "delete":
                         // TODO
-                        return `Successfully deleted | id: ${id} | key: ${key} | action: ${action}`
+                        return `⚠️ Action 'delete' not implemented | id: ${id} | key: ${key} | action: ${action}`
                     case "update":
                     default:
                         Search.updateContentItemIndex(id)
