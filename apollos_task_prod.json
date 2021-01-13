@@ -46,8 +46,12 @@
           "value": "production"
         },
         {
-          "name": "ALGOLIA_SEARCH_INDEX",
+          "name": "ALGOLIA_SEARCH_INDEX_CONTENT_ITEMS",
           "value": "ContentItems"
+        },
+        {
+          "name": "ALGOLIA_SEARCH_INDEX_GROUPS",
+          "value": "Groups"
         }
       ],
       "secrets": [
@@ -151,7 +155,9 @@
   ],
   "volumes": [],
   "placementConstraints": [],
-  "requiresCompatibilities": ["EC2"],
+  "requiresCompatibilities": [
+    "EC2"
+  ],
   "cpu": null,
   "memory": null,
   "tags": [
