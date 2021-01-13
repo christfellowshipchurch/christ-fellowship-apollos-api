@@ -168,7 +168,9 @@ const resolver = {
         cursor: await dataSources.GroupItem.getResourceOptions(id),
         args: input,
       })
-    }
+    },
+    searchGroups: async (root, input, { dataSources }) =>
+      dataSources.SearchGroups.index('Groups').byPaginatedQuery(input),
   },
 };
 

@@ -59,11 +59,27 @@ export default gql`
     author: Person
   }
 
-  extend type Query { 
+  type ContentItemSearchResult implements SearchResultItem {
+    cursor: String
+    node: Node
+
+    # ContentItem search attributes
+    title: String
+    summary: String
+    coverImage: ImageMedia
+  }
+
+  extend type Query {
     getContentItemByTitle(title: String!): ContentItem
     getCategoryByTitle(title: String!): ContentItem
     allEvents: [EventContentItem]
     featuredEvents: ContentItemsConnection
     sermons(first: Int, after: String): ContentItemsConnection
+    search(query: String!, first: Int, after: String): SearchResultsConnection @deprecated(reason: "Use searchContentItems instead")
+    searchContentItems(query: String!, first: Int, after: String): SearchResultsConnection
+  }
+
+  extend type Mutation {
+    indexContentItem(id: String, action: SearchIndexAction, key: String): String
   }
 `

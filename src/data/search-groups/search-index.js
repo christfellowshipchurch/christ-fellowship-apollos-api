@@ -1,3 +1,9 @@
+import {
+  parseCursor,
+  createCursor,
+  createGlobalId,
+} from '@apollosproject/server-core';
+
 /**
  * Manages interface with Algolia SDK, adding convenience functions
  * for common operations/tasks in our API.
@@ -51,6 +57,7 @@ export default class SearchIndex {
     const { hits } = await this.index.search({ query, length, offset });
 
     return hits.map((node, i) => ({
+      indexId: this.id,
       ...node,
       cursor: createCursor({ position: i + offset }),
     }));

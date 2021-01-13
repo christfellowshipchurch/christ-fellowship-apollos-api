@@ -155,6 +155,8 @@ const resolver = {
         website,
         title
       ),
+    searchContentItems: async (root, input, { dataSources }) =>
+      dataSources.SearchGroups.index('ContentItems').byPaginatedQuery(input),
   },
   ContentItem: {
     ...titleResolver,

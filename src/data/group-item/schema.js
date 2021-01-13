@@ -142,7 +142,7 @@ export const groupSchema = gql`
     removeGroupResource(relatedNodeId: ID!, groupId: ID!): Group
 
     # Search
-    indexGroup(id: String, action: INDEX_ACTION, key: String): String
+    indexGroup(id: String, action: SearchIndexAction, key: String): String
   }
 
   type GroupCoverImage {
@@ -151,12 +151,25 @@ export const groupSchema = gql`
     image: ImageMedia
   }
 
+  type GroupSearchResult implements SearchResultItem {
+    cursor: String
+    node: Node
+
+    # :: Group attributes from Algolia
+    title: String
+    summary: String
+    coverImage: ImageMedia
+    # groupType: GROUP_TYPE
+    # meetingDays: ['mon', 'sun']
+  }
+
   extend type Query {
     groupCoverImages: [GroupCoverImage]
     groupResourceOptions(
       groupId: ID!
       input: ContentItemsConnectionInput
     ): ContentItemsConnection
+    searchGroups(query: String!, first: Int, after: String): SearchResultsConnection
   }
 
   extend enum InteractionAction {

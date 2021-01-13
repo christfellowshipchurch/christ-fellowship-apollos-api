@@ -25,4 +25,4 @@ const resolver = {
     }
 }
 
-export default resolverMerge(resolver, coreSearch)
+export default resolver

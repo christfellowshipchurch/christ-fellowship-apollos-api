@@ -51,7 +51,7 @@ import * as PhoneNumber from './phone-number';
 import * as PrayerRequest from './prayer-request';
 import * as RockConstants from './rock-constants';
 import * as Schedule from './schedule';
-import * as Search from './search';
+// import * as Search from './search';
 import * as SearchGroups from './search-groups';
 import * as StreamChat from './stream-chat';
 import * as TwilioNotify from './twilio-notify';
@@ -105,7 +105,7 @@ const data = {
   RockConstants,
   Schedule,
   Scripture,
-  Search,
+  // Search,
   SearchGroups,
   Sharable,
   Sms: TwilioNotify,
