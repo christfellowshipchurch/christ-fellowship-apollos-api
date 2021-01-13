@@ -20,7 +20,7 @@ if (ApollosConfig.ALGOLIA.APPLICATION_ID && ApollosConfig.ALGOLIA.API_KEY) {
 
 // Initialize Indices
 if (ApollosConfig.ALGOLIA.INDICES) {
-  indicesConfig = ApollosConfig.ALGOLIA.INDICES;
+  const indicesConfig = ApollosConfig.ALGOLIA.INDICES;
   INDICES = {};
 
   for (let indexKey in indicesConfig) {
