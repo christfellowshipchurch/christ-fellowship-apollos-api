@@ -1,8 +1,4 @@
-// import * as coreSearch from '@apollosproject/data-connector-algolia-search'
-import { resolverMerge } from '@apollosproject/server-core'
 import ApollosConfig from '@apollosproject/config'
-
-const { ROCK } = ApollosConfig
 
 const resolver = {
   SearchResultItem: {
@@ -10,11 +6,7 @@ const resolver = {
       __typename || resolveInfo.schema.getType(__type)
   },
   Query: {
-    searchGroups: (root, args, { dataSources }) => {
-      console.log('Resolving >> searchGroups');
-
-      return dataSources.SearchGroups.index('Groups').test();
-    }
+    searchGroups: (root, args, { dataSources }) => dataSources.SearchGroups.index('Groups').test()
   }
 }
 
