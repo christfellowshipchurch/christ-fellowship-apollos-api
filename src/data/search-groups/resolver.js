@@ -13,7 +13,7 @@ const resolver = {
     searchGroups: (root, args, { dataSources }) => {
       console.log('Resolving >> searchGroups');
 
-      return null;
+      return dataSources.SearchGroups.index('Groups').test();
     }
   }
 }
