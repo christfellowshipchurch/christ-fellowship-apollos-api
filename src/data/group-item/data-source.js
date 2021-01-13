@@ -1,21 +1,24 @@
-import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
+import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import {
   createGlobalId,
   createCursor,
   parseCursor,
   parseGlobalId,
 } from '@apollosproject/server-core';
+
+import { graphql } from 'graphql';
 import { get, isNull, filter, head, chunk, flatten, take, uniqBy } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
-import { getIdentifierType } from '../utils';
-const { ROCK_MAPPINGS } = ApollosConfig;
 
+import { getIdentifierType } from '../utils';
+const { createImageUrlFromGuid } = Utils;
+
+const { ROCK_MAPPINGS } = ApollosConfig;
 const { GROUP } = ROCK_MAPPINGS;
 const { LEADER_ROLE_IDS } = GROUP;
-const { createImageUrlFromGuid } = Utils;
 
 /** TEMPORARY FIX
  *  In order to launch the My Groups feature in time for the September, 2020 Fall
@@ -581,7 +584,7 @@ export default class GroupItem extends baseGroup.dataSource {
             return !!groupMember.person;
           })
           .map(({ person }) => person.id)
-        ;
+          ;
 
         return uniqBy(resultIds);
       })
@@ -814,5 +817,36 @@ export default class GroupItem extends baseGroup.dataSource {
     }
 
     return 'Group';
+  }
+
+  // :: Search Indexing
+  // --------------------------------------------------------------------------
+
+
+  async updateIndexGroup(id) {
+    const getGroupQuery = `
+      query getGroup {
+        node(id: "${id}") {
+          __typename
+          id
+          ... on GroupItem {
+            title
+            summary
+            coverImage { sources { uri } }
+          }
+        }
+      }
+    `;
+
+    const { data } = await graphql(this.context.schema, getGroupQuery, {}, this.context);
+
+    if (!data.node) {
+      return `Error fetching data to index for Group "${id}"`
+    }
+
+    const { SearchGroups } = this.context.dataSources;
+    SearchGroups.index('Groups').addObjects([data.node])
+
+    return data;
   }
 }

@@ -140,6 +140,9 @@ export const groupSchema = gql`
       groupId: ID!
     ): Group
     removeGroupResource(relatedNodeId: ID!, groupId: ID!): Group
+
+    # Search
+    indexGroup(id: String, action: INDEX_ACTION, key: String): String
   }
 
   type GroupCoverImage {

@@ -1,3 +1,4 @@
+import ApollosConfig from '@apollosproject/config'
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
 import {
   resolverMerge,
@@ -134,6 +135,24 @@ const resolver = {
         console.log({ e });
       }
     },
+    indexGroup: async (root, { id, key, action }, { dataSources }) => {
+      const validInput = Boolean(id && action && key === ApollosConfig.ROCK.APOLLOS_SECRET);
+
+      if (!validInput) {
+        return `Failed to update | id: ${id} | key: ${key} | action: ${action}`
+      }
+
+      switch (action) {
+        case "delete":
+          // TODO
+          // dataSources.GroupItem.deleteIndexGroup(id);
+          return `⚠️ Action 'delete' not implemented | id: ${id} | key: ${key} | action: ${action}`
+        case "update":
+        default:
+          await dataSources.GroupItem.updateIndexGroup(id);
+          return `Successfully updated | id: ${id} | key: ${key} | action: ${action}`
+      }
+    }
   },
   Query: {
     groupCoverImages: async (root, args, { dataSources }) =>
