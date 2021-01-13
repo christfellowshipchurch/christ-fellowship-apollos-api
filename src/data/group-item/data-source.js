@@ -822,7 +822,6 @@ export default class GroupItem extends baseGroup.dataSource {
   // :: Search Indexing
   // --------------------------------------------------------------------------
 
-
   async updateIndexGroup(id) {
     const getGroupQuery = `
       query getGroup {

@@ -5,7 +5,6 @@ import SearchIndex from './search-index';
 
 let CLIENT;
 let INDICES;
-let INDICES_CONFIG;
 
 // Initialize Client
 if (ApollosConfig.ALGOLIA.APPLICATION_ID && ApollosConfig.ALGOLIA.API_KEY) {
@@ -21,14 +20,14 @@ if (ApollosConfig.ALGOLIA.APPLICATION_ID && ApollosConfig.ALGOLIA.API_KEY) {
 
 // Initialize Indices
 if (ApollosConfig.ALGOLIA.INDICES) {
-  INDICES_CONFIG = ApollosConfig.ALGOLIA.INDICES;
+  indicesConfig = ApollosConfig.ALGOLIA.INDICES;
   INDICES = {};
 
-  for (let indexKey in INDICES_CONFIG) {
+  for (let indexKey in indicesConfig) {
     if (INDICES[indexKey]) {
       console.warn(`Duplicate Algolia index configuration key "${indexKey}"`);
     } else {
-      INDICES[indexKey] = new SearchIndex(CLIENT, indexKey, INDICES_CONFIG[indexKey]);
+      INDICES[indexKey] = new SearchIndex(CLIENT, indexKey, indicesConfig[indexKey]);
     }
   }
 } else {
