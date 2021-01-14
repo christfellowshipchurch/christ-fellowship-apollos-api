@@ -59,7 +59,7 @@ export default gql`
     author: Person
   }
 
-  type ContentItemSearchResult implements SearchResultItem {
+  type ContentItemSearchResult implements SearchResult {
     cursor: String
     node: Node
 

@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 export default gql`
 
   type SearchResultsConnection {
-    edges: [SearchResultItem]
+    edges: [SearchResult]
     pageInfo: PaginationInfo
   }
 
@@ -12,7 +12,7 @@ export default gql`
     delete
   }
 
-  interface SearchResultItem {
+  interface SearchResult {
     cursor: String
     node: Node
   }

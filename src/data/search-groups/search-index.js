@@ -1,7 +1,6 @@
 import {
   parseCursor,
   createCursor,
-  createGlobalId,
 } from '@apollosproject/server-core';
 
 /**
@@ -9,21 +8,33 @@ import {
  * for common operations/tasks in our API.
  */
 export default class SearchIndex {
-  constructor(client, id, indexConfig) {
+  constructor(client, id, indexConfig = {}) {
+    const { INDEX, SEARCH_RESULT_TYPENAME, CONFIGURATION } = indexConfig;
+
+    if (!indexConfig || !INDEX || !SEARCH_RESULT_TYPENAME || !CONFIGURATION) {
+      console.warn(`Cannot create SearchIndex id "${id}" due to missing configuration values. Please verify your config.yml has correct ALGOLIA values.`)
+    }
+
     this.id = id;
-    this.indexConfig = indexConfig;
+    this.indexName = INDEX;
+    this.searchResultTypename = SEARCH_RESULT_TYPENAME;
+    this.configuration = CONFIGURATION;
 
-    this.index = client.initIndex(indexConfig.INDEX);
-    this.index.setSettings(indexConfig.CONFIGURATION);
+    this.index = client.initIndex(this.indexName);
+    this.index.setSettings(this.configuration);
 
-    console.log(`[🗄️ SearchIndex] Created "${this.id}" => "${indexConfig.INDEX}"`);
+    console.log(`[🗄️ SearchIndex] Created "${this.id}" => "${this.indexName}"`);
   }
 
-  test() {
-    return {
-      cursor: "abc123-mock-cursor",
-      node: null
-    }
+  async addObject(args) {
+    return new Promise((resolve, reject) => {
+      this.index.addObject(args, (err, result) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(result);
+      });
+    });
   }
 
   async addObjects(args) {
@@ -37,7 +48,6 @@ export default class SearchIndex {
     });
   }
 
-  // options = { query:String, after:Int, first:Int = 20 }
   async byPaginatedQuery({ query, after, first = 20 }) {
     // Prepare pagination
     const length = first;
@@ -56,10 +66,10 @@ export default class SearchIndex {
     // Perform search
     const { hits } = await this.index.search({ query, length, offset });
 
-    return hits.map((node, i) => ({
-      indexId: this.id,
-      ...node,
+    return hits.map((hit, i) => ({
+      ...hit,
       cursor: createCursor({ position: i + offset }),
+      __typename: this.searchResultTypename,
     }));
   }
 }

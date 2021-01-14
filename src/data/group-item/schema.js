@@ -151,7 +151,7 @@ export const groupSchema = gql`
     image: ImageMedia
   }
 
-  type GroupSearchResult implements SearchResultItem {
+  type GroupSearchResult implements SearchResult {
     cursor: String
     node: Node
 

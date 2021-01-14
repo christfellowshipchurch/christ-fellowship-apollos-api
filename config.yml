@@ -56,6 +56,7 @@ ALGOLIA:
     # 🤔 Is it ok or acceptable to use TitleCase key names here?
     ContentItems:
       INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_CONTENT_ITEMS}
+      SEARCH_RESULT_TYPENAME: 'ContentItemSearchResult'
       CONFIGURATION:
         searchableAttributes:
           - title
@@ -63,6 +64,7 @@ ALGOLIA:
           - unordered(summary)
     Groups:
       INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_GROUPS}
+      SEARCH_RESULT_TYPENAME: 'GroupSearchResult'
       CONFIGURATION:
         searchableAttributes:
           - title
