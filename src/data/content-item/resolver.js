@@ -7,7 +7,7 @@ import moment from 'moment';
 import momentTz from 'moment-timezone';
 import { get, split } from 'lodash';
 
-import { searchResultResolvers } from '../search-groups/resolver';
+import { searchResultResolvers } from '../search';
 
 import sanitizeHtml from '../sanitize-html';
 import { parseRockKeyValuePairs } from '../utils';
@@ -153,12 +153,12 @@ const resolver = {
         title
       ),
     searchContentItems: async (root, input, { dataSources }) =>
-      dataSources.SearchGroups.index('ContentItems').byPaginatedQuery(input),
+      dataSources.Search.index('ContentItems').byPaginatedQuery(input),
   },
   Mutation: {
-    indexContentItem: (root, { id, key, action }, { dataSources }) => {
+    indexContentItem: async (root, { id, key, action }, { dataSources }) => {
       if (id && action && key === ApollosConfig.ROCK.APOLLOS_SECRET) {
-        const { Search } = dataSources
+        const { ContentItem } = dataSources
 
         switch (action) {
           case "delete":
@@ -166,12 +166,8 @@ const resolver = {
             return `⚠️ Action 'delete' not implemented | id: ${id} | key: ${key} | action: ${action}`
           case "update":
           default:
-            // Search.index('ContentItems').updateContentItemIndex(id)
-            // return `Successfully updated | id: ${id} | key: ${key} | action: ${action}`
-
-            // ⚠️ TODO
-            // Needs re-implemented with new Search mechanisms!
-            return `⚠️ Action "${action}" implemented yet`;
+            await ContentItem.updateContentItemIndex(id);
+            return `Successfully updated | id: ${id} | key: ${key} | action: ${action}`
         }
       }
 

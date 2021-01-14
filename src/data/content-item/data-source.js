@@ -1,4 +1,3 @@
-import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
 import { get, find, kebabCase, toLower, upperCase, split, parseInt } from 'lodash';
@@ -6,9 +5,11 @@ import moment from 'moment-timezone';
 
 import { createVideoUrlFromGuid } from '../utils';
 
+import SearchableContentItem from './search';
+
 const { ROCK_MAPPINGS, ROCK, FEATURE_FLAGS } = ApollosConfig;
 
-export default class ContentItem extends coreContentItem.dataSource {
+export default class ContentItem extends SearchableContentItem {
   expanded = true;
 
   CORE_LIVE_CONTENT = this.LIVE_CONTENT;
@@ -180,7 +181,7 @@ export default class ContentItem extends coreContentItem.dataSource {
         __typename: 'VideoMedia',
         key,
         name: attributes[key].name,
-        embedHtml: get(attributeValues, 'videoEmbed.value', null), // TODO: this assumes that the key `VideoEmebed` is always used on Rock
+        embedHtml: get(attributeValues, 'videoEmbed.value', null), // TODO: this assumes that the key `VideoEmbed` is always used on Rock
         sources: attributeValues[key].value
           ? [{ uri: createVideoUrlFromGuid(attributeValues[key].value) }]
           : [],
