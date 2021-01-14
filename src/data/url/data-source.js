@@ -8,8 +8,14 @@ const { URLS: UrlDefinedTypeId } = DEFINED_TYPES;
 
 export default class Url extends RockApolloDataSource {
   getFromId(url) {
+    console.log({ url });
+
     // the url gets encoded as the id, so we can just return it with no fuss
     return url;
+  }
+
+  resolveType() {
+    return 'Url';
   }
 
   /**
@@ -24,10 +30,15 @@ export default class Url extends RockApolloDataSource {
       .andFilter('IsActive eq true')
       .first();
 
+    const url = get(
+      definedValue,
+      'attributeValues.url.value',
+      get(definedValue, 'description')
+    );
+
     return {
-      url: get(definedValue, 'description'),
+      url,
       title: get(definedValue, 'value'),
-      id: get(definedValue, 'id'),
     };
   }
 
