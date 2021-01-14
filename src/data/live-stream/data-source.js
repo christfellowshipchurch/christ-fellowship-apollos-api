@@ -26,7 +26,7 @@ export default class LiveStream extends matrixItemDataSource {
   getFromId = (id) => {
     const decoded = JSON.parse(id);
 
-    return this.request()
+    return this.request('AttributeMatrixItems')
       .filter(`Id eq ${decoded.id}`)
       .transform((result) =>
         result.map((node, i) => ({
@@ -118,8 +118,8 @@ export default class LiveStream extends matrixItemDataSource {
       id: root.id,
       channelId,
       channelType: CHANNEL_TYPE,
-    }
-};
+    };
+  }
 
   async getLiveStreamContentItems() {
     const request = async () => {
@@ -308,10 +308,26 @@ export default class LiveStream extends matrixItemDataSource {
   }
 
   async getLiveStreams(props) {
+    // return [
+    //   {
+    //     isLive: true,
+    //     eventStartTime: moment().tz(TIMEZONE).utc().toISOString(),
+    //     eventEndTime: moment().tz(TIMEZONE).add(1, 'hours').utc().toISOString(),
+    //     title: 'Christ Fellowship Everywhere',
+    //     contentChannelItemId: 8377,
+    //     attributeValues: {
+    //       liveStreamUrl: {
+    //         value:
+    //           'https://link.theplatform.com/s/IfSiAC/media/h9hnjqraubSs/file.m3u8?metafile=false&formats=m3u&auto=true',
+    //       },
+    //     },
+    //   },
+    // ];
+
     const { Person } = this.context.dataSources;
     const dayOfWeek = moment.tz(TIMEZONE).format('dddd').toLowerCase();
 
-    if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday' || dayOfWeek === 'wednesday') {
+    if (dayOfWeek === 'saturday' || dayOfWeek === 'sunday') {
       return this.weekendServiceIsLive(moment().utc().toISOString());
     }
 
