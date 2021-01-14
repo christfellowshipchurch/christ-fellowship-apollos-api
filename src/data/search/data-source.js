@@ -4,7 +4,7 @@
  */
 import SearchClient from './search-client';
 
-export default class SearchGroups {
+export default class Search {
   constructor() {
     this.client = SearchClient.CLIENT;
     this.indices = SearchClient.INDICES;
@@ -23,7 +23,7 @@ export default class SearchGroups {
     if (this.indices[key]) {
       return this.indices[key];
     } else {
-      console.warn(`No search index found for key ${key}`);
+      console.warn(`No Search index found for key ${key}`);
     }
   }
 }

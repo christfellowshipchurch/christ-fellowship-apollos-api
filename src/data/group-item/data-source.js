@@ -843,8 +843,8 @@ export default class GroupItem extends baseGroup.dataSource {
       return `Error fetching data to index for Group "${id}"`
     }
 
-    const { SearchGroups } = this.context.dataSources;
-    SearchGroups.index('Groups').addObjects([data.node])
+    const { Search } = this.context.dataSources;
+    Search.index('Groups').addObjects([data.node])
 
     return data;
   }

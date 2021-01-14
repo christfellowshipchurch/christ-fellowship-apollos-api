@@ -2,7 +2,7 @@ import ApollosConfig from '@apollosproject/config'
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
 import { resolverMerge, parseGlobalId, createGlobalId } from '@apollosproject/server-core';
 
-import { searchResultResolvers } from '../search-groups/resolver';
+import { searchResultResolvers } from '../search';
 
 const defaultResolvers = {
   id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
@@ -170,7 +170,7 @@ const resolver = {
       })
     },
     searchGroups: async (root, input, { dataSources }) =>
-      dataSources.SearchGroups.index('Groups').byPaginatedQuery(input),
+      dataSources.Search.index('Groups').byPaginatedQuery(input),
   },
 };
 

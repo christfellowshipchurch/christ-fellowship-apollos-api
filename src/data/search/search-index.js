@@ -1,7 +1,4 @@
-import {
-  parseCursor,
-  createCursor,
-} from '@apollosproject/server-core';
+import { parseCursor, createCursor } from '@apollosproject/server-core';
 
 /**
  * Manages interface with Algolia SDK, adding convenience functions
@@ -22,19 +19,6 @@ export default class SearchIndex {
 
     this.index = client.initIndex(this.indexName);
     this.index.setSettings(this.configuration);
-
-    console.log(`[🗄️ SearchIndex] Created "${this.id}" => "${this.indexName}"`);
-  }
-
-  async addObject(args) {
-    return new Promise((resolve, reject) => {
-      this.index.addObject(args, (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(result);
-      });
-    });
   }
 
   async addObjects(args) {
@@ -46,6 +30,11 @@ export default class SearchIndex {
         return resolve(result);
       });
     });
+  }
+
+  async deleteObject(args) {
+    // Note: this isn't promisified since the only usage didn't require it.
+    this.index.deleteObject(args);
   }
 
   async byPaginatedQuery({ query, after, first = 20 }) {
