@@ -153,7 +153,7 @@ const resolver = {
         title
       ),
     searchContentItems: async (root, input, { dataSources }) =>
-      dataSources.Search.index('ContentItems').byPaginatedQuery(input),
+      dataSources.ContentItem.getSearchIndex().byPaginatedQuery(input),
   },
   Mutation: {
     indexContentItem: async (root, { id, key, action }, { dataSources }) => {
