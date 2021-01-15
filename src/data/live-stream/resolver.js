@@ -17,6 +17,9 @@ const resolver = {
         JSON.stringify({ id, eventStartTime, eventEndTime }),
         parentType.name
       ),
+    // eventStartTime: () =>
+    //   moment(new Date('January 15, 2021 09:33:00')).utc().toISOString(),
+    // eventEndTime: () => moment(new Date('January 15, 2021 09:34:00')).utc().toISOString(),
     isLive: ({ id, eventStartTime, eventEndTime }) =>
       moment().isBetween(eventStartTime, eventEndTime),
     media: ({ attributeValues }) => {
@@ -29,7 +32,7 @@ const resolver = {
       return null;
     },
     actions: async ({ id, guid }, args, { dataSources }) => {
-      if (!id || id === "") return []
+      if (!id || id === '') return [];
 
       const unresolvedNode = await dataSources.LiveStream.getRelatedNodeFromId(id);
       // Get Matrix Items
@@ -101,21 +104,21 @@ const resolver = {
         // If we know that the related node is a content channel item, let's just query for that
         if (contentChannelItemId) {
           const { ContentItem, Cache } = dataSources;
-          const cachedKey = `liveStream-contentItem-${id}`
+          const cachedKey = `liveStream-contentItem-${id}`;
           const cachedValue = await Cache.get({
             key: cachedKey,
           });
           /**
            * Set up an empty object to be used as our content item
            */
-          let contentItem = {}
+          let contentItem = {};
 
           /**
            * If Redis has this item stored already, don't make the request to
            * Rock
            */
           if (cachedValue) {
-            contentItem = cachedValue
+            contentItem = cachedValue;
           } else {
             contentItem = await ContentItem.getFromId(contentChannelItemId);
 
@@ -123,7 +126,7 @@ const resolver = {
               await Cache.set({
                 key: cachedKey,
                 data: contentItem,
-                expiresIn: 60 * 60 // 1 hour cache
+                expiresIn: 60 * 60, // 1 hour cache
               });
             }
           }
@@ -169,23 +172,25 @@ const resolver = {
        * very explicit error handling and defaulting all return values
        * to `null`
        */
-      const { LiveStream } = dataSources
+      const { LiveStream } = dataSources;
       try {
         /**
          * getLiveStreams returns an array of Live Stream objects, but this
          * specific endpoint only returns a single Live Stream.
          */
-        const allActiveLiveStreams = await LiveStream.getLiveStreams({ anonymously: true })
+        const allActiveLiveStreams = await LiveStream.getLiveStreams({
+          anonymously: true,
+        });
 
         if (allActiveLiveStreams && allActiveLiveStreams.length > 0) {
-          return allActiveLiveStreams[0]
+          return allActiveLiveStreams[0];
         }
       } catch (e) {
-        console.log("Error when fetching live streams for TV Apps")
-        console.log({ e })
+        console.log('Error when fetching live streams for TV Apps');
+        console.log({ e });
       }
 
-      return null
+      return null;
     },
     floatLeftEmptyLiveStream: (root, args, { dataSources }) => null,
   },
