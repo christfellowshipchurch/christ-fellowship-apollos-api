@@ -114,9 +114,7 @@ export default class GroupItem extends baseGroup.dataSource {
       .andFilter(`GroupMemberStatus eq '1'`)
       .get();
     const uniqueMembers = uniqBy(members, 'personId');
-    return Promise.all(
-      uniqueMembers.map(({ personId }) => Person.getFromId(personId))
-    );
+    return Promise.all(uniqueMembers.map(({ personId }) => Person.getFromId(personId)));
   };
 
   getLeaders = async (groupId) => {
@@ -372,9 +370,39 @@ export default class GroupItem extends baseGroup.dataSource {
       expiresIn: 60 * 60 * 12, // 12 hour cache
     });
 
+    /**
+     * [{ id: String, leaders: Int }]
+     *
+     * While it's not the prettiest way to handle filtering out groups with no leaders, it's more than likely that Group Leaders are cached in Redis, so we should be ok to just check to see if we have any leaders to filter the group
+     */
+    const validGroupIds = await Promise.all(
+      groupIds.map(({ groupId, isLeader }) => {
+        const filter = async () => {
+          if (isLeader)
+            return {
+              id: groupId,
+              leaders: 1,
+            };
+
+          const leaders = await this.getLeaders(groupId);
+
+          return {
+            id: groupId,
+            leaders: Array.isArray(leaders) ? leaders.length : 0,
+          };
+        };
+
+        return filter();
+      })
+    );
+
     // Get the actual group data for the groups above.
     const groups = await Promise.all(
       groupIds
+        // Filter out Groups that don't have any leaders
+        .filter(({ groupId }) => {
+          return validGroupIds.find(({ id, leaders }) => groupId === id && leaders > 0);
+        })
         // Temp solution for protected group ids
         .filter(({ groupId }) => !EXCLUDE_IDS.includes(groupId))
         // If `asLeader`, return only those you are a leader of, otherwise return everything
@@ -402,8 +430,8 @@ export default class GroupItem extends baseGroup.dataSource {
   getMatrixItemsFromId = async (id) =>
     id
       ? this.request('/AttributeMatrixItems')
-        .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
-        .get()
+          .filter(`AttributeMatrix/${getIdentifierType(id).query}`)
+          .get()
       : [];
 
   groupTypeMap = {
@@ -580,11 +608,9 @@ export default class GroupItem extends baseGroup.dataSource {
           .filter((groupMember) => {
             return !!groupMember.person;
           })
-          .map(({ person }) => person.id)
-        ;
-
+          .map(({ person }) => person.id);
         return uniqBy(resultIds);
-      })
+      });
 
     const { Cache } = this.context.dataSources;
     const cachedKey = `group_member_ids_${id}_${isLeader}_${first}_${skip}`;
