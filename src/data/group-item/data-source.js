@@ -343,6 +343,7 @@ export default class GroupItem extends baseGroup.dataSource {
   getByPerson = async ({ personId, asLeader = false, groupTypeIds = null }) => {
     const { Cache, Schedule } = this.context.dataSources;
     const excludeList = await this._getExcludedGroupIds();
+
     const request = async () => {
       /**
        * Get the active groups that the person is a member of.
@@ -1040,8 +1041,6 @@ export default class GroupItem extends baseGroup.dataSource {
     });
   }
 
-  // TODO : Invalid Group Ids
-  // TODO : Invalid Volunteer Group Ids
   async _getValidGroupRoles() {
     const { Cache, DefinedValueList } = this.context.dataSources;
     const request = async () => {
@@ -1073,27 +1072,12 @@ export default class GroupItem extends baseGroup.dataSource {
   async _getExcludedGroupIds() {
     const { Cache } = this.context.dataSources;
     const request = async () => {
-      const groupGuids = await this.request('DefinedValues')
+      // Group Ids will be set to the  `value` property of the Defined Value in Rock
+      return this.request('DefinedValues')
         .filter(`DefinedTypeId eq ${EXCLUDE_GROUPS}`)
         .orFilter(`DefinedTypeId eq ${EXCLUDE_VOLUNTEER_GROUPS}`)
-        .transform((results) =>
-          results.map((result) => get(result, 'attributeValues.group.value'))
-        )
+        .transform((results) => results.map((result) => get(result, 'value')))
         .get();
-
-      const groupIds = await Promise.all(
-        groupGuids.map((guid) => {
-          const { query } = getIdentifierType(guid);
-
-          return this.request('Groups')
-            .filter(query)
-            .select('Id')
-            .transform((results) => get(results, '[0].id'))
-            .get();
-        })
-      );
-
-      return groupIds;
     };
 
     return Cache.request(request, {

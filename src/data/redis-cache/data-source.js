@@ -5,6 +5,8 @@ import { keys, get } from 'lodash';
 import { isRequired, isType } from '../utils';
 
 const { ROCK_ENTITY_IDS, PAGE_BUILDER, ROCK_MAPPINGS } = ApollosConfig;
+const { DEFINED_TYPES } = ROCK_MAPPINGS;
+const { EXCLUDE_GROUPS, EXCLUDE_VOLUNTEER_GROUPS, GROUP_MEMBER_ROLES } = DEFINED_TYPES;
 
 const parseKey = (key) => {
   if (Array.isArray(key)) {
@@ -214,7 +216,7 @@ export default class Cache extends RedisCache.dataSource {
           }
           return 'Success';
         case ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
-          const { DefinedValueList } = this.context.dataSources;
+          const { DefinedValueList, Group } = this.context.dataSources;
 
           // Delete the existing Defined Type
           await this.delete({ key: this.KEY_TEMPLATES.definedType`${entityId}` });
@@ -223,7 +225,23 @@ export default class Cache extends RedisCache.dataSource {
            * Request the full Defined Type from DefinedValueList data source so that it gets cached
            * consistently.
            */
-          const definedType = await DefinedValueList.getFromId(entityId);
+          DefinedValueList.getFromId(entityId);
+
+          /**
+           * If the Entity Id is one of our Exclude Lists for Groups, we'll flush Group Exclude Ids
+           */
+          if (entityId === EXCLUDE_GROUPS || entityId === EXCLUDE_VOLUNTEER_GROUPS) {
+            await this.delete({ key: this.KEY_TEMPLATES.groupExcludeIds });
+            Group._getExcludedGroupIds();
+          }
+
+          /**
+           * If the Entity Id is our Group Roles List, we'll flush Group Roles
+           */
+          if (entityId === GROUP_MEMBER_ROLES) {
+            await this.delete({ key: this.KEY_TEMPLATES.groupRoles });
+            Group._getValidGroupRoles();
+          }
 
           return 'Success';
         default:
