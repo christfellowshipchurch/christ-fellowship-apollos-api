@@ -340,7 +340,7 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
   }
 
-  getByPerson = async ({ personId, asLeader = false, groupTypeIds = null }) => {
+  getByPerson = async ({ personId, asLeader = false, groupTypeIds = [] }) => {
     const { Cache, Schedule } = this.context.dataSources;
     const excludeList = await this._getExcludedGroupIds();
 
@@ -349,17 +349,11 @@ export default class GroupItem extends baseGroup.dataSource {
        * Get the active groups that the person is a member of.
        * Conditionally filter that list of groups on whether or not your role in that group is that of "Leader".
        */
-
-      let _groupTypeIds = groupTypeIds;
-
-      if (!_groupTypeIds) {
-        const nestedArray = await Promise.all([
-          this.getValidGroupTypeIds(),
-          this.getValidVolunteerGroupTypeIds(),
-        ]);
-
-        _groupTypeIds = flatten(nestedArray);
-      }
+      const nestedArray = await Promise.all([
+        this.getValidGroupTypeIds(),
+        this.getValidVolunteerGroupTypeIds(),
+      ]);
+      const _groupTypeIds = flatten(nestedArray);
 
       /**
        * TL;DR Filter out any Group Types that don't have a valid Role Id
@@ -395,6 +389,7 @@ export default class GroupItem extends baseGroup.dataSource {
               .andFilter(
                 groupTypeRoles.map(({ id }) => `(GroupRoleId eq ${id})`).join(' or ')
               )
+              .expand('GroupRole')
               .get()
           );
         })
@@ -402,9 +397,10 @@ export default class GroupItem extends baseGroup.dataSource {
 
       const groupAssociations = flatten(groupAssociationRequests);
 
-      return groupAssociations.map(({ groupId, groupRoleId }) => ({
+      return groupAssociations.map(({ groupId, groupRoleId, groupRole }) => ({
         groupId,
         isLeader: !!validRoles.find(({ id, isLeader }) => groupRoleId === id && isLeader),
+        groupTypeId: groupRole?.groupTypeId,
       }));
     };
 
@@ -414,11 +410,18 @@ export default class GroupItem extends baseGroup.dataSource {
     });
 
     /**
-     * Filter by our exclude list
+     * Filter by our exclude list and our Group Type Ids
      *
-     * We have to do this here because there are too many exclusions for OData to handle
+     * We have to do this here because there are too many exclusions for OData to handle and we also want to make sure that we filter the list _after_ pulling from the cache so that we don't accidentally cache a filtered list
      */
-    groupIds = groupIds.filter(({ groupId }) => !excludeList.includes(groupId));
+    console.log({ groupIds, groupTypeIds });
+
+    groupIds = groupIds
+      .filter(({ groupId }) => !excludeList.includes(groupId))
+      .filter(
+        ({ groupTypeId }) =>
+          groupTypeIds.length === 0 || groupTypeIds.includes(groupTypeId)
+      );
 
     /**
      * [{ id: String, leaders: Boolean }]
