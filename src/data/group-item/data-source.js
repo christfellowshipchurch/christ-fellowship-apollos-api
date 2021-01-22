@@ -414,7 +414,6 @@ export default class GroupItem extends baseGroup.dataSource {
      *
      * We have to do this here because there are too many exclusions for OData to handle and we also want to make sure that we filter the list _after_ pulling from the cache so that we don't accidentally cache a filtered list
      */
-    console.log({ groupIds, groupTypeIds });
 
     groupIds = groupIds
       .filter(({ groupId }) => !excludeList.includes(groupId))
@@ -1030,19 +1029,6 @@ export default class GroupItem extends baseGroup.dataSource {
     });
 
     return ids;
-  }
-
-  _getValidGroupRoleIds() {
-    const { Cache, DefinedValueList } = this.context.dataSources;
-
-    const request = async () => {
-      const values = await DefinedValueList.getFromId(GROUP_MEMBER_ROLES);
-    };
-
-    return Cache.request(request, {
-      expiresIn: 60 * 60 * 24, // 24 hour cache
-      key: Cache.KEY_TEMPLATES.groupRoleIds,
-    });
   }
 
   async _getValidGroupRoles() {

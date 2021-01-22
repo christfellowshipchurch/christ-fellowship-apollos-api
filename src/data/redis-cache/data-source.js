@@ -19,33 +19,31 @@ export default class Cache extends RedisCache.dataSource {
   DEFAULT_TIMEOUT = 60 * 60; // 1 hour cache
 
   KEY_TEMPLATES = {
-    attributeMatrix: (_, id) => `attribute_matrix_${id}`,
-    contentChannelItemIds: (_, id) =>
-      `${process.env.CONTENT}_contentChannelItemIds_${id}`,
-    contentItem: (_, id) => `${process.env.CONTENT}_contentItem_${id}`,
-    contentItemChildren: (_, id) => `${process.env.CONTENT}_contentItem_${id}_children`,
-    definedType: (_, id) => `:${process.env.CONTENT}:definedType:${id}`,
-    eventContentItems: `${process.env.CONTENT}_eventContentItems`,
-    group: (_, id) => `${process.env.CONTENT}_group_${id}`,
-    groupExcludeIds: `:${process.env.CONTENT}:group-exclude-ids`,
-    groupLocations: (_, id) => `:${process.env.CONTENT}:group:locations:${id}`,
-    groupRoles: `groupRoles`,
-    groupTypeIds: (_, id) => `:${process.env.CONTENT}:group-type-collection:${id}`,
-    linkTree: 'linkTree',
-    liveStreamContentItems: `${process.env.CONTENT}_liveStreamContentItems`,
+    attributeMatrix: (_, id) => `attribute-matrix:${id}`,
+    contentChannelItemIds: (_, id) => `content-channel-item-ids:${id}`,
+    contentItem: (_, id) => `content-item:${id}`,
+    contentItemChildren: (_, id) => `content-item:${id}:children`,
+    definedType: (_, id) => `definedType:${id}`,
+    eventContentItems: `event-content-items`,
+    group: (_, id) => `group:${id}`,
+    groupExcludeIds: `group-exclude-ids`,
+    groupLocations: (_, id) => `group:locations:${id}`,
+    groupRoles: `group-roles`,
+    groupTypeIds: (_, id) => `group-type-collection:${id}`,
+    linkTree: 'link-tree',
+    liveStreamContentItems: `live-stream-content-items`,
     liveStreamRelatedNode: (_, id) => `liveStream-relatedNode-${id}`,
-    liveStreams: `${process.env.CONTENT}_liveStreams`,
-    pathnameId: (_, pathname) => `${process.env.CONTENT}_${pathname}`,
-    personas: (_, id) => `${process.env.CONTENT}_personas_${id}`,
-    person: (_, id) => `${process.env.CONTENT}_person_${id}`,
-    personAlias: (_, id) => `${process.env.CONTENT}_person_alias_${id}`,
-    personGroups: (_, personId) => `${process.env.CONTENT}_person_groups_${personId}`,
-    personPrayers: (_, personId) =>
-      `${process.env.CONTENT}_person_prayer_requests_${personId}`,
-    prayerRequest: (_, id) => `${process.env.CONTENT}_prayer_request_${id}`,
-    rockConstant: (_, name) => `${process.env.CONTENT}_rock_constant_${name}`,
-    rockFeed: (_, id) => `${process.env.CONTENT}_rockFeed_${id}`,
-    schedule: (_, id) => `${process.env.CONTENT}_schedule_${id}`,
+    liveStreams: `live-streams`,
+    pathnameId: (_, pathname) => `${pathname}`,
+    personas: (_, id) => `personas:${id}`,
+    person: (_, id) => `person:${id}`,
+    personAlias: (_, id) => `person-alias:${id}`,
+    personGroups: (_, personId) => `person-groups:${personId}`,
+    personPrayers: (_, personId) => `person-prayer-requests:${personId}`,
+    prayerRequest: (_, id) => `prayer-request:${id}`,
+    rockConstant: (_, name) => `rock-constant:${name}`,
+    rockFeed: (_, id) => `rock-feed:${id}`,
+    schedule: (_, id) => `schedule:${id}`,
   };
 
   initialize({ context }) {
@@ -79,7 +77,7 @@ export default class Cache extends RedisCache.dataSource {
 
       if (data) {
         await this.set({
-          key,
+          key: `:${process.env.CONTENT}:${key}`,
           data,
           expiresIn,
         });
@@ -215,17 +213,16 @@ export default class Cache extends RedisCache.dataSource {
             );
           }
           return 'Success';
-        case ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
+        case ROCK_ENTITY_IDS.DEFINED_TYPE:
           const { DefinedValueList, Group } = this.context.dataSources;
 
           // Delete the existing Defined Type
           await this.delete({ key: this.KEY_TEMPLATES.definedType`${entityId}` });
 
           /**
-           * Request the full Defined Type from DefinedValueList data source so that it gets cached
-           * consistently.
+           * Request the full Defined Type from DefinedValueList data source so that it gets cached immediately.
            */
-          DefinedValueList.getFromId(entityId);
+          await DefinedValueList.getFromId(entityId);
 
           /**
            * If the Entity Id is one of our Exclude Lists for Groups, we'll flush Group Exclude Ids
@@ -244,6 +241,25 @@ export default class Cache extends RedisCache.dataSource {
           }
 
           return 'Success';
+        case ROCK_ENTITY_IDS.PERSON:
+          const { Person, Group } = this.context.dataSources;
+
+          /**
+           * Delete the existing Person
+           * Request the full Person from the Person data source so that it gets cached immediately.
+           */
+          await this.delete({ key: this.KEY_TEMPLATES.person`${entityId}` });
+          await Person.getFromId(entityId);
+
+          /**
+           * Delete Groups for the Person
+           * Request all Groups for that person so new data gets cached immediately
+           */
+          await this.delete({ key: this.KEY_TEMPLATES.personGroups`${entityId}` });
+          await Group.getByPerson({
+            personId: entityId,
+          });
+
         default:
           return 'Failed';
       }
