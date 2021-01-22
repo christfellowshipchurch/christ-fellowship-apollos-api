@@ -395,10 +395,6 @@ export default class GroupItem extends baseGroup.dataSource {
               .andFilter(
                 groupTypeRoles.map(({ id }) => `(GroupRoleId eq ${id})`).join(' or ')
               )
-              // Filter out excluded groups
-              .andFilter(
-                excludeList.map((groupId) => `(GroupId ne ${groupId})`).join(' or ')
-              )
               .get()
           );
         })
@@ -412,10 +408,17 @@ export default class GroupItem extends baseGroup.dataSource {
       }));
     };
 
-    const groupIds = await Cache.request(request, {
+    let groupIds = await Cache.request(request, {
       key: Cache.KEY_TEMPLATES.personGroups`${personId}`,
       expiresIn: 60 * 60 * 12, // 12 hour cache
     });
+
+    /**
+     * Filter by our exclude list
+     *
+     * We have to do this here because there are too many exclusions for OData to handle
+     */
+    groupIds = groupIds.filter(({ groupId }) => !excludeList.includes(groupId));
 
     /**
      * [{ id: String, leaders: Boolean }]
@@ -1031,8 +1034,6 @@ export default class GroupItem extends baseGroup.dataSource {
 
     const request = async () => {
       const values = await DefinedValueList.getFromId(GROUP_MEMBER_ROLES);
-
-      console.log({ values: values.definedValues });
     };
 
     return Cache.request(request, {
