@@ -99,10 +99,16 @@ export default class Cache extends RedisCache.dataSource {
       isType(entityId, 'entityId', 'number') &&
       isType(entityTypeId, 'entityTypeId', 'number')
     ) {
+      const {
+        Auth,
+        ContentItem,
+        ContentChannel,
+        DefinedValueList,
+        Group,
+        PrayerRequest,
+      } = this.context.dataSources;
       switch (entityTypeId) {
         case ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
-          const { ContentItem, ContentChannel } = this.context.dataSources;
-
           // Delete the existing Content Item
           await this.delete({ key: this.KEY_TEMPLATES.contentItem`${entityId}` });
 
@@ -184,7 +190,6 @@ export default class Cache extends RedisCache.dataSource {
 
           return 'Success';
         case ROCK_ENTITY_IDS.PRAYER_REQUEST:
-          const { Auth, PrayerRequest } = this.context.dataSources;
           if (entityId > 0) {
             // Delete the existing Prayer Request
             await this.delete({ key: this.KEY_TEMPLATES.prayerRequest`${entityId}` });
@@ -214,8 +219,6 @@ export default class Cache extends RedisCache.dataSource {
           }
           return 'Success';
         case ROCK_ENTITY_IDS.DEFINED_TYPE:
-          const { DefinedValueList, Group } = this.context.dataSources;
-
           // Delete the existing Defined Type
           await this.delete({ key: this.KEY_TEMPLATES.definedType`${entityId}` });
 
@@ -242,8 +245,6 @@ export default class Cache extends RedisCache.dataSource {
 
           return 'Success';
         case ROCK_ENTITY_IDS.PERSON:
-          const { Person, Group } = this.context.dataSources;
-
           /**
            * Delete the existing Person
            * Request the full Person from the Person data source so that it gets cached immediately.
