@@ -142,11 +142,7 @@ export default class Feature extends coreFeatures.dataSource {
     const { Group, Auth, ContentItem, Schedule } = this.context.dataSources;
 
     try {
-      // Exclude Dream Team
-      const groupTypeKeys = Object.keys(Group.groupTypeMap).filter(
-        (key) => key !== 'DreamTeam'
-      );
-      const groupTypeIds = groupTypeKeys.map((key) => Group.groupTypeMap[key]);
+      const groupTypeIds = await Group.getValidGroupTypeIds();
       const { id } = await Auth.getCurrentPerson();
       const groups = await Group.getByPerson({ personId: id, groupTypeIds });
 
@@ -221,9 +217,10 @@ export default class Feature extends coreFeatures.dataSource {
     const { Group, Auth } = this.context.dataSources;
 
     try {
+      const groupTypeIds = await Group.getValidVolunteerGroupTypeIds();
       const { id } = await Auth.getCurrentPerson();
       const groups = await Group.getByPerson({
-        type: 'DreamTeam',
+        groupTypeIds,
         personId: id,
       });
 

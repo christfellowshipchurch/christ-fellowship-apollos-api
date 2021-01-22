@@ -22,8 +22,13 @@ export default class Cache extends RedisCache.dataSource {
       `${process.env.CONTENT}_contentChannelItemIds_${id}`,
     contentItem: (_, id) => `${process.env.CONTENT}_contentItem_${id}`,
     contentItemChildren: (_, id) => `${process.env.CONTENT}_contentItem_${id}_children`,
+    definedType: (_, id) => `:${process.env.CONTENT}:definedType:${id}`,
     eventContentItems: `${process.env.CONTENT}_eventContentItems`,
     group: (_, id) => `${process.env.CONTENT}_group_${id}`,
+    groupExcludeIds: `:${process.env.CONTENT}:group-exclude-ids`,
+    groupLocations: (_, id) => `:${process.env.CONTENT}:group:locations:${id}`,
+    groupRoles: `groupRoles`,
+    groupTypeIds: (_, id) => `:${process.env.CONTENT}:group-type-collection:${id}`,
     linkTree: 'linkTree',
     liveStreamContentItems: `${process.env.CONTENT}_liveStreamContentItems`,
     liveStreamRelatedNode: (_, id) => `liveStream-relatedNode-${id}`,
@@ -207,6 +212,20 @@ export default class Cache extends RedisCache.dataSource {
               'No user logged in when flushing a prayer request cache. Ignoring user cached data'
             );
           }
+          return 'Success';
+        case ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
+          const { DefinedValueList } = this.context.dataSources;
+
+          // Delete the existing Defined Type
+          await this.delete({ key: this.KEY_TEMPLATES.definedType`${entityId}` });
+
+          /**
+           * Request the full Defined Type from DefinedValueList data source so that it gets cached
+           * consistently.
+           */
+          const definedType = await DefinedValueList.getFromId(entityId);
+
+          return 'Success';
         default:
           return 'Failed';
       }
