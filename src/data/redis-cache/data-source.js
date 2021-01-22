@@ -5,6 +5,8 @@ import { keys, get } from 'lodash';
 import { isRequired, isType } from '../utils';
 
 const { ROCK_ENTITY_IDS, PAGE_BUILDER, ROCK_MAPPINGS } = ApollosConfig;
+const { DEFINED_TYPES } = ROCK_MAPPINGS;
+const { EXCLUDE_GROUPS, EXCLUDE_VOLUNTEER_GROUPS, GROUP_MEMBER_ROLES } = DEFINED_TYPES;
 
 const parseKey = (key) => {
   if (Array.isArray(key)) {
@@ -22,8 +24,13 @@ export default class Cache extends RedisCache.dataSource {
       `${process.env.CONTENT}_contentChannelItemIds_${id}`,
     contentItem: (_, id) => `${process.env.CONTENT}_contentItem_${id}`,
     contentItemChildren: (_, id) => `${process.env.CONTENT}_contentItem_${id}_children`,
+    definedType: (_, id) => `:${process.env.CONTENT}:definedType:${id}`,
     eventContentItems: `${process.env.CONTENT}_eventContentItems`,
     group: (_, id) => `${process.env.CONTENT}_group_${id}`,
+    groupExcludeIds: `:${process.env.CONTENT}:group-exclude-ids`,
+    groupLocations: (_, id) => `:${process.env.CONTENT}:group:locations:${id}`,
+    groupRoles: `groupRoles`,
+    groupTypeIds: (_, id) => `:${process.env.CONTENT}:group-type-collection:${id}`,
     linkTree: 'linkTree',
     liveStreamContentItems: `${process.env.CONTENT}_liveStreamContentItems`,
     liveStreamRelatedNode: (_, id) => `liveStream-relatedNode-${id}`,
@@ -207,6 +214,36 @@ export default class Cache extends RedisCache.dataSource {
               'No user logged in when flushing a prayer request cache. Ignoring user cached data'
             );
           }
+          return 'Success';
+        case ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
+          const { DefinedValueList, Group } = this.context.dataSources;
+
+          // Delete the existing Defined Type
+          await this.delete({ key: this.KEY_TEMPLATES.definedType`${entityId}` });
+
+          /**
+           * Request the full Defined Type from DefinedValueList data source so that it gets cached
+           * consistently.
+           */
+          DefinedValueList.getFromId(entityId);
+
+          /**
+           * If the Entity Id is one of our Exclude Lists for Groups, we'll flush Group Exclude Ids
+           */
+          if (entityId === EXCLUDE_GROUPS || entityId === EXCLUDE_VOLUNTEER_GROUPS) {
+            await this.delete({ key: this.KEY_TEMPLATES.groupExcludeIds });
+            Group._getExcludedGroupIds();
+          }
+
+          /**
+           * If the Entity Id is our Group Roles List, we'll flush Group Roles
+           */
+          if (entityId === GROUP_MEMBER_ROLES) {
+            await this.delete({ key: this.KEY_TEMPLATES.groupRoles });
+            Group._getValidGroupRoles();
+          }
+
+          return 'Success';
         default:
           return 'Failed';
       }

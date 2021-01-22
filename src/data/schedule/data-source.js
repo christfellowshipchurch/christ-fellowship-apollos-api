@@ -237,6 +237,8 @@ export default class Schedule extends RockApolloDataSource {
 
   /** MARK: - iCalendar */
   /**
+   * Parse iCalendar
+   * Takes an iCalendar string and parses it into a friendly object with ocurrences.
    * @param {String}                iCalendar string to parse.
    * @param {Object} args           Arguments to pass in to describe the parse.
    * @param {Number} args.duration  Manually set the duration of each instance of the event. Defaulted to the duration of the event set by the iCalendar string.
