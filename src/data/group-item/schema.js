@@ -152,6 +152,7 @@ export const groupSchema = gql`
   }
 
   type GroupSearchResult implements SearchResult {
+    id: ID!
     cursor: String
     node: Node
 
@@ -159,8 +160,6 @@ export const groupSchema = gql`
     title: String
     summary: String
     coverImage: ImageMedia
-    # groupType: GROUP_TYPE
-    # meetingDays: ['mon', 'sun']
   }
 
   extend type Query {

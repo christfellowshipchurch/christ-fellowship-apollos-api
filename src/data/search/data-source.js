@@ -19,6 +19,8 @@ export default class Search {
     this.context = context;
   }
 
+  // dataSource.Search.index('Group').byPaginatedQuery()
+  // dataSource.Search.index('ContentItems').byPaginatedQuery()
   index(key) {
     if (this.indices[key]) {
       return this.indices[key];
