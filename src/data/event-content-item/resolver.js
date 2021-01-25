@@ -8,7 +8,7 @@ import sanitizeHtml from '../sanitize-html';
 import { sharingResolver } from '../content-item/resolver';
 import deprecatedResolvers from './deprecated-resolvers';
 
-import campusSortOrder from '../campus/campus-sort-order'
+import campusSortOrder from '../campus/campus-sort-order';
 
 const resolver = {
   EventContentItem: {
@@ -82,41 +82,39 @@ const resolver = {
         }
       });
 
-      return Object.entries(filterScheduleDictionary).map(([name, schedules]) => {
-        return {
-          name,
-          instances: async () => {
-            const rockSchedules = await Schedule.getFromIds(schedules);
-            const times = await Promise.all(
-              rockSchedules.map((s) => Event.parseScheduleAsEvents(s))
-            );
+      return Object.entries(filterScheduleDictionary)
+        .map(([name, schedules]) => {
+          return {
+            name,
+            instances: async () => {
+              const rockSchedules = await Schedule.getFromIds(schedules);
+              const times = await Promise.all(
+                rockSchedules.map((s) => Event.parseScheduleAsEvents(s))
+              );
 
-            return uniqBy(
-              flatten(times).sort((a, b) => moment(a.start).diff(b.start)),
-              'start'
-            );
-          },
-        };
-      })
-      .sort((a, b) => {
-        /**
-         * If an order for a given name doesn't exist in our ordering file,
-         * we just shoot it to the bottom of the list
-         */
-        const aOrder = get(campusSortOrder, `${a.name}`, 1000)
-        const bOrder = get(campusSortOrder, `${b.name}`, 1000)
+              return uniqBy(
+                flatten(times).sort((a, b) => moment(a.start).diff(b.start)),
+                'start'
+              );
+            },
+          };
+        })
+        .sort((a, b) => {
+          /**
+           * If an order for a given name doesn't exist in our ordering file,
+           * we just shoot it to the bottom of the list
+           */
+          const aOrder = get(campusSortOrder, `${a.name}`, 1000);
+          const bOrder = get(campusSortOrder, `${b.name}`, 1000);
 
-        if (aOrder - bOrder < 0) return -1
-        if (aOrder - bOrder > 0) return 1
+          if (aOrder - bOrder < 0) return -1;
+          if (aOrder - bOrder > 0) return 1;
 
-        return 0
-      });
+          return 0;
+        });
     },
-    liveStream: ({ id, attributeValues }, args, { dataSources: { LiveStream } }) => {
-      const attributeMatrixGuid = get(attributeValues, 'liveStreams.value')
-      
-      return LiveStream.byAttributeMatrixGuid(attributeMatrixGuid, { contentChannelItemId: id })
-    }
+    liveStream: (root, args, { dataSources: { LiveStream } }) =>
+      LiveStream.byContentItem(root),
   },
 };
 
