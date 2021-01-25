@@ -23,7 +23,9 @@ export default class Cache extends RedisCache.dataSource {
     contentChannelItemIds: (_, id) => `content-channel-item-ids:${id}`,
     contentItem: (_, id) => `content-item:${id}`,
     contentItemChildren: (_, id) => `content-item:${id}:children`,
-    definedType: (_, id) => `definedType:${id}`,
+    definedType: (_, id) => `defined-type:${id}`,
+    definedValue: (_, id) => `defined-value:${id}`,
+    definedValueGuidId: (_, guid) => `defined-value-id:${guid}`,
     eventContentItems: `event-content-items`,
     group: (_, id) => `group:${id}`,
     groupExcludeIds: `group-exclude-ids`,
@@ -44,6 +46,7 @@ export default class Cache extends RedisCache.dataSource {
     rockConstant: (_, name) => `rock-constant:${name}`,
     rockFeed: (_, id) => `rock-feed:${id}`,
     schedule: (_, id) => `schedule:${id}`,
+    scheduleGuidId: (_, guid) => `schedule-id:${guid}`,
   };
 
   initialize({ context }) {

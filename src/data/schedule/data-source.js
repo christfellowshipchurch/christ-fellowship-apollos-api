@@ -20,12 +20,38 @@ export default class Schedule extends RockApolloDataSource {
   /** MARK: - Getters */
   getFromId = async (id = isRequired('Schedule.getFromId', 'id')) => {
     const { Cache } = this.context.dataSources;
-    const request = () => this.request().filter(getIdentifierType(id).query).first();
+    const { type } = getIdentifierType(id);
+    let _id = id;
 
-    return Cache.request(request, {
-      key: Cache.KEY_TEMPLATES.schedule`${id}`,
-      expiresIn: 60 * 10, // 10 minute cache
-    });
+    if (type === 'guid') {
+      _id = await this.getIdFromGuid(id);
+    }
+
+    if (_id) {
+      return Cache.request(() => this.request().find(_id).get(), {
+        key: Cache.KEY_TEMPLATES.schedule`${id}`,
+        expiresIn: 60 * 60, // 60 minute cache
+      });
+    }
+
+    return null;
+  };
+
+  getIdFromGuid = async (guid) => {
+    const { Cache } = this.context.dataSources;
+    const { query } = getIdentifierType(guid);
+
+    return Cache.request(
+      () =>
+        this.request()
+          .filter(query)
+          .transform((results) => results[0]?.id)
+          .get(),
+      {
+        key: Cache.KEY_TEMPLATES.scheduleGuidId`${guid}`,
+        expiresIn: 60 * 60 * 24, // 24 hour cache
+      }
+    );
   };
 
   getFromIds = (ids) =>
