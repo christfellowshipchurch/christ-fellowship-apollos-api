@@ -29,7 +29,7 @@ export default class Schedule extends RockApolloDataSource {
 
     if (_id) {
       return Cache.request(() => this.request().find(_id).get(), {
-        key: Cache.KEY_TEMPLATES.schedule`${id}`,
+        key: Cache.KEY_TEMPLATES.schedule`${_id}`,
         expiresIn: 60 * 60, // 60 minute cache
       });
     }

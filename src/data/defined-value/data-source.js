@@ -17,7 +17,7 @@ export default class DefinedValue extends RockApolloDataSource {
     if (_id) {
       return Cache.request(() => this.request().find(_id).get(), {
         expiresIn: 60 * 60, // 1 hour cache
-        key: Cache.KEY_TEMPLATES.definedValue`${id}`,
+        key: Cache.KEY_TEMPLATES.definedValue`${_id}`,
       });
     }
 
