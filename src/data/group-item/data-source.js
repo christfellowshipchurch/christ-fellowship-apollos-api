@@ -710,6 +710,14 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
   };
 
+  getPreference({ attributeValues }) {
+    return get(attributeValues, 'preference.valueFormatted', null);
+  }
+
+  getSubPreference({ attributeValues }) {
+    return get(attributeValues, 'subPreference.valueFormatted', null);
+  }
+
   allowMessages = ({ attributeValues }) => {
     return get(attributeValues, 'allowMessages.value', '');
   };

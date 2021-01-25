@@ -89,6 +89,8 @@ export const groupSchema = gql`
     phoneNumbers: [String]
     schedule: Schedule
     videoCall: VideoCallParams
+    preference: String
+    subPreference: String
 
     avatars: [String] @deprecated(reason: "Use people instead")
     leaders: [Person] @deprecated(reason: "Use people instead")

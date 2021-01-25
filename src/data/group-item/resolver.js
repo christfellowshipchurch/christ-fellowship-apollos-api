@@ -45,10 +45,14 @@ const resolver = {
       dataSources.GroupItem.getGroupVideoCallParams(root),
     parentVideoCall: (root, args, { dataSources }) =>
       dataSources.GroupItem.getGroupParentVideoCallParams(root),
-    allowMessages: (root, args, { dataSources }) =>
+      allowMessages: (root, args, { dataSources }) =>
       dataSources.GroupItem.allowMessages(root),
-    checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
+      checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
       CheckInable.getFromId(id),
+    preference: (root, args, { dataSources }) =>
+      dataSources.GroupItem.getPreference(root),
+    subPreference: (root, args, { dataSources }) =>
+      dataSources.GroupItem.getSubPreference(root),
   },
   VolunteerGroup: {
     ...defaultResolvers,
