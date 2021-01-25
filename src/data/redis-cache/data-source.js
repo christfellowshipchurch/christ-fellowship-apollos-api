@@ -22,6 +22,7 @@ export default class Cache extends RedisCache.dataSource {
     attributeMatrix: (_, id) => `attribute-matrix:${id}`,
     contentChannelItemIds: (_, id) => `content-channel-item-ids:${id}`,
     contentItem: (_, id) => `content-item:${id}`,
+    contentItemGuidId: (_, guid) => `content-item-id:${guid}`,
     contentItemChildren: (_, id) => `content-item:${id}:children`,
     definedType: (_, id) => `defined-type:${id}`,
     definedValue: (_, id) => `defined-value:${id}`,

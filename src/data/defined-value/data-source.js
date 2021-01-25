@@ -24,13 +24,14 @@ export default class DefinedValue extends RockApolloDataSource {
     return null;
   };
 
+  // ! Deprecated : please use getFromId instead
   getDefinedValueByIdentifier = this.getFromId;
   getByIdentifier = this.getFromId;
 
   getValueById = async (id) => {
     if (id && id !== '') {
       try {
-        const definedValue = await this.getByIdentifier(id);
+        const definedValue = await this.getFromId(id);
 
         return definedValue.value;
       } catch (e) {
