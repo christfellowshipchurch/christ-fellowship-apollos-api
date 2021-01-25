@@ -149,15 +149,31 @@ export default class LiveStream extends definedValueDataSource {
 
       const definedType = await DefinedValueList.getFromId(LIVE_STREAM_SCHEDULES);
       const definedValues = get(definedType, 'definedValues', []);
-      const liveStreams = definedValues.map((definedValue) => {
-        return {
-          ...definedValue,
-          securityDataViews: definedValue?.attributeValues?.securityDataViews?.value,
-        };
-      });
+      const liveStreams = await Promise.all(
+        definedValues.map((definedValue) => {
+          const request = async () => {
+            let isLive = false;
+            const nextInstance = await this.getNextInstance(definedValue);
+
+            if (nextInstance) {
+              const { start, end } = nextInstance;
+              isLive = moment().isBetween(start, end);
+            }
+
+            return {
+              ...definedValue,
+              securityDataViews: definedValue?.attributeValues?.securityDataViews?.value,
+              isLive,
+            };
+          };
+
+          return request();
+        })
+      );
 
       return liveStreams
         .filter((liveStream) => !!liveStream)
+        .filter(({ isLive }) => isLive)
         .filter((liveStream) => filterByPersona(liveStream));
     } catch (e) {
       console.log('Error fetching Live Streams');
