@@ -4,7 +4,7 @@ import { createGlobalId } from '@apollosproject/server-core';
 import { get, find, kebabCase, toLower, upperCase, split, parseInt } from 'lodash';
 import moment from 'moment-timezone';
 
-import { createVideoUrlFromGuid } from '../utils';
+import { createVideoUrlFromGuid, getIdentifierType } from '../utils';
 
 const { ROCK_MAPPINGS, ROCK, FEATURE_FLAGS } = ApollosConfig;
 
@@ -121,11 +121,38 @@ export default class ContentItem extends coreContentItem.dataSource {
 
   getFromId = async (id) => {
     const { Cache } = this.context.dataSources;
+    const { type } = getIdentifierType(id);
+    let _id = id;
 
-    return Cache.request(() => this.request().find(id).get(), {
-      key: Cache.KEY_TEMPLATES.contentItem`${id}`,
-      expiresIn: 60 * 60 * 12, // 12 hour cache
-    });
+    if (type === 'guid') {
+      _id = await this.getIdFromGuid(id);
+    }
+
+    if (_id) {
+      return Cache.request(() => this.request().find(_id).get(), {
+        key: Cache.KEY_TEMPLATES.contentItem`${_id}`,
+        expiresIn: 60 * 60 * 12, // 12 hour cache
+      });
+    }
+
+    return null;
+  };
+
+  getIdFromGuid = async (guid) => {
+    const { Cache } = this.context.dataSources;
+    const { query } = getIdentifierType(guid);
+
+    return Cache.request(
+      () =>
+        this.request()
+          .filter(query)
+          .transform((results) => results[0]?.id)
+          .get(),
+      {
+        key: Cache.KEY_TEMPLATES.contentItemGuidId`${guid}`,
+        expiresIn: 60 * 60 * 24, // 24 hour cache
+      }
+    );
   };
 
   byAttributeValue = (key, value) => {
