@@ -145,29 +145,13 @@ export const groupSchema = gql`
     removeGroupResource(relatedNodeId: ID!, groupId: ID!): Group
 
     # Search
-    indexGroup(id: String, action: SearchIndexAction, key: String): String
+    indexGroup(id: String, action: INDEX_ACTION, key: String): String
   }
 
   type GroupCoverImage {
     guid: String
     name: String
     image: ImageMedia
-  }
-
-  type GroupSearchResult implements SearchResult {
-    id: ID!
-    cursor: String
-    node: Node
-
-    # :: Group attributes from Algolia
-    title: String
-    summary: String
-    coverImage: ImageMedia
-    campus: Campus
-    preference: String
-    subPreference: String
-    membersCount: Int # Derived property for search
-    leaders: [Person] # Note: Differs from what people resolver returns
   }
 
   extend type Query {

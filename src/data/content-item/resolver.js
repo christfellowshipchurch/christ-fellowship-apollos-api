@@ -7,8 +7,6 @@ import moment from 'moment';
 import momentTz from 'moment-timezone';
 import { get, split } from 'lodash';
 
-import { searchResultResolvers } from '../search';
-
 import sanitizeHtml from '../sanitize-html';
 import { parseRockKeyValuePairs } from '../utils';
 
@@ -152,7 +150,7 @@ const resolver = {
         website,
         title
       ),
-    searchContentItems: async (root, input, { dataSources }) =>
+    search: async (root, input, { dataSources }) =>
       dataSources.ContentItem.getSearchIndex().byPaginatedQuery(input),
   },
   Mutation: {
@@ -173,9 +171,6 @@ const resolver = {
 
       return `Failed to update | id: ${id} | key: ${key} | action: ${action}`
     }
-  },
-  ContentItemSearchResult: {
-    ...searchResultResolvers,
   },
   ContentItem: {
     ...titleResolver,

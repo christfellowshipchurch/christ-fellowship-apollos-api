@@ -14,33 +14,10 @@ import sanitizeHtml from 'sanitize-html';
 const MAX_SIZE = 10000; // bytes
 const { REDIS_URL, CONTENT } = process.env;
 
-// :: Redis & Utils
-// ----------------------------------------------------------------------------
-
 const redis = new Redis(REDIS_URL);
-let client;
-let subscriber;
-let queueOpts;
 
-if (REDIS_URL) {
-  client = new Redis(REDIS_URL);
-  subscriber = new Redis(REDIS_URL);
-
-  // Used to ensure that N+3 redis connections are not created per queue.
-  // https://github.com/OptimalBits/bull/blob/develop/PATTERNS.md#reusing-redis-connections
-  queueOpts = {
-    createClient(type) {
-      switch (type) {
-        case 'client':
-          return client;
-        case 'subscriber':
-          return subscriber;
-        default:
-          return new Redis(REDIS_URL);
-      }
-    },
-  };
-}
+// :: Utils
+// ----------------------------------------------------------------------------
 
 const cleanHtmlContentForIndex = (htmlContent) => {
   // Strip all html tags
@@ -115,18 +92,61 @@ const deleteKeysByPattern = (pattern) => {
 // :: Main Class
 // ----------------------------------------------------------------------------
 
+/**
+ * Creates a new base class that adds Algolia search features.
+ */
 export default class SearchableContentItem extends coreContentItem.dataSource {
   getSearchIndex() {
     return this.context.dataSources.Search.index('ContentItems');
   }
 
-  async indexAllGeneralContent() {
-    const { ContentItem, Search } = this.context.dataSources
+  resolveType(props) {
+    const { clientVersion } = this.context;
+    const { attributeValues, contentChannelTypeId } = props;
+    const versionParse = split(clientVersion, '.').join('');
 
-    const contentItems = await ContentItem
+    /**
+     * Versions of the app that are a lower version than 5.2.1 have a bug
+     * that will crash the app whenever a DevotionalContentItem is referenced.
+     *
+     * In order to counter-balance that, we just wanna make sure the request
+     * is coming from something higher than version 5.2.0 before we start
+     * dynamically returning DevotionalContentItem as a resolved type
+     */
+    if (parseInt(versionParse) > 520) {
+      if (get(attributeValues, 'scriptures.value', '') !== '') {
+        return 'DevotionalContentItem';
+      }
+    }
+
+    /**
+     * Versions of the app that are lower than 5.4.0 have a visual bug where they
+     * don't ever show dates/times on EventContentItems.
+     *
+     * We have an error in logic where the `hideLabel` boolean flag is not respected,
+     * so we need to just resolve all `EventContentItem` types to `InformationalContentItem`
+     * to avoid the visual issue.
+     */
+    if (parseInt(versionParse) < 540) {
+      if (
+        get(
+          ROCK_MAPPINGS,
+          'CONTENT_ITEM.EventContentItem.ContentChannelTypeId',
+          []
+        ).includes(contentChannelTypeId)
+      ) {
+        return 'InformationalContentItem';
+      }
+    }
+
+    return super.resolveType(props);
+  }
+
+  async indexAllGeneralContent() {
+    const contentItems = await this
       .request()
       .filterOneOf([43, 45, 60, 63].map(n => `ContentChannelId eq ${n}`))
-      .andFilter(ContentItem.byActive())
+      .andFilter(this.byActive())
       .get();
 
     const indexableItems = await Promise.all(
@@ -136,16 +156,9 @@ export default class SearchableContentItem extends coreContentItem.dataSource {
     this.getSearchIndex().addObjects(indexableItems);
   }
 
-  resolveContentItem(item) {
-    const { ContentItem } = this.context.dataSources;
-    return ContentItem.resolveType(item);
-  }
-
   async mapItemToAlgolia(item) {
-    console.log('mapItemToAlgolia() item: ', item)
-    const type = await this.resolveContentItem(item);
+    const type = await this.resolveType(item);
 
-    console.log('about to fetch data via graphql...');
     const { data } = await graphql(
       this.context.schema,
       `query getItem {
@@ -177,12 +190,8 @@ export default class SearchableContentItem extends coreContentItem.dataSource {
     log(`updateContentItemIndex(${id})`)
 
     /** Resolve the Content Item */
-    const { ContentItem } = this.context.dataSources;
-
-    log('getting item from id...');
-    const item = await ContentItem.getFromId(id);
+    const item = await this.getFromId(id);
     if (!item) {
-      log('item not found!');
       return null;
     }
 
@@ -196,7 +205,6 @@ export default class SearchableContentItem extends coreContentItem.dataSource {
     }
 
     /** Resolve the item to an indexable item and get the Start Date */
-    log('about to mapItemToAlgolia');
     const indexableItem = await this.mapItemToAlgolia(item);
     const { startDateTime } = item;
 
@@ -268,5 +276,60 @@ export default class SearchableContentItem extends coreContentItem.dataSource {
 
     log(`Updating search index for "${item.title}"`)
     return this.getSearchIndex().addObjects([indexableItem])
+  }
+
+  async deltaIndex({ datetime }) {
+    let itemsLeft = true;
+    const args = { after: null, first: 100 };
+
+    while (itemsLeft) {
+      const { edges } = await this.paginate({
+        cursor: await this.byDateAndActive({ datetime }),
+        args,
+      });
+
+      const result = await edges;
+      const items = result.map(({ node }) => node);
+      itemsLeft = items.length === 100;
+
+      if (itemsLeft) args.after = result[result.length - 1].cursor;
+      const indexableItems = await Promise.all(
+        items.map((item) => this.mapItemToAlgolia(item))
+      );
+
+      await this.addObjects(indexableItems);
+    }
+  }
+
+  async indexAll() {
+    await new Promise((resolve, reject) =>
+      this.index.clearIndex((err, result) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(result);
+      })
+    );
+    let itemsLeft = true;
+    const args = { after: null, first: 100 };
+
+    while (itemsLeft) {
+      const { edges } = await this.paginate({
+        cursor: this.byActive(),
+        args,
+      });
+
+      const result = await edges;
+      const items = result.map(({ node }) => node);
+      itemsLeft = items.length === 100;
+
+      if (itemsLeft) args.after = result[result.length - 1].cursor;
+
+      const indexableItems = await Promise.all(
+        items.map((item) => this.mapItemToAlgolia(item))
+      );
+
+      await this.addObjects(indexableItems);
+    }
   }
 }

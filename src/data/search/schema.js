@@ -6,12 +6,15 @@ export default gql`
     pageInfo: PaginationInfo
   }
 
-  interface SearchResult {
+  type SearchResult {
     cursor: String
+    title: String
+    summary: String
+    coverImage: ImageMedia
     node: Node
   }
 
-  enum SearchIndexAction {
+  enum INDEX_ACTION {
     update
     delete
   }

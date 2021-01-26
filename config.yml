@@ -43,20 +43,10 @@ CHURCH_ONLINE:
 ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
   API_KEY: ${ALGOLIA_API_KEY}
-  # TODO: should we support multiple indices? how?
-  #  ✂️ ------------------------------------------------
-  SEARCH_INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_CONTENT_ITEMS}
-  CONFIGURATION:
-    searchableAttributes:
-      - title
-      - htmlContent
-      - unordered(summary)
-  #  ✂️ ------------------------------------------------
   INDICES:
     # 🤔 Is it ok or acceptable to use TitleCase key names here?
     ContentItems:
       INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_CONTENT_ITEMS}
-      SEARCH_RESULT_TYPENAME: 'ContentItemSearchResult'
       CONFIGURATION:
         searchableAttributes:
           - title
@@ -64,7 +54,6 @@ ALGOLIA:
           - unordered(summary)
     Groups:
       INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_GROUPS}
-      SEARCH_RESULT_TYPENAME: 'GroupSearchResult'
       CONFIGURATION:
         searchableAttributes:
           - title

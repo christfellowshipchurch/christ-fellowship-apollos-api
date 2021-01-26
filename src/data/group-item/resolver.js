@@ -2,8 +2,6 @@ import ApollosConfig from '@apollosproject/config'
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
 import { resolverMerge, parseGlobalId, createGlobalId } from '@apollosproject/server-core';
 
-import { searchResultResolvers } from '../search';
-
 const defaultResolvers = {
   id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
   title: (root, args, { dataSources }) => dataSources.GroupItem.getTitle(root),
@@ -61,9 +59,6 @@ const resolver = {
     id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
     checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
       CheckInable.getFromId(id),
-  },
-  GroupSearchResult: {
-    ...searchResultResolvers
   },
   Mutation: {
     addMemberAttendance: async (root, { id }, { dataSources }) => {

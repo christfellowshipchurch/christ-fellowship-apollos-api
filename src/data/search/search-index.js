@@ -6,15 +6,14 @@ import { parseCursor, createCursor } from '@apollosproject/server-core';
  */
 export default class SearchIndex {
   constructor(client, id, indexConfig = {}) {
-    const { INDEX, SEARCH_RESULT_TYPENAME, CONFIGURATION } = indexConfig;
+    const { INDEX, CONFIGURATION } = indexConfig;
 
-    if (!indexConfig || !INDEX || !SEARCH_RESULT_TYPENAME || !CONFIGURATION) {
+    if (!indexConfig || !INDEX || !CONFIGURATION) {
       console.warn(`Cannot create SearchIndex id "${id}" due to missing configuration values. Please verify your config.yml has correct ALGOLIA values.`)
     }
 
     this.id = id;
     this.indexName = INDEX;
-    this.searchResultTypename = SEARCH_RESULT_TYPENAME;
     this.configuration = CONFIGURATION;
 
     this.index = client.initIndex(this.indexName);
@@ -58,7 +57,6 @@ export default class SearchIndex {
     return hits.map((hit, i) => ({
       ...hit,
       cursor: createCursor({ position: i + offset }),
-      __typename: this.searchResultTypename,
     }));
   }
 }
