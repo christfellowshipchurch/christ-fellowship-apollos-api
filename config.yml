@@ -56,9 +56,15 @@ ALGOLIA:
       INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_GROUPS}
       CONFIGURATION:
         searchableAttributes:
+          - campusName
+          - preference
+          - subPreference
           - title
           - summary
-          # Eventually... groupType, meetingDays, campus, onlineOnly, etc
+        attributesForFaceting:
+          - campusName
+          - preference
+          - subPreference
 
 # Stream Chat https://getstream.io
 STREAM:

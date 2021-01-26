@@ -170,8 +170,8 @@ const resolver = {
         args: input,
       })
     },
-    searchGroups: async (root, input, { dataSources }) =>
-      dataSources.Search.index('Groups').byPaginatedQuery(input),
+    searchGroups: async (root, args, { dataSources }) =>
+      dataSources.GroupItem.searchGroups(args),
   },
 };
 

@@ -154,13 +154,17 @@ export const groupSchema = gql`
     image: ImageMedia
   }
 
+  input SearchGroupsInput {
+    text: String
+  }
+
   extend type Query {
     groupCoverImages: [GroupCoverImage]
     groupResourceOptions(
       groupId: ID!
       input: ContentItemsConnectionInput
     ): ContentItemsConnection
-    searchGroups(query: String!, first: Int, after: String): SearchResultsConnection
+    searchGroups(query: SearchGroupsInput!, first: Int, after: String): SearchResultsConnection
   }
 
   extend enum InteractionAction {

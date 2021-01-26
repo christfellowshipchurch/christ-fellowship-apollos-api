@@ -137,6 +137,10 @@ export default class GroupItem extends baseGroup.dataSource {
     return leaders.length ? leaders : null;
   };
 
+  getSearchIndex() {
+    return this.context.dataSources.Search.index('Groups');
+  }
+
   addMemberAttendance = async (id) => {
     const { scheduleId, campusId } = await this.request('Groups')
       .filter(`Id eq ${id}`)
@@ -832,44 +836,12 @@ export default class GroupItem extends baseGroup.dataSource {
 
   // Note: The input `group` may have aliased fields etc, as it is assumed
   // to be passed from a specialized query and not raw Rock object/data.
-  mapItemForIndex(group) {
-    console.log('🔀 Mapping item for indexing... group: ', group);
-    const {
-      id,
-      title,
-      summary,
-      coverImage,
-      campus,
-      preference,
-      subPreference
-    } = group;
+  async mapItemForIndex(groupId) {
+    console.log('🔀 Mapping item for indexing... groupId: ', groupId);
 
-    // Pick a subset of Person properties, and remove the edges/node layers.
-    const leaders = get(group, 'leaders.edges', []).map(({ node }) => ({
-      id: node.id,
-      firstName: node.firstName,
-      lastName: node.lastName,
-      nickName: node.nickName,
-      photo: node.photo?.uri,
-    }));
-
-    return {
-      id,
-      title,
-      summary,
-      coverImage,
-      campus,
-      preference,
-      subPreference,
-      membersCount: group.members?.totalCount,
-      leaders,
-    }
-  }
-
-  async updateIndexGroup(id) {
     const getGroupQuery = `
       query getGroup {
-        node(id: "${id}") {
+        node(id: "${groupId}") {
           __typename
           id
           ... on Group {
@@ -904,17 +876,65 @@ export default class GroupItem extends baseGroup.dataSource {
       }
     `;
 
-    const { data } = await graphql(this.context.schema, getGroupQuery, {}, this.context);
+    const { data, error } = await graphql(this.context.schema, getGroupQuery, {}, this.context);
+
+    if (error) {
+      return null;
+    }
+
+    const {
+      id,
+      campus,
+      coverImage,
+      preference,
+      subPreference,
+      summary,
+      title,
+    } = data.node;
+
+    // Remember — Algolia uses the order of attributes on items in its results
+    // ranking logic, in lieu of other settings/custom ranking formula, etc.
+    // @see https://www.algolia.com/doc/guides/managing-results/must-do/searchable-attributes/#ordering-your-attributes
+    // @see https://www.algolia.com/doc/guides/managing-results/must-do/custom-ranking/#custom-ranking
+    return {
+      id,
+      // ? Is there any real value in storing presentation-only props in Algolia?
+      // ? Should we refactor this and ContentItem indexing / SearchResult to remove cover image?
+      // Searchable properties
+      campusName: campus?.name,
+      preference,
+      subPreference,
+      title,
+      summary,
+      coverImage, // Presentation only
+    }
+  }
+
+  async updateIndexGroup(id) {
+    const groupForIndex = await this.mapItemForIndex(id);
 
     // TODO: Better error handling? Should this throw?
-    if (!data.node) {
+    if (!groupForIndex) {
       return `Error fetching data to index for Group "${id}"`
     }
 
-    const { Search } = this.context.dataSources;
-    console.log('Item to index => ', this.mapItemForIndex(data.node));
-    // Search.index('Groups').addObjects([data.node])
+    console.log('Item to index => ', JSON.stringify(groupForIndex, null, 2));
+    console.warn('⚠️ SKIPPING ACTUAL ADD ⚠️')
+    // this.getSearchIndex().addObjects([data.node])
 
     return true;
+  }
+
+  searchGroups(args) {
+    console.log('[GroupItem] searching for groups, request args:', args);
+    const { query, first, after } = args;
+    const searchQuery = {
+      query: query.text,
+      first,
+      after,
+    }
+
+    console.log('--> Algolia searchQuery:', searchQuery);
+    return this.getSearchIndex().byPaginatedQuery(searchQuery);
   }
 }
