@@ -1,29 +1,13 @@
-import { Feature as coreFeatures } from '@apollosproject/data-connector-rock';
-import { get, split } from 'lodash';
+import { Feature as coreFeatures, Utils } from '@apollosproject/data-connector-rock';
+import { get, split, flattenDeep, take, isEmpty } from 'lodash';
+import moment from 'moment-timezone';
 import ApollosConfig from '@apollosproject/config';
 
-const { ROCK_MAPPINGS, FEATURE_FLAGS } = ApollosConfig;
+const { ROCK_MAPPINGS, FEATURE_FLAGS, ROCK } = ApollosConfig;
+const { createImageUrlFromGuid } = Utils;
 
 export default class Feature extends coreFeatures.dataSource {
   expanded = true;
-  superGetFeatures = this.getFeatures;
-
-  FEATURE_MAP = Object.entries({
-    // We need to make sure `this` refers to the class, not the `FEATURE_MAP` object.
-    ActionBar: this.createActionBarFeature,
-    ActionList: this.createActionListFeature,
-    AvatarList: this.createAvatarListFeature,
-    HeroList: this.createHeroListFeature,
-    HorizontalCardList: this.createHorizontalCardListFeature,
-    PrayerList: this.createPrayerListFeature,
-    LiveContentList: this.createLiveStreamListFeature,
-    VerticalCardList: this.createVerticalCardListFeature,
-  }).reduce((accum, [key, value]) => {
-    // convenciance code to make sure all methods are bound to the Features dataSource
-    // eslint-disable-next-line
-    accum[key] = value.bind(this);
-    return accum;
-  }, {});
 
   /** Create Features */
   createActionBarFeature({ actions }) {
@@ -316,13 +300,17 @@ export default class Feature extends coreFeatures.dataSource {
       return [];
     }
 
-    const { ContentItem, Person } = this.context.dataSources;
-    const contentChannelItems = await this.request('ContentChannelItems')
-      .filter(`ContentChannelId eq ${contentChannelId}`)
-      .andFilter(ContentItem.LIVE_CONTENT())
-      .cache({ ttl: 60 })
-      .orderBy('Order', 'asc')
-      .get();
+    const { ContentItem, ContentChannel, Person } = this.context.dataSources;
+    const contentItemIds = await ContentChannel.getContentItemIds(contentChannelId);
+    /**
+     * You may be tempted to replace the following method with ContentItem.getFromIds
+     * which wouldn't be wrong, but would also negate the extensive Redis Cache used
+     * on each individual Content Item. While not programatically the _best_ way to
+     * handle this given the Content Item API, it's actually more performant.
+     */
+    const contentChannelItems = await Promise.all(
+      contentItemIds.map((id) => ContentItem.getFromId(id))
+    );
 
     // TODO : remove when this is merged [https://github.com/ApollosProject/apollos-plugin/pull/2]
     const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === 'LIVE';

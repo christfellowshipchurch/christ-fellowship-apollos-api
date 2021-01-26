@@ -1,5 +1,5 @@
-import { createGlobalId } from '@apollosproject/server-core'
-import crypto from 'crypto-js'
+import { createGlobalId } from '@apollosproject/server-core';
+import crypto from 'crypto-js';
 
 const resolver = {
   StreamChatChannelNode: {
@@ -7,14 +7,13 @@ const resolver = {
       __typename || resolveInfo.schema.getType(__type),
   },
   StreamChatChannel: {
-    id: ({ id }, args, context, { parentType }) =>
-      createGlobalId(id, parentType.name),
+    id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
   },
   StreamChatChannelType: {
-    LIVESTREAM: 'livestream',
-    MESSAGING: 'messaging',
-    GROUP: 'group'
-  }
+    LIVESTREAM: () => 'livestream',
+    MESSAGING: () => 'messaging',
+    GROUP: () => 'group',
+  },
 };
 
 export default resolver;

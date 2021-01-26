@@ -6,13 +6,24 @@ import {
   parseCursor,
   parseGlobalId,
 } from '@apollosproject/server-core';
-import { get, isNull, filter, head, chunk, flatten, take, result } from 'lodash';
+import { get, isNull, filter, head, chunk, flatten, take, uniqBy } from 'lodash';
+import { parseISO, isFuture, isToday, isValid } from 'date-fns';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
 import { getIdentifierType } from '../utils';
 const { ROCK_MAPPINGS } = ApollosConfig;
 
+const { GROUP, DEFINED_TYPES } = ROCK_MAPPINGS;
+const { LEADER_ROLE_IDS } = GROUP;
+const {
+  GROUP_MEMBER_ROLES,
+  GROUP_TYPES,
+  VOLUNTEER_GROUP_TYPES,
+  GROUP_FINDER_TYPES,
+  EXCLUDE_GROUPS,
+  EXCLUDE_VOLUNTEER_GROUPS,
+} = DEFINED_TYPES;
 const { createImageUrlFromGuid } = Utils;
 
 /** TEMPORARY FIX
@@ -63,7 +74,6 @@ const EXCLUDE_IDS = [
   1032489,
 ];
 
-const CHANNEL_TYPE = 'group';
 const GROUP_COVER_IMAGES_DEFINED_TYPE_ID = get(
   ApollosConfig,
   'ROCK_MAPPINGS.DEFINED_TYPES.GROUP_COVER_IMAGES'
@@ -109,9 +119,11 @@ export default class GroupItem extends baseGroup.dataSource {
     const { Person } = this.context.dataSources;
     const members = await this.request('GroupMembers')
       .andFilter(`GroupId eq ${groupId}`)
+      .andFilter('GroupRole/IsLeader eq false')
       .andFilter(`GroupMemberStatus eq '1'`)
       .get();
-    return Promise.all(members.map(({ personId }) => Person.getFromId(personId)));
+    const uniqueMembers = uniqBy(members, 'personId');
+    return Promise.all(uniqueMembers.map(({ personId }) => Person.getFromId(personId)));
   };
 
   getLeaders = async (groupId) => {
@@ -122,8 +134,9 @@ export default class GroupItem extends baseGroup.dataSource {
       .andFilter(`GroupMemberStatus eq '1'`)
       .expand('GroupRole')
       .get();
+    const uniqueMembers = uniqBy(members, 'personId');
     const leaders = await Promise.all(
-      members.map(({ personId }) => Person.getFromId(personId))
+      uniqueMembers.map(({ personId }) => Person.getFromId(personId))
     );
     return leaders.length ? leaders : null;
   };
@@ -327,57 +340,221 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
   }
 
-  getByPerson = async ({
-    personId,
-    type = null,
-    asLeader = false,
-    groupTypeIds = null,
-  }) => {
-    // Get the active groups that the person is a member of.
-    // Conditionally filter that list of groups on whether or not your
-    // role in that group is that of "Leader".
-    const _groupTypeIds = groupTypeIds || this.getGroupTypeIds();
-    const groupAssociationRequests = await Promise.all(
-      chunk(_groupTypeIds, 3).map((groupTypeIds) =>
-        this.request('GroupMembers')
-          .expand('GroupRole')
-          .filter(
-            `PersonId eq ${personId} ${asLeader ? ' and GroupRole/IsLeader eq true' : ''}`
-          )
-          // Do not include groups where user's status is Inactive or Pending
-          .andFilter(`GroupMemberStatus ne 'Inactive'`)
-          .andFilter(`GroupMemberStatus ne 'Pending'`)
-          // Filter by Group Type Id up here
-          .andFilter(
-            groupTypeIds.map((id) => `(GroupRole/GroupTypeId eq ${id})`).join(' or ')
-          )
-          .get()
-      )
-    );
+  getByPerson = async ({ personId, asLeader = false, groupTypeIds = [] }) => {
+    const { Cache, Schedule } = this.context.dataSources;
+    const excludeList = await this._getExcludedGroupIds();
 
-    const groupAssociations = flatten(groupAssociationRequests);
+    const request = async () => {
+      /**
+       * Get the active groups that the person is a member of.
+       * Conditionally filter that list of groups on whether or not your role in that group is that of "Leader".
+       */
+      const nestedArray = await Promise.all([
+        this.getValidGroupTypeIds(),
+        this.getValidVolunteerGroupTypeIds(),
+      ]);
+      const _groupTypeIds = flatten(nestedArray);
+
+      /**
+       * TL;DR Filter out any Group Types that don't have a valid Role Id
+       *
+       * To make the request even more specific, we only want to make a request to Rock for Groups Associations in which our user has a valid Role and a Valid Group Type.
+       *
+       * As a secondary check for the sake of performance, we'll confirm that every Group Type has at least 1 valid Member Role before making the request.
+       *
+       * We will also take into consideration whether our request should limit to just Groups in which the user is a leader of. If `asLeader` is true, we filter to _only_ Member Roles that are marked in Rock as Leader Roles. Otherwise, we'll use all valid roles.
+       */
+      let validRoles = await this._getValidGroupRoles();
+      if (asLeader) {
+        validRoles.filter(({ isLeader }) => isLeader);
+      }
+
+      const validGroupTypeIds = _groupTypeIds.filter((id) =>
+        validRoles.find(({ groupTypeId }) => groupTypeId === id)
+      );
+
+      const groupAssociationRequests = await Promise.all(
+        validGroupTypeIds.map((id) => {
+          const groupTypeRoles = validRoles.filter(
+            ({ groupTypeId }) => groupTypeId === id
+          );
+
+          return (
+            this.request('GroupMembers')
+              .filter(`PersonId eq ${personId}`)
+              // Do not include groups where user's status is Inactive or Pending
+              .andFilter(`GroupMemberStatus ne 'Inactive'`)
+              .andFilter(`GroupMemberStatus ne 'Pending'`)
+              // Check for the appropriate GroupRole
+              .andFilter(
+                groupTypeRoles.map(({ id }) => `(GroupRoleId eq ${id})`).join(' or ')
+              )
+              .expand('GroupRole')
+              .get()
+          );
+        })
+      );
+
+      const groupAssociations = flatten(groupAssociationRequests);
+
+      return groupAssociations.map(({ groupId, groupRoleId, groupRole }) => ({
+        groupId,
+        isLeader: !!validRoles.find(({ id, isLeader }) => groupRoleId === id && isLeader),
+        groupTypeId: groupRole?.groupTypeId,
+      }));
+    };
+
+    let groupIds = await Cache.request(request, {
+      key: Cache.KEY_TEMPLATES.personGroups`${personId}`,
+      expiresIn: 60 * 60 * 12, // 12 hour cache
+    });
+
+    /**
+     * Filter by our exclude list and our Group Type Ids
+     *
+     * We have to do this here because there are too many exclusions for OData to handle and we also want to make sure that we filter the list _after_ pulling from the cache so that we don't accidentally cache a filtered list
+     */
+
+    groupIds = groupIds
+      .filter(({ groupId }) => !excludeList.includes(groupId))
+      .filter(
+        ({ groupTypeId }) =>
+          groupTypeIds.length === 0 || groupTypeIds.includes(groupTypeId)
+      );
+
+    /**
+     * [{ id: String, leaders: Boolean }]
+     *
+     * While it's not the prettiest way to handle filtering out groups with no leaders, it's more than likely that Group Leaders are cached in Redis, so we should be ok to just check to see if we have any leaders to filter the group
+     */
+    const validGroupLeaders = await Promise.all(
+      groupIds.map(({ groupId, isLeader }) => {
+        const filter = async () => {
+          if (isLeader)
+            return {
+              id: groupId,
+              leaders: true,
+            };
+
+          const leaders = await this.getLeaders(groupId);
+
+          return {
+            id: groupId,
+            leaders: Array.isArray(leaders) && leaders.length > 0,
+          };
+        };
+
+        return filter();
+      })
+    );
 
     // Get the actual group data for the groups above.
     const groups = await Promise.all(
-      groupAssociations
+      groupIds
+        // Filter out Groups that don't have any leaders
+        .filter(({ groupId }) => {
+          return validGroupLeaders.find(({ id, leaders }) => groupId === id && leaders);
+        })
         // Temp solution for protected group ids
         .filter(({ groupId }) => !EXCLUDE_IDS.includes(groupId))
+        // If `asLeader`, return only those you are a leader of, otherwise return everything
+        .filter(({ isLeader }) => {
+          if (asLeader) return isLeader;
+          return true;
+        })
         .map(({ groupId: id }) => this.getFromId(id))
+    );
+
+    /**
+     * [{ id: String, schedule: Boolean }]
+     *
+     * While it's not the prettiest way to handle checking group schedules, it's more than likely that Schedules are cached in Redis, so we should be ok to just pull the schedule, parse it, and then check the date.
+     */
+
+    const validGroupSchedules = await Promise.all(
+      groups.map(({ id, scheduleId }) => {
+        const filter = async () => {
+          let schedule = false;
+          /**
+           * If there is a Schedule Id on the Group, we can just go ahead and check for a Schedule from a Location attached on the Group.
+           */
+          const scheduleIsValid = (s) => {
+            if (s && s.nextStart) {
+              const { nextStart } = s;
+              const parsedDate = parseISO(nextStart);
+
+              return isToday(parsedDate) || isFuture(parsedDate);
+            }
+          };
+          if (scheduleId) {
+            const parsedSchedule = await Schedule.parseById(scheduleId);
+
+            schedule = scheduleIsValid(parsedSchedule);
+          } else {
+            const locations = await this.getLocations(id);
+
+            /**
+             * We're gonna use a simple For Loop here cause we can really easily exit it once we find at least 1 valid schedule
+             */
+            for (var i = 0; i < locations.length; i++) {
+              const location = locations[i];
+              const { schedules } = location;
+
+              for (var j = 0; j < schedules.length; j++) {
+                const s = schedules[j];
+                const parsedSchedule = await Schedule.parse(s);
+
+                schedule = scheduleIsValid(parsedSchedule);
+
+                if (schedule) break;
+              }
+
+              if (schedule) break;
+            }
+          }
+
+          return {
+            id,
+            schedule,
+          };
+        };
+
+        return filter();
+      })
     );
 
     // Filter the groups to make sure we only pull those that are
     // active and NOT archived
-    const filteredGroups = await Promise.all(
-      groups.filter((group) => group && group.isActive && !group.isArchived)
-    );
+    const filteredGroups = groups
+      .filter((group) => group && group.isActive && !group.isArchived)
+      // Filter out Groups that don't have a valid schedule
+      .filter(({ id: groupId }) => {
+        return validGroupSchedules.find(({ id, schedule }) => groupId === id && schedule);
+      });
 
-    // Remove the groups that aren't of the types we want and return.
-    return filteredGroups.filter(({ groupTypeId }) =>
-      type
-        ? groupTypeId === this.groupTypeMap[type]
-        : Object.values(this.groupTypeMap).includes(groupTypeId)
-    );
+    return filteredGroups;
   };
+
+  /**
+   * Get Locations
+   * Gets the Rock Group Locations with Schedules for a given Group Id. Results filtered to only include the 'Web and App' location in Rock.
+   * @param {Integer} id | Rock Group Id
+   */
+  getLocations(id) {
+    const { Cache } = this.context.dataSources;
+    const request = () => {
+      return this.request('/GroupLocations')
+        .filter(`GroupId eq ${id}`)
+        .andFilter(`LocationId eq ${ROCK_MAPPINGS.LOCATION_IDS.WEB_AND_APP}`)
+        .expand('Schedules')
+        .get();
+    };
+
+    return Cache.request(request, {
+      expiresIn: 60 * 60 * 12, // 12 hour cache
+      key: Cache.KEY_TEMPLATES.groupLocations`${id}`,
+    });
+  }
 
   getMatrixItemsFromId = async (id) =>
     id
@@ -538,31 +715,45 @@ export default class GroupItem extends baseGroup.dataSource {
       }
     }
 
-    // temporarily store the select parameter to
-    // put back after "Id" is selected for the count
-    const cursor = this.request('GroupMembers')
+    /**
+     * Cache the Person Id's for the current group based on the Group Members
+     * Table.
+     *
+     * It's kind of naive, but the cache is super specific and will take into
+     * consideration the id, isLeader flag, first, and skip (from the cursor).
+     * This could likely be streamlined at some point in time, but I'm fairly
+     * confident that Rock could not handle the load of grabbing more than ~40
+     * group members, so let's not push it unnecessarily.
+     */
+    const personIdsCursor = this.request('GroupMembers')
       .filter(`GroupId eq ${id}`)
       .andFilter(`GroupRole/IsLeader eq ${isLeader}`)
       .andFilter(`GroupMemberStatus eq '1'`)
       .expand('GroupRole, Person')
       .top(first)
       .skip(skip)
-      .transform((results) =>
-        results
+      .transform((results) => {
+        const resultIds = results
           .filter((groupMember) => {
             return !!groupMember.person;
           })
-          .map(({ person }, i) => {
-            return {
-              node: this.context.dataSources.Person.getFromId(person.id),
-              cursor: createCursor({ position: i + skip }),
-            };
-          })
-      );
+          .map(({ person }) => person.id);
+        return uniqBy(resultIds);
+      });
+
+    const { Cache } = this.context.dataSources;
+    const cachedKey = `group_member_ids_${id}_${isLeader}_${first}_${skip}`;
+    const personIds = await Cache.request(() => personIdsCursor.get(), {
+      key: cachedKey,
+      expiresIn: 60 * 60 * 12, // 12 hour cache
+    });
 
     return {
-      getTotalCount: cursor.count,
-      edges: cursor.get(),
+      getTotalCount: personIdsCursor.count,
+      edges: personIds.map((id, i) => ({
+        node: this.context.dataSources.Person.getFromId(id),
+        cursor: createCursor({ position: i + skip }),
+      })),
     };
   }
 
@@ -687,6 +878,7 @@ export default class GroupItem extends baseGroup.dataSource {
     // TODO : break up this logic and move it to the StreamChat DataSource
     const { Auth, StreamChat, Flag } = this.context.dataSources;
     const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
+    const CHANNEL_TYPE = StreamChat.channelType.GROUP;
 
     if (featureFlagStatus !== 'LIVE') {
       return null;
@@ -749,11 +941,11 @@ export default class GroupItem extends baseGroup.dataSource {
       id: root.id,
       channelId,
       channelType: CHANNEL_TYPE,
-    }
+    };
   };
 
   resolveType({ groupTypeId, id }) {
-    // if we have defined an ContentChannelTypeId based maping in the YML file, use it!
+    // if we have defined an ContentChannelTypeId based mapping in the YML file, use it!
     if (
       Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
         ({ GroupTypeId }) => GroupTypeId && GroupTypeId.includes(groupTypeId)
@@ -764,7 +956,7 @@ export default class GroupItem extends baseGroup.dataSource {
         return value.GroupTypeId && value.GroupTypeId.includes(groupTypeId);
       });
     }
-    // if we have defined a GroupId based maping in the YML file, use it!
+    // if we have defined a GroupId based mapping in the YML file, use it!
     if (
       Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
         ({ GroupId }) => GroupId && GroupId.includes(id)
@@ -777,5 +969,110 @@ export default class GroupItem extends baseGroup.dataSource {
     }
 
     return 'Group';
+  }
+
+  /**
+   * Get Valid Group Type Ids
+   * Gets the Group Type Ids for the Defined Type `GROUP_TYPES`
+   * @returns {[Integer]}
+   */
+  getValidGroupTypeIds = () => this._getGroupTypesFromDefinedType(GROUP_TYPES);
+
+  /**
+   * Get Valid Volunteer Group Type Ids
+   * Gets the Group Type Ids for the Defined Type `VOLUNTEER_GROUP_TYPES`
+   * @returns {[Integer]}
+   */
+  getValidVolunteerGroupTypeIds = () =>
+    this._getGroupTypesFromDefinedType(VOLUNTEER_GROUP_TYPES);
+
+  /**
+   * Get Valid Group Finder Type Ids
+   * Gets the Group Type Ids for the Defined Type `GROUP_FINDER_TYPES`
+   * @returns {[Integer]}
+   */
+  getValidGroupFinderTypeIds = () =>
+    this._getGroupTypesFromDefinedType(GROUP_FINDER_TYPES);
+
+  /**
+   * Private Get Group Types from Defined Type
+   * This method uses a Defined Type Id and fetches those Defined Values. It then looks for an attribute called `groupTypes` and returns the Id for that Group Type.
+   * @param {Integer} id
+   * @returns {[Integer]}
+   */
+  async _getGroupTypesFromDefinedType(id) {
+    const { Cache, DefinedValueList } = this.context.dataSources;
+    const { definedValues } = await DefinedValueList.getFromId(id);
+
+    const request = async () => {
+      return Promise.all(
+        definedValues.map((item) => {
+          const groupTypeId = get(item, 'attributeValues.groupType.value');
+
+          if (groupTypeId) {
+            const identifier = getIdentifierType(groupTypeId);
+
+            return this.request('GroupTypes')
+              .filter(identifier.query)
+              .transform((results) => results[0]?.id)
+              .get();
+          }
+
+          return () => null;
+        })
+      );
+    };
+
+    const ids = await Cache.request(request, {
+      expiresIn: 60 * 60 * 24, // 24 hour cache
+      key: Cache.KEY_TEMPLATES.groupTypeIds`${id}`,
+    });
+
+    return ids;
+  }
+
+  async _getValidGroupRoles() {
+    const { Cache, DefinedValueList } = this.context.dataSources;
+    const request = async () => {
+      const { definedValues } = await DefinedValueList.getFromId(GROUP_MEMBER_ROLES);
+      const memberRoles = await Promise.all(
+        definedValues.map((definedValue) => {
+          const attributeValue = get(definedValue, 'attributeValues.groupRole.value');
+          const identifier = getIdentifierType(attributeValue);
+          return this.request('GroupTypeRoles')
+            .filter(identifier.query)
+            .transform((results) => ({
+              id: results[0]?.id,
+              isLeader: results[0]?.isLeader,
+              groupTypeId: results[0]?.groupTypeId,
+            }))
+            .get();
+        })
+      );
+
+      return memberRoles;
+    };
+
+    return Cache.request(request, {
+      expiresIn: 60 * 60 * 24, // 24 hour cache
+      key: Cache.KEY_TEMPLATES.groupRoles,
+    });
+  }
+
+  async _getExcludedGroupIds() {
+    const { Cache } = this.context.dataSources;
+    const request = async () => {
+      // Group Ids will be set to the  `value` property of the Defined Value in Rock
+      return this.request('DefinedValues')
+        .filter(`DefinedTypeId eq ${EXCLUDE_GROUPS}`)
+        .orFilter(`DefinedTypeId eq ${EXCLUDE_VOLUNTEER_GROUPS}`)
+        .transform((results) => results.map((result) => get(result, 'value')))
+        .get();
+    };
+
+    return Cache.request(request, {
+      expiresIn: 60 * 60 * 24, // 24 hour cache
+      key: Cache.KEY_TEMPLATES.groupExcludeIds,
+    });
   }
 }

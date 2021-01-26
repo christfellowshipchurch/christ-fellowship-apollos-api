@@ -148,4 +148,21 @@ export default class ContentChannel extends coreContentChannel.dataSource {
       })
     );
   };
+
+  getContentItemIds = (contentChannelId) => {
+    const { Cache, ContentItem } = this.context.dataSources;
+    const request = () =>
+      this.request('ContentChannelItems')
+        .filter(`ContentChannelId eq ${contentChannelId}`)
+        .andFilter(ContentItem.LIVE_CONTENT())
+        .cache({ ttl: 60 })
+        .orderBy('Order', 'asc')
+        .transform((results) => results.filter((item) => !!item.id).map(({ id }) => id))
+        .get();
+
+    return Cache.request(request, {
+      key: Cache.KEY_TEMPLATES.contentChannelItemIds`${contentChannelId}`,
+      expiresIn: 60 * 60 * 12, // 12 hour cache
+    });
+  };
 }

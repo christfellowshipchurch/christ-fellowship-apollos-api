@@ -161,7 +161,6 @@ export const generateAppLinkFromUrl = async (uri, context) => {
     }?mobileApp=external&${parsedUrl.query || ''}`;
   }
 
-  console.log('defualt');
   return uri;
 };
 

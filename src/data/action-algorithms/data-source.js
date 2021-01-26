@@ -30,12 +30,12 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
     MY_PRAYERS: this.myPrayersAlgorithm,
     MY_VOLUNTEER_GROUPS: this.myVolunteerGroupsAlgorithm,
     PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride,
-    ROCK_DYNAMIC_FEED: this.rockDynamicFeed,
     SERMON_CHILDREN: this.sermonChildrenAlgorithm,
     UPCOMING_EVENTS: this.upcomingEventsAlgorithmWithActionOverride,
   }).reduce((accum, [key, value]) => {
-    // convenciance code to make sure all methods are bound to the Features dataSource
+    // convenciance code to make sure all methods are bound to the Action Algorithm dataSource
     // eslint-disable-next-line
+
     accum[key] = value.bind(this);
     return accum;
   }, {});
@@ -145,11 +145,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
     const { Group, Auth, ContentItem } = this.context.dataSources;
 
     try {
-      // Exclude Dream Team
-      const groupTypeKeys = Object.keys(Group.groupTypeMap).filter(
-        (key) => key !== 'DreamTeam'
-      );
-      const groupTypeIds = groupTypeKeys.map((key) => Group.groupTypeMap[key]);
+      const groupTypeIds = await Group.getValidGroupTypeIds();
 
       const { id } = await Auth.getCurrentPerson();
       const groups = await Group.getByPerson({ personId: id, groupTypeIds });
@@ -223,9 +219,10 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
     const { Group, Auth } = this.context.dataSources;
 
     try {
+      const groupTypeIds = await Group.getValidVolunteerGroupTypeIds();
       const { id } = await Auth.getCurrentPerson();
       const groups = await Group.getByPerson({
-        type: 'DreamTeam',
+        groupTypeIds,
         personId: id,
       });
 
@@ -255,66 +252,6 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
     const personaFeed = await this.personaFeedAlgorithm();
 
     return !!action ? personaFeed.map((n) => ({ ...n, action })) : personaFeed;
-  }
-
-  async rockDynamicFeed({ contentChannelId = null }) {
-    console.warn(
-      'Deprecated: Please use the name "getRockFeedFeatures" instead. You used "rockDynamicFeed"'
-    );
-    if (!contentChannelId) {
-      return [];
-    }
-
-    const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === 'LIVE';
-    const { ContentItem, Person } = this.context.dataSources;
-    const contentChannelItems = await this.request('ContentChannelItems')
-      .filter(`ContentChannelId eq ${contentChannelId}`)
-      .andFilter(ContentItem.LIVE_CONTENT())
-      .cache({ ttl: 60 })
-      .orderBy('Order', 'asc')
-      .get();
-    let personas = [];
-
-    if (usePersonas) {
-      try {
-        personas = await Person.getPersonas({
-          categoryId: ROCK_MAPPINGS.DATAVIEW_CATEGORIES.PersonaId,
-        });
-      } catch (e) {
-        console.log('Rock Dynamic Feed: Unable to retrieve personas for user.');
-      }
-    }
-
-    const actions = contentChannelItems.map((item, i) => {
-      const action = get(item, 'attributeValues.action.value', '');
-
-      if (!action || action === '' || !item.id) return null;
-      const securityDataViews = split(
-        get(item, 'attributeValues.securityDataViews.value', ''),
-        ','
-      ).filter((dv) => !!dv);
-
-      if (securityDataViews.length > 0) {
-        const userInSecurityDataViews = personas.filter(({ guid }) =>
-          securityDataViews.includes(guid)
-        );
-        if (userInSecurityDataViews.length === 0) {
-          console.log('User does not have access to this item');
-          return null;
-        }
-      }
-
-      return {
-        id: `${item.id}${i}`,
-        title: item.title,
-        subtitle: get(item, 'contentChannel.name'),
-        relatedNode: { ...item, __type: ContentItem.resolveType(item) },
-        image: ContentItem.getCoverImage(item),
-        action: action.includes('Horizontal') ? 'VIEW_CHILDREN' : action,
-      };
-    });
-
-    return actions.filter((action) => !!action);
   }
 
   async upcomingEventsAlgorithmWithActionOverride({

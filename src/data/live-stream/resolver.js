@@ -1,7 +1,7 @@
 import { createGlobalId, resolverMerge } from '@apollosproject/server-core';
 import * as coreLiveStream from '@apollosproject/data-connector-church-online';
 import { Utils } from '@apollosproject/data-connector-rock';
-import { get } from 'lodash';
+import { get, isEmpty } from 'lodash';
 import moment from 'moment';
 
 const { createImageUrlFromGuid } = Utils;
@@ -12,27 +12,51 @@ const resolver = {
       __typename || resolveInfo.schema.getType(__type),
   },
   LiveStream: {
-    id: ({ id, eventStartTime, eventEndTime }, args, context, { parentType }) =>
-      createGlobalId(
-        JSON.stringify({ id, eventStartTime, eventEndTime }),
-        parentType.name
-      ),
-    // eventStartTime: () =>
-    //   moment(new Date('January 15, 2021 09:33:00')).utc().toISOString(),
-    // eventEndTime: () => moment(new Date('January 15, 2021 09:34:00')).utc().toISOString(),
-    isLive: ({ id, eventStartTime, eventEndTime }) =>
-      moment().isBetween(eventStartTime, eventEndTime),
-    media: ({ attributeValues }) => {
-      const liveStreamUrl = get(attributeValues, 'liveStreamUrl.value');
+    id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
+    eventStartTime: async (root, _, { dataSources }) => {
+      const { LiveStream } = dataSources;
+      const nextInstance = await LiveStream.getNextInstance(root);
 
-      if (liveStreamUrl) {
-        return { sources: [{ uri: liveStreamUrl }] };
+      if (nextInstance) {
+        const { start } = nextInstance;
+        return start;
+      }
+
+      return null;
+    },
+    eventEndTime: async (root, _, { dataSources }) => {
+      const { LiveStream } = dataSources;
+      const nextInstance = await LiveStream.getNextInstance(root);
+
+      if (nextInstance) {
+        const { end } = nextInstance;
+        return end;
+      }
+
+      return null;
+    },
+    isLive: async (root, _, { dataSources }) => {
+      const { LiveStream } = dataSources;
+      const nextInstance = await LiveStream.getNextInstance(root);
+
+      if (nextInstance) {
+        const { start, end } = nextInstance;
+        return moment().isBetween(start, end);
+      }
+
+      return false;
+    },
+    media: ({ attributeValues }) => {
+      const uri = get(attributeValues, 'url.value');
+
+      if (uri) {
+        return { sources: [{ uri }] };
       }
 
       return null;
     },
     actions: async ({ id, guid }, args, { dataSources }) => {
-      if (!id || id === '') return [];
+      return [];
 
       const unresolvedNode = await dataSources.LiveStream.getRelatedNodeFromId(id);
       // Get Matrix Items
@@ -83,81 +107,32 @@ const resolver = {
 
       return liveStreamDefaultActionItemsMapped.concat(liveStreamActionsItemsMapped);
     },
-    contentItem: ({ contentChannelItemId }, _, { dataSources }) => {
-      if (contentChannelItemId) {
+    contentItem: ({ attributeValues }, _, { dataSources }) => {
+      const contentItemId = attributeValues?.contentItem?.value;
+      if (contentItemId && !isEmpty(contentItemId)) {
         const { ContentItem } = dataSources;
-
-        return ContentItem.getFromId(contentChannelItemId);
+        return ContentItem.getFromId(contentItemId);
       }
 
       return null;
     },
-    relatedNode: async (
-      { id, contentChannelItemId },
-      _,
-      { models, dataSources },
-      resolveInfo
-    ) => {
-      try {
-        let globalId = '';
+    relatedNode: async ({ attributeValues }, _, { dataSources }) => {
+      const contentItemId = attributeValues?.contentItem?.value;
+      if (contentItemId && !isEmpty(contentItemId)) {
+        const { ContentItem } = dataSources;
+        const contentItem = await ContentItem.getFromId(contentItemId);
+        const __typename = ContentItem.resolveType(contentItem);
 
-        // If we know that the related node is a content channel item, let's just query for that
-        if (contentChannelItemId) {
-          const { ContentItem, Cache } = dataSources;
-          const cachedKey = `liveStream-contentItem-${id}`;
-          const cachedValue = await Cache.get({
-            key: cachedKey,
-          });
-          /**
-           * Set up an empty object to be used as our content item
-           */
-          let contentItem = {};
-
-          /**
-           * If Redis has this item stored already, don't make the request to
-           * Rock
-           */
-          if (cachedValue) {
-            contentItem = cachedValue;
-          } else {
-            contentItem = await ContentItem.getFromId(contentChannelItemId);
-
-            if (contentItem != null) {
-              await Cache.set({
-                key: cachedKey,
-                data: contentItem,
-                expiresIn: 60 * 60, // 1 hour cache
-              });
-            }
-          }
-
-          const resolvedType = ContentItem.resolveType(contentItem);
-          globalId = createGlobalId(contentChannelItemId, resolvedType);
-        } else if (id) {
-          // If we don't know the related node type, we need to manually figure it out
-          const { LiveStream } = dataSources;
-          const unresolvedNode = await LiveStream.getRelatedNodeFromId(id);
-
-          const { globalId: relatedNodeGlobalId } = unresolvedNode;
-          globalId = relatedNodeGlobalId;
-        }
-
-        return await models.Node.get(globalId, dataSources, resolveInfo);
-      } catch (e) {
-        console.log(`Error fetching live stream related node ${id}`, e);
-        return null;
+        return {
+          __typename,
+          ...contentItem,
+        };
       }
-    },
-    streamChatChannel: async (
-      { id, eventStartTime, eventEndTime },
-      _,
-      { dataSources: { Flag } }
-    ) => {
-      const featureFlag = await Flag.currentUserCanUseFeature('LIVE_STREAM_CHAT');
-      if (featureFlag !== 'LIVE') return null;
 
-      return { id: JSON.stringify({ id, eventStartTime, eventEndTime }) };
+      return null;
     },
+    streamChatChannel: async (root, _, { dataSources }) =>
+      dataSources.LiveStream.getStreamChatChannel(root),
     checkin: ({ attributeValues }, args, { dataSources: { CheckInable } }) => {
       const groupId = get(attributeValues, 'checkInGroup.value', '');
 

@@ -12,7 +12,6 @@ import {
   Followings,
   Interactions,
   PersonalDevice,
-  RockConstants,
   Sharable,
   Template,
 } from '@apollosproject/data-connector-rock';
@@ -40,6 +39,7 @@ import * as FeatureFeed from './feature-feeds';
 import * as Flag from './flag';
 import * as Group from './groups';
 import * as GroupItem from './group-item';
+import * as LinkTree from './link-tree';
 import * as LiveStream from './live-stream';
 import * as MatrixItem from './matrix-item';
 import * as Message from './message';
@@ -48,6 +48,7 @@ import * as PageBuilder from './page-builder';
 import * as Person from './people';
 import * as PhoneNumber from './phone-number';
 import * as PrayerRequest from './prayer-request';
+import * as RockConstants from './rock-constants';
 import * as Schedule from './schedule';
 import * as Search from './search';
 import * as StreamChat from './stream-chat';
@@ -87,6 +88,7 @@ const data = {
   GroupItem,
   Interactions,
   Interfaces,
+  LinkTree,
   LiveStream,
   MatrixItem,
   Message,

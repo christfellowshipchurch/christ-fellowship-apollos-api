@@ -1,4 +1,4 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
 export default gql`
   type AppLink {
@@ -14,13 +14,13 @@ export default gql`
     links: [AppLink]
   }
 
-  extend type Query { 
+  extend type Query {
     privacyPolicyUrl: String
     passwordResetUrl: String
     moreLinks: [AppLinks]
     profileLinks: [AppLink]
     websiteBanner: CallToAction
     genderOptions: [String]
-    inAppLink(url:String!): String
+    inAppLink(url: String!): String
   }
-`
+`;

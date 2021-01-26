@@ -1,48 +1,40 @@
 import {
   ContentItem as coreContentItem,
-  Utils
-} from '@apollosproject/data-connector-rock'
-import { resolverMerge } from '@apollosproject/server-core'
+  Utils,
+} from '@apollosproject/data-connector-rock';
+import { resolverMerge } from '@apollosproject/server-core';
 import Hypher from 'hypher';
 import english from 'hyphenation.en-us';
-import moment from 'moment'
-import momentTz from 'moment-timezone'
-import {
-  get,
-  has,
-  split,
-  orderBy,
-} from 'lodash'
+import moment from 'moment';
+import momentTz from 'moment-timezone';
+import { get, has, split, orderBy } from 'lodash';
 
-import sanitizeHtml from '../sanitize-html'
+import sanitizeHtml from '../sanitize-html';
 
-import * as EventContentItem from '../event-content-item'
-import * as InformationalContentItem from '../informational-content-item'
-import * as WebsiteContentItem from '../website-content-item'
-import * as WebsiteHtmlContentItem from '../website-html-content-item'
-import * as WebsiteFeature from '../website-feature'
-import * as WebsiteGroupContentItem from '../website-group-content-item'
-import * as WebsitePagesContentItem from '../website-pages-content-item'
-import { parseRockKeyValuePairs } from '../utils'
+import * as EventContentItem from '../event-content-item';
+import * as InformationalContentItem from '../informational-content-item';
+import * as WebsiteContentItem from '../website-content-item';
+import * as WebsiteHtmlContentItem from '../website-html-content-item';
+import * as WebsiteFeature from '../website-feature';
+import * as WebsiteGroupContentItem from '../website-group-content-item';
+import * as WebsitePagesContentItem from '../website-pages-content-item';
+import { parseRockKeyValuePairs } from '../utils';
 
-import ApollosConfig from '@apollosproject/config'
+import ApollosConfig from '@apollosproject/config';
 
-const { createImageUrlFromGuid } = Utils
+const { createImageUrlFromGuid } = Utils;
 const hypher = new Hypher(english);
 
 const titleResolver = {
   title: ({ title: originalTitle, attributeValues }, { hyphenated }) => {
     // Check for an attribute value called titleOverride
-    const titleOverride = get(attributeValues, 'titleOverride.value', originalTitle)
-    const title = titleOverride !== ''
-      ? titleOverride
-      : originalTitle
-
+    const titleOverride = get(attributeValues, 'titleOverride.value', originalTitle);
+    const title = titleOverride !== '' ? titleOverride : originalTitle;
 
     if (!hyphenated) {
-      return title
+      return title;
     }
-    const words = title.split(' ')
+    const words = title.split(' ');
 
     /* We only want to hyphenate the end of words because Hyper uses a language dictionary to add
      * "soft" hyphens at the appropriate places. By only adding "soft" hyphens to the end of we
@@ -65,22 +57,19 @@ const titleResolver = {
      * TODO: Expose the hyphenation point to make this more flexible in the future.
      */
     const hyphenateEndOfWord = (word, segment) =>
-      word.length > 7 ? word + '\u00AD' + segment : word + segment
+      word.length > 7 ? word + '\u00AD' + segment : word + segment;
 
     const hyphenateLongWords = (word, hyphenateFunction) =>
-      word.length > 7 ? hyphenateFunction(word) : word
+      word.length > 7 ? hyphenateFunction(word) : word;
 
     return words
       .map((w) =>
-        hyphenateLongWords(w, () =>
-          hypher.hyphenate(w).reduce(hyphenateEndOfWord)
-        )
+        hyphenateLongWords(w, () => hypher.hyphenate(w).reduce(hyphenateEndOfWord))
       )
-      .join(' ')
+      .join(' ');
   },
   htmlContent: ({ content }) => sanitizeHtml(content),
-}
-
+};
 
 const resolverExtensions = {
   ...titleResolver,
@@ -89,55 +78,58 @@ const resolverExtensions = {
     title: 'Share via ...',
     message: ContentItem.generateShareMessage(root),
   }),
-  tags: ({ attributeValues }) =>
-    split(get(attributeValues, 'tags.value', ''), ','),
+  tags: ({ attributeValues }) => split(get(attributeValues, 'tags.value', ''), ','),
   icon: ({ attributeValues }) => {
-    const parsed = parseRockKeyValuePairs(get(attributeValues, 'icon.value', 'book-open'))
-    return get(parsed, '[0].key', 'book-open')
+    const parsed = parseRockKeyValuePairs(
+      get(attributeValues, 'icon.value', 'book-open')
+    );
+    return get(parsed, '[0].key', 'book-open');
   },
   estimatedTime: ({ attributeValues }) =>
     get(attributeValues, 'estimatedTime.value', null),
   publishDate: ({ startDateTime }) => {
-    if(!!startDateTime && startDateTime !== '' && moment(startDateTime).isValid()){
-      return momentTz.tz(startDateTime, ApollosConfig.ROCK.TIMEZONE).utc().toISOString()
+    if (!!startDateTime && startDateTime !== '' && moment(startDateTime).isValid()) {
+      return momentTz.tz(startDateTime, ApollosConfig.ROCK.TIMEZONE).utc().toISOString();
     }
-    return moment().utc().toISOString()
+    return moment().utc().toISOString();
   },
   author: async ({ attributeValues }, args, { dataSources }) => {
-    if (get(attributeValues, 'author.value', null)) {
-      const { id } = await dataSources.Person.getFromAliasId(attributeValues.author.value)
+    if (get(attributeValues, 'author.value')) {
+      const { id } = await dataSources.Person.getFromAliasId(
+        attributeValues.author.value
+      );
 
-      const person = await dataSources.Person.getFromId(id)
+      const person = await dataSources.Person.getFromId(id);
 
-      return person
+      return person;
     }
 
-    return null
+    return null;
   },
-}
+};
 
 const connectionResolvers = {
   childContentItemsConnection: async ({ id }, args, { dataSources }) => {
-    const { ContentItem } = dataSources
+    const { ContentItem } = dataSources;
     const { edges, ...pagination } = await ContentItem.paginate({
       cursor: await ContentItem.getAssociationCursorByContentItemId(id),
       args,
-    })
+    });
     const resolveEdges = async () => {
-      const resolvedAssociations = await edges
+      const resolvedAssociations = await edges;
 
       return resolvedAssociations.map(({ node, ...edge }) => ({
         node: ContentItem.getFromId(node.childContentChannelItemId),
-        ...edge
-      }))
-    }
+        ...edge,
+      }));
+    };
 
     return {
       edges: resolveEdges(),
-      ...pagination
-    }
+      ...pagination,
+    };
   },
-}
+};
 
 const resolver = {
   Query: {
@@ -147,8 +139,7 @@ const resolver = {
       dataSources.ContentItem.getCategoryByTitle(title),
     getEventContentByTitle: async (root, { title }, { dataSources }) =>
       dataSources.ContentItem.getEventByTitle(title),
-    allEvents: async (root, args, { dataSources }) =>
-      dataSources.ContentItem.getEvents(),
+    allEvents: async (root, args, { dataSources }) => dataSources.ContentItem.getEvents(),
     featuredEvents: (root, args, { dataSources }) =>
       dataSources.ContentItem.paginate({
         cursor: dataSources.ContentItem.getFeaturedEvents(),
@@ -160,7 +151,10 @@ const resolver = {
         args,
       }),
     getWebsitePageContentByTitle: async (root, { website, title }, context) =>
-      await context.dataSources.WebsitePagesContentItem.getWebsitePageContentByTitle(website, title),
+      await context.dataSources.WebsitePagesContentItem.getWebsitePageContentByTitle(
+        website,
+        title
+      ),
   },
   ContentItem: {
     ...titleResolver,
@@ -193,6 +187,6 @@ const resolver = {
   ...WebsiteFeature.resolver,
   ...WebsiteGroupContentItem.resolver,
   ...WebsitePagesContentItem.resolver,
-}
+};
 
-export default resolverMerge(resolver, coreContentItem)
+export default resolverMerge(resolver, coreContentItem);
