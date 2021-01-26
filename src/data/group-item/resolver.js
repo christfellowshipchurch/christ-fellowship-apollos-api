@@ -49,6 +49,8 @@ const resolver = {
       dataSources.GroupItem.allowMessages(root),
       checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
       CheckInable.getFromId(id),
+    campus: ({ campusId }, args, { dataSources }) =>
+      dataSources.Campus.getFromId(campusId),
     preference: (root, args, { dataSources }) =>
       dataSources.GroupItem.getPreference(root),
     subPreference: (root, args, { dataSources }) =>

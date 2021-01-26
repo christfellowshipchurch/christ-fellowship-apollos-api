@@ -89,6 +89,7 @@ export const groupSchema = gql`
     phoneNumbers: [String]
     schedule: Schedule
     videoCall: VideoCallParams
+    campus: Campus
     preference: String
     subPreference: String
 
@@ -162,6 +163,11 @@ export const groupSchema = gql`
     title: String
     summary: String
     coverImage: ImageMedia
+    campus: Campus
+    preference: String
+    subPreference: String
+    membersCount: Int # Derived property for search
+    leaders: [Person] # Note: Differs from what people resolver returns
   }
 
   extend type Query {

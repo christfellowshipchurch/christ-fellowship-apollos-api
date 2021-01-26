@@ -830,16 +830,75 @@ export default class GroupItem extends baseGroup.dataSource {
   // :: Search Indexing
   // --------------------------------------------------------------------------
 
+  // Note: The input `group` may have aliased fields etc, as it is assumed
+  // to be passed from a specialized query and not raw Rock object/data.
+  mapItemForIndex(group) {
+    console.log('🔀 Mapping item for indexing... group: ', group);
+    const {
+      id,
+      title,
+      summary,
+      coverImage,
+      campus,
+      preference,
+      subPreference
+    } = group;
+
+    // Pick a subset of Person properties, and remove the edges/node layers.
+    const leaders = get(group, 'leaders.edges', []).map(({ node }) => ({
+      id: node.id,
+      firstName: node.firstName,
+      lastName: node.lastName,
+      nickName: node.nickName,
+      photo: node.photo?.uri,
+    }));
+
+    return {
+      id,
+      title,
+      summary,
+      coverImage,
+      campus,
+      preference,
+      subPreference,
+      membersCount: group.members?.totalCount,
+      leaders,
+    }
+  }
+
   async updateIndexGroup(id) {
     const getGroupQuery = `
       query getGroup {
         node(id: "${id}") {
           __typename
           id
-          ... on GroupItem {
+          ... on Group {
             title
             summary
             coverImage { sources { uri } }
+            campus {
+              id
+              name
+            }
+            preference
+            subPreference
+            members: people(first: 1) {
+              totalCount
+            }
+            leaders: people(first: 5, isLeader:true) {
+              totalCount
+              edges {
+                node {
+                  id
+                  firstName
+                  lastName
+                  nickName
+                  photo {
+                    uri
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -847,13 +906,15 @@ export default class GroupItem extends baseGroup.dataSource {
 
     const { data } = await graphql(this.context.schema, getGroupQuery, {}, this.context);
 
+    // TODO: Better error handling? Should this throw?
     if (!data.node) {
       return `Error fetching data to index for Group "${id}"`
     }
 
     const { Search } = this.context.dataSources;
-    Search.index('Groups').addObjects([data.node])
+    console.log('Item to index => ', this.mapItemForIndex(data.node));
+    // Search.index('Groups').addObjects([data.node])
 
-    return data;
+    return true;
   }
 }
