@@ -226,6 +226,8 @@ ROCK_MAPPINGS:
     GROUP_COVER_IMAGES: 368
     URLS: 369
     LINK_TREE: 374
+    GROUP_PREFERENCES: 203
+    GROUP_SUB_PREFERENCES: 382
 
   # List of attribute keys for Profile information
   # when migrating from Arena to Rock, the Arena keys were kept

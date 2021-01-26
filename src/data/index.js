@@ -31,7 +31,6 @@ import * as Browse from './browse';
 import * as Cache from './redis-cache';
 import * as Campus from './campus';
 import * as CheckInable from './checkinable';
-import * as Communities from './communities';
 import * as ContentChannel from './content-channel';
 import * as ContentItem from './content-item';
 import * as DefinedValue from './defined-value';
@@ -50,6 +49,7 @@ import * as PageBuilder from './page-builder';
 import * as Person from './people';
 import * as PhoneNumber from './phone-number';
 import * as PrayerRequest from './prayer-request';
+import * as Preferences from './preferences';
 import * as RockConstants from './rock-constants';
 import * as Schedule from './schedule';
 import * as Search from './search';
@@ -77,7 +77,6 @@ const data = {
   Cache,
   Campus,
   CheckInable,
-  Communities,
   ContentChannel,
   ContentItem,
   DefinedValue,
@@ -103,6 +102,7 @@ const data = {
   PersonalDevice,
   PhoneNumber,
   PrayerRequest,
+  Preferences,
   RockConstants,
   Schedule,
   Scripture,
