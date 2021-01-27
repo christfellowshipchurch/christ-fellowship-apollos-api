@@ -146,6 +146,7 @@ export const groupSchema = gql`
 
     # Search
     indexGroup(id: String, action: INDEX_ACTION, key: String): String
+    indexAllGroups(action: INDEX_ACTION, key: String): String
   }
 
   type GroupCoverImage {

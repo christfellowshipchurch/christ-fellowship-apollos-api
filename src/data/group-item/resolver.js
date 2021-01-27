@@ -140,18 +140,36 @@ const resolver = {
       const validInput = Boolean(id && action && key === ApollosConfig.ROCK.APOLLOS_SECRET);
 
       if (!validInput) {
-        return `Failed to update | id: ${id} | key: ${key} | action: ${action}`
+        return `Failed to update | id: ${id} | action: ${action}`
       }
 
       switch (action) {
         case "delete":
           // TODO
           // dataSources.GroupItem.deleteIndexGroup(id);
-          return `⚠️ Action 'delete' not implemented | id: ${id} | key: ${key} | action: ${action}`
+          return `⚠️ Action 'delete' not implemented | id: ${id} | action: ${action}`
         case "update":
         default:
           await dataSources.GroupItem.updateIndexGroup(id);
-          return `Successfully updated | id: ${id} | key: ${key} | action: ${action}`
+          return `Successfully updated | id: ${id} | action: ${action}`
+      }
+    },
+    indexAllGroups: async (root, { key, action }, { dataSources }) => {
+      const validInput = Boolean(action && key === ApollosConfig.ROCK.APOLLOS_SECRET);
+
+      if (!validInput) {
+        return `Failed to update | action: ${action}`
+      }
+
+      switch (action) {
+        case "delete":
+          // TODO
+          // dataSources.GroupItem.deleteIndexGroup(id);
+          return `⚠️ Action 'delete' not implemented | action: ${action}`
+        case "update":
+        default:
+          await dataSources.GroupItem.updateIndexAllGroups();
+          return `Successfully updated all relevant groups | action: ${action}`
       }
     }
   },
