@@ -215,6 +215,7 @@ export default class Schedule extends RockApolloDataSource {
      */
 
     const filteredDates = events
+      .filter((e) => !!e.start && !!e.end)
       .filter((e) => moment(e.start).isSameOrAfter(moment().startOf('day')))
       .sort(sortByTimeAsc);
     const closestDate = first(filteredDates);
@@ -222,12 +223,14 @@ export default class Schedule extends RockApolloDataSource {
     const nextEnd = get(closestDate, 'end');
 
     return {
-      nextStart: moment(nextStart).isValid()
-        ? moment.tz(nextStart, TIMEZONE).utc().format()
-        : null,
-      nextEnd: moment(nextEnd).isValid()
-        ? moment.tz(nextEnd, TIMEZONE).utc().format()
-        : null,
+      nextStart:
+        nextStart && moment(nextStart).isValid()
+          ? moment.tz(nextStart, TIMEZONE).utc().format()
+          : null,
+      nextEnd:
+        nextEnd && moment(nextEnd).isValid()
+          ? moment.tz(nextEnd, TIMEZONE).utc().format()
+          : null,
       startOffset: this.defaultStartOffsetMinutes,
       endOffset: this.defaultEndOffsetMinutes,
     };
@@ -342,6 +345,7 @@ export default class Schedule extends RockApolloDataSource {
            * end date of this specific occurence and convert to an ISO string
            * and push it to our array of events
            */
+
           events.push({
             start: this.toISOString(rdate),
             end: moment.utc(rdate).add(minutes, 'minutes').toISOString(),
