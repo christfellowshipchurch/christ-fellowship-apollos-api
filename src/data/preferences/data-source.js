@@ -17,7 +17,9 @@ export default class Preferences extends RockApolloDataSource {
     return definedValues.map((item) => {
       return {
         id: item.id,
-        title: item.value,
+        title: get(item.attributeValues, 'titleOverride.value', null)
+          ? item.attributeValues.titleOverride.value
+          : item.value,
         summary: item.description,
         coverImage: {
           sources: [
