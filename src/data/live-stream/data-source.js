@@ -1,6 +1,6 @@
 import { dataSource as definedValueDataSource } from '../defined-value';
 import moment from 'moment-timezone';
-import { compareAsc, parseISO } from 'date-fns';
+import { compareAsc, parseISO, isFuture } from 'date-fns';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
 import crypto from 'crypto-js';
@@ -55,6 +55,9 @@ export default class LiveStream extends definedValueDataSource {
             const dateB = parseISO(b.start);
 
             return compareAsc(dateA, dateB);
+          })
+          .filter(({ end }) => {
+            return isFuture(parseISO(end));
           })
           .find(() => true);
 
@@ -170,7 +173,6 @@ export default class LiveStream extends definedValueDataSource {
 
       return liveStreams
         .filter((liveStream) => !!liveStream)
-        .filter(({ isLive }) => isLive)
         .filter((liveStream) => filterByPersona(liveStream));
     } catch (e) {
       console.log('Error fetching Live Streams');

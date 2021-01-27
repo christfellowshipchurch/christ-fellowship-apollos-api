@@ -14,19 +14,6 @@ const resolver = {
   LiveStreamListFeature: {
     id: ({ id }) => createGlobalId(id, 'LiveStreamListFeature'),
   },
-  Query: {
-    userFeedFeatures: async (root, args, { clientVersion, dataSources: { Feature } }) => {
-      // 5.0.x and 5.1.x use a different client side UI set that is not compatible
-      // with Core Apollos 1.4.3. In order to combat that, we check the version of the client
-      // coming in to route requests
-      //
-      // TODO : deprecate this once we get at least 80-90% adpotion of the new version
-
-      return Feature.getRockFeedFeatures({
-        contentChannelId: ROCK_MAPPINGS.HOME_FEATURES_CHANNEL_ID,
-      });
-    },
-  },
 };
 
 export default resolverMerge(resolver, coreFeatures);

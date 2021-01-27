@@ -2,7 +2,7 @@ import { FeatureFeed as coreFeatureFeed } from '@apollosproject/data-connector-r
 import { resolverMerge } from '@apollosproject/server-core';
 import ApollosConfig from '@apollosproject/config';
 
-const { CONTENT_CHANNEL_FEEDS } = ApollosConfig;
+const { CONTENT_CHANNEL_FEEDS, CONNECT_TAB } = ApollosConfig;
 
 const resolver = {
   Query: {
@@ -31,9 +31,6 @@ const resolver = {
         type: 'apollosConfig',
         args: { section: 'HOME_HEADER_FEATURES', ...args },
       }),
-    // ! Deprecated. Please use homeHeaderFeedFeatures instead
-    userHeaderFeatures: async (root, args, { dataSources: { Feature, Flag } }) =>
-      Feature.getHomeHeaderFeedFeatures(),
   },
 };
 

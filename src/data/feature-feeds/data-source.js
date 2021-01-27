@@ -3,6 +3,7 @@ import { FeatureFeed as coreFeatureFeed } from '@apollosproject/data-connector-r
 
 export default class FeatureFeed extends coreFeatureFeed.dataSource {
   superGetFeed = this.getFeed;
+
   getFeed = async ({ type = '', args = {} }) => {
     const { ContentChannel } = this.context.dataSources;
 
@@ -12,9 +13,6 @@ export default class FeatureFeed extends coreFeatureFeed.dataSource {
         id: createGlobalId(JSON.stringify({ type, args }), 'FeatureFeed'),
         getFeatures: () => ContentChannel.getFeatures(args.contentChannelId),
       };
-    }
-
-    if (type === 'give') {
     }
 
     return this.superGetFeed({ type, args });

@@ -34,8 +34,8 @@ export default class PrayerRequest extends corePrayerRequest.dataSource {
     return prayerSubmission;
   };
 
-  byDailyPrayerFeed = async () => {
-    const requestBuilder = await this.baseByDailyPrayerFeed();
+  byDailyPrayerFeed = async (props) => {
+    const requestBuilder = await this.baseByDailyPrayerFeed(props);
 
     return requestBuilder.andFilter(
       `CategoryId eq ${ROCK_MAPPINGS.GENERAL_PRAYER_CATEGORY_ID}`
