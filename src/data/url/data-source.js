@@ -8,8 +8,6 @@ const { URLS: UrlDefinedTypeId } = DEFINED_TYPES;
 
 export default class Url extends RockApolloDataSource {
   getFromId(url) {
-    console.log({ url });
-
     // the url gets encoded as the id, so we can just return it with no fuss
     return url;
   }
