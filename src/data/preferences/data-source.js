@@ -14,7 +14,11 @@ export default class Preferences extends RockApolloDataSource {
       ROCK_MAPPINGS.DEFINED_TYPES.GROUP_PREFERENCES
     );
 
-    return definedValues.map((item) => {
+    const filteredPreferences = definedValues.filter(
+      (definedValue) => definedValue && definedValue.isActive
+    );
+
+    return filteredPreferences.map((item) => {
       return {
         id: item.id,
         title: get(item.attributeValues, 'titleOverride.value', null)
@@ -42,7 +46,11 @@ export default class Preferences extends RockApolloDataSource {
       ROCK_MAPPINGS.DEFINED_TYPES.GROUP_SUB_PREFERENCES
     );
 
-    return definedValues.map((item) => {
+    const filteredSubPreferences = definedValues.filter(
+      (definedValue) => definedValue && definedValue.isActive
+    );
+
+    return filteredSubPreferences.map((item) => {
       return {
         id: item.id,
         title: item.value,
