@@ -12,6 +12,7 @@ export default gql`
     title: String
     summary: String
     coverImage: ImageMedia
+    url: String
   }
 
   extend type Query {

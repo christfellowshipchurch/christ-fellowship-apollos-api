@@ -28,6 +28,7 @@ export default class Preferences extends RockApolloDataSource {
             },
           ],
         },
+        url: get(item.attributeValues, 'url.value', null),
       };
     });
 
