@@ -226,8 +226,15 @@ ROCK_MAPPINGS:
     GROUP_COVER_IMAGES: 368
     URLS: 369
     LINK_TREE: 374
+    LIVE_STREAM_SCHEDULES: 373
+    GROUP_FINDER_TYPES: 381
+    GROUP_MEMBER_ROLES: 375
     GROUP_PREFERENCES: 203
     GROUP_SUB_PREFERENCES: 382
+    GROUP_TYPES: 376
+    VOLUNTEER_GROUP_TYPES: 377
+    EXCLUDE_GROUPS: 378
+    EXCLUDE_VOLUNTEER_GROUPS: 379
 
   # List of attribute keys for Profile information
   # when migrating from Arena to Rock, the Arena keys were kept
@@ -424,8 +431,10 @@ NOTIFICATIONS:
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_ENTITY_IDS:
   CONTENT_CHANNEL_ITEM: 208
+  DEFINED_TYPE: 72
   DEFINED_VALUE: 31
   GROUP: 16
+  PERSON: 15
   PRAYER_REQUEST: 33
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.

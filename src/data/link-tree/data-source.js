@@ -30,7 +30,7 @@ export default class DefinedValueList extends RockApolloDataSource {
       )
       .map((definedValue) => {
         const { value, attributeValues } = definedValue;
-        const url = get(attributeValues, '');
+        const url = get(attributeValues, 'url.value');
 
         return {
           title: value,

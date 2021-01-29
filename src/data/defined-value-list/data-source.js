@@ -1,13 +1,24 @@
 import RockApolloDataSource from '@apollosproject/rock-apollo-data-source';
-import { getIdentifierType } from '../utils';
 
 export default class DefinedValueList extends RockApolloDataSource {
   resource = 'DefinedValues';
   expanded = true;
 
-  getByIdentifier = async (id) => {
-    const definedValues = await this.request().filter(`DefinedTypeId eq ${id}`).get();
+  getFromId = async (id) => {
+    // TODO : cache this
+    const { Cache } = this.context.dataSources;
+    const request = () =>
+      this.request()
+        .filter(`DefinedTypeId eq ${id}`)
+        .andFilter(`IsActive eq true`)
+        .transform((definedValues) => ({ id, definedValues }))
+        .get();
 
-    return { id, definedValues };
+    return Cache.request(request, {
+      expiresIn: 60 * 60 * 12,
+      key: Cache.KEY_TEMPLATES.definedType`${id}`,
+    });
   };
+
+  getByIdentifier = this.getFromId;
 }

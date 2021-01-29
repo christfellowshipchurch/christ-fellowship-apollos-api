@@ -20,12 +20,38 @@ export default class Schedule extends RockApolloDataSource {
   /** MARK: - Getters */
   getFromId = async (id = isRequired('Schedule.getFromId', 'id')) => {
     const { Cache } = this.context.dataSources;
-    const request = () => this.request().filter(getIdentifierType(id).query).first();
+    const { type } = getIdentifierType(id);
+    let _id = id;
 
-    return Cache.request(request, {
-      key: Cache.KEY_TEMPLATES.schedule`${id}`,
-      expiresIn: 60 * 10, // 10 minute cache
-    });
+    if (type === 'guid') {
+      _id = await this.getIdFromGuid(id);
+    }
+
+    if (_id) {
+      return Cache.request(() => this.request().find(_id).get(), {
+        key: Cache.KEY_TEMPLATES.schedule`${_id}`,
+        expiresIn: 60 * 60, // 60 minute cache
+      });
+    }
+
+    return null;
+  };
+
+  getIdFromGuid = async (guid) => {
+    const { Cache } = this.context.dataSources;
+    const { query } = getIdentifierType(guid);
+
+    return Cache.request(
+      () =>
+        this.request()
+          .filter(query)
+          .transform((results) => results[0]?.id)
+          .get(),
+      {
+        key: Cache.KEY_TEMPLATES.scheduleGuidId`${guid}`,
+        expiresIn: 60 * 60 * 24, // 24 hour cache
+      }
+    );
   };
 
   getFromIds = (ids) =>
@@ -189,6 +215,7 @@ export default class Schedule extends RockApolloDataSource {
      */
 
     const filteredDates = events
+      .filter((e) => !!e.start && !!e.end)
       .filter((e) => moment(e.start).isSameOrAfter(moment().startOf('day')))
       .sort(sortByTimeAsc);
     const closestDate = first(filteredDates);
@@ -196,12 +223,14 @@ export default class Schedule extends RockApolloDataSource {
     const nextEnd = get(closestDate, 'end');
 
     return {
-      nextStart: moment(nextStart).isValid()
-        ? moment.tz(nextStart, TIMEZONE).utc().format()
-        : null,
-      nextEnd: moment(nextEnd).isValid()
-        ? moment.tz(nextEnd, TIMEZONE).utc().format()
-        : null,
+      nextStart:
+        nextStart && moment(nextStart).isValid()
+          ? moment.tz(nextStart, TIMEZONE).utc().format()
+          : null,
+      nextEnd:
+        nextEnd && moment(nextEnd).isValid()
+          ? moment.tz(nextEnd, TIMEZONE).utc().format()
+          : null,
       startOffset: this.defaultStartOffsetMinutes,
       endOffset: this.defaultEndOffsetMinutes,
     };
@@ -237,6 +266,8 @@ export default class Schedule extends RockApolloDataSource {
 
   /** MARK: - iCalendar */
   /**
+   * Parse iCalendar
+   * Takes an iCalendar string and parses it into a friendly object with ocurrences.
    * @param {String}                iCalendar string to parse.
    * @param {Object} args           Arguments to pass in to describe the parse.
    * @param {Number} args.duration  Manually set the duration of each instance of the event. Defaulted to the duration of the event set by the iCalendar string.
@@ -314,6 +345,7 @@ export default class Schedule extends RockApolloDataSource {
            * end date of this specific occurence and convert to an ISO string
            * and push it to our array of events
            */
+
           events.push({
             start: this.toISOString(rdate),
             end: moment.utc(rdate).add(minutes, 'minutes').toISOString(),
