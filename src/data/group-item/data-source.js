@@ -8,7 +8,7 @@ import {
 } from '@apollosproject/server-core';
 
 import { graphql } from 'graphql';
-import { get, isNull, filter, head, chunk, flatten, take, uniqBy } from 'lodash';
+import { get, isNull, isEmpty, filter, head, chunk, flatten, take, uniqBy } from 'lodash';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
@@ -857,23 +857,6 @@ export default class GroupItem extends baseGroup.dataSource {
             }
             preference
             subPreference
-            members: people(first: 1) {
-              totalCount
-            }
-            leaders: people(first: 5, isLeader:true) {
-              totalCount
-              edges {
-                node {
-                  id
-                  firstName
-                  lastName
-                  nickName
-                  photo {
-                    uri
-                  }
-                }
-              }
-            }
           }
         }
       }
@@ -926,23 +909,61 @@ export default class GroupItem extends baseGroup.dataSource {
     }
 
     console.log('Item to index => ', JSON.stringify(groupForIndex, null, 2));
-    console.warn('⚠️ SKIPPING ACTUAL ADD ⚠️')
-    // this.getSearchIndex().addObjects([data.node])
-
     return true;
   }
 
   searchGroups(args) {
     console.log('[GroupItem] searching for groups, request args:', args);
     const { query, first, after } = args;
-    const searchQuery = {
+
+    // TODO: These little utils could be centralized to somewhere else
+    // ✂️ -------------------------------------------------------------------------------
+    const namedValue = (prefix, string) => `${prefix}:"${string}"`;
+    const prefixValues = (prefix, array) => {
+      if (isEmpty(array)) return;
+      return array.map(value => namedValue(prefix, value));
+    };
+
+    const group = (string) => string ? `(${string})` : undefined;
+    const joinValues = (strings, conditional) => {
+      if (isEmpty(strings) || !conditional) {
+        return undefined;
+      }
+
+      return strings
+        .filter(str => typeof str !== 'undefined')
+        .join(conditional)
+    };
+    const oneOf = (strings) => group(joinValues(strings, ' OR '));
+    const andList = (strings) => joinValues(strings, ' AND ');
+
+    // createFilterString({ colors: ["red", "blue"], sizes: ["MD", "LG", "XL"] })
+    // --> '(color:"red" OR color:"blue") AND (sizes:"MD" OR sizes:"LG" OR sizes:"XL")'
+    const createFilterString = (filters) => {
+      const campusNames = prefixValues('campusName', filters.campusNames);
+      const preferences = prefixValues('preference', filters.preferences);
+      const subPreferences = prefixValues('subPreference', filters.subPreferences);
+
+      // ( preferences )
+      // ( campusNames ) AND ( subPreferences )
+      // ( campusNames ) AND ( preferences ) AND ( subPreferences )
+      return andList([
+        oneOf(campusNames),
+        oneOf(preferences),
+        oneOf(subPreferences)
+      ]);
+    };
+    // ✂️ -------------------------------------------------------------------------------
+
+    const searchParams = {
       query: query.text,
+      filters: createFilterString(query),
       first,
       after,
     }
 
-    console.log('--> Algolia searchQuery:', searchQuery);
-    return this.getSearchIndex().byPaginatedQuery(searchQuery);
+    console.log('🔍 Algolia searchParams:', searchParams);
+    return this.getSearchIndex().byPaginatedQuery(searchParams);
   }
 
   // ⚠️ TEMPORARY FOR SAMPLE DATA ⚠️
@@ -951,9 +972,13 @@ export default class GroupItem extends baseGroup.dataSource {
 
   async updateIndexAllGroups() {
     console.log('[GroupItem] indexing "all" groups');
-    const sampleCount = 3;
+    console.log('•••••••• 🛑 SAFETY SWITCH ••••••••');
+    return null;
+    const alreadyIndexedCount = 101;
+    const sampleCount = 50;
 
-    const groups = this.sampleGroupIds.slice(0, sampleCount);
+    const groups = this.sampleGroupIds.slice(alreadyIndexedCount + 1, alreadyIndexedCount + sampleCount);
+    console.log('group ids to index:', groups);
     const groupsForIndex = await Promise.all(
       groups.map(id => this.mapItemForIndex(id))
     );

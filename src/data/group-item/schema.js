@@ -157,6 +157,9 @@ export const groupSchema = gql`
 
   input SearchGroupsInput {
     text: String
+    campusNames: [String]
+    preferences: [String]
+    subPreferences: [String]
   }
 
   extend type Query {
