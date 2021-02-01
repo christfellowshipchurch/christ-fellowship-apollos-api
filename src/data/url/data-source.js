@@ -12,6 +12,10 @@ export default class Url extends RockApolloDataSource {
     return url;
   }
 
+  resolveType() {
+    return 'Url';
+  }
+
   /**
    * Gets a url from a Rock Defined Value Id
    * @param {string} id - Rock Defined Value Id
@@ -24,10 +28,15 @@ export default class Url extends RockApolloDataSource {
       .andFilter('IsActive eq true')
       .first();
 
+    const url = get(
+      definedValue,
+      'attributeValues.url.value',
+      get(definedValue, 'description')
+    );
+
     return {
-      url: get(definedValue, 'description'),
+      url,
       title: get(definedValue, 'value'),
-      id: get(definedValue, 'id'),
     };
   }
 

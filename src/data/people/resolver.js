@@ -31,29 +31,18 @@ const resolver = {
         key: get(ApollosConfig, 'ROCK_MAPPINGS.PERSON_ATTRIBUTES.ETHNICITY'),
       })
     ),
-    groups: enforceCurrentUser(({ id }, { input }, { dataSources }) => {
+    groups: enforceCurrentUser(async ({ id }, { input }, { dataSources }) => {
       const { Group } = dataSources;
-      let args = { personId: id };
+      const groupTypeIds = await Group.getValidGroupTypeIds();
+      let args = { personId: id, groupTypeIds };
+
+      /**
+       * ? I think we should kill this field from Person and move it to a more specific endpoint.
+       *
+       * ! Since the only place this is being used, at the moment, is by the Groups page on the website, we're going to remove the more complex logic that handles filtering. Instead, we'll just go ahead and return just Groups with no Volunteer Groups.
+       */
 
       if (input) {
-        const include = get(input, 'includeTypes', []);
-        const exclude = get(input, 'excludeTypes', []);
-
-        /**
-         * Respect the include before the exclude
-         *
-         * TODO : respect a combination of both include and exclude... maybe?
-         */
-        if (include.length) {
-          args.groupTypeIds = Object.keys(Group.groupTypeMap)
-            .filter((key) => include.includes(key))
-            .map((key) => Group.groupTypeMap[key]);
-        } else if (exclude.length) {
-          args.groupTypeIds = Object.keys(Group.groupTypeMap)
-            .filter((key) => !exclude.includes(key))
-            .map((key) => Group.groupTypeMap[key]);
-        }
-
         args.asLeader = get(input, 'asLeader', false);
       }
 
