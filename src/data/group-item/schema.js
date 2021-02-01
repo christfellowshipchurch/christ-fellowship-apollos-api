@@ -160,6 +160,7 @@ export const groupSchema = gql`
     campusNames: [String]
     preferences: [String]
     subPreferences: [String]
+    days: [String]
   }
 
   extend type Query {

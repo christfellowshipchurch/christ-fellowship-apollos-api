@@ -1111,6 +1111,9 @@ export default class GroupItem extends baseGroup.dataSource {
           __typename
           id
           ... on Group {
+            dateTime {
+              start
+            }
             title
             summary
             coverImage { sources { uri } }
@@ -1141,6 +1144,7 @@ export default class GroupItem extends baseGroup.dataSource {
       id,
       campus,
       coverImage,
+      dateTime,
       preference,
       subPreference,
       summary,
@@ -1157,10 +1161,11 @@ export default class GroupItem extends baseGroup.dataSource {
       // ? Should we refactor this and ContentItem indexing / SearchResult to remove cover image?
       // Searchable properties
       campusName: campus?.name,
+      day: moment(dateTime.start).format('ddd'),
       preference,
       subPreference,
-      title,
       summary,
+      title,
       coverImage, // Presentation only
     };
 
@@ -1209,11 +1214,17 @@ export default class GroupItem extends baseGroup.dataSource {
       const campusNames = prefixValues('campusName', filters.campusNames);
       const preferences = prefixValues('preference', filters.preferences);
       const subPreferences = prefixValues('subPreference', filters.subPreferences);
+      const days = prefixValues('day', filters.days);
 
       // ( preferences )
       // ( campusNames ) AND ( subPreferences )
       // ( campusNames ) AND ( preferences ) AND ( subPreferences )
-      return andList([oneOf(campusNames), oneOf(preferences), oneOf(subPreferences)]);
+      return andList([
+        oneOf(campusNames),
+        oneOf(days),
+        oneOf(preferences),
+        oneOf(subPreferences),
+      ]);
     };
     // ✂️ -------------------------------------------------------------------------------
 
