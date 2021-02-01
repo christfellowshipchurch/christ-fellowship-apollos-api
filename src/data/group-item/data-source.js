@@ -17,6 +17,7 @@ import crypto from 'crypto-js';
 import { getIdentifierType } from '../utils';
 const { createImageUrlFromGuid } = Utils;
 
+const { ROCK_MAPPINGS } = ApollosConfig;
 const { GROUP, DEFINED_TYPES } = ROCK_MAPPINGS;
 const { LEADER_ROLE_IDS } = GROUP;
 const {
@@ -27,7 +28,6 @@ const {
   EXCLUDE_GROUPS,
   EXCLUDE_VOLUNTEER_GROUPS,
 } = DEFINED_TYPES;
-const { createImageUrlFromGuid } = Utils;
 
 /** TEMPORARY FIX
  *  In order to launch the My Groups feature in time for the September, 2020 Fall
@@ -1097,10 +1097,13 @@ export default class GroupItem extends baseGroup.dataSource {
   // Note: The input `group` may have aliased fields etc, as it is assumed
   // to be passed from a specialized query and not raw Rock object/data.
   async mapItemForIndex(groupId) {
-    const globalId = typeof groupId === 'number' ?
-    createGlobalId(groupId, 'Group')
-    : groupId
-    console.log('🔀 Mapping item for indexing... groupId: ', groupId, `( "${globalId}" )`);
+    const globalId =
+      typeof groupId === 'number' ? createGlobalId(groupId, 'Group') : groupId;
+    console.log(
+      '🔀 Mapping item for indexing... groupId: ',
+      groupId,
+      `( "${globalId}" )`
+    );
 
     const getGroupQuery = `
       query getGroup {
@@ -1122,7 +1125,12 @@ export default class GroupItem extends baseGroup.dataSource {
       }
     `;
 
-    const { data, error } = await graphql(this.context.schema, getGroupQuery, {}, this.context);
+    const { data, error } = await graphql(
+      this.context.schema,
+      getGroupQuery,
+      {},
+      this.context
+    );
 
     if (error) {
       console.log('❌ error: ', error);
@@ -1165,7 +1173,7 @@ export default class GroupItem extends baseGroup.dataSource {
 
     // TODO: Better error handling? Should this throw?
     if (!groupForIndex) {
-      return `Error fetching data to index for Group "${id}"`
+      return `Error fetching data to index for Group "${id}"`;
     }
 
     console.log('Item to index => ', JSON.stringify(groupForIndex, null, 2));
@@ -1181,18 +1189,16 @@ export default class GroupItem extends baseGroup.dataSource {
     const namedValue = (prefix, string) => `${prefix}:"${string}"`;
     const prefixValues = (prefix, array) => {
       if (isEmpty(array)) return;
-      return array.map(value => namedValue(prefix, value));
+      return array.map((value) => namedValue(prefix, value));
     };
 
-    const group = (string) => string ? `(${string})` : undefined;
+    const group = (string) => (string ? `(${string})` : undefined);
     const joinValues = (strings, conditional) => {
       if (isEmpty(strings) || !conditional) {
         return undefined;
       }
 
-      return strings
-        .filter(str => typeof str !== 'undefined')
-        .join(conditional)
+      return strings.filter((str) => typeof str !== 'undefined').join(conditional);
     };
     const oneOf = (strings) => group(joinValues(strings, ' OR '));
     const andList = (strings) => joinValues(strings, ' AND ');
@@ -1207,11 +1213,7 @@ export default class GroupItem extends baseGroup.dataSource {
       // ( preferences )
       // ( campusNames ) AND ( subPreferences )
       // ( campusNames ) AND ( preferences ) AND ( subPreferences )
-      return andList([
-        oneOf(campusNames),
-        oneOf(preferences),
-        oneOf(subPreferences)
-      ]);
+      return andList([oneOf(campusNames), oneOf(preferences), oneOf(subPreferences)]);
     };
     // ✂️ -------------------------------------------------------------------------------
 
@@ -1220,7 +1222,7 @@ export default class GroupItem extends baseGroup.dataSource {
       filters: createFilterString(query),
       first,
       after,
-    }
+    };
 
     console.log('🔍 Algolia searchParams:', searchParams);
     return this.getSearchIndex().byPaginatedQuery(searchParams);
@@ -1237,10 +1239,13 @@ export default class GroupItem extends baseGroup.dataSource {
     const alreadyIndexedCount = 101;
     const sampleCount = 50;
 
-    const groups = this.sampleGroupIds.slice(alreadyIndexedCount + 1, alreadyIndexedCount + sampleCount);
+    const groups = this.sampleGroupIds.slice(
+      alreadyIndexedCount + 1,
+      alreadyIndexedCount + sampleCount
+    );
     console.log('group ids to index:', groups);
     const groupsForIndex = await Promise.all(
-      groups.map(id => this.mapItemForIndex(id))
+      groups.map((id) => this.mapItemForIndex(id))
     );
 
     console.log('groupsForIndex:', groupsForIndex);
