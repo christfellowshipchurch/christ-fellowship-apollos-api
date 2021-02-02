@@ -6,7 +6,7 @@ import Queue from 'bull';
 import { graphql } from 'graphql';
 import Redis from 'ioredis';
 import keywordExtractor from 'keyword-extractor';
-import { take, get } from 'lodash';
+import { take, get, split } from 'lodash';
 import momentTz from 'moment-timezone';
 import sizeof from 'object-sizeof';
 import sanitizeHtml from 'sanitize-html';
