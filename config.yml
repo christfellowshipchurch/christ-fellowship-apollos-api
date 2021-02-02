@@ -57,12 +57,14 @@ ALGOLIA:
       CONFIGURATION:
         searchableAttributes:
           - campusName
+          - day
           - preference
           - subPreference
-          - title
           - summary
+          - title
         attributesForFaceting:
           - campusName
+          - day
           - preference
           - subPreference
 
