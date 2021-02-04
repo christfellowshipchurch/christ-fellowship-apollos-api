@@ -3,15 +3,16 @@ import {
   resolverMerge,
   parseGlobalId,
   createGlobalId,
-  withEdgePagination
+  withEdgePagination,
 } from '@apollosproject/server-core';
+import { get } from 'lodash';
 
 const defaultResolvers = {
   id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
   title: (root, args, { dataSources }) => dataSources.GroupItem.getTitle(root),
   summary: ({ description }, args, { dataSources }) => description,
-  groupType: ({ groupTypeId }, args, { dataSources }) =>
-    dataSources.GroupItem.getGroupTypeFromId(groupTypeId),
+  groupType: ({ attributeValues }, args, { dataSources }) =>
+    get(attributeValues, 'preference.valueFormatted'),
   groupResources: (root, args, { dataSources }) =>
     dataSources.GroupItem.getGroupResources(root),
   resources: ({ id }, args, { dataSources }) => dataSources.GroupItem.getResources(id),
@@ -27,8 +28,8 @@ const defaultResolvers = {
     }),
   chatChannelId: (root, args, { dataSources }) => null, // Deprecated
   streamChatChannel: async (root, args, { dataSources }) =>
-    dataSources.GroupItem.getStreamChatChannel(root)
-}
+    dataSources.GroupItem.getStreamChatChannel(root),
+};
 
 const resolver = {
   GroupItem: {
@@ -148,8 +149,8 @@ const resolver = {
       return dataSources.ContentItem.paginate({
         cursor: await dataSources.GroupItem.getResourceOptions(id),
         args: input,
-      })
-    }
+      });
+    },
   },
 };
 
