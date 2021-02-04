@@ -7,8 +7,8 @@ import { get } from 'lodash';
 
 const { createImageUrlFromGuid } = Utils;
 
-export default class Preferences extends RockApolloDataSource {
-  getPreferences = async () => {
+export default class GroupPreferences extends RockApolloDataSource {
+  getGroupPreferences = async () => {
     const { DefinedValueList, ContentItem } = this.context.dataSources;
     const { definedValues } = await DefinedValueList.getByIdentifier(
       ROCK_MAPPINGS.DEFINED_TYPES.GROUP_PREFERENCES
@@ -40,7 +40,7 @@ export default class Preferences extends RockApolloDataSource {
 
     return definedValues;
   };
-  getSubPreferences = async () => {
+  getGroupSubPreferences = async () => {
     const { DefinedValueList, ContentItem } = this.context.dataSources;
     const { definedValues } = await DefinedValueList.getByIdentifier(
       ROCK_MAPPINGS.DEFINED_TYPES.GROUP_SUB_PREFERENCES
