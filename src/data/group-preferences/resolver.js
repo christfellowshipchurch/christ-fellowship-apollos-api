@@ -3,9 +3,9 @@ import ApollosConfig from '@apollosproject/config';
 const resolver = {
   Query: {
     allPreferences: async (root, args, { dataSources }) =>
-      dataSources.Preferences.getGroupPreferences(),
+      dataSources.GroupPreferences.getGroupPreferences(),
     allSubPreferences: async (root, args, { dataSources }) =>
-      dataSources.Preferences.getGroupSubPreferences(),
+      dataSources.GroupPreferences.getGroupSubPreferences(),
   },
 };
 
