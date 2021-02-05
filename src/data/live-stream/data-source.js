@@ -157,8 +157,6 @@ export default class LiveStream extends definedValueDataSource {
             let isLive = false;
             const nextInstance = await this.getNextInstance(definedValue);
 
-            console.log({ title: definedValue.value, nextInstance });
-
             if (nextInstance) {
               const { start, end } = nextInstance;
               isLive = moment().isBetween(start, end);

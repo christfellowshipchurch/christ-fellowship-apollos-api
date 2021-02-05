@@ -69,8 +69,10 @@ export default class Cache extends RedisCache.dataSource {
       isType(requestMethod, 'requestMethod', 'function') &&
       isType(key, 'key', 'string')
     ) {
+      const _key = `:${process.env.CONTENT}:${key}`;
+
       const cachedValue = await this.get({
-        key,
+        key: _key,
       });
 
       if (cachedValue) {
@@ -81,7 +83,7 @@ export default class Cache extends RedisCache.dataSource {
 
       if (data) {
         await this.set({
-          key: `:${process.env.CONTENT}:${key}`,
+          key: _key,
           data,
           expiresIn,
         });
