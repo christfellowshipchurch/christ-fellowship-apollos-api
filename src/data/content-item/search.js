@@ -156,8 +156,13 @@ export default class SearchableContentItem extends coreContentItem.dataSource {
     this.getSearchIndex().addObjects(indexableItems);
   }
 
+  resolveContentItem(item) {
+    const { ContentItem } = this.context.dataSources;
+    return ContentItem.resolveType(item);
+  }
+
   async mapItemToAlgolia(item) {
-    const type = await this.resolveType(item);
+    const type = await this.resolveContentItem(item);
 
     const { data } = await graphql(
       this.context.schema,

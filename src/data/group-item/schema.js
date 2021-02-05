@@ -146,7 +146,6 @@ export const groupSchema = gql`
 
     # Search
     indexGroup(id: String, action: INDEX_ACTION, key: String): String
-    indexAllGroups(action: INDEX_ACTION, key: String): String
   }
 
   type GroupCoverImage {
@@ -158,8 +157,8 @@ export const groupSchema = gql`
   input SearchGroupsInput {
     text: String
     campusNames: [String]
-    preferences: [String]
-    subPreferences: [String]
+    groupPreferences: [String]
+    groupSubPreferences: [String]
     days: [String]
   }
 

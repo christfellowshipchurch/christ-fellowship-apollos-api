@@ -154,24 +154,6 @@ const resolver = {
           return `Successfully updated | id: ${id} | action: ${action}`
       }
     },
-    indexAllGroups: async (root, { key, action }, { dataSources }) => {
-      const validInput = Boolean(action && key === ApollosConfig.ROCK.APOLLOS_SECRET);
-
-      if (!validInput) {
-        return `Failed to update | action: ${action}`
-      }
-
-      switch (action) {
-        case "delete":
-          // TODO
-          // dataSources.GroupItem.deleteIndexGroup(id);
-          return `⚠️ Action 'delete' not implemented | action: ${action}`
-        case "update":
-        default:
-          await dataSources.GroupItem.updateIndexAllGroups();
-          return `Successfully updated all relevant groups | action: ${action}`
-      }
-    }
   },
   Query: {
     groupCoverImages: async (root, args, { dataSources }) =>
