@@ -1,6 +1,6 @@
 import { dataSource as definedValueDataSource } from '../defined-value';
 import moment from 'moment-timezone';
-import { compareAsc, parseISO } from 'date-fns';
+import { compareAsc, parseISO, isFuture } from 'date-fns';
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
 import crypto from 'crypto-js';
@@ -53,6 +53,7 @@ export default class LiveStream extends definedValueDataSource {
         const parsedSchedule = await Schedule.parseiCalendar(schedule.iCalendarContent);
 
         const nextInstance = parsedSchedule
+          .filter(({ end }) => end && isFuture(parseISO(end)))
           .sort((a, b) => {
             const dateA = parseISO(a.start);
             const dateB = parseISO(b.start);
@@ -149,11 +150,14 @@ export default class LiveStream extends definedValueDataSource {
 
       const definedType = await DefinedValueList.getFromId(LIVE_STREAM_SCHEDULES);
       const definedValues = get(definedType, 'definedValues', []);
+
       const liveStreams = await Promise.all(
         definedValues.map((definedValue) => {
           const request = async () => {
             let isLive = false;
             const nextInstance = await this.getNextInstance(definedValue);
+
+            console.log({ title: definedValue.value, nextInstance });
 
             if (nextInstance) {
               const { start, end } = nextInstance;
