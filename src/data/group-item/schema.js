@@ -157,8 +157,8 @@ export const groupSchema = gql`
   input SearchGroupsInput {
     text: String
     campusNames: [String]
-    groupPreferences: [String]
-    groupSubPreferences: [String]
+    preferences: [String]
+    subPreferences: [String]
     days: [String]
   }
 

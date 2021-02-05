@@ -1206,8 +1206,8 @@ export default class GroupItem extends baseGroup.dataSource {
     // --> '(color:"red" OR color:"blue") AND (sizes:"MD" OR sizes:"LG" OR sizes:"XL")'
     const createFilterString = (filters) => {
       const campusNames = prefixValues('campusName', filters.campusNames);
-      const preferences = prefixValues('preference', filters.groupPreferences);
-      const subPreferences = prefixValues('subPreference', filters.groupSubPreferences);
+      const preferences = prefixValues('preference', filters.preferences);
+      const subPreferences = prefixValues('subPreference', filters.subPreferences);
       const days = prefixValues('day', filters.days);
 
       // ( preferences )
