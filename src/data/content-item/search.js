@@ -199,7 +199,6 @@ export default class SearchableContentItem extends coreContentItem.dataSource {
 
     /** Delete the item if it should not be included in Search */
     if (hideFromSearch === "true") {
-      console.log('👀 hidden from search!');
       const type = await this.resolveContentItem(item);
       return this.getSearchIndex().deleteObject(createGlobalId(item.id, type));
     }
