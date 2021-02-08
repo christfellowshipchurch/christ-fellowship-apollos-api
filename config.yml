@@ -44,15 +44,14 @@ ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
   API_KEY: ${ALGOLIA_API_KEY}
   INDICES:
-    # 🤔 Is it ok or acceptable to use TitleCase key names here?
-    ContentItems:
+    CONTENT_ITEMS:
       INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_CONTENT_ITEMS}
       CONFIGURATION:
         searchableAttributes:
           - title
           - htmlContent
           - unordered(summary)
-    Groups:
+    GROUPS:
       INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_GROUPS}
       CONFIGURATION:
         searchableAttributes:

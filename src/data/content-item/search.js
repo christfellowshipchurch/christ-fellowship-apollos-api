@@ -97,7 +97,7 @@ const deleteKeysByPattern = (pattern) => {
  */
 export default class SearchableContentItem extends coreContentItem.dataSource {
   getSearchIndex() {
-    return this.context.dataSources.Search.index('ContentItems');
+    return this.context.dataSources.Search.index('CONTENT_ITEMS');
   }
 
   resolveType(props) {

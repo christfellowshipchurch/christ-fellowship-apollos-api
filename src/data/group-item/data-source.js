@@ -145,7 +145,7 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getSearchIndex() {
-    return this.context.dataSources.Search.index('Groups');
+    return this.context.dataSources.Search.index('GROUPS');
   }
 
   addMemberAttendance = async (id) => {
