@@ -1,12 +1,96 @@
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
 import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock';
-import { get, find, kebabCase, toLower, upperCase, split, parseInt } from 'lodash';
+import { get, find, kebabCase, take, toLower, upperCase, split, parseInt } from 'lodash';
 import moment from 'moment-timezone';
+import Queue from 'bull';
+import { graphql } from 'graphql';
+import Redis from 'ioredis';
+import keywordExtractor from 'keyword-extractor';
+import sizeof from 'object-sizeof';
+import sanitizeHtml from 'sanitize-html';
 
 import { createVideoUrlFromGuid, getIdentifierType } from '../utils';
 
 const { ROCK_MAPPINGS, ROCK, FEATURE_FLAGS } = ApollosConfig;
+
+// Search Config & Utils
+// ----------------------------------------------------------------------------
+
+const MAX_SIZE = 10000; // bytes
+const { REDIS_URL, CONTENT } = process.env;
+
+const redis = new Redis(REDIS_URL);
+
+const cleanHtmlContentForIndex = (htmlContent) => {
+  // Strip all html tags
+  const cleanedHtml = sanitizeHtml(htmlContent, {
+    allowedTags: [],
+    allowedAttributes: {}
+  })
+
+  return keywordExtractor.extract(cleanedHtml, {
+    language: "english",
+    remove_digits: true,
+    return_changed_case: true,
+    remove_duplicates: true
+  })
+};
+
+const processObjectSize = (obj) => {
+  const objSize = sizeof(obj)
+
+  // If the object is smaller than the max size, return it
+  if (objSize < MAX_SIZE) return obj
+
+  // Calculate the size of the htmlContent and the rest of the props
+  const htmlContentSize = sizeof(obj.htmlContent)
+  const objPropSize = objSize - htmlContentSize
+
+  if (objPropSize > MAX_SIZE) {
+    // TODO : handle an object that exceeds the max size without any htmlContent
+    return obj
+  }
+
+  // Calculate the max size that the html content array can be.
+  const maxContentSize = MAX_SIZE - objPropSize
+  // Calculate the new length of the array based on the % reduction
+  // that needs to be had. It's not exact, but it should be decent
+  // enough for right now.
+  //
+  // Ex: if we need a 50% reduction in the array size, cut the array's
+  // length in half
+  const percentReduction = maxContentSize / htmlContentSize
+  const newArrayLength = obj.htmlContent.length - (obj.htmlContent.length * percentReduction)
+
+  return {
+    ...obj,
+    htmlContent: take(obj.htmlContent, newArrayLength)
+  }
+}
+
+const deleteKeysByPattern = (pattern) => {
+  return new Promise((resolve, reject) => {
+    const stream = redis.scanStream({
+      match: pattern
+    });
+    stream.on("data", (keys) => {
+      if (keys.length) {
+        const pipeline = redis.pipeline();
+        keys.forEach((key) => {
+          pipeline.del(key);
+        });
+        pipeline.exec();
+      }
+    });
+    stream.on("end", () => {
+      resolve();
+    });
+    stream.on("error", (e) => {
+      reject(e);
+    });
+  });
+};
 
 export default class ContentItem extends coreContentItem.dataSource {
   expanded = true;
@@ -412,7 +496,7 @@ export default class ContentItem extends coreContentItem.dataSource {
   };
 
   // Search
-  // ============================================================
+  // --------------------------------------------------------------------------
 
   getSearchIndex() {
     return this.context.dataSources.Search.index('CONTENT_ITEMS');
@@ -544,11 +628,11 @@ export default class ContentItem extends coreContentItem.dataSource {
      *  be active
      */
     if (startDateTime && startDateTime !== '') {
-      const mStartDateTime = momentTz(startDateTime).tz(ApollosConfig.ROCK.TIMEZONE);
+      const mStartDateTime = moment(startDateTime).tz(ApollosConfig.ROCK.TIMEZONE);
 
-      log(`${momentTz().format()} : ${item.title} has a start date of ${mStartDateTime.format()}`);
+      log(`${moment().format()} : ${item.title} has a start date of ${mStartDateTime.format()}`);
 
-      if (mStartDateTime.isValid() && mStartDateTime.isAfter(momentTz())) {
+      if (mStartDateTime.isValid() && mStartDateTime.isAfter(moment())) {
         /** Set up the options for the bull job.
          *
          *  We need to get the difference between now and the Start Time
@@ -567,10 +651,10 @@ export default class ContentItem extends coreContentItem.dataSource {
         const data = {
           action: 'update',
           item: indexableItem,
-          timestamp: momentTz().format('hh:mm:ss')
+          timestamp: moment().format('hh:mm:ss')
         };
         const options = {
-          delay: mStartDateTime.diff(momentTz()),
+          delay: mStartDateTime.diff(moment()),
           attempts: 2,
           prefix: `bull-${CONTENT}`,
         };
