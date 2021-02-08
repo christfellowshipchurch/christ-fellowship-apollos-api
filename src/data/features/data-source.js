@@ -85,10 +85,9 @@ export default class Feature extends coreFeatures.dataSource {
     const cards = ActionAlgorithm.runAlgorithms({ algorithms });
 
     // Ensures that we have a generated ID for the Primary Action related node, if not provided.
-    if (primaryAction && primaryAction.relatedNode && !primaryAction.relatedNode.id) {
-      primaryAction.relatedNode.id = this.createFeatureId({
-        args: primaryAction.relatedNode,
-      });
+    if (primaryAction) {
+      // eslint-disable-next-line no-param-reassign
+      primaryAction = this.attachRelatedNodeId(primaryAction);
     }
 
     return {
@@ -100,6 +99,7 @@ export default class Feature extends coreFeatures.dataSource {
           title,
           subtitle,
           cardType,
+          primaryAction,
         },
       }),
       cards,
