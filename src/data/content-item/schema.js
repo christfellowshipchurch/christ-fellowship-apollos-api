@@ -65,10 +65,5 @@ export default gql`
     allEvents: [EventContentItem]
     featuredEvents: ContentItemsConnection
     sermons(first: Int, after: String): ContentItemsConnection
-    search(query: String!, first: Int, after: String): SearchResultsConnection
-  }
-
-  extend type Mutation {
-    indexContentItem(id: String, action: INDEX_ACTION, key: String): String
   }
 `

@@ -18,4 +18,29 @@ export default gql`
     update
     delete
   }
+
+  input SearchGroupsInput {
+    text: String
+    campusNames: [String]
+    preferences: [String]
+    subPreferences: [String]
+    days: [String]
+  }
+
+  # Search Integrations by data types/modules
+  extend type Query {
+    # ContentItems
+    search(query: String!, first: Int, after: String): SearchResultsConnection
+
+    # Groups
+    searchGroups(query: SearchGroupsInput!, first: Int, after: String): SearchResultsConnection
+  }
+
+  extend type Mutation {
+    # ContentItems
+    indexContentItem(id: String, action: INDEX_ACTION, key: String): String
+
+    # Groups
+    indexGroup(id: String, action: INDEX_ACTION, key: String): String
+  }
 `

@@ -143,9 +143,6 @@ export const groupSchema = gql`
       groupId: ID!
     ): Group
     removeGroupResource(relatedNodeId: ID!, groupId: ID!): Group
-
-    # Search
-    indexGroup(id: String, action: INDEX_ACTION, key: String): String
   }
 
   type GroupCoverImage {
@@ -154,21 +151,12 @@ export const groupSchema = gql`
     image: ImageMedia
   }
 
-  input SearchGroupsInput {
-    text: String
-    campusNames: [String]
-    preferences: [String]
-    subPreferences: [String]
-    days: [String]
-  }
-
   extend type Query {
     groupCoverImages: [GroupCoverImage]
     groupResourceOptions(
       groupId: ID!
       input: ContentItemsConnectionInput
     ): ContentItemsConnection
-    searchGroups(query: SearchGroupsInput!, first: Int, after: String): SearchResultsConnection
   }
 
   extend enum InteractionAction {
