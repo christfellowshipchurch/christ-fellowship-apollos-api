@@ -1097,9 +1097,8 @@ export default class GroupItem extends baseGroup.dataSource {
   // Note: The input `group` may have aliased fields etc, as it is assumed
   // to be passed from a specialized query and not raw Rock object/data.
   async mapItemForIndex(groupId) {
-    const globalId = typeof groupId === 'number'
-      ? createGlobalId(groupId, 'Group')
-      : groupId;
+    const globalId =
+      typeof groupId === 'number' ? createGlobalId(groupId, 'Group') : groupId;
 
     const getGroupQuery = `
       query getGroup {
@@ -1132,7 +1131,10 @@ export default class GroupItem extends baseGroup.dataSource {
     );
 
     if (error) {
-      console.log(`GroupItem.mapItemForIndex() Error indexing groupId ${groupId}: `, error);
+      console.log(
+        `GroupItem.mapItemForIndex() Error indexing groupId ${groupId}: `,
+        error
+      );
       return null;
     }
 
@@ -1216,9 +1218,7 @@ export default class GroupItem extends baseGroup.dataSource {
         return undefined;
       }
 
-      return strings
-        .filter(string => !isNil(string))
-        .join(conditional);
+      return strings.filter((string) => !isNil(string)).join(conditional);
     };
     const oneOf = (strings) => group(join(strings, ' OR '));
     const allOf = (strings) => join(strings, ' AND ');
@@ -1227,17 +1227,15 @@ export default class GroupItem extends baseGroup.dataSource {
 
     // Get a query attribute by key from the input `query.attributes`
     const getQueryAttribute = (key) => {
-      return query?.attributes?.find(attribute => attribute.key === key);
-    }
+      return query?.attributes?.find((attribute) => attribute.key === key);
+    };
 
     // Return a query attribute's values prefixed with a string
     const prefixAttributeValues = ({ attributeKey, prefixString }) => {
       const attribute = getQueryAttribute(attributeKey);
 
-      return attribute ?
-        prefixValues(prefixString, attribute.values)
-        : undefined;
-    }
+      return attribute ? prefixValues(prefixString, attribute.values) : undefined;
+    };
 
     const queryText = getQueryAttribute('text')?.values[0];
     const campusNames = prefixAttributeValues({
@@ -1275,4 +1273,33 @@ export default class GroupItem extends baseGroup.dataSource {
 
     return this.getSearchIndex().byPaginatedQuery(searchParams);
   }
+
+  /**  :: Contact Group Leader
+   * --------------------------------------------------------------------------
+   * This workflow is triggered when a user clicks 'contact' leader
+   *  @param {number}  groupId  Group id
+   *  @param {string}  message  Personal message from user
+   */
+
+  contactLeader = async ({ groupId, message }) => {
+    if (!groupId || !message) return null;
+
+    try {
+      const { Workflow, Auth } = this.context.dataSources;
+      const currentUser = await Auth.getCurrentPerson();
+
+      Workflow.trigger({
+        id: ROCK_MAPPINGS.WORKFLOW_IDS.GROUP_CONTACT_LEADER,
+        attributes: {
+          personId: currentUser.id,
+          groupId,
+          message,
+        },
+      });
+
+      return workflow.status;
+    } catch (e) {
+      console.log(e);
+    }
+  };
 }
