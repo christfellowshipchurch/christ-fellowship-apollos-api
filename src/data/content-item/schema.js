@@ -59,7 +59,7 @@ export default gql`
     author: Person
   }
 
-  extend type Query { 
+  extend type Query {
     getContentItemByTitle(title: String!): ContentItem
     getCategoryByTitle(title: String!): ContentItem
     allEvents: [EventContentItem]

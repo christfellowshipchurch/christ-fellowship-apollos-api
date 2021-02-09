@@ -43,13 +43,29 @@ CHURCH_ONLINE:
 ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
   API_KEY: ${ALGOLIA_API_KEY}
-  # TODO: should we support multiple indices? how?
-  SEARCH_INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX}
-  CONFIGURATION:
-    searchableAttributes:
-      - title
-      - htmlContent
-      - unordered(summary)
+  INDICES:
+    CONTENT_ITEMS:
+      INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_CONTENT_ITEMS}
+      CONFIGURATION:
+        searchableAttributes:
+          - title
+          - htmlContent
+          - unordered(summary)
+    GROUPS:
+      INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_GROUPS}
+      CONFIGURATION:
+        searchableAttributes:
+          - campusName
+          - day
+          - preference
+          - subPreference
+          - summary
+          - title
+        attributesForFaceting:
+          - campusName
+          - day
+          - preference
+          - subPreference
 
 # Stream Chat https://getstream.io
 STREAM:

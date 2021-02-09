@@ -1,19 +1,23 @@
-import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
+import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import {
   createGlobalId,
   createCursor,
   parseCursor,
   parseGlobalId,
 } from '@apollosproject/server-core';
-import { get, isNull, filter, head, chunk, flatten, take, uniqBy } from 'lodash';
-import { parseISO, isFuture, isToday, isValid } from 'date-fns';
+
+import { graphql } from 'graphql';
+import { get, isNull, isNil, isEmpty, filter, head, flatten, take, uniqBy } from 'lodash';
+import { parseISO, isFuture, isToday } from 'date-fns';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
-import { getIdentifierType } from '../utils';
-const { ROCK_MAPPINGS } = ApollosConfig;
 
+import { getIdentifierType } from '../utils';
+const { createImageUrlFromGuid } = Utils;
+
+const { ROCK_MAPPINGS } = ApollosConfig;
 const { GROUP, DEFINED_TYPES } = ROCK_MAPPINGS;
 const { LEADER_ROLE_IDS } = GROUP;
 const {
@@ -24,7 +28,6 @@ const {
   EXCLUDE_GROUPS,
   EXCLUDE_VOLUNTEER_GROUPS,
 } = DEFINED_TYPES;
-const { createImageUrlFromGuid } = Utils;
 
 /** TEMPORARY FIX
  *  In order to launch the My Groups feature in time for the September, 2020 Fall
@@ -140,6 +143,10 @@ export default class GroupItem extends baseGroup.dataSource {
     );
     return leaders.length ? leaders : null;
   };
+
+  getSearchIndex() {
+    return this.context.dataSources.Search.index('GROUPS');
+  }
 
   addMemberAttendance = async (id) => {
     const { scheduleId, campusId } = await this.request('Groups')
@@ -862,6 +869,14 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
   };
 
+  getPreference({ attributeValues }) {
+    return get(attributeValues, 'preference.valueFormatted', null);
+  }
+
+  getSubPreference({ attributeValues }) {
+    return get(attributeValues, 'subPreference.valueFormatted', null);
+  }
+
   allowMessages = ({ attributeValues }) => {
     return get(attributeValues, 'allowMessages.value', '');
   };
@@ -1074,5 +1089,190 @@ export default class GroupItem extends baseGroup.dataSource {
       expiresIn: 60 * 60 * 24, // 24 hour cache
       key: Cache.KEY_TEMPLATES.groupExcludeIds,
     });
+  }
+
+  // :: Search Indexing
+  // --------------------------------------------------------------------------
+
+  // Note: The input `group` may have aliased fields etc, as it is assumed
+  // to be passed from a specialized query and not raw Rock object/data.
+  async mapItemForIndex(groupId) {
+    const globalId = typeof groupId === 'number'
+      ? createGlobalId(groupId, 'Group')
+      : groupId;
+
+    const getGroupQuery = `
+      query getGroup {
+        node(id: "${globalId}") {
+          __typename
+          id
+          ... on Group {
+            dateTime {
+              start
+            }
+            title
+            summary
+            coverImage { sources { uri } }
+            campus {
+              id
+              name
+            }
+            preference
+            subPreference
+          }
+        }
+      }
+    `;
+
+    const { data, error } = await graphql(
+      this.context.schema,
+      getGroupQuery,
+      {},
+      this.context
+    );
+
+    if (error) {
+      console.log(`GroupItem.mapItemForIndex() Error indexing groupId ${groupId}: `, error);
+      return null;
+    }
+
+    const {
+      id,
+      campus,
+      coverImage,
+      dateTime,
+      preference,
+      subPreference,
+      summary,
+      title,
+    } = data.node;
+
+    // Remember — Algolia uses the order of attributes on items in its results
+    // ranking logic, in lieu of other settings/custom ranking formula, etc.
+    // @see https://www.algolia.com/doc/guides/managing-results/must-do/searchable-attributes/#ordering-your-attributes
+    // @see https://www.algolia.com/doc/guides/managing-results/must-do/custom-ranking/#custom-ranking
+    const groupForIndex = {
+      id,
+      // ? Is there any real value in storing presentation-only props in Algolia?
+      // ? Should we refactor this and ContentItem indexing / SearchResult to remove cover image?
+      // Searchable properties
+      campusName: campus?.name,
+      day: moment(dateTime.start).format('ddd'),
+      preference,
+      subPreference,
+      summary,
+      title,
+      coverImage, // Presentation only
+    };
+
+    return groupForIndex;
+  }
+
+  async updateIndexGroup(id) {
+    const groupForIndex = await this.mapItemForIndex(id);
+
+    // TODO: Better error handling? Should this throw?
+    if (!groupForIndex) {
+      console.log(`Error fetching data to index for Group "${id}"`);
+      return false;
+    }
+
+    return true;
+  }
+
+  searchGroups(args) {
+    const { query, first, after } = args;
+    /*
+      query: {
+        attributes: [
+          { key: "campusNames", values: ["Royal Palm Beach", "Jupiter"] },
+          { key: "preferences", values: ["Crew", "Co-ed"] }
+        ]
+      }
+    */
+
+    // TODO: These little utils could be centralized to somewhere else
+    // ✂️ -------------------------------------------------------------------------------
+
+    // prefixValue('topping', 'cheese')
+    // --> 'topping:"cheese"'
+    const prefixValue = (prefix, string) => `${prefix}:"${string}"`;
+
+    // prefixValues('color', ['red, 'green', 'blue'])
+    // --> ['color:"red"', 'color:"green", 'color:"blue"]
+    const prefixValues = (prefix, array) => {
+      if (isEmpty(array)) return undefined;
+      return array.map((value) => prefixValue(prefix, value));
+    };
+
+    // group("pizza")
+    // --> "(pizza)"
+    const group = (string) => (string ? `(${string})` : undefined);
+
+    // join(["not too hot", undefined, "not too cold", "not too lumpy"], ' AND ')
+    // --> '"not too hot AND not too cold AND not too lumpy"'
+    const join = (strings, conditional) => {
+      if (isEmpty(strings) || !conditional) {
+        return undefined;
+      }
+
+      return strings
+        .filter(string => !isNil(string))
+        .join(conditional);
+    };
+    const oneOf = (strings) => group(join(strings, ' OR '));
+    const allOf = (strings) => join(strings, ' AND ');
+
+    // ✂️ -------------------------------------------------------------------------------
+
+    // Get a query attribute by key from the input `query.attributes`
+    const getQueryAttribute = (key) => {
+      return query?.attributes?.find(attribute => attribute.key === key);
+    }
+
+    // Return a query attribute's values prefixed with a string
+    const prefixAttributeValues = ({ attributeKey, prefixString }) => {
+      const attribute = getQueryAttribute(attributeKey);
+
+      return attribute ?
+        prefixValues(prefixString, attribute.values)
+        : undefined;
+    }
+
+    const queryText = getQueryAttribute('text')?.values[0];
+    const campusNames = prefixAttributeValues({
+      attributeKey: 'campusNames',
+      prefixString: 'campusName',
+    });
+    const preferences = prefixAttributeValues({
+      attributeKey: 'preferences',
+      prefixString: 'preference',
+    });
+    const subPreferences = prefixAttributeValues({
+      attributeKey: 'subPreferences',
+      prefixString: 'subPreference',
+    });
+    const days = prefixAttributeValues({
+      attributeKey: 'days',
+      prefixString: 'day',
+    });
+
+    // Something like:
+    // (campusName:"Jupiter" OR campusName:"Royal Palm Beach") AND (preference:"Crew (Men)" OR preference:"Sisterhood")
+    const filtersString = allOf([
+      oneOf(campusNames),
+      oneOf(days),
+      oneOf(preferences),
+      oneOf(subPreferences),
+    ]);
+
+    const searchParams = {
+      query: queryText,
+      filters: filtersString,
+      first,
+      after,
+    };
+
+    return this.getSearchIndex().byPaginatedQuery(searchParams);
   }
 }

@@ -1,10 +1,6 @@
+import ApollosConfig from '@apollosproject/config'
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
-import {
-  resolverMerge,
-  parseGlobalId,
-  createGlobalId,
-  withEdgePagination
-} from '@apollosproject/server-core';
+import { resolverMerge, parseGlobalId, createGlobalId } from '@apollosproject/server-core';
 
 const defaultResolvers = {
   id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
@@ -47,10 +43,16 @@ const resolver = {
       dataSources.GroupItem.getGroupVideoCallParams(root),
     parentVideoCall: (root, args, { dataSources }) =>
       dataSources.GroupItem.getGroupParentVideoCallParams(root),
-    allowMessages: (root, args, { dataSources }) =>
+      allowMessages: (root, args, { dataSources }) =>
       dataSources.GroupItem.allowMessages(root),
-    checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
+      checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
       CheckInable.getFromId(id),
+    campus: ({ campusId }, args, { dataSources }) =>
+      dataSources.Campus.getFromId(campusId),
+    preference: (root, args, { dataSources }) =>
+      dataSources.GroupItem.getPreference(root),
+    subPreference: (root, args, { dataSources }) =>
+      dataSources.GroupItem.getSubPreference(root),
   },
   VolunteerGroup: {
     ...defaultResolvers,
@@ -134,6 +136,24 @@ const resolver = {
         console.log({ e });
       }
     },
+    indexGroup: async (root, { id, key, action }, { dataSources }) => {
+      const validInput = Boolean(id && action && key === ApollosConfig.ROCK.APOLLOS_SECRET);
+
+      if (!validInput) {
+        return `Failed to update | id: ${id} | action: ${action}`
+      }
+
+      switch (action) {
+        case "delete":
+          // TODO
+          // dataSources.GroupItem.deleteIndexGroup(id);
+          return `⚠️ Action 'delete' not implemented | id: ${id} | action: ${action}`
+        case "update":
+        default:
+          await dataSources.GroupItem.updateIndexGroup(id);
+          return `Successfully updated | id: ${id} | action: ${action}`
+      }
+    },
   },
   Query: {
     groupCoverImages: async (root, args, { dataSources }) =>
@@ -149,7 +169,9 @@ const resolver = {
         cursor: await dataSources.GroupItem.getResourceOptions(id),
         args: input,
       })
-    }
+    },
+    searchGroups: async (root, args, { dataSources }) =>
+      dataSources.GroupItem.searchGroups(args),
   },
 };
 
