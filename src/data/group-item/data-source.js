@@ -1292,11 +1292,10 @@ export default class GroupItem extends baseGroup.dataSource {
         id: ROCK_MAPPINGS.WORKFLOW_IDS.GROUP_CONTACT_LEADER,
         attributes: {
           personId: currentUser.id,
-          groupId,
+          groupId: 'Group:3deb8bbfda5d713df49929ce78c61bb7',
           message,
         },
       });
-
       return workflow.status;
     } catch (e) {
       console.log(e);
