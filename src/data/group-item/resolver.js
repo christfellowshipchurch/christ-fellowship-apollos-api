@@ -160,7 +160,7 @@ const resolver = {
           return `Successfully updated | id: ${id} | action: ${action}`;
       }
     },
-    contactGroupLeader: async (root, { groupId, message }, { dataSources }) =>
+    contactGroupLeader: async (root, { groupId, message }, { dataSources }) => {
       try {
         return dataSources.GroupItem.contactLeader({ groupId, message });
       } catch (e) {
