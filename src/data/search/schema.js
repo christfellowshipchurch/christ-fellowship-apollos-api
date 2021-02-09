@@ -19,12 +19,13 @@ export default gql`
     delete
   }
 
-  input SearchGroupsInput {
-    text: String
-    campusNames: [String]
-    preferences: [String]
-    subPreferences: [String]
-    days: [String]
+  input SearchQueryInput {
+    attributes: [SearchQueryAttributeInput]
+  }
+
+  input SearchQueryAttributeInput {
+    key: String
+    values: [String]
   }
 
   # Search Integrations by data types/modules
@@ -33,7 +34,7 @@ export default gql`
     search(query: String!, first: Int, after: String): SearchResultsConnection
 
     # Groups
-    searchGroups(query: SearchGroupsInput!, first: Int, after: String): SearchResultsConnection
+    searchGroups(query: SearchQueryInput!, first: Int, after: String): SearchResultsConnection
   }
 
   extend type Mutation {

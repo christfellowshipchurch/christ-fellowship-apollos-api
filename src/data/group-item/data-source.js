@@ -8,7 +8,7 @@ import {
 } from '@apollosproject/server-core';
 
 import { graphql } from 'graphql';
-import { get, isNull, isEmpty, filter, head, flatten, take, uniqBy } from 'lodash';
+import { get, isNull, isNil, isEmpty, filter, head, flatten, take, uniqBy } from 'lodash';
 import { parseISO, isFuture, isToday } from 'date-fns';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
@@ -1182,49 +1182,93 @@ export default class GroupItem extends baseGroup.dataSource {
 
   searchGroups(args) {
     const { query, first, after } = args;
+    /*
+      query: {
+        attributes: [
+          { key: "campusNames", values: ["Royal Palm Beach", "Jupiter"] },
+          { key: "preferences", values: ["Crew", "Co-ed"] }
+        ]
+      }
+    */
 
     // TODO: These little utils could be centralized to somewhere else
     // ✂️ -------------------------------------------------------------------------------
-    const namedValue = (prefix, string) => `${prefix}:"${string}"`;
+
+    // prefixValue('topping', 'cheese')
+    // --> 'topping:"cheese"'
+    const prefixValue = (prefix, string) => `${prefix}:"${string}"`;
+
+    // prefixValues('color', ['red, 'green', 'blue'])
+    // --> ['color:"red"', 'color:"green", 'color:"blue"]
     const prefixValues = (prefix, array) => {
-      if (isEmpty(array)) return;
-      return array.map((value) => namedValue(prefix, value));
+      if (isEmpty(array)) return undefined;
+      return array.map((value) => prefixValue(prefix, value));
     };
 
+    // group("pizza")
+    // --> "(pizza)"
     const group = (string) => (string ? `(${string})` : undefined);
-    const joinValues = (strings, conditional) => {
+
+    // join(["not too hot", undefined, "not too cold", "not too lumpy"], ' AND ')
+    // --> '"not too hot AND not too cold AND not too lumpy"'
+    const join = (strings, conditional) => {
       if (isEmpty(strings) || !conditional) {
         return undefined;
       }
 
-      return strings.filter((str) => typeof str !== 'undefined').join(conditional);
+      return strings
+        .filter(string => !isNil(string))
+        .join(conditional);
     };
-    const oneOf = (strings) => group(joinValues(strings, ' OR '));
-    const andList = (strings) => joinValues(strings, ' AND ');
+    const oneOf = (strings) => group(join(strings, ' OR '));
+    const allOf = (strings) => join(strings, ' AND ');
 
-    // createFilterString({ colors: ["red", "blue"], sizes: ["MD", "LG", "XL"] })
-    // --> '(color:"red" OR color:"blue") AND (sizes:"MD" OR sizes:"LG" OR sizes:"XL")'
-    const createFilterString = (filters) => {
-      const campusNames = prefixValues('campusName', filters.campusNames);
-      const preferences = prefixValues('preference', filters.preferences);
-      const subPreferences = prefixValues('subPreference', filters.subPreferences);
-      const days = prefixValues('day', filters.days);
-
-      // ( preferences )
-      // ( campusNames ) AND ( subPreferences )
-      // ( campusNames ) AND ( preferences ) AND ( subPreferences )
-      return andList([
-        oneOf(campusNames),
-        oneOf(days),
-        oneOf(preferences),
-        oneOf(subPreferences),
-      ]);
-    };
     // ✂️ -------------------------------------------------------------------------------
 
+    // Get a query attribute by key from the input `query.attributes`
+    const getQueryAttribute = (key) => {
+      return query?.attributes?.find(attribute => attribute.key === key);
+    }
+
+    // Return a query attribute's values prefixed with a string
+    const prefixAttributeValues = ({ attributeKey, prefixString }) => {
+      const attribute = getQueryAttribute(attributeKey);
+
+      return attribute ?
+        prefixValues(prefixString, attribute.values)
+        : undefined;
+    }
+
+    const queryText = getQueryAttribute('text')?.values[0];
+    const campusNames = prefixAttributeValues({
+      attributeKey: 'campusNames',
+      prefixString: 'campusName',
+    });
+    const preferences = prefixAttributeValues({
+      attributeKey: 'preferences',
+      prefixString: 'preference',
+    });
+    const subPreferences = prefixAttributeValues({
+      attributeKey: 'subPreferences',
+      prefixString: 'subPreference',
+    });
+    const days = prefixAttributeValues({
+      attributeKey: 'days',
+      prefixString: 'day',
+    });
+
+    // Something like:
+    // (campusName:"Jupiter" OR campusName:"Royal Palm Beach") AND (preference:"Crew (Men)" OR preference:"Sisterhood")
+    const filtersString = allOf([
+      oneOf(campusNames),
+      oneOf(days),
+      oneOf(preferences),
+      oneOf(subPreferences),
+    ]);
+
     const searchParams = {
-      query: query.text,
-      filters: createFilterString(query),
+      query: queryText,
+      filters: filtersString,
       first,
       after,
     };
