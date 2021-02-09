@@ -28,15 +28,6 @@ export default gql`
     values: [String]
   }
 
-  input SearchQueryInput {
-    attributes: [SearchQueryAttributeInput]
-  }
-
-  input SearchQueryAttributeInput {
-    key: String
-    values: [String]
-  }
-
   # Search Integrations by data types/modules
   extend type Query {
     # ContentItems
