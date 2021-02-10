@@ -1288,7 +1288,7 @@ export default class GroupItem extends baseGroup.dataSource {
       const { Workflow, Auth } = this.context.dataSources;
       const currentUser = await Auth.getCurrentPerson();
 
-      Workflow.trigger({
+      const workflow = await Workflow.trigger({
         id: ROCK_MAPPINGS.WORKFLOW_IDS.GROUP_CONTACT_LEADER,
         attributes: {
           personId: currentUser.id,
