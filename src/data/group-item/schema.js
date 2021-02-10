@@ -157,6 +157,9 @@ export const groupSchema = gql`
       groupId: ID!
       input: ContentItemsConnectionInput
     ): ContentItemsConnection
+    groupSearchOptions: String
+    groupSearchFacetsAttributes: String
+    groupSearchRefinementList: String
   }
 
   extend enum InteractionAction {
