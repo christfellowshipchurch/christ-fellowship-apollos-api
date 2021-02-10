@@ -4,6 +4,7 @@ export default gql`
   type SearchResultsConnection {
     edges: [SearchResult]
     pageInfo: PaginationInfo
+    totalResults: Int
   }
 
   type SearchResult {

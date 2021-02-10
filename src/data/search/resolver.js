@@ -2,8 +2,7 @@ import { withEdgePagination } from '@apollosproject/server-core';
 
 const resolver = {
   SearchResultsConnection: {
-    edges: (edges) => edges,
-    pageInfo: (edges) => withEdgePagination({ edges }),
+    pageInfo: ({ edges }) => withEdgePagination({ edges }),
   },
   SearchResult: {
     node: async ({ id }, _, { models, dataSources }, resolveInfo) => {
