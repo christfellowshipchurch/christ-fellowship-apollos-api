@@ -2,7 +2,8 @@ import {
   ActionAlgorithm as coreActionAlgorithm,
   Utils,
 } from '@apollosproject/data-connector-rock';
-import { get, flattenDeep } from 'lodash';
+import { createGlobalId } from '@apollosproject/server-core';
+import { get, flattenDeep, isEmpty } from 'lodash';
 import moment from 'moment-timezone';
 import ApollosConfig from '@apollosproject/config';
 
@@ -99,18 +100,31 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
     ).expand('ContentChannel');
     const items = limit ? await cursor.top(limit).get() : await cursor.get();
 
-    return items.map((item, i) => ({
-      id: `${item.id}${i}`,
-      title:
-        get(item, 'attributeValues.cardTitle.value', '') !== ''
-          ? get(item, 'attributeValues.cardTitle.value', item.title)
-          : item.title,
-      subtitle: ContentItem.createSummary(item),
-      relatedNode: { ...item, __type: ContentItem.resolveType(item) },
-      image: ContentItem.getCoverImage(item),
-      action: 'READ_CONTENT',
-      summary: ContentItem.createSummary(item),
-    }));
+    return items.map((item, i) => {
+      const urlEndpoint = item?.attributeValues?.redirectUrl?.value;
+      const isUrl = urlEndpoint && !isEmpty(urlEndpoint);
+
+      const relatedNode = isUrl
+        ? {
+            __type: 'Url',
+            id: createGlobalId(urlEndpoint, 'Url'),
+            url: urlEndpoint,
+          }
+        : { ...item, __type: ContentItem.resolveType(item) };
+
+      return {
+        id: `${item.id}${i}`,
+        title:
+          get(item, 'attributeValues.cardTitle.value', '') !== ''
+            ? get(item, 'attributeValues.cardTitle.value', item.title)
+            : item.title,
+        subtitle: ContentItem.createSummary(item),
+        relatedNode,
+        image: ContentItem.getCoverImage(item),
+        action: isUrl ? 'OPEN_URL' : 'READ_CONTENT',
+        summary: ContentItem.createSummary(item),
+      };
+    });
   }
 
   async globalContentAlgorithm({ index = 0, limit = null } = {}) {

@@ -28,7 +28,8 @@ export default class Schedule extends RockApolloDataSource {
     }
 
     if (_id) {
-      return Cache.request(() => this.request().find(_id).get(), {
+      const request = () => this.request().find(_id).get();
+      return Cache.request(request, {
         key: Cache.KEY_TEMPLATES.schedule`${_id}`,
         expiresIn: 60 * 60, // 60 minute cache
       });
@@ -41,23 +42,20 @@ export default class Schedule extends RockApolloDataSource {
     const { Cache } = this.context.dataSources;
     const { query } = getIdentifierType(guid);
 
-    return Cache.request(
-      () =>
-        this.request()
-          .filter(query)
-          .transform((results) => results[0]?.id)
-          .get(),
-      {
-        key: Cache.KEY_TEMPLATES.scheduleGuidId`${guid}`,
-        expiresIn: 60 * 60 * 24, // 24 hour cache
-      }
-    );
+    const request = () =>
+      this.request()
+        .filter(query)
+        .transform((results) => results[0]?.id)
+        .get();
+    return Cache.request(request, {
+      key: Cache.KEY_TEMPLATES.scheduleGuidId`${guid}`,
+      expiresIn: 60 * 60 * 24, // 24 hour cache
+    });
   };
 
-  getFromIds = (ids) =>
-    this.request()
-      .filterOneOf(ids.map((n) => getIdentifierType(n).query))
-      .get();
+  getFromIds = (ids) => {
+    return Promise.all(ids.map((id) => this.getFromId(id)));
+  };
 
   getOccurrences = async (id) => {
     if (id) {

@@ -54,7 +54,7 @@ export default gql`
     )
 
     # This label is an additional
-    label: String
+    labelText: String @deprecated(reason: "Use labelText instead.")
     eventGroupings: [EventGrouping]
   }
 `;

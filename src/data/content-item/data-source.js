@@ -202,6 +202,7 @@ export default class ContentItem extends coreContentItem.dataSource {
         attributes,
       })
     );
+
     return videoKeys
       .map((key) => ({
         __typename: 'VideoMedia',
