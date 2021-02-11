@@ -869,8 +869,20 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
   };
 
-  getPreference({ attributeValues }) {
-    return get(attributeValues, 'preference.valueFormatted', null);
+  async getPreference({ attributeValues }) {
+    const preferenceId = attributeValues?.preference?.value;
+
+    if (!preferenceId) {
+      return null;
+    }
+
+    const { DefinedValue } = this.context.dataSources;
+    const preference = await DefinedValue.getFromId(preferenceId);
+
+    const titleOverride = get(preference, 'attributeValues.titleOverride.value', undefined);
+    const valueFormatted = get(attributeValues, 'subPreference.valueFormatted', null);
+
+    return titleOverride || valueFormatted;
   }
 
   getSubPreference({ attributeValues }) {
