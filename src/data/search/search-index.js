@@ -52,11 +52,15 @@ export default class SearchIndex {
     }
 
     // Perform search
-    const { hits } = await this.index.search({ query, filters, length, offset });
+    const results = await this.index.search({ query, filters, length, offset });
+    const { hits, nbHits: totalResults } = results;
 
-    return hits.map((hit, i) => ({
-      ...hit,
-      cursor: createCursor({ position: i + offset }),
-    }));
+    return {
+      totalResults,
+      edges: hits.map((hit, i) => ({
+        ...hit,
+        cursor: createCursor({ position: i + offset }),
+      }))
+    };
   }
 }
