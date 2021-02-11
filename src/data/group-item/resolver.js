@@ -139,11 +139,6 @@ const resolver = {
   Query: {
     groupCoverImages: async (root, args, { dataSources }) =>
       dataSources.GroupItem.getCoverImages(),
-    // groupResourceOptions: async (
-    //   root,
-    //   { groupId, input: { first, after } = {} },
-    //   { dataSources }
-    // ) => dataSources.GroupItem.getResourceOptions({ groupId, first, after }),
     groupResourceOptions: async (root, { groupId, input }, { dataSources }) => {
       const { id } = parseGlobalId(groupId);
       return dataSources.ContentItem.paginate({

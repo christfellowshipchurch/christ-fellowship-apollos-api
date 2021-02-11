@@ -76,6 +76,9 @@ export default class PrayerRequest extends corePrayerRequest.dataSource {
       .andFilter(`Answer eq null or Answer eq ''`) // prayers that aren't answered
       .sort([
         { field: 'EnteredDateTime', direction: 'desc' }, // newest prayer first
-      ]);
+      ])
+      .transform((
+        prayers // note : we need to add the TypeName explicitly to this to get node to resolve
+      ) => prayers.map((prayer) => ({ ...prayer, __typename: 'PrayerRequest' })));
   }
 }

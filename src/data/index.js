@@ -45,6 +45,7 @@ import * as MatrixItem from './matrix-item';
 import * as Message from './message';
 import * as Metadata from './metadata';
 import * as PageBuilder from './page-builder';
+import * as NodePagination from './node-pagination';
 import * as Person from './people';
 import * as PhoneNumber from './phone-number';
 import * as PrayerRequest from './prayer-request';
@@ -93,6 +94,7 @@ const data = {
   MatrixItem,
   Message,
   Metadata,
+  NodePagination,
   OneSignal,
   OneSignalWithRock,
   PageBuilder,
