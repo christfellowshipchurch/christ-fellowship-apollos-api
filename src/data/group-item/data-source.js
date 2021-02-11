@@ -880,8 +880,7 @@ export default class GroupItem extends baseGroup.dataSource {
     const preference = await DefinedValue.getFromId(preferenceId);
 
     const titleOverride = get(preference, 'attributeValues.titleOverride.value', undefined);
-    const valueFormatted = get(attributeValues, 'subPreference.valueFormatted', null);
-
+    const valueFormatted = get(attributeValues, 'preference.valueFormatted', null);
     return titleOverride || valueFormatted;
   }
 
