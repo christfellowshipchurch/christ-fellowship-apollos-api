@@ -1274,20 +1274,17 @@ export default class GroupItem extends baseGroup.dataSource {
     return this.getSearchIndex().byPaginatedQuery(searchParams);
   }
   getGroupSearchOptions = async () => {
-    const { GroupItem } = this.context.dataSources;
+    const { GroupItem, GroupPreferences } = this.context.dataSources;
 
-    const subPreferences = await this.getSubPreferences();
-    const preferences = await this.getPreferences();
+    const subPreferences = await GroupPreferences.getGroupSubPreferences();
+    const preferences = await GroupPreferences.getGroupPreferences();
     const facets = await GroupItem.getSearchIndex().byFacets();
-    // console.log('***SearchOptions', Object.keys(facets.preference));
-    // console.log('***preferences', preferences);
 
     const options = 'getSearchOptions called';
-    const opti = Object.keys(facets).map((key, index) => {
+    const groupSearchOptions = Object.keys(facets).map((key, index) => {
       return { [key]: Object.keys(facets[key]) };
     });
-    console.log('***opti', opti);
-    return options;
+    return groupSearchOptions;
   };
 
   getGroupSearchFacetsAttributes = async () => {
@@ -1295,20 +1292,6 @@ export default class GroupItem extends baseGroup.dataSource {
 
     const facets = await GroupItem.getSearchIndex().byFacets();
 
-    const options = 'getSearchFacets called';
-
-    console.log('***opti', Object.keys(facets));
-    return options;
-  };
-
-  getGroupSearchRefinementList = async () => {
-    const { GroupItem } = this.context.dataSources;
-
-    const facets = await GroupItem.getSearchIndex().byFacets();
-
-    const options = 'getSearchFacets called';
-
-    console.log('***opti', facets);
-    return options;
+    return Object.keys(facets);
   };
 }

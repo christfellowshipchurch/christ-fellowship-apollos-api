@@ -182,8 +182,6 @@ const resolver = {
       dataSources.GroupItem.getGroupSearchOptions(),
     groupSearchFacetsAttributes: async (root, args, { dataSources }) =>
       dataSources.GroupItem.getGroupSearchFacetsAttributes(),
-    groupSearchRefinementList: async (root, args, { dataSources }) =>
-      dataSources.GroupItem.getGroupSearchRefinementList(),
   },
 };
 
