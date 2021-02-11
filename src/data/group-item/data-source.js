@@ -1281,8 +1281,8 @@ export default class GroupItem extends baseGroup.dataSource {
    *  @param {string}  message  Personal message from user
    */
 
-  contactLeader = async ({ groupId, message }) => {
-    if (!groupId || !message) return null;
+  contactLeader = async ({ groupId }) => {
+    if (!groupId) return null;
 
     try {
       const { Workflow, Auth } = this.context.dataSources;
@@ -1293,7 +1293,6 @@ export default class GroupItem extends baseGroup.dataSource {
         attributes: {
           personId: currentUser.id,
           groupId,
-          message,
         },
       });
       return workflow.status;
