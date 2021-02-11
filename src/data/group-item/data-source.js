@@ -8,7 +8,18 @@ import {
 } from '@apollosproject/server-core';
 
 import { graphql } from 'graphql';
-import { get, isNull, isNil, isEmpty, filter, head, flatten, take, uniqBy } from 'lodash';
+import {
+  get,
+  isNull,
+  isNil,
+  isEmpty,
+  filter,
+  head,
+  flatten,
+  take,
+  uniqBy,
+  zipObject,
+} from 'lodash';
 import { parseISO, isFuture, isToday } from 'date-fns';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
@@ -1276,15 +1287,13 @@ export default class GroupItem extends baseGroup.dataSource {
   getGroupSearchOptions = async () => {
     const { GroupItem, GroupPreferences } = this.context.dataSources;
 
-    const subPreferences = await GroupPreferences.getGroupSubPreferences();
-    const preferences = await GroupPreferences.getGroupPreferences();
     const facets = await GroupItem.getSearchIndex().byFacets();
 
-    const options = 'getSearchOptions called';
     const groupSearchOptions = Object.keys(facets).map((key, index) => {
-      return { [key]: Object.keys(facets[key]) };
+      return Object.keys(facets[key]);
     });
-    return groupSearchOptions;
+
+    return zipObject(Object.keys(facets), groupSearchOptions);
   };
 
   getGroupSearchFacetsAttributes = async () => {
