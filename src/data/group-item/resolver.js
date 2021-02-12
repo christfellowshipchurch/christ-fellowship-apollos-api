@@ -154,10 +154,26 @@ const resolver = {
           // TODO
           // dataSources.GroupItem.deleteIndexGroup(id);
           return `⚠️ Action 'delete' not implemented | id: ${id} | action: ${action}`;
-        case 'update':
-        default:
+        case "update":
           await dataSources.GroupItem.updateIndexGroup(id);
           return `Successfully updated | id: ${id} | action: ${action}`;
+        default:
+          return `Unhandled INDEX_ACTION`;
+      }
+    },
+    indexAllGroups: async (root, { id, key, action }, { dataSources }) => {
+      const validInput = Boolean(action && key === ApollosConfig.ROCK.APOLLOS_SECRET);
+
+      if (!validInput) {
+        return `Failed to update | action: ${action}`;
+      }
+
+      switch (action) {
+        case "update":
+          await dataSources.GroupItem.updateIndexAllGroups();
+          return `Successfully updated | action: ${action}`;
+        default:
+          return `Unhandled INDEX_ACTION`;
       }
     },
     contactGroupLeader: async (root, { groupId }, { dataSources }) => {

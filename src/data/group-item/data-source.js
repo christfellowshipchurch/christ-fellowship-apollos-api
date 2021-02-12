@@ -880,8 +880,19 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
   };
 
-  getPreference({ attributeValues }) {
-    return get(attributeValues, 'preference.valueFormatted', null);
+  async getPreference({ attributeValues }) {
+    const preferenceId = attributeValues?.preference?.value;
+
+    if (!preferenceId) {
+      return null;
+    }
+
+    const { DefinedValue } = this.context.dataSources;
+    const preference = await DefinedValue.getFromId(preferenceId);
+
+    const titleOverride = get(preference, 'attributeValues.titleOverride.value', undefined);
+    const valueFormatted = get(attributeValues, 'preference.valueFormatted', null);
+    return titleOverride || valueFormatted;
   }
 
   getSubPreference({ attributeValues }) {
@@ -1130,6 +1141,17 @@ export default class GroupItem extends baseGroup.dataSource {
             preference
             subPreference
           }
+          ... on GroupItem {
+            leaders: people(first: 20, isLeader: true) {
+              edges {
+                node {
+                  id
+                  firstName
+                  lastName
+                }
+              }
+            }
+          }
         }
       }
     `;
@@ -1141,12 +1163,11 @@ export default class GroupItem extends baseGroup.dataSource {
       this.context
     );
 
-    if (error) {
+    if (error || !data.node) {
       console.log(
         `GroupItem.mapItemForIndex() Error indexing groupId ${groupId}: `,
         error
       );
-      return null;
     }
 
     const {
@@ -1154,11 +1175,14 @@ export default class GroupItem extends baseGroup.dataSource {
       campus,
       coverImage,
       dateTime,
+      leaders,
       preference,
       subPreference,
       summary,
       title,
     } = data.node;
+
+    const dateTimeFormatted = moment(dateTime?.start).format('ddd');
 
     // Remember — Algolia uses the order of attributes on items in its results
     // ranking logic, in lieu of other settings/custom ranking formula, etc.
@@ -1170,11 +1194,12 @@ export default class GroupItem extends baseGroup.dataSource {
       // ? Should we refactor this and ContentItem indexing / SearchResult to remove cover image?
       // Searchable properties
       campusName: campus?.name,
-      day: moment(dateTime.start).format('ddd'),
       preference,
       subPreference,
-      summary,
+      day: dateTimeFormatted === 'Invalid date' ? '' : dateTimeFormatted,
       title,
+      summary,
+      leaders: leaders?.edges?.map(({ node }) => `${node.firstName} ${node.lastName}`) || [],
       coverImage, // Presentation only
     };
 
@@ -1191,6 +1216,47 @@ export default class GroupItem extends baseGroup.dataSource {
     }
 
     return true;
+  }
+// ⚠️ TEMPORARY FOR SAMPLE DATA ⚠️
+  // ~330 Rock group IDs from existing group finder wide-open / unrefined search
+  sampleGroupIds = [1018844, 989451, 1088929, 1042306, 1085234, 986154, 984069, 244464, 1085583, 1089364, 978042, 856506, 980089, 1089146, 241779, 1042960, 1020415, 841914, 242491, 1048468, 957695, 1091536, 1085830, 1017554, 1089363, 841609, 979605, 862655, 912983, 241822, 242275, 261655, 888876, 242121, 1060973, 257426, 1092643, 1088403, 1042734, 1034190, 241745, 956591, 956595, 956596, 956597, 1041270, 1041283, 888595, 1049473, 261284, 255407, 1044021, 1036416, 1036417, 243645, 853039, 1088930, 242146, 843488, 1088938, 242185, 242135, 242128, 242147, 242119, 1088943, 1085063, 977945, 1065574, 1088941, 1088940, 1088942, 979689, 1085190, 981243, 256030, 1003685, 242553, 1041150, 1055949, 774596, 888914, 253409, 242000, 268435, 971326, 1047257, 252151, 993779, 1059173, 1022729, 242011, 820128, 827354, 1039692, 998266, 242397, 242166, 242390, 1042735, 254430, 984014, 822846, 254394, 241867, 242303, 980848, 252993, 242167, 1055679, 1087922, 1085254, 1089274, 984290, 1052975, 242386, 1088626, 1088640, 1042076, 912148, 783712, 1046898, 1085189, 887021, 1075108, 1043768, 981236, 993368, 241955, 769561, 1016406, 1003560, 1086550, 1003185, 258445, 249749, 1042394, 241889, 1039842, 837223, 986728, 241797, 248719, 1016719, 798560, 919062, 864376, 1085191, 1088594, 996674, 996615, 242277, 242424, 1092642, 1085205, 1042551, 1091235, 967786, 1091150, 993655, 960273, 971095, 1086384, 837224, 1058546, 1044414, 1088407, 845467, 1090940, 1075112, 242370, 1071361, 1085353, 969049, 975937, 1075135, 1065949, 796066, 1054536, 269099, 982803, 796781, 828107, 242533, 1043712, 869365, 257436, 970201, 1071205, 825257, 241965, 1040007, 242384, 992195, 915661, 1020133, 827961, 250954, 969959, 770849, 988788, 1090883, 1046888, 1054194, 1042730, 890771, 242513, 241622, 1040000, 1082198, 1018675, 1003892, 261288, 1058556, 851312, 1042336, 1085817, 767547, 1085816, 867023, 242270, 1057996, 820149, 1044077, 267101, 998641, 1042520, 241808, 843821, 1045509, 259034, 241899, 1085552, 264063, 1085584, 1089369, 1068794, 998371, 874887, 774879, 1039833, 1046973, 1091066, 1091172, 252904, 256438, 1039941, 770826, 1038611, 1091151, 1064012, 1088885, 267931, 269222, 242070, 1042550, 241740, 894706, 893447, 1089659, 243380, 241838, 1062496, 241795, 971094, 983440, 827349, 979794, 804727, 1070235, 1088937, 1088939, 1088935, 1043387, 1091511, 241986, 242803, 1053794, 765428, 980852, 1088944, 849366, 1038429, 241807, 961932, 242173, 1033290, 857097, 1042549, 246020, 1085238, 1088329, 258119, 767125, 264101, 1051433, 1085557, 1088432, 986388, 981164, 802315, 1088786, 761313, 1041919, 903591, 1089262, 1089266, 1091065, 984068, 1075113, 1041151, 983589, 983458, 1017713, 983588, 1041154, 983520, 983519, 1041156, 983525, 1041157, 983524, 1044108, 983521, 1041160, 983522, 1041161, 1042694, 1042695, 1041155, 983526];
+
+  /**
+   * This method is temporary for development purposes, hence all the safety switches
+   */
+  async updateIndexAllGroups() {
+    console.log('\n[GroupItem] indexing "all" groups');
+
+    const SAFETY_SWITCH = true;
+    const DRY_RUN = true;
+
+    if (SAFETY_SWITCH) {
+      console.log('•••••••• 🛑 SAFETY SWITCH 🛑 ••••••••');
+      return null;
+    }
+
+    const offset = 300;
+    const limit = 50;
+
+    const startIndex = offset;
+    const endIndex = offset + limit;
+
+    console.log(`Sampling groups between index ${startIndex} and ${endIndex}`);
+    const groups = this.sampleGroupIds.slice(startIndex, endIndex);
+    console.log('--> ', groups);
+
+    const groupsForIndex = await Promise.all(
+      groups.map((id) => this.mapItemForIndex(id))
+    );
+
+    console.log('groupsForIndex:', JSON.stringify(groupsForIndex, null, 2));
+
+    if (DRY_RUN) {
+      console.log('•••••••• 🙅‍♂️ DRY RUN, SKIPPING INDEX OPERATION 🙅‍♂️ ••••••••');
+      return null;
+    }
+
+    return this.getSearchIndex().addObjects(groupsForIndex.filter(group => !!group));
   }
 
   searchGroups(args) {

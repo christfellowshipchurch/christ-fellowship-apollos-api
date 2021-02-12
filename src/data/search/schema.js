@@ -44,5 +44,6 @@ export default gql`
 
     # Groups
     indexGroup(id: String, action: INDEX_ACTION, key: String): String
+    indexAllGroups(action: INDEX_ACTION, key: String): String
   }
 `

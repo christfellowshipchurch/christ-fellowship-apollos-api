@@ -55,12 +55,13 @@ ALGOLIA:
       INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_GROUPS}
       CONFIGURATION:
         searchableAttributes:
+          - preference
           - campusName
           - day
-          - preference
           - subPreference
-          - summary
           - title
+          - summary
+          - leaders
         attributesForFaceting:
           - campusName
           - day
