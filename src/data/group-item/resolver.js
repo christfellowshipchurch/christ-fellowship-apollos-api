@@ -1,6 +1,10 @@
-import ApollosConfig from '@apollosproject/config'
+import ApollosConfig from '@apollosproject/config';
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
-import { resolverMerge, parseGlobalId, createGlobalId } from '@apollosproject/server-core';
+import {
+  resolverMerge,
+  parseGlobalId,
+  createGlobalId,
+} from '@apollosproject/server-core';
 
 const defaultResolvers = {
   id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
@@ -23,8 +27,8 @@ const defaultResolvers = {
     }),
   chatChannelId: (root, args, { dataSources }) => null, // Deprecated
   streamChatChannel: async (root, args, { dataSources }) =>
-    dataSources.GroupItem.getStreamChatChannel(root)
-}
+    dataSources.GroupItem.getStreamChatChannel(root),
+};
 
 const resolver = {
   GroupItem: {
@@ -43,9 +47,9 @@ const resolver = {
       dataSources.GroupItem.getGroupVideoCallParams(root),
     parentVideoCall: (root, args, { dataSources }) =>
       dataSources.GroupItem.getGroupParentVideoCallParams(root),
-      allowMessages: (root, args, { dataSources }) =>
+    allowMessages: (root, args, { dataSources }) =>
       dataSources.GroupItem.allowMessages(root),
-      checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
+    checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
       CheckInable.getFromId(id),
     campus: ({ campusId }, args, { dataSources }) =>
       dataSources.Campus.getFromId(campusId),
@@ -137,14 +141,16 @@ const resolver = {
       }
     },
     indexGroup: async (root, { id, key, action }, { dataSources }) => {
-      const validInput = Boolean(id && action && key === ApollosConfig.ROCK.APOLLOS_SECRET);
+      const validInput = Boolean(
+        id && action && key === ApollosConfig.ROCK.APOLLOS_SECRET
+      );
 
       if (!validInput) {
         return `Failed to update | id: ${id} | action: ${action}`;
       }
 
       switch (action) {
-        case "delete":
+        case 'delete':
           // TODO
           // dataSources.GroupItem.deleteIndexGroup(id);
           return `⚠️ Action 'delete' not implemented | id: ${id} | action: ${action}`;
@@ -170,6 +176,13 @@ const resolver = {
           return `Unhandled INDEX_ACTION`;
       }
     },
+    contactGroupLeader: async (root, { groupId }, { dataSources }) => {
+      try {
+        return dataSources.GroupItem.contactLeader({ groupId });
+      } catch (e) {
+        console.log({ e });
+      }
+    },
   },
   Query: {
     groupCoverImages: async (root, args, { dataSources }) =>
@@ -184,10 +197,14 @@ const resolver = {
       return dataSources.ContentItem.paginate({
         cursor: await dataSources.GroupItem.getResourceOptions(id),
         args: input,
-      })
+      });
     },
     searchGroups: async (root, args, { dataSources }) =>
       dataSources.GroupItem.searchGroups(args),
+    groupSearchOptions: async (root, args, { dataSources }) =>
+      dataSources.GroupItem.getGroupSearchOptions(),
+    groupSearchFacetsAttributes: async (root, args, { dataSources }) =>
+      dataSources.GroupItem.getGroupSearchFacetsAttributes(),
   },
 };
 

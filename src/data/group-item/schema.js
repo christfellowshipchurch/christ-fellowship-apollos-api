@@ -143,6 +143,8 @@ export const groupSchema = gql`
       groupId: ID!
     ): Group
     removeGroupResource(relatedNodeId: ID!, groupId: ID!): Group
+    # Contact Leader
+    contactGroupLeader(groupId: ID!): String
   }
 
   type GroupCoverImage {
@@ -157,6 +159,15 @@ export const groupSchema = gql`
       groupId: ID!
       input: ContentItemsConnectionInput
     ): ContentItemsConnection
+    groupSearchOptions: GroupSearchFacetsOptions
+    groupSearchFacetsAttributes: [String]
+  }
+
+  type GroupSearchFacetsOptions {
+    campusName: [String]
+    day: [String]
+    preference: [String]
+    subPreference: [String]
   }
 
   extend enum InteractionAction {
