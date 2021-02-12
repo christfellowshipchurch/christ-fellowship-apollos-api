@@ -8,7 +8,18 @@ import {
 } from '@apollosproject/server-core';
 
 import { graphql } from 'graphql';
-import { get, isNull, isNil, isEmpty, filter, head, flatten, take, uniqBy } from 'lodash';
+import {
+  get,
+  isNull,
+  isNil,
+  isEmpty,
+  filter,
+  head,
+  flatten,
+  take,
+  uniqBy,
+  zipObject,
+} from 'lodash';
 import { parseISO, isFuture, isToday } from 'date-fns';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
@@ -1274,6 +1285,26 @@ export default class GroupItem extends baseGroup.dataSource {
     return this.getSearchIndex().byPaginatedQuery(searchParams);
   }
 
+  getGroupSearchOptions = async () => {
+    const { GroupItem, GroupPreferences } = this.context.dataSources;
+
+    const facets = await GroupItem.getSearchIndex().byFacets();
+
+    const groupSearchOptions = Object.keys(facets).map((key, index) => {
+      return Object.keys(facets[key]);
+    });
+
+    return zipObject(Object.keys(facets), groupSearchOptions);
+  };
+
+  getGroupSearchFacetsAttributes = async () => {
+    const { GroupItem } = this.context.dataSources;
+
+    const facets = await GroupItem.getSearchIndex().byFacets();
+
+    return Object.keys(facets);
+  };
+
   /**  :: Contact Group Leader
    * --------------------------------------------------------------------------
    * This workflow is triggered when a user clicks 'contact' leader
@@ -1299,5 +1330,5 @@ export default class GroupItem extends baseGroup.dataSource {
     } catch (e) {
       console.log(e);
     }
-  };
+  }
 }

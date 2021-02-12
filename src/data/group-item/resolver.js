@@ -185,6 +185,10 @@ const resolver = {
     },
     searchGroups: async (root, args, { dataSources }) =>
       dataSources.GroupItem.searchGroups(args),
+    groupSearchOptions: async (root, args, { dataSources }) =>
+      dataSources.GroupItem.getGroupSearchOptions(),
+    groupSearchFacetsAttributes: async (root, args, { dataSources }) =>
+      dataSources.GroupItem.getGroupSearchFacetsAttributes(),
   },
 };
 
