@@ -165,6 +165,7 @@ export const groupSchema = gql`
     campusName: [String]
     day: [String]
     preference: [String]
+    subPreference: [String]
   }
 
   extend enum InteractionAction {
