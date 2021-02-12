@@ -15,11 +15,14 @@ const resolver = {
   CardListItem: {
     labelText: ({ labelText }) => labelText,
     hasAction: (root, args, { dataSources: { ContentItem } }) => {
-      const { __type } = root.relatedNode;
+      // todo : temporary solution to get past a really annoying error when the type isn't there
+      try {
+        const { __type } = root.relatedNode;
 
-      if (__type.includes('ContentItem')) {
-        return !!get(ContentItem.getVideos(root.relatedNode), '[0].sources[0]', null);
-      }
+        if (__type.includes('ContentItem')) {
+          return !!get(ContentItem.getVideos(root.relatedNode), '[0].sources[0]', null);
+        }
+      } catch (e) {}
 
       return false;
     },

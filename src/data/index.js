@@ -15,6 +15,8 @@ import {
   Sharable,
   Template,
 } from '@apollosproject/data-connector-rock';
+import { Comment, UserFlag } from '@apollosproject/data-connector-postgres';
+
 import * as Theme from './theme';
 
 // This module is used to attach Rock User updating to the OneSignal module.
@@ -76,6 +78,7 @@ const data = {
   Cache,
   Campus,
   CheckInable,
+  Comment,
   ContentChannel,
   ContentItem,
   DefinedValue,
@@ -113,6 +116,7 @@ const data = {
   Template,
   Theme,
   TwilioNotify,
+  UserFlag,
   Url,
   WebsiteContentItem: {
     dataSource: WebsiteContentItem.dataSource,
