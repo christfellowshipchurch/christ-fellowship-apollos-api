@@ -21,6 +21,25 @@ export default gql`
   ${WebsitePagesContentItem.schema}
   ${WebsiteContentItem.schema}
 
+  interface PublicationNode {
+    author: Person
+    estimatedTime: String
+    publishDate: String
+  }
+
+  # Maps to each type implementing each interface.
+  # Reduces visual fluff in this file. No magic.
+  ${addInterfacesForEachContentItemType(
+    ['PublicationNode'],
+    [
+      'DevotionalContentItem',
+      'UniversalContentItem',
+      'ContentSeriesContentItem',
+      'MediaContentItem',
+      'WeekendContentItem',
+    ]
+  )}
+
   extend type DevotionalContentItem {
     tags: [String]
     icon: String

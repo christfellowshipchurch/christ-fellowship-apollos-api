@@ -180,6 +180,10 @@ const resolver = {
     ...resolverExtensions,
     ...connectionResolvers,
   },
+  PublicationNode: {
+    __resolveType: ({ __typename, __type }, args, resolveInfo) =>
+      __typename || resolveInfo.schema.getType(__type),
+  },
   ...InformationalContentItem.resolver,
   ...EventContentItem.resolver,
   ...WebsiteContentItem.resolver,

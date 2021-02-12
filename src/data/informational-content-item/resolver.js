@@ -1,14 +1,10 @@
-import ApollosConfig from '@apollosproject/config'
-import {
-  ContentItem as coreContentItem,
-} from '@apollosproject/data-connector-rock'
-import {
-  get,
-} from 'lodash'
+import ApollosConfig from '@apollosproject/config';
+import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock';
+import { get } from 'lodash';
 
-import { parseRockKeyValuePairs } from '../utils'
+import { parseRockKeyValuePairs } from '../utils';
 
-import sanitizeHtml from '../sanitize-html'
+import sanitizeHtml from '../sanitize-html';
 
 const resolver = {
   InformationalContentItem: {
@@ -19,19 +15,20 @@ const resolver = {
       const ctaValuePairs = parseRockKeyValuePairs(
         get(attributeValues, 'callsToAction.value', ''),
         'call',
-        'action')
+        'action'
+      );
 
-      if (ctaValuePairs.length) return ctaValuePairs
+      if (ctaValuePairs.length) return ctaValuePairs;
 
       // Get Matrix Items
-      const { MatrixItem } = dataSources
-      const matrixGuid = get(attributeValues, 'actions.value', '')
-      const matrixItems = await MatrixItem.getItemsFromId(matrixGuid)
+      const { MatrixItem } = dataSources;
+      const matrixGuid = get(attributeValues, 'actions.value', '');
+      const matrixItems = await MatrixItem.getItemsFromId(matrixGuid);
 
       return matrixItems.map(({ attributeValues: matrixItemAttributeValues }) => ({
         call: get(matrixItemAttributeValues, 'title.value', ''),
         action: get(matrixItemAttributeValues, 'url.value', ''),
-      }))
+      }));
     },
     htmlContent: ({ content }) => sanitizeHtml(content),
     sharing: (root, args, { dataSources: { ContentItem } }, { parentType }) => ({
@@ -40,6 +37,6 @@ const resolver = {
       message: ContentItem.generateShareMessage(root),
     }),
   },
-}
+};
 
-export default resolver
+export default resolver;
