@@ -157,6 +157,15 @@ export const groupSchema = gql`
       groupId: ID!
       input: ContentItemsConnectionInput
     ): ContentItemsConnection
+    groupSearchOptions: GroupSearchFacetsOptions
+    groupSearchFacetsAttributes: [String]
+  }
+
+  type GroupSearchFacetsOptions {
+    campusName: [String]
+    day: [String]
+    preference: [String]
+    subPreference: [String]
   }
 
   extend enum InteractionAction {

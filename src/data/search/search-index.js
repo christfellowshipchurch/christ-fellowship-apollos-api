@@ -9,7 +9,9 @@ export default class SearchIndex {
     const { INDEX, CONFIGURATION } = indexConfig;
 
     if (!indexConfig || !INDEX || !CONFIGURATION) {
-      console.warn(`Cannot create SearchIndex id "${id}" due to missing configuration values. Please verify your config.yml has correct ALGOLIA values.`)
+      console.warn(
+        `Cannot create SearchIndex id "${id}" due to missing configuration values. Please verify your config.yml has correct ALGOLIA values.`
+      );
     }
 
     this.id = id;
@@ -62,5 +64,10 @@ export default class SearchIndex {
         cursor: createCursor({ position: i + offset }),
       }))
     };
+  }
+
+  async byFacets() {
+    const { facets } = await this.index.search('', { facets: ['*'] });
+    return facets;
   }
 }
