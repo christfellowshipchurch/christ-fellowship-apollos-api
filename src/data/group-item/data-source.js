@@ -1284,6 +1284,7 @@ export default class GroupItem extends baseGroup.dataSource {
 
     return this.getSearchIndex().byPaginatedQuery(searchParams);
   }
+
   getGroupSearchOptions = async () => {
     const { GroupItem, GroupPreferences } = this.context.dataSources;
 
@@ -1303,4 +1304,31 @@ export default class GroupItem extends baseGroup.dataSource {
 
     return Object.keys(facets);
   };
+
+  /**  :: Contact Group Leader
+   * --------------------------------------------------------------------------
+   * This workflow is triggered when a user clicks 'contact' leader
+   *  @param {number}  groupId  Group id
+   *  @param {string}  message  Personal message from user
+   */
+
+  contactLeader = async ({ groupId }) => {
+    if (!groupId) return null;
+
+    try {
+      const { Workflow, Auth } = this.context.dataSources;
+      const currentUser = await Auth.getCurrentPerson();
+
+      const workflow = await Workflow.trigger({
+        id: ROCK_MAPPINGS.WORKFLOW_IDS.GROUP_CONTACT_LEADER,
+        attributes: {
+          personId: currentUser.id,
+          groupId,
+        },
+      });
+      return workflow.status;
+    } catch (e) {
+      console.log(e);
+    }
+  }
 }

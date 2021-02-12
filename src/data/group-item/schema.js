@@ -143,6 +143,8 @@ export const groupSchema = gql`
       groupId: ID!
     ): Group
     removeGroupResource(relatedNodeId: ID!, groupId: ID!): Group
+    # Contact Leader
+    contactGroupLeader(groupId: ID!): String
   }
 
   type GroupCoverImage {
