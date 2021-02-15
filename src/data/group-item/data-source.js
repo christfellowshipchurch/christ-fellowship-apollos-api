@@ -1374,12 +1374,12 @@ export default class GroupItem extends baseGroup.dataSource {
   /**  :: Contact Group Leader
    * --------------------------------------------------------------------------
    * This workflow is triggered when a user clicks 'contact' leader
-   *  @param {number}  groupId  Group id
-   *  @param {string}  message  Personal message from user
+   *  @param {string}  groupId  Apollos Group id
    */
 
   contactLeader = async ({ groupId }) => {
     if (!groupId) return null;
+    const groupGlobalId = parseGlobalId(groupId)?.id;
 
     try {
       const { Workflow, Auth } = this.context.dataSources;
@@ -1389,12 +1389,12 @@ export default class GroupItem extends baseGroup.dataSource {
         id: ROCK_MAPPINGS.WORKFLOW_IDS.GROUP_CONTACT_LEADER,
         attributes: {
           personId: currentUser.id,
-          groupId,
+          groupId: groupGlobalId,
         },
       });
       return workflow.status;
     } catch (e) {
       console.log(e);
     }
-  }
+  };
 }
