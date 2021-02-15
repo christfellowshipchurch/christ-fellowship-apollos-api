@@ -106,8 +106,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
 
       const relatedNode = isUrl
         ? {
-            __type: 'Url',
-            id: createGlobalId(urlEndpoint, 'Url'),
+            __typename: 'Url',
             url: urlEndpoint,
           }
         : { ...item, __type: ContentItem.resolveType(item) };
