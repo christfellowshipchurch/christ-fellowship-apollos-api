@@ -17,7 +17,7 @@
     "test:watch": "jest --maxWorkers=2 --watch"
   },
   "engines": {
-    "node": ">=10.19.x"
+    "node": ">=12.x.x"
   },
   "jest": {
     "collectCoverage": true,
