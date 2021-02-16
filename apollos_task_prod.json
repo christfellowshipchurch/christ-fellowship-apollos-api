@@ -52,6 +52,14 @@
         {
           "name": "ALGOLIA_SEARCH_INDEX_GROUPS",
           "value": "Groups"
+        },
+        {
+          "valueFrom": "APOLLO_GRAPH_VARIANT",
+          "name": "production"
+        },
+        {
+          "valueFrom": "APOLLO_SCHEMA_REPORTING",
+          "name": "true"
         }
       ],
       "secrets": [
@@ -132,16 +140,8 @@
           "name": "STREAM_CHAT_API_KEY"
         },
         {
-          "valueFrom": "/prod/ENGINE_API_KEY",
-          "name": "ENGINE_API_KEY"
-        },
-        {
-          "valueFrom": "/prod/ENGINE_SCHEMA_TAG",
-          "name": "ENGINE_SCHEMA_TAG"
-        },
-        {
-          "valueFrom": "/prod/APOLLO_SCHEMA_REPORTING",
-          "name": "APOLLO_SCHEMA_REPORTING"
+          "valueFrom": "/prod/APOLLO_KEY",
+          "name": "APOLLO_KEY"
         }
       ],
       "mountPoints": [],
@@ -155,9 +155,7 @@
   ],
   "volumes": [],
   "placementConstraints": [],
-  "requiresCompatibilities": [
-    "EC2"
-  ],
+  "requiresCompatibilities": ["EC2"],
   "cpu": null,
   "memory": null,
   "tags": [
