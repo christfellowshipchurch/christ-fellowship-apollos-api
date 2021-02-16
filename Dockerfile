@@ -1,4 +1,5 @@
 FROM node:12-alpine
+RUN apk add python
 COPY . /usr/src/
 WORKDIR /usr/src
 RUN yarn
