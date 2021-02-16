@@ -52,4 +52,9 @@ export default gql`
     subtitle: String
     liveStreams: [LiveStream]
   }
+
+  type CommentListFeature implements Feature & Node {
+    id: ID!
+    order: Int
+  }
 `;

@@ -15,7 +15,7 @@ import {
   Sharable,
   Template,
 } from '@apollosproject/data-connector-rock';
-import { Comment, UserFlag } from '@apollosproject/data-connector-postgres';
+// import { Comment, UserFlag } from '@apollosproject/data-connector-postgres';
 
 import * as Theme from './theme';
 
@@ -78,7 +78,7 @@ const data = {
   Cache,
   Campus,
   CheckInable,
-  Comment,
+  // Comment,
   ContentChannel,
   ContentItem,
   DefinedValue,
@@ -116,7 +116,7 @@ const data = {
   Template,
   Theme,
   TwilioNotify,
-  UserFlag,
+  // UserFlag,
   Url,
   WebsiteContentItem: {
     dataSource: WebsiteContentItem.dataSource,
