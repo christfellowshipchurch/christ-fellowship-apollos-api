@@ -54,12 +54,12 @@
           "value": "Groups"
         },
         {
-          "valueFrom": "APOLLO_GRAPH_VARIANT",
-          "name": "production"
+          "name": "APOLLO_GRAPH_VARIANT",
+          "value": "production"
         },
         {
-          "valueFrom": "APOLLO_SCHEMA_REPORTING",
-          "name": "true"
+          "name": "APOLLO_SCHEMA_REPORTING",
+          "value": "true"
         }
       ],
       "secrets": [
