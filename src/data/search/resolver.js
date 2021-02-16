@@ -1,28 +1,21 @@
-import * as coreSearch from '@apollosproject/data-connector-algolia-search'
-import { resolverMerge } from '@apollosproject/server-core'
-import ApollosConfig from '@apollosproject/config'
-
-const { ROCK } = ApollosConfig
+import { withEdgePagination } from '@apollosproject/server-core';
 
 const resolver = {
-    Mutation: {
-        indexContentItem: (root, { id, key, action }, { dataSources }) => {
-            if (id && action && key === ROCK.APOLLOS_SECRET) {
-                const { Search } = dataSources
-                switch (action) {
-                    case "delete":
-                        // TODO
-                        return `Successfully deleted | id: ${id} | key: ${key} | action: ${action}`
-                    case "update":
-                    default:
-                        Search.updateContentItemIndex(id)
-                        return `Successfully updated | id: ${id} | key: ${key} | action: ${action}`
-                }
-            }
-
-            return `Failed to update | id: ${id} | key: ${key} | action: ${action}`
-        }
-    }
+  SearchResultsConnection: {
+    pageInfo: ({ edges }) => withEdgePagination({ edges }),
+  },
+  SearchResult: {
+    node: async ({ id }, _, { models, dataSources }, resolveInfo) => {
+      try {
+        return await models.Node.get(id, dataSources, resolveInfo);
+      } catch (e) {
+        // Right now we don't have a good mechanism to flush deleted items from the search index.
+        // This helps make sure we don't return something unresolvable.
+        console.log(`Error fetching search result ${id}`, e);
+        return null;
+      }
+    },
+  },
 }
 
-export default resolverMerge(resolver, coreSearch)
+export default resolver;

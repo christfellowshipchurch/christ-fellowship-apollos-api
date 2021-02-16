@@ -51,6 +51,7 @@ import * as NodePagination from './node-pagination';
 import * as Person from './people';
 import * as PhoneNumber from './phone-number';
 import * as PrayerRequest from './prayer-request';
+import * as GroupPreferences from './group-preferences';
 import * as RockConstants from './rock-constants';
 import * as Schedule from './schedule';
 import * as Search from './search';
@@ -90,6 +91,7 @@ const data = {
   Followings,
   Group,
   GroupItem,
+  GroupPreferences,
   Interactions,
   Interfaces,
   LinkTree,

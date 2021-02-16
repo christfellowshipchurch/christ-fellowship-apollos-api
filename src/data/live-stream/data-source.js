@@ -50,6 +50,7 @@ export default class LiveStream extends definedValueDataSource {
         const parsedSchedule = await Schedule.parseiCalendar(schedule.iCalendarContent);
 
         const nextInstance = parsedSchedule
+          .filter(({ end }) => end && isFuture(parseISO(end)))
           .sort((a, b) => {
             const dateA = parseISO(a.start);
             const dateB = parseISO(b.start);
@@ -149,6 +150,7 @@ export default class LiveStream extends definedValueDataSource {
 
       const definedType = await DefinedValueList.getFromId(LIVE_STREAM_SCHEDULES);
       const definedValues = get(definedType, 'definedValues', []);
+
       const liveStreams = await Promise.all(
         definedValues.map((definedValue) => {
           const request = async () => {

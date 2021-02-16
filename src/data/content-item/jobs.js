@@ -4,33 +4,7 @@ import moment from 'moment-timezone';
 import Redis from 'ioredis';
 
 const { ROCK } = ApollosConfig;
-
-const { REDIS_URL, CONTENT } = process.env;
-
-let client;
-let subscriber;
-let queueOpts;
-
-if (REDIS_URL) {
-  client = new Redis(REDIS_URL);
-  subscriber = new Redis(REDIS_URL);
-
-  // Used to ensure that N+3 redis connections are not created per queue.
-  // https://github.com/OptimalBits/bull/blob/develop/PATTERNS.md#reusing-redis-connections
-  queueOpts = {
-    prefix: `bull-${CONTENT}`,
-    createClient(type) {
-      switch (type) {
-        case 'client':
-          return client;
-        case 'subscriber':
-          return subscriber;
-        default:
-          return new Redis(REDIS_URL);
-      }
-    },
-  };
-}
+const { REDIS_URL } = process.env;
 
 const deleteJobs = () => {
   const redis = new Redis(REDIS_URL);
@@ -70,12 +44,12 @@ const createJobs = ({ getContext, queues }) => {
   deleteJobs()
   return
 
-  const FullIndexQueue = queues.add('algolia-full-index-queue', queueOpts);
-  const DeltaIndexQueue = queues.add('algolia-delta-index-queue', queueOpts);
+  const FullIndexQueue = queues.add('algolia-full-index-queue', redisQueueOptions);
+  const DeltaIndexQueue = queues.add('algolia-delta-index-queue', redisQueueOptions);
 
   FullIndexQueue.process(async () => {
     const context = getContext();
-    return context.dataSources.Search.indexAll();
+    return context.dataSources.ContentItem.indexAll();
   });
 
   DeltaIndexQueue.process(async () => {
@@ -100,7 +74,7 @@ const createJobs = ({ getContext, queues }) => {
       .tz(ROCK.TIMEZONE)
       .format()
       .split(/[-+]\d+:\d+/)[0];
-    return context.dataSources.Search.deltaIndex({ datetime });
+    return context.dataSources.ContentItem.deltaIndex({ datetime });
   });
 
   FullIndexQueue.add(null, { repeat: { cron: '15 3 * * 1' } });

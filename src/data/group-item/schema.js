@@ -89,6 +89,9 @@ export const groupSchema = gql`
     phoneNumbers: [String]
     schedule: Schedule
     videoCall: VideoCallParams
+    campus: Campus
+    preference: String
+    subPreference: String
 
     avatars: [String] @deprecated(reason: "Use people instead")
     leaders: [Person] @deprecated(reason: "Use people instead")
@@ -140,6 +143,8 @@ export const groupSchema = gql`
       groupId: ID!
     ): Group
     removeGroupResource(relatedNodeId: ID!, groupId: ID!): Group
+    # Contact Leader
+    contactGroupLeader(groupId: ID!): String
   }
 
   type GroupCoverImage {
@@ -157,6 +162,15 @@ export const groupSchema = gql`
 
     currentUserGroups(first: Int, after: String): NodeConnection
     currentUserVolunteerGroups(first: Int, after: String): NodeConnection
+    groupSearchOptions: GroupSearchFacetsOptions
+    groupSearchFacetsAttributes: [String]
+  }
+
+  type GroupSearchFacetsOptions {
+    campusName: [String]
+    day: [String]
+    preference: [String]
+    subPreference: [String]
   }
 
   extend enum InteractionAction {

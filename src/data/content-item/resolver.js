@@ -1,15 +1,14 @@
-import {
-  ContentItem as coreContentItem,
-  Utils,
-} from '@apollosproject/data-connector-rock';
+import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock';
 import { resolverMerge } from '@apollosproject/server-core';
+import ApollosConfig from '@apollosproject/config';
 import Hypher from 'hypher';
 import english from 'hyphenation.en-us';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
-import { get, has, split, orderBy } from 'lodash';
+import { get, split } from 'lodash';
 
 import sanitizeHtml from '../sanitize-html';
+import { parseRockKeyValuePairs } from '../utils';
 
 import * as EventContentItem from '../event-content-item';
 import * as InformationalContentItem from '../informational-content-item';
@@ -18,11 +17,7 @@ import * as WebsiteHtmlContentItem from '../website-html-content-item';
 import * as WebsiteFeature from '../website-feature';
 import * as WebsiteGroupContentItem from '../website-group-content-item';
 import * as WebsitePagesContentItem from '../website-pages-content-item';
-import { parseRockKeyValuePairs } from '../utils';
 
-import ApollosConfig from '@apollosproject/config';
-
-const { createImageUrlFromGuid } = Utils;
 const hypher = new Hypher(english);
 
 const titleResolver = {
@@ -155,6 +150,27 @@ const resolver = {
         website,
         title
       ),
+    search: async (root, input, { dataSources }) =>
+      dataSources.ContentItem.getSearchIndex().byPaginatedQuery(input),
+  },
+  Mutation: {
+    indexContentItem: async (root, { id, key, action }, { dataSources }) => {
+      if (id && action && key === ApollosConfig.ROCK.APOLLOS_SECRET) {
+        const { ContentItem } = dataSources
+
+        switch (action) {
+          case "delete":
+            // TODO
+            return `⚠️ Action 'delete' not implemented | id: ${id} | key: ${key} | action: ${action}`
+          case "update":
+          default:
+            await ContentItem.updateContentItemIndex(id);
+            return `Successfully updated | id: ${id} | key: ${key} | action: ${action}`
+        }
+      }
+
+      return `Failed to update | id: ${id} | key: ${key} | action: ${action}`
+    }
   },
   ContentItem: {
     ...titleResolver,

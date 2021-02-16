@@ -75,8 +75,12 @@ export default class Campus extends coreCampus.dataSource {
       .cache({ ttl: 600 }) // ten minutes
       .first();
 
-  getSchedule = (id) =>
-    this.request('Schedules').filter(getIdentifierType(id).query).first();
+  getSchedule = async (id) => {
+    const { Schedule } = this.context.dataSources;
+    const schedule = await Schedule.getFromId(id);
+
+    return schedule;
+  };
 
   getFromId = (id) =>
     this.request()

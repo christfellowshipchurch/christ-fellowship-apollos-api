@@ -43,13 +43,30 @@ CHURCH_ONLINE:
 ALGOLIA:
   APPLICATION_ID: ${ALGOLIA_APP_ID}
   API_KEY: ${ALGOLIA_API_KEY}
-  # TODO: should we support multiple indices? how?
-  SEARCH_INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX}
-  CONFIGURATION:
-    searchableAttributes:
-      - title
-      - htmlContent
-      - unordered(summary)
+  INDICES:
+    CONTENT_ITEMS:
+      INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_CONTENT_ITEMS}
+      CONFIGURATION:
+        searchableAttributes:
+          - title
+          - htmlContent
+          - unordered(summary)
+    GROUPS:
+      INDEX: ${CONTENT}_${ALGOLIA_SEARCH_INDEX_GROUPS}
+      CONFIGURATION:
+        searchableAttributes:
+          - preference
+          - campusName
+          - day
+          - subPreference
+          - title
+          - summary
+          - leaders
+        attributesForFaceting:
+          - campusName
+          - day
+          - preference
+          - subPreference
 
 # Stream Chat https://getstream.io
 STREAM:
@@ -227,10 +244,12 @@ ROCK_MAPPINGS:
     URLS: 369
     LINK_TREE: 374
     LIVE_STREAM_SCHEDULES: 373
+    GROUP_FINDER_TYPES: 381
     GROUP_MEMBER_ROLES: 375
+    GROUP_PREFERENCES: 203
+    GROUP_SUB_PREFERENCES: 382
     GROUP_TYPES: 376
     VOLUNTEER_GROUP_TYPES: 377
-    GROUP_FINDER_TYPES: 381
     EXCLUDE_GROUPS: 378
     EXCLUDE_VOLUNTEER_GROUPS: 379
 
@@ -262,6 +281,7 @@ ROCK_MAPPINGS:
     PASSWORD_RESET_EMAIL: 327
     ADDRESS_UPDATE: 328
     CHECK_IN: 552
+    GROUP_CONTACT_LEADER: 654
 
   GROUP_TYPE_IDS:
     DREAM_TEAM: 37

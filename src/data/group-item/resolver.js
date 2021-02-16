@@ -1,3 +1,4 @@
+import ApollosConfig from '@apollosproject/config';
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
 import {
   resolverMerge,
@@ -52,6 +53,12 @@ const resolver = {
       dataSources.GroupItem.allowMessages(root),
     checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
       CheckInable.getFromId(id),
+    campus: ({ campusId }, args, { dataSources }) =>
+      dataSources.Campus.getFromId(campusId),
+    preference: (root, args, { dataSources }) =>
+      dataSources.GroupItem.getPreference(root),
+    subPreference: (root, args, { dataSources }) =>
+      dataSources.GroupItem.getSubPreference(root),
   },
   VolunteerGroup: {
     ...defaultResolvers,
@@ -135,6 +142,49 @@ const resolver = {
         console.log({ e });
       }
     },
+    indexGroup: async (root, { id, key, action }, { dataSources }) => {
+      const validInput = Boolean(
+        id && action && key === ApollosConfig.ROCK.APOLLOS_SECRET
+      );
+
+      if (!validInput) {
+        return `Failed to update | id: ${id} | action: ${action}`;
+      }
+
+      switch (action) {
+        case 'delete':
+          // TODO
+          // dataSources.GroupItem.deleteIndexGroup(id);
+          return `⚠️ Action 'delete' not implemented | id: ${id} | action: ${action}`;
+        case 'update':
+          await dataSources.GroupItem.updateIndexGroup(id);
+          return `Successfully updated | id: ${id} | action: ${action}`;
+        default:
+          return `Unhandled INDEX_ACTION`;
+      }
+    },
+    indexAllGroups: async (root, { id, key, action }, { dataSources }) => {
+      const validInput = Boolean(action && key === ApollosConfig.ROCK.APOLLOS_SECRET);
+
+      if (!validInput) {
+        return `Failed to update | action: ${action}`;
+      }
+
+      switch (action) {
+        case 'update':
+          await dataSources.GroupItem.updateIndexAllGroups();
+          return `Successfully updated | action: ${action}`;
+        default:
+          return `Unhandled INDEX_ACTION`;
+      }
+    },
+    contactGroupLeader: async (root, { groupId }, { dataSources }) => {
+      try {
+        return dataSources.GroupItem.contactLeader({ groupId });
+      } catch (e) {
+        console.log({ e });
+      }
+    },
   },
   Query: {
     groupCoverImages: async (root, args, { dataSources }) =>
@@ -146,6 +196,12 @@ const resolver = {
         args: input,
       });
     },
+    searchGroups: async (root, args, { dataSources }) =>
+      dataSources.GroupItem.searchGroups(args),
+    groupSearchOptions: async (root, args, { dataSources }) =>
+      dataSources.GroupItem.getGroupSearchOptions(),
+    groupSearchFacetsAttributes: async (root, args, { dataSources }) =>
+      dataSources.GroupItem.getGroupSearchFacetsAttributes(),
   },
 };
 

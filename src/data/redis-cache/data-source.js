@@ -54,6 +54,10 @@ export default class Cache extends RedisCache.dataSource {
     this.context = context;
   }
 
+  get keyPrefix() {
+    return `:${process.env.CONTENT}:`;
+  }
+
   /**
    * Makes a request and return the cached value if it exists. If it does not exist in the cache, it will cache the value.
    * @param {function}  request         Async method whose return value gets cached.
@@ -69,8 +73,10 @@ export default class Cache extends RedisCache.dataSource {
       isType(requestMethod, 'requestMethod', 'function') &&
       isType(key, 'key', 'string')
     ) {
+      const _key = `${this.keyPrefix}${key}`;
+
       const cachedValue = await this.get({
-        key,
+        key: _key,
       });
 
       if (cachedValue) {
@@ -81,7 +87,7 @@ export default class Cache extends RedisCache.dataSource {
 
       if (data) {
         await this.set({
-          key: `:${process.env.CONTENT}:${key}`,
+          key: _key,
           data,
           expiresIn,
         });
@@ -92,7 +98,9 @@ export default class Cache extends RedisCache.dataSource {
   }
 
   async delete({ key }, callback) {
-    return this.safely(() => this.redis.del(parseKey(key), callback));
+    return this.safely(() =>
+      this.redis.del(parseKey(`${this.keyPrefix}${key}`), callback)
+    );
   }
 
   async updateRockEntity({
