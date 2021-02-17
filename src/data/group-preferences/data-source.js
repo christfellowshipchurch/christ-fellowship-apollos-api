@@ -5,6 +5,7 @@ const { ROCK_MAPPINGS } = ApollosConfig;
 import { Utils } from '@apollosproject/data-connector-rock';
 import { get } from 'lodash';
 
+import { rockImageUrl } from '../utils';
 const { createImageUrlFromGuid } = Utils;
 
 export default class GroupPreferences extends RockApolloDataSource {
@@ -19,6 +20,8 @@ export default class GroupPreferences extends RockApolloDataSource {
     );
 
     return filteredPreferences.map((item) => {
+      const coverImageGuid = get(item.attributeValues, 'image.value', null);
+
       return {
         id: item.id,
         title: get(item.attributeValues, 'titleOverride.value', null)
@@ -28,9 +31,16 @@ export default class GroupPreferences extends RockApolloDataSource {
         coverImage: {
           sources: [
             {
-              uri: get(item.attributeValues, 'image.value', null)
-                ? createImageUrlFromGuid(item.attributeValues.image.value)
-                : null,
+              uri: coverImageGuid ?
+                rockImageUrl(
+                  coverImageGuid,
+                  {
+                    w: 768,
+                    format: 'jpg',
+                    quality: 70,
+                  }
+                )
+                : null
             },
           ],
         },
