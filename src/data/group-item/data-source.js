@@ -1199,7 +1199,8 @@ export default class GroupItem extends baseGroup.dataSource {
       day: dateTimeFormatted === 'Invalid date' ? '' : dateTimeFormatted,
       title,
       summary,
-      leaders: leaders?.edges?.map(({ node }) => `${node.firstName} ${node.lastName}`) || [],
+      leaders:
+        leaders?.edges?.map(({ node }) => `${node.firstName} ${node.lastName}`) || [],
       coverImage, // Presentation only
     };
 
@@ -1256,7 +1257,7 @@ export default class GroupItem extends baseGroup.dataSource {
       return null;
     }
 
-    return this.getSearchIndex().addObjects(groupsForIndex.filter(group => !!group));
+    return this.getSearchIndex().addObjects(groupsForIndex.filter((group) => !!group));
   }
 
   searchGroups(args) {
