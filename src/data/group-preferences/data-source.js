@@ -2,14 +2,30 @@ import ApollosConfig from '@apollosproject/config';
 import RockApolloDataSource from '@apollosproject/rock-apollo-data-source';
 
 const { ROCK_MAPPINGS } = ApollosConfig;
-import { Utils } from '@apollosproject/data-connector-rock';
 import { get } from 'lodash';
 
-const { createImageUrlFromGuid } = Utils;
+import { rockImageUrl } from '../utils';
+
+function getTransformedCoverImage(item) {
+  const coverImageGuid = get(item.attributeValues, 'image.value', null);
+
+  if (coverImageGuid) {
+    return rockImageUrl(
+      coverImageGuid,
+      {
+        w: 768,
+        format: 'jpg',
+        quality: 70,
+      }
+    );
+  }
+
+  return null;
+}
 
 export default class GroupPreferences extends RockApolloDataSource {
   getGroupPreferences = async () => {
-    const { DefinedValueList, ContentItem } = this.context.dataSources;
+    const { DefinedValueList } = this.context.dataSources;
     const { definedValues } = await DefinedValueList.getByIdentifier(
       ROCK_MAPPINGS.DEFINED_TYPES.GROUP_PREFERENCES
     );
@@ -28,20 +44,17 @@ export default class GroupPreferences extends RockApolloDataSource {
         coverImage: {
           sources: [
             {
-              uri: get(item.attributeValues, 'image.value', null)
-                ? createImageUrlFromGuid(item.attributeValues.image.value)
-                : null,
+              uri: getTransformedCoverImage(item)
             },
           ],
         },
         url: get(item.attributeValues, 'url.value', null),
       };
     });
-
-    return definedValues;
   };
+
   getGroupSubPreferences = async () => {
-    const { DefinedValueList, ContentItem } = this.context.dataSources;
+    const { DefinedValueList } = this.context.dataSources;
     const { definedValues } = await DefinedValueList.getByIdentifier(
       ROCK_MAPPINGS.DEFINED_TYPES.GROUP_SUB_PREFERENCES
     );
@@ -57,15 +70,11 @@ export default class GroupPreferences extends RockApolloDataSource {
         coverImage: {
           sources: [
             {
-              uri: get(item.attributeValues, 'image.value', null)
-                ? createImageUrlFromGuid(item.attributeValues.image.value)
-                : null,
+              uri: getTransformedCoverImage(item),
             },
           ],
         },
       };
     });
-
-    return definedValues;
   };
 }
