@@ -92,6 +92,7 @@ export const groupSchema = gql`
     campus: Campus
     preference: String
     subPreference: String
+    meetingType: String
 
     avatars: [String] @deprecated(reason: "Use people instead")
     leaders: [Person] @deprecated(reason: "Use people instead")
@@ -168,6 +169,7 @@ export const groupSchema = gql`
     day: [String]
     preference: [String]
     subPreference: [String]
+    meetingType: [String]
   }
 
   extend enum InteractionAction {

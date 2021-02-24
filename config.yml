@@ -62,11 +62,13 @@ ALGOLIA:
           - title
           - summary
           - leaders
+          - meetingType
         attributesForFaceting:
           - campusName
           - day
           - preference
           - subPreference
+          - meetingType
 
 # Stream Chat https://getstream.io
 STREAM:

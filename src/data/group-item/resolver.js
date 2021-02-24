@@ -57,6 +57,8 @@ const resolver = {
       dataSources.GroupItem.getPreference(root),
     subPreference: (root, args, { dataSources }) =>
       dataSources.GroupItem.getSubPreference(root),
+    meetingType: (root, args, { dataSources }) =>
+      dataSources.GroupItem.getMeetingType(root),
   },
   VolunteerGroup: {
     ...defaultResolvers,
@@ -154,7 +156,7 @@ const resolver = {
           // TODO
           // dataSources.GroupItem.deleteIndexGroup(id);
           return `⚠️ Action 'delete' not implemented | id: ${id} | action: ${action}`;
-        case "update":
+        case 'update':
           await dataSources.GroupItem.updateIndexGroup(id);
           return `Successfully updated | id: ${id} | action: ${action}`;
         default:
@@ -169,7 +171,7 @@ const resolver = {
       }
 
       switch (action) {
-        case "update":
+        case 'update':
           await dataSources.GroupItem.updateIndexAllGroups();
           return `Successfully updated | action: ${action}`;
         default:
