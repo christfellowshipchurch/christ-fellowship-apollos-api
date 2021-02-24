@@ -395,10 +395,10 @@ FEATURE_FLAGS:
   HOME_HEADER:
     status: 'LIVE'
   GROUP_CHAT:
-    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    securityGroupId: 1100551 # https://rock.christfellowship.church/page/2423?GroupId=1100551
     status: 'LIVE'
   GROUP_CUSTOMIZATION:
-    securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
+    securityGroupId: 1052011 # https://rock.christfellowship.church/page/2423?GroupId=1100558&ExpandedIds=1100557
     status: 'LIVE'
   LIVE_STREAM_CHAT:
     securityGroupId: 1052011 # CFDP Feature Flags/Live Stream Chat
@@ -415,7 +415,7 @@ FEATURE_FLAGS:
   ROCK_DYNAMIC_FEED_WITH_PERSONAS:
     status: 'LIVE'
   VOLUNTEER_GROUPS:
-    securityGroupId: 1052010 # CFDP Feature Flags/My Dream Teams
+    securityGroupId: 1052010 # https://rock.christfellowship.church/page/2423?GroupId=1052010&ExpandedIds=1100557
     status: 'LIVE'
 
 PAGE_BUILDER:
