@@ -90,7 +90,7 @@ export const groupSchema = gql`
     schedule: Schedule
     videoCall: VideoCallParams
     campus: Campus
-    preference: String
+    preference: [String]
     subPreference: String
     meetingType: String
 

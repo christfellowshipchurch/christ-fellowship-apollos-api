@@ -880,23 +880,35 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
   };
 
+  getPreferenceString = async (id) => {
+    const { DefinedValue } = this.context.dataSources;
+
+    const preference = await DefinedValue.getFromId(id);
+    const titleOverride = get(
+      preference,
+      'attributeValues.titleOverride.value',
+      undefined
+    );
+    const value = get(preference, 'preference.value', null);
+    return titleOverride || value;
+  };
+
   async getPreference({ attributeValues }) {
     const preferenceId = attributeValues?.preference?.value;
 
     if (!preferenceId) {
       return null;
     }
-
-    const { DefinedValue } = this.context.dataSources;
-    const preference = await DefinedValue.getFromId(preferenceId);
-
-    const titleOverride = get(
-      preference,
-      'attributeValues.titleOverride.value',
-      undefined
-    );
-    const valueFormatted = get(attributeValues, 'preference.valueFormatted', null);
-    return titleOverride || valueFormatted;
+    if (preferenceId.includes(',')) {
+      const ids = preferenceId.split(',');
+      const preferences = await Promise.all(
+        ids.map((id) => this.getPreferenceString(id))
+      );
+      return preferences;
+    } else {
+      const preference = await this.getPreferenceString(preferenceId);
+      return [preference];
+    }
   }
 
   getSubPreference({ attributeValues }) {
