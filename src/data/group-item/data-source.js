@@ -1204,7 +1204,7 @@ export default class GroupItem extends baseGroup.dataSource {
       title,
     } = data.node;
 
-    const dateTimeFormatted = moment(dateTime?.start).format('ddd');
+    const dateTimeFormatted = moment(dateTime?.start).format('dddd');
 
     // Remember — Algolia uses the order of attributes on items in its results
     // ranking logic, in lieu of other settings/custom ranking formula, etc.
