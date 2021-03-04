@@ -199,9 +199,10 @@ export default class Schedule extends RockApolloDataSource {
     };
   }
 
-  async _parseCustomSchedule(iCalendar) {
+  async _parseCustomSchedule(iCalendar, args) {
+    const duration = get(args, 'duration', this.defaultEndOffsetMinutes);
     const events = await this.parseiCalendar(iCalendar, {
-      duration: this.defaultEndOffsetMinutes,
+      duration,
     });
 
     /** TL;DR: parseiCalendar filters by the _day_ of the event, not the time
@@ -398,6 +399,9 @@ export default class Schedule extends RockApolloDataSource {
 
   timeIsInSchedules = async ({ ids, time }) => {
     const times = await this.getOccurrencesFromIds(ids);
+
+    console.log({ times });
+
     const nextTime = first(times);
 
     if (nextTime) {
