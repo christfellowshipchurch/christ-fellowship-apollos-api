@@ -100,6 +100,7 @@ export default class Checkinable extends RockApolloDataSource {
        *  for check in. This would mean that this schedule is valid between 6:30am
        *  and 7:30am
        */
+
       if (isActive) {
         if (moment().isBetween(checkInStart, checkInEnd)) {
           return returnData;

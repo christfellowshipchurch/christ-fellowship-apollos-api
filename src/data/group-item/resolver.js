@@ -1,3 +1,4 @@
+import { AuthenticationError } from 'apollo-server';
 import ApollosConfig from '@apollosproject/config';
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
 import {
@@ -5,6 +6,7 @@ import {
   parseGlobalId,
   createGlobalId,
 } from '@apollosproject/server-core';
+import { isWithinInterval, parseISO } from 'date-fns';
 
 const defaultResolvers = {
   id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
@@ -43,10 +45,90 @@ const resolver = {
     },
     dateTime: ({ scheduleId }, args, { dataSources }) =>
       dataSources.GroupItem.getDateTimeFromId(scheduleId),
-    videoCall: (root, args, { dataSources }) =>
-      dataSources.GroupItem.getGroupVideoCallParams(root),
-    parentVideoCall: (root, args, { dataSources }) =>
-      dataSources.GroupItem.getGroupParentVideoCallParams(root),
+    videoCall: async (root, args, { dataSources }) => {
+      const { GroupItem, Auth, Schedule } = dataSources;
+
+      /**
+       * note : we force login to access video calls, so we just want to check and make sure that there is a user logged in
+       */
+      try {
+        const currentPerson = await Auth.getCurrentPerson();
+        if (!currentPerson.id) {
+          return null;
+        }
+
+        const { id, scheduleId } = root;
+
+        if (id && scheduleId) {
+          const schedule = await Schedule.getFromId(scheduleId);
+          const nextScheduleInstance = await Schedule._parseCustomSchedule(
+            schedule.iCalendarContent,
+            {
+              duration: 4 * 60,
+            }
+          );
+
+          if (nextScheduleInstance.nextStart && nextScheduleInstance.nextEnd) {
+            if (
+              isWithinInterval(new Date(), {
+                start: parseISO(nextScheduleInstance.nextStart),
+                end: parseISO(nextScheduleInstance.nextEnd),
+              })
+            ) {
+              return GroupItem.getGroupVideoCallParams(root);
+            }
+          }
+        }
+      } catch (e) {
+        if (!(e instanceof AuthenticationError)) {
+          throw e;
+        }
+      }
+
+      return null;
+    },
+    parentVideoCall: async (root, args, { dataSources }) => {
+      const { GroupItem, Auth, Schedule } = dataSources;
+
+      /**
+       * note : we force login to access video calls, so we just want to check and make sure that there is a user logged in
+       */
+      try {
+        const currentPerson = await Auth.getCurrentPerson();
+        if (!currentPerson.id) {
+          return null;
+        }
+
+        const { id, scheduleId } = root;
+
+        if (id && scheduleId) {
+          const schedule = await Schedule.getFromId(scheduleId);
+          const nextScheduleInstance = await Schedule._parseCustomSchedule(
+            schedule.iCalendarContent,
+            {
+              duration: 4 * 60,
+            }
+          );
+
+          if (nextScheduleInstance.nextStart && nextScheduleInstance.nextEnd) {
+            if (
+              isWithinInterval(new Date(), {
+                start: parseISO(nextScheduleInstance.nextStart),
+                end: parseISO(nextScheduleInstance.nextEnd),
+              })
+            ) {
+              return GroupItem.getGroupParentVideoCallParams(root);
+            }
+          }
+        }
+      } catch (e) {
+        if (!(e instanceof AuthenticationError)) {
+          throw e;
+        }
+      }
+
+      return null;
+    },
     allowMessages: (root, args, { dataSources }) =>
       dataSources.GroupItem.allowMessages(root),
     checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
