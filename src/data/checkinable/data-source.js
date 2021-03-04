@@ -69,8 +69,6 @@ export default class Checkinable extends RockApolloDataSource {
     const { Schedule } = this.context.dataSources;
     const { nextStart, startOffset, endOffset } = await Schedule.parseById(scheduleId);
 
-    console.log({ nextStart, startOffset, endOffset });
-
     /** Check to make sure the nextStartDateTime is valid */
     if (nextStart && moment(nextStart).isValid()) {
       /** Beginning of the most recent instance */
@@ -102,8 +100,6 @@ export default class Checkinable extends RockApolloDataSource {
        *  for check in. This would mean that this schedule is valid between 6:30am
        *  and 7:30am
        */
-
-      console.log({ isActive, returnData });
 
       if (isActive) {
         if (moment().isBetween(checkInStart, checkInEnd)) {

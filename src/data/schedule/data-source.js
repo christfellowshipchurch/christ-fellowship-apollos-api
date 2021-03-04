@@ -400,8 +400,6 @@ export default class Schedule extends RockApolloDataSource {
   timeIsInSchedules = async ({ ids, time }) => {
     const times = await this.getOccurrencesFromIds(ids);
 
-    console.log({ times });
-
     const nextTime = first(times);
 
     if (nextTime) {
