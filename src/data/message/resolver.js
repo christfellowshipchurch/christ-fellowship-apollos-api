@@ -1,28 +1,20 @@
-import {
-  createGlobalId,
-  withEdgePagination,
-} from '@apollosproject/server-core';
-import ApollosConfig from '@apollosproject/config'
-import { get } from 'lodash'
-import moment from 'moment-timezone'
+import { createGlobalId, withEdgePagination } from '@apollosproject/server-core';
+import ApollosConfig from '@apollosproject/config';
+import { get } from 'lodash';
+import moment from 'moment-timezone';
 
-const { ROCK } = ApollosConfig
+const { ROCK } = ApollosConfig;
 
 const resolver = {
   Message: {
-    id: ({ id }, args, context, { parentType }) =>
-      createGlobalId(id, parentType.name),
+    id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
     title: ({ attributeValues }, args, context) =>
-      get(attributeValues, 'title.value', ''),
+      console.log({ attributeValues }) || get(attributeValues, 'title.value', ''),
     subtitle: ({ attributeValues }, args, context) =>
       get(attributeValues, 'subtitle.value', ''),
-    body: ({ attributeValues }, args, context) =>
-      get(attributeValues, 'body.value', ''),
+    body: ({ attributeValues }, args, context) => get(attributeValues, 'body.value', ''),
     date: ({ attributeValues }, args, context) =>
-      moment
-        .tz(get(attributeValues, 'date.value', ''), ROCK.TIMEZONE)
-        .utc()
-        .format(),
+      moment.tz(get(attributeValues, 'date.value', ''), ROCK.TIMEZONE).utc().format(),
   },
   MessagesConnection: {
     totalCount: ({ getTotalCount }) => getTotalCount(),
@@ -35,6 +27,6 @@ const resolver = {
         args,
       }),
   },
-}
+};
 
-export default resolver
+export default resolver;
