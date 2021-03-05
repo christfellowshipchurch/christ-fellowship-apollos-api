@@ -3,7 +3,7 @@ import {
   Utils,
 } from '@apollosproject/data-connector-rock';
 import { createGlobalId } from '@apollosproject/server-core';
-import { get, flattenDeep, isEmpty } from 'lodash';
+import { get, flattenDeep, isEmpty, uniqBy } from 'lodash';
 import moment from 'moment-timezone';
 import ApollosConfig from '@apollosproject/config';
 
@@ -239,7 +239,9 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
         personId: id,
       });
 
-      return groups.map((item, i) => {
+      // ? this is just a temp solution : why are volunteer groups returning so many duplicate results??
+
+      return uniqBy(groups, 'id').map((item, i) => {
         return {
           id: `${item.id}${i}`,
           title: Group.getTitle(item),
