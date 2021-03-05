@@ -9,7 +9,7 @@ const resolver = {
   Message: {
     id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
     title: ({ attributeValues }, args, context) =>
-      console.log({ attributeValues }) || get(attributeValues, 'title.value', ''),
+      get(attributeValues, 'title.value', ''),
     subtitle: ({ attributeValues }, args, context) =>
       get(attributeValues, 'subtitle.value', ''),
     body: ({ attributeValues }, args, context) => get(attributeValues, 'body.value', ''),
