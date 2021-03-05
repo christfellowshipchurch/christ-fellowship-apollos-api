@@ -97,7 +97,7 @@ const data = {
   Metadata,
   OneSignal,
   OneSignalWithRock,
-  PageBuilder,
+  // PageBuilder,
   Pass,
   Person,
   PersonalDevice,

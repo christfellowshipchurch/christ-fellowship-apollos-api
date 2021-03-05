@@ -233,6 +233,10 @@ ROCK_MAPPINGS:
   CAMPAIGN_CHANNEL_IDS:
     - 11
 
+  PAGE_BUILDER_CONTENT_CHANNEL_IDS:
+    - 54
+    - 72
+
   ANNOUNCEMENTS_CHANNEL_ID: 50
   SERMON_CHANNEL_ID: 63
 
@@ -421,6 +425,8 @@ FEATURE_FLAGS:
     status: 'LIVE'
 
 PAGE_BUILDER:
+  default:
+    contentChannelId: 54
   locations:
     contentChannelId: 72
     buildingBlocks:

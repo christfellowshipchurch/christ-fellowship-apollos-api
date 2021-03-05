@@ -524,6 +524,23 @@ export default class Feature extends coreFeatures.dataSource {
     return this.getFeedFeatures(get(ApollosConfig, 'FEATURE_FEEDS.CONNECT_TAB', []));
   }
 
+  /**
+   * note : use this method to get content channel items for Page Builder Features
+   */
+
+  async getPageBuilderFeatures(url) {
+    const { ContentItem } = this.context.dataSources;
+    const contentItemId = await ContentItem.getIdByUrl(url);
+
+    if (contentItemId) {
+      const contentItem = await ContentItem.getFromId(contentItemId);
+
+      return console.warn({ contentItem });
+    } else {
+      return console.error('url could not be found');
+    }
+  }
+
   async getRockFeedFeatures({ contentChannelId }) {
     if (!contentChannelId) {
       return [];

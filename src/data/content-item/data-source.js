@@ -10,7 +10,11 @@ import keywordExtractor from 'keyword-extractor';
 import sizeof from 'object-sizeof';
 import sanitizeHtml from 'sanitize-html';
 
-import { createVideoUrlFromGuid, getIdentifierType } from '../utils';
+import {
+  createVideoUrlFromGuid,
+  getIdentifierType,
+  getConfigurationFromUrl,
+} from '../utils';
 
 const { ROCK_MAPPINGS, ROCK, FEATURE_FLAGS } = ApollosConfig;
 
@@ -26,55 +30,56 @@ const cleanHtmlContentForIndex = (htmlContent) => {
   // Strip all html tags
   const cleanedHtml = sanitizeHtml(htmlContent, {
     allowedTags: [],
-    allowedAttributes: {}
-  })
+    allowedAttributes: {},
+  });
 
   return keywordExtractor.extract(cleanedHtml, {
-    language: "english",
+    language: 'english',
     remove_digits: true,
     return_changed_case: true,
-    remove_duplicates: true
-  })
+    remove_duplicates: true,
+  });
 };
 
 const processObjectSize = (obj) => {
-  const objSize = sizeof(obj)
+  const objSize = sizeof(obj);
 
   // If the object is smaller than the max size, return it
-  if (objSize < MAX_SIZE) return obj
+  if (objSize < MAX_SIZE) return obj;
 
   // Calculate the size of the htmlContent and the rest of the props
-  const htmlContentSize = sizeof(obj.htmlContent)
-  const objPropSize = objSize - htmlContentSize
+  const htmlContentSize = sizeof(obj.htmlContent);
+  const objPropSize = objSize - htmlContentSize;
 
   if (objPropSize > MAX_SIZE) {
     // TODO : handle an object that exceeds the max size without any htmlContent
-    return obj
+    return obj;
   }
 
   // Calculate the max size that the html content array can be.
-  const maxContentSize = MAX_SIZE - objPropSize
+  const maxContentSize = MAX_SIZE - objPropSize;
   // Calculate the new length of the array based on the % reduction
   // that needs to be had. It's not exact, but it should be decent
   // enough for right now.
   //
   // Ex: if we need a 50% reduction in the array size, cut the array's
   // length in half
-  const percentReduction = maxContentSize / htmlContentSize
-  const newArrayLength = obj.htmlContent.length - (obj.htmlContent.length * percentReduction)
+  const percentReduction = maxContentSize / htmlContentSize;
+  const newArrayLength =
+    obj.htmlContent.length - obj.htmlContent.length * percentReduction;
 
   return {
     ...obj,
-    htmlContent: take(obj.htmlContent, newArrayLength)
-  }
-}
+    htmlContent: take(obj.htmlContent, newArrayLength),
+  };
+};
 
 const deleteKeysByPattern = (pattern) => {
   return new Promise((resolve, reject) => {
     const stream = redis.scanStream({
-      match: pattern
+      match: pattern,
     });
-    stream.on("data", (keys) => {
+    stream.on('data', (keys) => {
       if (keys.length) {
         const pipeline = redis.pipeline();
         keys.forEach((key) => {
@@ -83,10 +88,10 @@ const deleteKeysByPattern = (pattern) => {
         pipeline.exec();
       }
     });
-    stream.on("end", () => {
+    stream.on('end', () => {
       resolve();
     });
-    stream.on("error", (e) => {
+    stream.on('error', (e) => {
       reject(e);
     });
   });
@@ -550,9 +555,8 @@ export default class ContentItem extends coreContentItem.dataSource {
   }
 
   async indexAllGeneralContent() {
-    const contentItems = await this
-      .request()
-      .filterOneOf([43, 45, 60, 63].map(n => `ContentChannelId eq ${n}`))
+    const contentItems = await this.request()
+      .filterOneOf([43, 45, 60, 63].map((n) => `ContentChannelId eq ${n}`))
       .andFilter(this.byActive())
       .get();
 
@@ -587,14 +591,14 @@ export default class ContentItem extends coreContentItem.dataSource {
 
     return processObjectSize({
       ...data.node,
-      htmlContent: cleanHtmlContentForIndex(data.node.htmlContent)
+      htmlContent: cleanHtmlContentForIndex(data.node.htmlContent),
     });
   }
 
   async updateContentItemIndex(id) {
     // const log = (msg) => console.log(`\n\x1b[35m${msg}\x1b[30m\n`);
     const log = (msg) => console.log(`\n*** Search Index Log ***\n${msg}\n\n`);
-    log(`updateContentItemIndex(${id})`)
+    log(`updateContentItemIndex(${id})`);
 
     /** Resolve the Content Item */
     const item = await this.getFromId(id);
@@ -602,10 +606,14 @@ export default class ContentItem extends coreContentItem.dataSource {
       return null;
     }
 
-    const hideFromSearch = get(item, "attributeValues.hideFromSearch.value", "false").toLowerCase();
+    const hideFromSearch = get(
+      item,
+      'attributeValues.hideFromSearch.value',
+      'false'
+    ).toLowerCase();
 
     /** Delete the item if it should not be included in Search */
-    if (hideFromSearch === "true") {
+    if (hideFromSearch === 'true') {
       const type = await this.resolveContentItem(item);
       return this.getSearchIndex().deleteObject(createGlobalId(item.id, type));
     }
@@ -630,7 +638,11 @@ export default class ContentItem extends coreContentItem.dataSource {
     if (startDateTime && startDateTime !== '') {
       const mStartDateTime = moment(startDateTime).tz(ApollosConfig.ROCK.TIMEZONE);
 
-      log(`${moment().format()} : ${item.title} has a start date of ${mStartDateTime.format()}`);
+      log(
+        `${moment().format()} : ${
+          item.title
+        } has a start date of ${mStartDateTime.format()}`
+      );
 
       if (mStartDateTime.isValid() && mStartDateTime.isAfter(moment())) {
         /** Set up the options for the bull job.
@@ -651,7 +663,7 @@ export default class ContentItem extends coreContentItem.dataSource {
         const data = {
           action: 'update',
           item: indexableItem,
-          timestamp: moment().format('hh:mm:ss')
+          timestamp: moment().format('hh:mm:ss'),
         };
         const options = {
           delay: mStartDateTime.diff(moment()),
@@ -659,9 +671,9 @@ export default class ContentItem extends coreContentItem.dataSource {
           prefix: `bull-${CONTENT}`,
         };
 
-        log(`Scheduling search index update for "${item.title}"`)
+        log(`Scheduling search index update for "${item.title}"`);
         itemQueue.add(data, options);
-        itemQueue.process(job => {
+        itemQueue.process((job) => {
           /** Get the item from our job data so that we can go ahead
            *  and execute our search
            *
@@ -670,18 +682,18 @@ export default class ContentItem extends coreContentItem.dataSource {
           const { data } = job;
           const { action, item } = data;
 
-          if (action === "update") {
+          if (action === 'update') {
             log(`Running scheduled search index update for "${item.title}"`);
             return this.getSearchIndex().addObjects([item]);
           }
         });
 
-        return null
+        return null;
       }
     }
 
-    log(`Updating search index for "${item.title}"`)
-    return this.getSearchIndex().addObjects([indexableItem])
+    log(`Updating search index for "${item.title}"`);
+    return this.getSearchIndex().addObjects([indexableItem]);
   }
 
   async deltaIndex({ datetime }) {
@@ -737,5 +749,38 @@ export default class ContentItem extends coreContentItem.dataSource {
 
       await this.addObjects(indexableItems);
     }
+  }
+
+  getIdByUrl(pathname = isRequired('ContentItem.getIdByUrl', 'pathname')) {
+    const { Cache } = this.context.dataSources;
+
+    const {
+      contentChannelIds,
+      queryAttribute,
+      page,
+      pathname: cleanedPathname,
+    } = getConfigurationFromUrl(pathname);
+
+    if (contentChannelIds) {
+      const request = async () => {
+        const contentItem = await this.byAttributeValue(queryAttribute, page)
+          .filterOneOf(
+            contentChannelIds.map(
+              (contentChannelId) => `ContentChannelId eq ${contentChannelId}`
+            )
+          )
+          .select('Id')
+          .first();
+
+        return contentItem.id;
+      };
+
+      return Cache.request(request, {
+        key: Cache.KEY_TEMPLATES.pathnameId`${cleanedPathname}`,
+        expiresIn: 60 * 60 * 12, // 12 hour cache
+      });
+    }
+
+    return null;
   }
 }
