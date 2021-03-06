@@ -20,7 +20,7 @@ const { ROCK_MAPPINGS, ROCK, FEATURE_FLAGS } = ApollosConfig;
 const MAX_SIZE = 10000; // bytes
 const { REDIS_URL, CONTENT } = process.env;
 
-const redis = new Redis(REDIS_URL);
+const redis = REDIS_URL ? new Redis(REDIS_URL) : null;
 
 const cleanHtmlContentForIndex = (htmlContent) => {
   // Strip all html tags
