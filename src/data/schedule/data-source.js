@@ -306,10 +306,29 @@ export default class Schedule extends RockApolloDataSource {
     };
     const offsetStr = getTimezoneOffset();
 
-    const iCalAdjusted = iCal
-      .replace(iCalStart[0], `DTSTART;TZID=Etc/GMT${offsetStr}:${iCalStart[1]}`)
-      .replace(iCalEnd[0], `DTEND;TZID=Etc/GMT${offsetStr}:${iCalEnd[1]}`)
-      .replace(iCalStamp[0], `DTSTAMP;TZID=Etc/GMT${offsetStr}:${iCalStamp[1]}`);
+    let iCalAdjusted = iCal;
+
+    /**
+     * note : bunch of standard conditionals here just to be safe. No need to throw errors unecessarily
+     */
+    if (iCalStart)
+      iCalAdjusted = iCalAdjusted.replace(
+        iCalStart[0],
+        `DTSTART;TZID=Etc/GMT${offsetStr}:${iCalStart[1]}`
+      );
+
+    if (iCalStart)
+      iCalAdjusted = iCalAdjusted.replace(
+        iCalEnd[0],
+        `DTEND;TZID=Etc/GMT${offsetStr}:${iCalEnd[1]}`
+      );
+
+    if (iCalStart)
+      iCalAdjusted = iCalAdjusted.replace(
+        iCalStamp[0],
+        `DTSTAMP;TZID=Etc/GMT${offsetStr}:${iCalStamp[1]}`
+      );
+
     const iCalEvents = Object.values(await ical.async.parseICS(iCalAdjusted));
 
     /** [{ start, end, ical }]

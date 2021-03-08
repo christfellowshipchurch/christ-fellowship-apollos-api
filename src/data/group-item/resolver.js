@@ -80,9 +80,8 @@ const resolver = {
           }
         }
       } catch (e) {
-        if (!(e instanceof AuthenticationError)) {
-          throw e;
-        }
+        // note : no need to throw errors here, it's safe enough to return `null`
+        console.warn('Group Video Call', e);
       }
 
       return null;
@@ -122,9 +121,8 @@ const resolver = {
           }
         }
       } catch (e) {
-        if (!(e instanceof AuthenticationError)) {
-          throw e;
-        }
+        // note : no need to throw errors here, it's safe enough to return `null`
+        console.warn('Group Parent Video Call', e);
       }
 
       return null;
