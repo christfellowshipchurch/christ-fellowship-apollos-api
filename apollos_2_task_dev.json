@@ -39,11 +39,11 @@
         },
         {
           "name": "NODE_ENV",
-          "value": "stage"
+          "value": "production"
         },
         {
           "name": "CONTENT",
-          "value": "stage"
+          "value": "production"
         },
         {
           "name": "ALGOLIA_SEARCH_INDEX_CONTENT_ITEMS",

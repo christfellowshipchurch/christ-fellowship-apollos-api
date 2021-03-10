@@ -23,6 +23,7 @@ export default class Feature extends coreFeatures.dataSource {
 
   /** Create Features */
   createActionBarFeature({ actions }) {
+    console.log('ACTION BAR');
     return {
       // The Feature ID is based on all of the action ids, added together.
       // This is naive, and could be improved.
