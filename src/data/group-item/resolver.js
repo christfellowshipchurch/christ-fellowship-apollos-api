@@ -46,86 +46,13 @@ const resolver = {
     dateTime: ({ scheduleId }, args, { dataSources }) =>
       dataSources.GroupItem.getDateTimeFromId(scheduleId),
     videoCall: async (root, args, { dataSources }) => {
-      const { GroupItem, Auth, Schedule } = dataSources;
-
-      /**
-       * note : we force login to access video calls, so we just want to check and make sure that there is a user logged in
-       */
-      try {
-        const currentPerson = await Auth.getCurrentPerson();
-        if (!currentPerson.id) {
-          return null;
-        }
-
-        const { id, scheduleId } = root;
-
-        if (id && scheduleId) {
-          const schedule = await Schedule.getFromId(scheduleId);
-          const nextScheduleInstance = await Schedule._parseCustomSchedule(
-            schedule.iCalendarContent,
-            {
-              duration: 4 * 60,
-            }
-          );
-
-          if (nextScheduleInstance.nextStart && nextScheduleInstance.nextEnd) {
-            if (
-              isWithinInterval(new Date(), {
-                start: parseISO(nextScheduleInstance.nextStart),
-                end: parseISO(nextScheduleInstance.nextEnd),
-              })
-            ) {
-              return GroupItem.getGroupVideoCallParams(root);
-            }
-          }
-        }
-      } catch (e) {
-        // note : no need to throw errors here, it's safe enough to return `null`
-        console.warn('Group Video Call', e);
-      }
-
-      return null;
+      const { GroupItem } = dataSources;
+      return GroupItem.getGroupVideoCallParams(root);
     },
     parentVideoCall: async (root, args, { dataSources }) => {
-      const { GroupItem, Auth, Schedule } = dataSources;
+      const { GroupItem } = dataSources;
 
-      /**
-       * note : we force login to access video calls, so we just want to check and make sure that there is a user logged in
-       */
-      try {
-        const currentPerson = await Auth.getCurrentPerson();
-        if (!currentPerson.id) {
-          return null;
-        }
-
-        const { id, scheduleId } = root;
-
-        if (id && scheduleId) {
-          const schedule = await Schedule.getFromId(scheduleId);
-          const nextScheduleInstance = await Schedule._parseCustomSchedule(
-            schedule.iCalendarContent,
-            {
-              duration: 4 * 60,
-            }
-          );
-
-          if (nextScheduleInstance.nextStart && nextScheduleInstance.nextEnd) {
-            if (
-              isWithinInterval(new Date(), {
-                start: parseISO(nextScheduleInstance.nextStart),
-                end: parseISO(nextScheduleInstance.nextEnd),
-              })
-            ) {
-              return GroupItem.getGroupParentVideoCallParams(root);
-            }
-          }
-        }
-      } catch (e) {
-        // note : no need to throw errors here, it's safe enough to return `null`
-        console.warn('Group Parent Video Call', e);
-      }
-
-      return null;
+      return GroupItem.getGroupParentVideoCallParams(root);
     },
     allowMessages: (root, args, { dataSources }) =>
       dataSources.GroupItem.allowMessages(root),
