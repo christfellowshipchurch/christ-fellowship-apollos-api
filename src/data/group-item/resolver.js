@@ -4,7 +4,6 @@ import {
   resolverMerge,
   parseGlobalId,
   createGlobalId,
-  withEdgePagination,
 } from '@apollosproject/server-core';
 import { get } from 'lodash';
 
@@ -45,10 +44,15 @@ const resolver = {
     },
     dateTime: ({ scheduleId }, args, { dataSources }) =>
       dataSources.GroupItem.getDateTimeFromId(scheduleId),
-    videoCall: (root, args, { dataSources }) =>
-      dataSources.GroupItem.getGroupVideoCallParams(root),
-    parentVideoCall: (root, args, { dataSources }) =>
-      dataSources.GroupItem.getGroupParentVideoCallParams(root),
+    videoCall: async (root, args, { dataSources }) => {
+      const { GroupItem } = dataSources;
+      return GroupItem.getGroupVideoCallParams(root);
+    },
+    parentVideoCall: async (root, args, { dataSources }) => {
+      const { GroupItem } = dataSources;
+
+      return GroupItem.getGroupParentVideoCallParams(root);
+    },
     allowMessages: (root, args, { dataSources }) =>
       dataSources.GroupItem.allowMessages(root),
     checkin: ({ id }, args, { dataSources: { CheckInable } }) =>
@@ -59,6 +63,8 @@ const resolver = {
       dataSources.GroupItem.getPreference(root),
     subPreference: (root, args, { dataSources }) =>
       dataSources.GroupItem.getSubPreference(root),
+    meetingType: (root, args, { dataSources }) =>
+      dataSources.GroupItem.getMeetingType(root),
   },
   VolunteerGroup: {
     ...defaultResolvers,

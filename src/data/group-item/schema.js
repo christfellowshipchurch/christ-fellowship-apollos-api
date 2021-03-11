@@ -90,8 +90,9 @@ export const groupSchema = gql`
     schedule: Schedule
     videoCall: VideoCallParams
     campus: Campus
-    preference: String
+    preference: [String]
     subPreference: String
+    meetingType: String
 
     avatars: [String] @deprecated(reason: "Use people instead")
     leaders: [Person] @deprecated(reason: "Use people instead")
@@ -171,6 +172,7 @@ export const groupSchema = gql`
     day: [String]
     preference: [String]
     subPreference: [String]
+    meetingType: [String]
   }
 
   extend enum InteractionAction {
