@@ -1,4 +1,3 @@
-import { featuresSchema } from '@apollosproject/data-schema';
 import gql from 'graphql-tag';
 
 export default gql`
