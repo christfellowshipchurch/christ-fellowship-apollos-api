@@ -1072,8 +1072,6 @@ export default class GroupItem extends baseGroup.dataSource {
         .filter((groupTypeId) => !!groupTypeId)
         .filter((groupTypeId, index, self) => self.indexOf(groupTypeId) === index);
 
-      console.log({ groupTypeIds });
-
       return Promise.all(
         groupTypeIds.map((groupTypeId) => {
           if (groupTypeId) {
