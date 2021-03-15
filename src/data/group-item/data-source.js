@@ -1059,13 +1059,23 @@ export default class GroupItem extends baseGroup.dataSource {
    */
   async _getGroupTypesFromDefinedType(id) {
     const { Cache, DefinedValueList } = this.context.dataSources;
-    const { definedValues } = await DefinedValueList.getFromId(id);
 
     const request = async () => {
-      return Promise.all(
-        definedValues.map((item) => {
-          const groupTypeId = get(item, 'attributeValues.groupType.value');
+      const { definedValues } = await DefinedValueList.getFromId(id);
+      /**
+       * 1. Map to Group Type Ids
+       * 2. Filter out any falsey value
+       * 3. Filter out duplicate Group Type Ids
+       */
+      const groupTypeIds = definedValues
+        .map((definedValue) => get(definedValue, 'attributeValues.groupType.value'))
+        .filter((groupTypeId) => !!groupTypeId)
+        .filter((groupTypeId, index, self) => self.indexOf(groupTypeId) === index);
 
+      console.log({ groupTypeIds });
+
+      return Promise.all(
+        groupTypeIds.map((groupTypeId) => {
           if (groupTypeId) {
             const identifier = getIdentifierType(groupTypeId);
 
@@ -1085,17 +1095,27 @@ export default class GroupItem extends baseGroup.dataSource {
       key: Cache.KEY_TEMPLATES.groupTypeIds`${id}`,
     });
 
-    return ids;
+    // note : one last filter for falsey value
+    return ids.filter((id) => !!id);
   }
 
   async _getValidGroupRoles() {
     const { Cache, DefinedValueList } = this.context.dataSources;
     const request = async () => {
       const { definedValues } = await DefinedValueList.getFromId(GROUP_MEMBER_ROLES);
+      /**
+       * 1. Map to Group Type Ids
+       * 2. Filter out any falsey value
+       * 3. Filter out duplicate Group Type Ids
+       */
+      const groupTypeRoles = definedValues
+        .map((definedValue) => get(definedValue, 'attributeValues.groupRole.value'))
+        .filter((groupTypeRole) => !!groupTypeRole)
+        .filter((groupTypeRole, index, self) => self.indexOf(groupTypeRole) === index);
+
       const memberRoles = await Promise.all(
-        definedValues.map((definedValue) => {
-          const attributeValue = get(definedValue, 'attributeValues.groupRole.value');
-          const identifier = getIdentifierType(attributeValue);
+        groupTypeRoles.map((groupTypeRole) => {
+          const identifier = getIdentifierType(groupTypeRole);
           return this.request('GroupTypeRoles')
             .filter(identifier.query)
             .transform((results) => ({
