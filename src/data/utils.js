@@ -7,6 +7,7 @@ import { get, last, dropRight, forEach } from 'lodash';
 import CHRISTMAS_DEVO_IDS from './christmas-devo';
 
 const { createImageUrlFromGuid } = Utils;
+const { ROCK_MAPPINGS } = ApollosConfig;
 
 /*
  Splits up a Rock Key Value paired string where | splits pairs and ^ splits key and value
@@ -194,4 +195,26 @@ export const isValidUrl = (str) => {
     'i'
   ); // fragment locator
   return !!pattern.test(str);
+};
+
+export const getConfigurationFromUrl = (pathname) => {
+  /** Split the pathname by the / so that we can get the page that we want to query
+   *  as well as the path to the config object for that path to get the Content Channel
+   *  where those pages live.
+   *
+   *  Example: '/locations/name/' should resolve to ['locations', 'name'] so that we can
+   *           check the PAGE_BUILDER config object for the Content Channel Id for 'locations'
+   *           and then query that Content Channel for 'name'
+   */
+
+  const paths = pathname.split('/').filter((path) => path && path !== '');
+  const pathToPage = dropRight(paths);
+  const page = last(paths);
+
+  return {
+    contentChannelIds: ROCK_MAPPINGS.PAGE_BUILDER_CONTENT_CHANNEL_IDS,
+    pathname: paths.join('/'),
+    page,
+    queryAttribute: 'url',
+  };
 };

@@ -8,6 +8,8 @@ export default gql`
     giveFeedFeatures: FeatureFeed @cacheControl(maxAge: 0)
     homeHeaderFeedFeatures: FeatureFeed @cacheControl(maxAge: 0)
 
+    featuresFeed(pathname: String!): FeatureFeed @cacheControl(maxAge: 0)
+
     userHeaderFeatures: [Feature]
     @cacheControl(maxAge: 0)
     @deprecated(reason: "Please use homeHeaderFeedFeatures instead")

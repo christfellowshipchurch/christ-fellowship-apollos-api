@@ -9,8 +9,8 @@ const resolver = {
   AvatarListFeature: {
     id: ({ id }) => createGlobalId(id, 'AvatarListFeature'),
   },
-  LiveStreamListFeature: {
-    id: ({ id }) => createGlobalId(id, 'LiveStreamListFeature'),
+  ContentBlockFeature: {
+    id: ({ id }) => createGlobalId(id, 'ContentBlockFeature'),
   },
   CardListItem: {
     labelText: ({ labelText }) => labelText,
@@ -26,6 +26,9 @@ const resolver = {
 
       return false;
     },
+  },
+  LiveStreamListFeature: {
+    id: ({ id }) => createGlobalId(id, 'LiveStreamListFeature'),
   },
 };
 

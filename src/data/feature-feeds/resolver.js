@@ -16,11 +16,6 @@ const resolver = {
         type: 'apollosConfig',
         args: { section: 'EVENTS_TAB', ...args },
       }),
-    giveFeedFeatures: (root, args, { dataSources: { FeatureFeed } }) =>
-      FeatureFeed.getFeed({
-        type: 'apollosConfig',
-        args: { section: 'GIVE_FEATURES', ...args },
-      }),
     homeFeedFeatures: (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
         type: 'contentChannel',
@@ -30,6 +25,40 @@ const resolver = {
       FeatureFeed.getFeed({
         type: 'apollosConfig',
         args: { section: 'HOME_HEADER_FEATURES', ...args },
+      }),
+    featuresFeed: (root, { pathname, ...args }, { dataSources: { FeatureFeed } }) => {
+      switch (pathname) {
+        case 'connect':
+          return FeatureFeed.getFeed({
+            type: 'apollosConfig',
+            args: { section: 'CONNECT_TAB', ...args },
+          });
+        case 'events':
+          return FeatureFeed.getFeed({
+            type: 'apollosConfig',
+            args: { section: 'EVENTS_TAB', ...args },
+          });
+        case 'home':
+          return FeatureFeed.getFeed({
+            type: 'contentChannel',
+            args: { contentChannelId: CONTENT_CHANNEL_FEEDS.HOME_FEED, ...args },
+          });
+        case 'give':
+          return FeatureFeed.getFeed({
+            type: 'apollosConfig',
+            args: { section: 'GIVE_FEATURES', ...args },
+          });
+        default:
+          return FeatureFeed.getFeed({
+            type: 'pageBuilder',
+            args: { pathname, ...args },
+          });
+      }
+    },
+    giveFeedFeatures: (root, args, { dataSources: { FeatureFeed } }) =>
+      FeatureFeed.getFeed({
+        type: 'apollosConfig',
+        args: { section: 'GIVE_FEATURES', ...args },
       }),
   },
 };

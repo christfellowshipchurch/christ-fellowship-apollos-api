@@ -57,4 +57,14 @@ export default gql`
     id: ID!
     order: Int
   }
+
+  type ContentBlockFeature implements Feature & Node {
+    id: ID!
+    order: Int
+
+    title(hyphenated: Boolean): String
+    summary: String
+    htmlContent: String
+    coverImage: ImageMedia
+  }
 `;

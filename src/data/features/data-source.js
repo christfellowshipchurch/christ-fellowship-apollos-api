@@ -1,6 +1,8 @@
 import { Feature as coreFeatures } from '@apollosproject/data-connector-rock';
 import { get } from 'lodash';
 
+import sanitizeHtml from '../sanitize-html';
+
 export default class Feature extends coreFeatures.dataSource {
   expanded = true;
 
@@ -70,6 +72,28 @@ export default class Feature extends coreFeatures.dataSource {
       primaryAction,
       // Typename is required so GQL knows specifically what Feature is being created
       __typename: 'AvatarListFeature',
+    };
+  }
+
+  async createContentBlockFeature({ contentChannelItemId }) {
+    const { ContentItem } = this.context.dataSources;
+
+    const contentItem = await ContentItem.getFromId(contentChannelItemId);
+
+    return {
+      // The Feature ID is based on all of the action ids, added together.
+      // This is naive, and could be improved.
+      id: this.createFeatureId({
+        args: {
+          contentChannelItemId,
+        },
+      }),
+      title: contentItem.title,
+      summary: ContentItem.createSummary(contentItem),
+      htmlContent: sanitizeHtml(content.content),
+      coverImage: ContentItem.getCoverImage(contentItem),
+      // Typename is required so GQL knows specifically what Feature is being created
+      __typename: 'ContentBlockFeature',
     };
   }
 
