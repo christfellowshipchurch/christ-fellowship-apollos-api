@@ -4,17 +4,15 @@ import { getConfigurationFromUrl } from '../utils';
 
 export default class PageBuilder extends ContentItem.dataSource {
   async getFeatures(pathname) {
-    const { ContentItem } = this.context.dataSources;
+    const { ContentItem, Feature } = this.context.dataSources;
 
     const contentItemId = await this.getIdByUrl(pathname);
 
     if (contentItemId) {
       const childrenIds = await ContentItem.getChildrenIds(contentItemId);
-      const contentItems = await Promise.all(
-        childrenIds.map((id) => ContentItem.getFromId(id))
+      return childrenIds.map((contentChannelItemId) =>
+        Feature.createContentBlockFeature({ contentChannelItemId })
       );
-
-      console.log({ contentItems });
     }
 
     return [];
