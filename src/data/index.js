@@ -29,6 +29,7 @@ import * as Address from './address';
 import * as Auth from './auth';
 import * as Browse from './browse';
 import * as Cache from './redis-cache';
+import * as CacheManager from './redis-cache-manager';
 import * as Campus from './campus';
 import * as CheckInable from './checkinable';
 import * as ContentChannel from './content-channel';
@@ -75,6 +76,7 @@ const data = {
   BinaryFiles,
   Browse,
   Cache,
+  CacheManager,
   Campus,
   CheckInable,
   ContentChannel,

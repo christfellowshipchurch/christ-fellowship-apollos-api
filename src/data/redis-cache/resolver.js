@@ -6,9 +6,15 @@ const { APOLLOS_SECRET } = ROCK;
 
 export default {
   Mutation: {
-    flushRock: (root, { key, ...args }, { dataSources: { Cache } }) => {
+    flushRock: async (root, { key, ...args }, { dataSources: { CacheManager } }) => {
       if (key === APOLLOS_SECRET) {
-        return Cache.flushFor('ROCK', args);
+        console.log('\n\x1b[35m[redis cache] starting recursive clear');
+
+        await CacheManager.recursivelyClear(args);
+
+        console.log('[redis cache] finished recursive clear\x1b[0m\n');
+
+        return;
       }
 
       throw new AuthenticationError(

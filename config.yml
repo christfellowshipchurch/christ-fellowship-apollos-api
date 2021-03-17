@@ -450,12 +450,25 @@ NOTIFICATIONS:
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_ENTITY_IDS:
+  CONTENT_CHANNEL: 209
   CONTENT_CHANNEL_ITEM: 208
   DEFINED_TYPE: 72
   DEFINED_VALUE: 31
   GROUP: 16
   PERSON: 15
   PRAYER_REQUEST: 33
+  SCHEDULE: 54
+
+ROCK_FIELD_TYPE_IDS:
+  CONTENT_CHANNEL: 76
+  CONTENT_CHANNEL_ITEM: 127
+  DEFINED_TYPE: 15
+  DEFINED_VALUE: 16
+  GROUP: 23
+  PERSON: 18
+  PRAYER_REQUEST: 154
+  SCHEDULE: 109
+  SCHEDULE_BUILDER: 155
 
 # Default mapping of field types -> ids. There's probably no reason to edit this.
 ROCK_CONSTANTS:
