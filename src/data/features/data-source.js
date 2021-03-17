@@ -1,5 +1,5 @@
 import { Feature as coreFeatures } from '@apollosproject/data-connector-rock';
-import { get } from 'lodash';
+import { get, isEmpty } from 'lodash';
 
 import sanitizeHtml from '../sanitize-html';
 
@@ -76,10 +76,22 @@ export default class Feature extends coreFeatures.dataSource {
   }
 
   async createContentBlockFeature({ contentChannelItemId }) {
-    const { ContentItem } = this.context.dataSources;
+    const { ContentItem, DefinedValue } = this.context.dataSources;
 
     const contentItem = await ContentItem.getFromId(contentChannelItemId);
     const summary = get(contentItem, 'attributeValues.summary.value', '');
+    const contentLayoutDefinedValue = get(
+      contentItem,
+      'attributeValues.contentLayout.value',
+      ''
+    );
+    let orientation = 'default';
+
+    if (!isEmpty(contentLayoutDefinedValue)) {
+      const definedValue = await DefinedValue.getFromId(contentLayoutDefinedValue);
+
+      orientation = definedValue?.value ? definedValue?.value : orientation;
+    }
 
     return {
       // The Feature ID is based on all of the action ids, added together.
@@ -93,6 +105,7 @@ export default class Feature extends coreFeatures.dataSource {
       summary,
       htmlContent: sanitizeHtml(contentItem.content),
       coverImage: ContentItem.getCoverImage(contentItem),
+      orientation: orientation.toUpperCase(),
       // Typename is required so GQL knows specifically what Feature is being created
       __typename: 'ContentBlockFeature',
     };

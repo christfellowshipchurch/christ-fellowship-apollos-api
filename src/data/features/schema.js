@@ -11,6 +11,13 @@ export default gql`
     READ_GROUP
   }
 
+  enum CONTENT_BLOCK_ORIENTATION {
+    DEFAULT
+    INVERTED
+    LEFT
+    RIGHT
+  }
+
   enum HorizontalCardType {
     DEFAULT
     HIGHLIGHT
@@ -66,5 +73,7 @@ export default gql`
     summary: String
     htmlContent: String
     coverImage: ImageMedia
+
+    orientation: CONTENT_BLOCK_ORIENTATION
   }
 `;
