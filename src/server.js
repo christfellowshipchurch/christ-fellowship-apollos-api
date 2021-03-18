@@ -62,6 +62,9 @@ const apolloServer = new ApolloServer({
     sendHeaders: {
       all: true,
     },
+    sendVariableValues: {
+      all: true,
+    },
   },
 });
 
