@@ -51,15 +51,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
       id: `${item.id}${i}`,
       title: item.title,
       relatedNode: { ...item, __type: ContentItem.resolveType(item) },
-      // image: ContentItem.getCoverImage(item),
-      image: {
-        sources: [
-          {
-            uri:
-              'https://cloudfront.christfellowship.church/GetImage.ashx?guid=3376aa0d-5610-4a8a-ae24-046250ebf297&mode=crop&h=150&w=150&format=jpg&quality=70',
-          },
-        ],
-      },
+      image: ContentItem.getCoverImage(item),
       action: 'READ_CONTENT',
       summary: ContentItem.createSummary(item),
     }));
@@ -127,15 +119,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
             : item.title,
         subtitle: ContentItem.createSummary(item),
         relatedNode,
-        // image: ContentItem.getCoverImage(item),
-        image: {
-          sources: [
-            {
-              uri:
-                'https://cloudfront.christfellowship.church/GetImage.ashx?guid=3376aa0d-5610-4a8a-ae24-046250ebf297&mode=crop&h=150&w=150&format=jpg&quality=70',
-            },
-          ],
-        },
+        image: ContentItem.getCoverImage(item),
         action: isUrl ? 'OPEN_URL' : 'READ_CONTENT',
         summary: ContentItem.createSummary(item),
       };
