@@ -15,7 +15,7 @@ const {
   SCHEDULE,
 } = ROCK_ENTITY_IDS;
 
-const log_cache = (type, entityId) => console.log(`[redis cache] ${type} : ${entityId}`);
+const cacheLog = (type, entityId) => console.log(`[redis cache] ${type} : ${entityId}`);
 
 export default class CacheManager extends RedisCache.dataSource {
   async _getEntityAttributeValues({
@@ -140,14 +140,14 @@ export default class CacheManager extends RedisCache.dataSource {
       let recursiveEntities = [];
       switch (entityTypeId) {
         case CONTENT_CHANNEL:
-          log_cache('Content Channel', entityId);
+          cacheLog('Content Channel', entityId);
 
           await this.delete({
             key: this.KEY_TEMPLATES.contentChannelItemIds`${entityId}`,
           });
           break;
         case CONTENT_CHANNEL_ITEM:
-          log_cache('Content Channel Item', entityId);
+          cacheLog('Content Channel Item', entityId);
 
           await this.delete({ key: this.KEY_TEMPLATES.contentItem`${entityId}` });
           await this.delete({ key: this.KEY_TEMPLATES.contentItemChildren`${entityId}` });
@@ -158,12 +158,12 @@ export default class CacheManager extends RedisCache.dataSource {
           });
           break;
         case DEFINED_TYPE:
-          log_cache('Defined Type', entityId);
+          cacheLog('Defined Type', entityId);
 
           await this.delete({ key: this.KEY_TEMPLATES.definedType`${entityId}` });
           break;
         case DEFINED_VALUE:
-          log_cache('Defined Value', entityId);
+          cacheLog('Defined Value', entityId);
 
           await this.delete({ key: this.KEY_TEMPLATES.definedValue`${entityId}` });
 
@@ -173,7 +173,7 @@ export default class CacheManager extends RedisCache.dataSource {
           });
           break;
         case GROUP:
-          log_cache('Group', entityId);
+          cacheLog('Group', entityId);
 
           await this.delete({ key: this.KEY_TEMPLATES.group`${entityId}` });
           await this.delete({ key: this.KEY_TEMPLATES.groupLocations`${entityId}` });
@@ -184,19 +184,19 @@ export default class CacheManager extends RedisCache.dataSource {
           });
           break;
         case PRAYER_REQUEST:
-          log_cache('Prayer Request', entityId);
+          cacheLog('Prayer Request', entityId);
 
           await this.delete({ key: this.KEY_TEMPLATES.prayerRequest`${entityId}` });
           break;
         case PERSON:
-          log_cache('Person', entityId);
+          cacheLog('Person', entityId);
 
           await this.delete({ key: this.KEY_TEMPLATES.person`${entityId}` });
           await this.delete({ key: this.KEY_TEMPLATES.personGroups`${entityId}` });
           await this.delete({ key: this.KEY_TEMPLATES.personPrayers`${entityId}` });
           break;
         case SCHEDULE:
-          log_cache('Schedule', entityId);
+          cacheLog('Schedule', entityId);
 
           await this.delete({ key: this.KEY_TEMPLATES.schedule`${entityId}` });
 
