@@ -1,3 +1,4 @@
+import ApollosConfig from '@apollosproject/config';
 import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock';
 import { get, flatten, uniq, uniqBy, first, filter, isEmpty } from 'lodash';
 import { compareAsc, parseISO } from 'date-fns';
@@ -10,6 +11,8 @@ import { sharingResolver } from '../content-item/resolver';
 import deprecatedResolvers from './deprecated-resolvers';
 
 import campusSortOrder from '../campus/campus-sort-order';
+
+const { CONTENT_CHANNEL_FEEDS } = ApollosConfig;
 
 const resolver = {
   EventContentItem: {
@@ -148,6 +151,11 @@ const resolver = {
     },
     liveStream: (root, args, { dataSources: { LiveStream } }) =>
       LiveStream.byContentItem(root),
+    featureFeed: (root, args, { dataSources: { FeatureFeed } }) =>
+      FeatureFeed.getFeed({
+        type: 'contentChannel',
+        args: { contentChannelId: CONTENT_CHANNEL_FEEDS.HOME_FEED, ...args },
+      }),
   },
 };
 
