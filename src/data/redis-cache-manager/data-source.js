@@ -151,6 +151,7 @@ export default class CacheManager extends RedisCache.dataSource {
 
           await this.delete({ key: this.KEY_TEMPLATES.contentItem`${entityId}` });
           await this.delete({ key: this.KEY_TEMPLATES.contentItemChildren`${entityId}` });
+          await this.delete({ key: `contentItem:coverImage:${entity}` });
 
           recursiveEntities = await this._getEntityAttributeValues({
             entityId,
