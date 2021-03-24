@@ -191,6 +191,13 @@ const resolver = {
   MediaContentItem: {
     ...resolverExtensions,
     ...connectionResolvers,
+    featureFeed: ({ id }, args, { dataSources: { FeatureFeed } }) =>
+      FeatureFeed.getFeed({
+        type: 'contentChannelItem',
+        args: {
+          contentChannelItemId: id,
+        },
+      }),
   },
   WeekendContentItem: {
     ...resolverExtensions,

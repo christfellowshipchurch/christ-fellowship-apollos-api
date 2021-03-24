@@ -105,6 +105,8 @@ export default class ContentItem extends coreContentItem.dataSource {
    * @return {function}
    */
   sortByAssociationOrder = (associations) => (a, b) => {
+    if (!a.order || !b.order) return 0;
+
     /**
      * Find the Association Order for the given content channel items
      */
@@ -746,5 +748,87 @@ export default class ContentItem extends coreContentItem.dataSource {
 
       await this.addObjects(indexableItems);
     }
+  }
+
+  async getFeatures(id) {
+    // note : get the children of Content Item
+    const { Feature } = this.context.dataSources;
+    const childrenIds = await this.getChildrenIds(id);
+    const children = await Promise.all(childrenIds.map((id) => this.getFromId(id)));
+
+    return children
+      .map((child) => {
+        const { id, contentChannelId, contentChannelTypeId, title } = child;
+        let typename = null;
+
+        // if we have defined an ContentChannelTypeId based maping in the YML file, use it!
+        if (
+          Object.values(ROCK_MAPPINGS.FEATURE_MAPPINGS).some(
+            ({ ContentChannelTypeId }) =>
+              ContentChannelTypeId && ContentChannelTypeId.includes(contentChannelTypeId)
+          )
+        ) {
+          typename = Object.keys(ROCK_MAPPINGS.FEATURE_MAPPINGS).find((key) => {
+            const value = ROCK_MAPPINGS.FEATURE_MAPPINGS[key];
+            return (
+              value.ContentChannelTypeId &&
+              value.ContentChannelTypeId.includes(contentChannelTypeId)
+            );
+          });
+        }
+        // if we have defined a ContentChannelId based maping in the YML file, use it!
+        if (
+          Object.values(ROCK_MAPPINGS.FEATURE_MAPPINGS).some(
+            ({ ContentChannelId }) =>
+              ContentChannelId && ContentChannelId.includes(contentChannelId)
+          )
+        ) {
+          typename = Object.keys(ROCK_MAPPINGS.FEATURE_MAPPINGS).find((key) => {
+            const value = ROCK_MAPPINGS.FEATURE_MAPPINGS[key];
+            return (
+              value.ContentChannelId && value.ContentChannelId.includes(contentChannelId)
+            );
+          });
+        }
+
+        if (!typename) return null;
+
+        switch (typename) {
+          case 'ContentBlock':
+            return Feature.createContentBlockFeature({ contentChannelItemId: id });
+          case 'HeroList':
+            // todo :
+            return null;
+          case 'HorizontalCardList':
+            return Feature.createHorizontalCardListFeature({
+              algorithms: [
+                {
+                  type: 'CONTENT_CHILDREN',
+                  arguments: {
+                    contentChannelItemId: id,
+                    limit: 0,
+                  },
+                },
+              ],
+              title,
+              subtitle: this.createSummary(child),
+              cardType: 'HIGHLIGHT',
+              primaryAction: {
+                title: 'See More',
+                action: 'OPEN_URL',
+                relatedNode: {
+                  __typename: 'Url',
+                  url: 'https://christfellowship.church',
+                },
+              },
+            });
+          case 'VerticalCardList':
+            // todo :
+            return null;
+          default:
+            return null;
+        }
+      })
+      .filter((child) => !!child);
   }
 }

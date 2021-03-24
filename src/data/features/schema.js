@@ -73,6 +73,7 @@ export default gql`
     summary: String
     htmlContent: String
     coverImage: ImageMedia
+    videos: [VideoMedia]
 
     orientation: CONTENT_BLOCK_ORIENTATION
   }
