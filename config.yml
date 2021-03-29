@@ -303,7 +303,6 @@ ROCK_MAPPINGS:
   YOUNG_ADULTS_GROUP_TYPE_ID: 73
 
   DEFAULT_CAMPUS_ID: 9
-  HOME_FEATURES_CHANNEL_ID: 64
   GENERAL_PRAYER_CATEGORY_ID: 580
 
   FEATURE_MAPPINGS:
@@ -312,12 +311,10 @@ ROCK_MAPPINGS:
     HorizontalCardList:
       ContentChannelId: [44]
 
-HOME_FEATURES:
-  - title: Dynamic Rock Feed
-    algorithms:
-      - type: ROCK_DYNAMIC_FEED
-        arguments:
-          contentChannelId: 64
+CONTENT_CHANNEL_FEEDS:
+  HOME_FEED: 64
+
+# Feature Feed Configuration
 CONNECT_FEATURES:
   - type: AvatarList
     algorithms: [CURRENT_USER]
@@ -384,7 +381,43 @@ GIVE_FEATURES:
         arguments:
           contentChannelId: 76
   - type: ActionBar
-    actions: []
+    actions:
+      - action: 'OPEN_URL'
+        title: 'PushPay'
+        icon: 'push-pay'
+        theme:
+          colors:
+            primary: '#d52158'
+        relatedNode:
+          __typename: 'Url'
+          url: 'https://cf.church/pushpay?feed=give'
+      - action: 'OPEN_URL'
+        title: 'PayPal'
+        icon: 'pay-pal'
+        theme:
+          colors:
+            primary: '#179bd7'
+        relatedNode:
+          __typename: 'Url'
+          url: 'http://cf.church/paypal?feed=give'
+      - action: 'OPEN_URL'
+        title: 'CashApp'
+        icon: 'cash-app'
+        theme:
+          colors:
+            primary: '#1ec27f'
+        relatedNode:
+          __typename: 'Url'
+          url: 'http://cf.church/cash-app?feed=give'
+      - action: 'OPEN_URL'
+        title: 'Venmo'
+        icon: 'venmo'
+        theme:
+          colors:
+            primary: '#00aeef'
+        relatedNode:
+          __typename: 'Url'
+          url: 'http://cf.church/venmo?feed=give'
 HOME_HEADER_FEATURES:
   - algorithms: [ALL_LIVE_CONTENT]
     type: LiveContentList
