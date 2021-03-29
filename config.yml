@@ -318,83 +318,81 @@ HOME_FEATURES:
       - type: ROCK_DYNAMIC_FEED
         arguments:
           contentChannelId: 64
-
-FEATURE_FEEDS:
-  CONNECT_TAB:
-    - type: AvatarList
-      algorithms: [CURRENT_USER]
-      isCard: false
-      primaryAction:
-        action: OPEN_URL
-        icon: 'settings'
+CONNECT_FEATURES:
+  - type: AvatarList
+    algorithms: [CURRENT_USER]
+    isCard: false
+    primaryAction:
+      action: OPEN_URL
+      icon: 'settings'
+      relatedNode:
+        __typename: Url
+        url: 'christfellowship://c/EditCurrentUser'
+  - type: ActionBar
+    actions:
+      - action: OPEN_URL
+        title: 'Groups'
+        icon: 'users'
+        theme:
+          colors:
+            primary: '#00aeef'
         relatedNode:
           __typename: Url
-          url: 'christfellowship://c/EditCurrentUser'
-    - type: ActionBar
-      actions:
-        - action: OPEN_URL
-          title: 'Groups'
-          icon: 'users'
-          theme:
-            colors:
-              primary: '#00aeef'
-          relatedNode:
-            __typename: Url
-            url: 'https://rock.gocf.org/groups'
-        - action: OPEN_URL
-          title: 'Serve'
-          icon: 'handshake'
-          theme:
-            colors:
-              primary: '#d52158'
-          relatedNode:
-            __typename: Url
-            url: 'https://rock.christfellowship.church/dreamteam'
-        - action: OPEN_URL
-          title: 'Give Now'
-          icon: 'envelope-open-dollar'
-          theme:
-            colors:
-              primary: '#1ec27f'
-          relatedNode:
-            __typename: Url
-            url: 'https://cf.church/pushpay?feed=connect'
-    - type: HorizontalCardList
-      algorithms: [MY_GROUPS]
-      title: 'My Groups'
-      flagKey: GROUPS
-    - type: HorizontalCardList
-      algorithms: [MY_VOLUNTEER_GROUPS]
-      title: 'My Dream Teams'
-      flagKey: VOLUNTEER_GROUPS
-    - type: HorizontalCardList
-      algorithms: [MY_PRAYERS]
-      title: 'My Prayers'
-      primaryAction:
-        action: OPEN_URL
-        title: 'See all'
+          url: 'https://rock.gocf.org/groups'
+      - action: OPEN_URL
+        title: 'Serve'
+        icon: 'handshake'
+        theme:
+          colors:
+            primary: '#d52158'
         relatedNode:
           __typename: Url
-          url: 'christfellowship://c/MyPrayerRequestsFeed'
-  EVENTS_TAB:
-    - type: VerticalCardList
-      algorithms: [ALL_EVENTS]
-  GIVE_TAB:
-    - type: HeroList
-      algorithms:
-        - type: CONTENT_CHANNEL
-          arguments:
-            contentChannelId: 76
-    - type: ActionBar
-      actions: []
-  HOME_HEADER:
-    - algorithms: [ALL_LIVE_CONTENT]
-      type: LiveContentList
-      title: Live Now
-    - algorithms: [DAILY_PRAYER]
-      isCard: false
-      type: PrayerList
-      title: Daily Prayer
+          url: 'https://rock.christfellowship.church/dreamteam'
+      - action: OPEN_URL
+        title: 'Give Now'
+        icon: 'envelope-open-dollar'
+        theme:
+          colors:
+            primary: '#1ec27f'
+        relatedNode:
+          __typename: Url
+          url: 'https://cf.church/pushpay?feed=connect'
+  - type: HorizontalCardList
+    algorithms: [MY_GROUPS]
+    title: 'My Groups'
+    flagKey: GROUPS
+  - type: HorizontalCardList
+    algorithms: [MY_VOLUNTEER_GROUPS]
+    title: 'My Dream Teams'
+    flagKey: VOLUNTEER_GROUPS
+  - type: HorizontalCardList
+    algorithms: [MY_PRAYERS]
+    title: 'My Prayers'
+    primaryAction:
+      action: OPEN_URL
+      title: 'See all'
+      relatedNode:
+        __typename: Url
+        url: 'christfellowship://c/MyPrayerRequestsFeed'
+EVENTS_FEATURES:
+  - type: VerticalCardList
+    algorithms: [ALL_EVENTS]
+GIVE_FEATURES:
+  - type: HeroList
+    algorithms:
+      - type: CONTENT_CHANNEL
+        arguments:
+          contentChannelId: 76
+  - type: ActionBar
+    actions: []
+HOME_HEADER_FEATURES:
+  - algorithms: [ALL_LIVE_CONTENT]
+    type: LiveContentList
+    title: Live Now
+  - algorithms: [DAILY_PRAYER]
+    isCard: false
+    type: PrayerList
+    title: Daily Prayer
 
 FEATURE_FLAGS:
   CHECK_IN:

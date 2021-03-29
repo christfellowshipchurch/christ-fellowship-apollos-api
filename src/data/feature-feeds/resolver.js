@@ -9,12 +9,12 @@ const resolver = {
     connectFeedFeatures: async (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
         type: 'apollosConfig',
-        args: { section: 'CONNECT_TAB', ...args },
+        args: { section: 'CONNECT_FEATURES', ...args },
       }),
     eventsFeedFeatures: async (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
         type: 'apollosConfig',
-        args: { section: 'EVENTS_TAB', ...args },
+        args: { section: 'EVENTS_FEATURES', ...args },
       }),
     homeFeedFeatures: (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
@@ -31,12 +31,12 @@ const resolver = {
         case 'connect':
           return FeatureFeed.getFeed({
             type: 'apollosConfig',
-            args: { section: 'CONNECT_TAB', ...args },
+            args: { section: 'CONNECT_FEATURES', ...args },
           });
         case 'events':
           return FeatureFeed.getFeed({
             type: 'apollosConfig',
-            args: { section: 'EVENTS_TAB', ...args },
+            args: { section: 'EVENTS_FEATURES', ...args },
           });
         case 'home':
           return FeatureFeed.getFeed({
