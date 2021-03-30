@@ -6,7 +6,7 @@ import ApollosConfig from '@apollosproject/config'
 import { resolverMerge } from '@apollosproject/server-core'
 import { get, remove, toLower, head, camelCase } from 'lodash'
 import moment from 'moment'
-import sanitizeHtml from '@apollosproject/data-connector-rock/lib/sanitize-html'
+import sanitizeHtml from 'sanitize-html'
 
 import { parseRockKeyValuePairs, getIdentifierType } from '../utils'
 
@@ -14,7 +14,7 @@ const { createImageUrlFromGuid } = Utils
 const { ROCK_MAPPINGS } = ApollosConfig
 
 /* 
-* Rock will not alaways return the expanded Location object
+* Rock will not always return the expanded Location object
 *
 * We get around this by checking to see if the location object is null
 *
