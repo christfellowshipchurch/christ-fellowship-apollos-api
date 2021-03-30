@@ -72,7 +72,7 @@
     "remove-words": "^0.9.0",
     "sanitize-html": "^1.26.0",
     "sqlite3": "^5.0.1",
-    "stream-chat": "^1.14.1",
+    "stream-chat": "^3.7.0",
     "twilio": "^3.33.1",
     "url": "^0.11.0",
     "yup": "^0.27.0"
