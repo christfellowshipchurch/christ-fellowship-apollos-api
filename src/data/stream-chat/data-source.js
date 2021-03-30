@@ -33,6 +33,15 @@ export default class StreamChat extends RESTDataSource {
     GROUP: 'group',
   };
 
+  getFromId = (id) => {
+    const { channelId, channelType } = JSON.parse(id);
+
+    return {
+      channelId,
+      channelType,
+    };
+  };
+
   getStreamUserId(id) {
     const globalId = createGlobalId(id, 'AuthenticatedUser');
     return globalId.split(':')[1];

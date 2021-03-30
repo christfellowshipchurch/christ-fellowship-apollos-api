@@ -115,6 +115,9 @@ const data = {
   Sharable,
   Sms: TwilioNotify,
   StreamChat,
+  StreamChatChannel: {
+    dataSource: StreamChat.dataSource,
+  },
   Template,
   Theme,
   TwilioNotify,

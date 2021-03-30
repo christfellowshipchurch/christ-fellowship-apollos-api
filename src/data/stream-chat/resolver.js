@@ -7,7 +7,8 @@ const resolver = {
       __typename || resolveInfo.schema.getType(__type),
   },
   StreamChatChannel: {
-    id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
+    id: ({ channelId, channelType }, args, context, { parentType }) =>
+      createGlobalId(JSON.stringify({ channelId, channelType }), parentType.name),
   },
   StreamChatChannelType: {
     LIVESTREAM: () => 'livestream',
