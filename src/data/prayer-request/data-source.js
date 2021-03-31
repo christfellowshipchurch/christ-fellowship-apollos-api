@@ -2,7 +2,7 @@ import { PrayerRequest as corePrayerRequest } from '@apollosproject/data-connect
 import ApollosConfig from '@apollosproject/config';
 import { isRequired } from '../utils';
 
-const { ROCK, ROCK_MAPPINGS } = ApollosConfig;
+const { ROCK_MAPPINGS } = ApollosConfig;
 
 export default class PrayerRequest extends corePrayerRequest.dataSource {
   baseByDailyPrayerFeed = this.byDailyPrayerFeed;
@@ -34,8 +34,8 @@ export default class PrayerRequest extends corePrayerRequest.dataSource {
     return prayerSubmission;
   };
 
-  byDailyPrayerFeed = async () => {
-    const requestBuilder = await this.baseByDailyPrayerFeed();
+  byDailyPrayerFeed = async (props) => {
+    const requestBuilder = await this.baseByDailyPrayerFeed(props);
 
     return requestBuilder.andFilter(
       `CategoryId eq ${ROCK_MAPPINGS.GENERAL_PRAYER_CATEGORY_ID}`
@@ -76,6 +76,9 @@ export default class PrayerRequest extends corePrayerRequest.dataSource {
       .andFilter(`Answer eq null or Answer eq ''`) // prayers that aren't answered
       .sort([
         { field: 'EnteredDateTime', direction: 'desc' }, // newest prayer first
-      ]);
+      ])
+      .transform((
+        prayers // note : we need to add the TypeName explicitly to this to get node to resolve
+      ) => prayers.map((prayer) => ({ ...prayer, __typename: 'PrayerRequest' })));
   }
 }

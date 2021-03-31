@@ -15,15 +15,15 @@ import {
   Sharable,
   Template,
 } from '@apollosproject/data-connector-rock';
+// import { Comment, UserFlag } from '@apollosproject/data-connector-postgres';
+
 import * as Theme from './theme';
 
 // This module is used to attach Rock User updating to the OneSignal module.
 // This module includes a Resolver that overides a resolver defined in `OneSignal`
 import * as OneSignalWithRock from './oneSignalWithRock';
 
-//
-// TODO : use when 1.7.0 goes into production
-// import * as ActionAlgorithm from './action-algorithms';
+import * as ActionAlgorithm from './action-algorithms';
 import * as AdditionalEndpoint from './additional-endpoints';
 import * as Address from './address';
 import * as Auth from './auth';
@@ -38,6 +38,7 @@ import * as DefinedValue from './defined-value';
 import * as DefinedValueList from './defined-value-list';
 import * as Event from './events';
 import * as Feature from './features';
+import * as FeatureFeed from './feature-feeds';
 import * as Flag from './flag';
 import * as Group from './groups';
 import * as GroupItem from './group-item';
@@ -47,6 +48,7 @@ import * as MatrixItem from './matrix-item';
 import * as Message from './message';
 import * as Metadata from './metadata';
 import * as PageBuilder from './page-builder';
+import * as NodePagination from './node-pagination';
 import * as Person from './people';
 import * as PhoneNumber from './phone-number';
 import * as PrayerRequest from './prayer-request';
@@ -67,7 +69,7 @@ import * as Workflow from './workflow';
 
 // MARK : - Please keep in alphabetical order
 const data = {
-  // ActionAlgorithm,
+  ActionAlgorithm,
   AdditionalEndpoint,
   Address,
   Analytics,
@@ -79,12 +81,14 @@ const data = {
   CacheManager,
   Campus,
   CheckInable,
+  // Comment,
   ContentChannel,
   ContentItem,
   DefinedValue,
   DefinedValueList,
   Event,
   Feature,
+  FeatureFeed,
   Flag,
   Followings,
   Group,
@@ -97,6 +101,7 @@ const data = {
   MatrixItem,
   Message,
   Metadata,
+  NodePagination,
   OneSignal,
   OneSignalWithRock,
   PageBuilder,
@@ -112,9 +117,13 @@ const data = {
   Sharable,
   Sms: TwilioNotify,
   StreamChat,
+  StreamChatChannel: {
+    dataSource: StreamChat.dataSource,
+  },
   Template,
   Theme,
   TwilioNotify,
+  // UserFlag,
   Url,
   WebsiteContentItem: {
     dataSource: WebsiteContentItem.dataSource,

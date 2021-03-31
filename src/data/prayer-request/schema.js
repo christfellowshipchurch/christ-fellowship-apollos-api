@@ -1,33 +1,51 @@
-import { gql } from 'apollo-server'
-import { prayerSchema } from '@apollosproject/data-schema'
+import { gql } from 'apollo-server';
+import { prayerSchema } from '@apollosproject/data-schema';
+
+// todo : the Core Prayer schema is missing some definitions and extensions that are present in the resolver. Bring back the Core Package when that is confirmed to be settled
 
 export default gql`
-    ${prayerSchema}
+  type PrayerRequest implements Node {
+    id: ID!
+    text: String!
+    requestor: Person
+    isAnonymous: Boolean
+    isPrayed: Boolean
+  }
 
-    extend type PrayerRequest {
-        requestedDate: String
-    }
+  type PrayerListFeature implements Feature & Node {
+    id: ID!
+    order: Int
+    isCard: Boolean
+    title: String
+    subtitle: String
+    prayers: [PrayerRequest]
+  }
 
-    input PrayerRequestsConnectionInput {
-        first: Int
-        after: String
-    }
+  type VerticalPrayerListFeature implements Feature & Node {
+    id: ID!
+    order: Int
+    title: String
+    subtitle: String
+    prayers: [PrayerRequest]
+  }
 
-    type PrayerRequestsConnection {
-        edges: [PrayerRequestsConnectionEdge]
-        totalCount: Int
-        pageInfo: PaginationInfo
-    }
+  extend type Mutation {
+    addPrayer(text: String!, isAnonymous: Boolean): PrayerRequest
+  }
 
-    type PrayerRequestsConnectionEdge {
-        node: PrayerRequest
-        cursor: String
-    }
+  extend enum InteractionAction {
+    PRAY
+  }
 
-    extend type Query {
-        currentUserPrayerRequests(
-            first: Int
-            after: String
-        ): PrayerRequestsConnection
-    }
-`
+  extend type Person {
+    prayers: [PrayerRequest]
+  }
+
+  extend type PrayerRequest {
+    requestedDate: String
+  }
+
+  extend type Query {
+    currentUserPrayerRequests(first: Int, after: String): NodeConnection
+  }
+`;

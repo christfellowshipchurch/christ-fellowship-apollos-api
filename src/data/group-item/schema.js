@@ -160,6 +160,9 @@ export const groupSchema = gql`
       groupId: ID!
       input: ContentItemsConnectionInput
     ): ContentItemsConnection
+
+    currentUserGroups(first: Int, after: String): NodeConnection
+    currentUserVolunteerGroups(first: Int, after: String): NodeConnection
     groupSearchOptions: GroupSearchFacetsOptions
     groupSearchFacetsAttributes: [String]
   }

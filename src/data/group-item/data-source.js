@@ -932,73 +932,80 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getStreamChatChannel = async (root) => {
-    // TODO : break up this logic and move it to the StreamChat DataSource
-    const { Auth, StreamChat, Flag } = this.context.dataSources;
-    const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
-    const CHANNEL_TYPE = StreamChat.channelType.GROUP;
+    try {
+      // TODO : break up this logic and move it to the StreamChat DataSource
+      const { Auth, StreamChat, Flag } = this.context.dataSources;
+      const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
+      const CHANNEL_TYPE = StreamChat.channelType.GROUP;
 
-    if (featureFlagStatus !== 'LIVE') {
-      return null;
+      if (featureFlagStatus !== 'LIVE') {
+        return null;
+      }
+
+      const currentPerson = await Auth.getCurrentPerson();
+      const resolvedType = this.resolveType(root);
+      const globalId = createGlobalId(root.id, resolvedType);
+      const channelId = crypto.SHA1(globalId).toString();
+
+      const groupMembers = await this.getMembers(root.id);
+      const members = groupMembers
+        ? groupMembers.map((member) => StreamChat.getStreamUserId(member.id))
+        : [];
+
+      const groupLeaders = await this.getLeaders(root.id);
+      const leaders = groupLeaders
+        ? groupLeaders.map((leader) => StreamChat.getStreamUserId(leader.id))
+        : [];
+
+      // Create any Stream users that might not exist
+      // We need to do this before we can create a channel 🙄
+      await StreamChat.createStreamUsers({
+        users: groupMembers.map(StreamChat.getStreamUser),
+      });
+
+      // Make sure the channel exists.
+      // If it doesn't, create it.
+      await StreamChat.getChannel({
+        channelId,
+        channelType: CHANNEL_TYPE,
+        options: {
+          members,
+          created_by: StreamChat.getStreamUser(currentPerson),
+        },
+      });
+
+      // Add group members not in channel
+      await StreamChat.addMembers({
+        channelId,
+        groupMembers: members,
+        channelType: CHANNEL_TYPE,
+      });
+
+      // Remove channel members not in group
+      await StreamChat.removeMembers({
+        channelId,
+        groupMembers: members,
+        channelType: CHANNEL_TYPE,
+      });
+
+      // Promote/demote members for moderation if necessary
+      await StreamChat.updateModerators({
+        channelId,
+        groupLeaders: leaders,
+        channelType: CHANNEL_TYPE,
+      });
+
+      return {
+        id: root.id,
+        channelId,
+        channelType: CHANNEL_TYPE,
+      };
+    } catch (error) {
+      console.warn('[Group.getStreamChatChannel] Error!');
+      console.error(error);
     }
 
-    const currentPerson = await Auth.getCurrentPerson();
-    const resolvedType = this.resolveType(root);
-    const globalId = createGlobalId(root.id, resolvedType);
-    const channelId = crypto.SHA1(globalId).toString();
-
-    const groupMembers = await this.getMembers(root.id);
-    const members = groupMembers
-      ? groupMembers.map((member) => StreamChat.getStreamUserId(member.id))
-      : [];
-
-    const groupLeaders = await this.getLeaders(root.id);
-    const leaders = groupLeaders
-      ? groupLeaders.map((leader) => StreamChat.getStreamUserId(leader.id))
-      : [];
-
-    // Create any Stream users that might not exist
-    // We need to do this before we can create a channel 🙄
-    await StreamChat.createStreamUsers({
-      users: groupMembers.map(StreamChat.getStreamUser),
-    });
-
-    // Make sure the channel exists.
-    // If it doesn't, create it.
-    await StreamChat.getChannel({
-      channelId,
-      channelType: CHANNEL_TYPE,
-      options: {
-        members,
-        created_by: StreamChat.getStreamUser(currentPerson),
-      },
-    });
-
-    // Add group members not in channel
-    await StreamChat.addMembers({
-      channelId,
-      groupMembers: members,
-      channelType: CHANNEL_TYPE,
-    });
-
-    // Remove channel members not in group
-    await StreamChat.removeMembers({
-      channelId,
-      groupMembers: members,
-      channelType: CHANNEL_TYPE,
-    });
-
-    // Promote/demote members for moderation if necessary
-    await StreamChat.updateModerators({
-      channelId,
-      groupLeaders: leaders,
-      channelType: CHANNEL_TYPE,
-    });
-
-    return {
-      id: root.id,
-      channelId,
-      channelType: CHANNEL_TYPE,
-    };
+    return null;
   };
 
   resolveType({ groupTypeId, id }) {

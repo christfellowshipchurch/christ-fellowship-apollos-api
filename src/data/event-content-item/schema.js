@@ -20,16 +20,11 @@ export default gql`
     audios: [AudioMedia]
     htmlContent: String
     summary: String
-    childContentItemsConnection(
-      first: Int
-      after: String
-    ): ContentItemsConnection
-    siblingContentItemsConnection(
-      first: Int
-      after: String
-    ): ContentItemsConnection
+    childContentItemsConnection(first: Int, after: String): ContentItemsConnection
+    siblingContentItemsConnection(first: Int, after: String): ContentItemsConnection
     parentChannel: ContentChannel
     theme: Theme
+    publishDate: String
 
     nextOccurrence: String
       @deprecated(
@@ -59,8 +54,10 @@ export default gql`
       )
 
     # This label is an additional
-    label: String
+    labelText: String @deprecated(reason: "Use labelText instead.")
     eventGroupings: [EventGrouping]
+
+    featureFeed: FeatureFeed
   }
 `;
 

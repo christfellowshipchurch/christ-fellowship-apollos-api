@@ -1,8 +1,12 @@
+import fs from 'fs';
+import path from 'path';
+import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 import ApollosConfig from '@apollosproject/config';
 import express from 'express';
 import { RockLoggingExtension } from '@apollosproject/rock-apollo-data-source';
 import { BugsnagPlugin } from '@apollosproject/bugsnag';
+import { get } from 'lodash';
 import {
   resolvers,
   schema,
@@ -15,20 +19,19 @@ import {
 
 export { resolvers, schema, testSchema };
 
-const isDev =
-  process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+const isDev = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
 
 const extensions = isDev ? [() => new RockLoggingExtension()] : [];
 
 const cacheOptions = isDev
   ? {}
   : {
-    cacheControl: {
-      stripFormattedExtensions: false,
-      calculateHttpHeaders: true,
-      defaultMaxAge: 600,
-    },
-  };
+      cacheControl: {
+        stripFormattedExtensions: false,
+        calculateHttpHeaders: true,
+        defaultMaxAge: 600,
+      },
+    };
 
 const { ENGINE } = ApollosConfig;
 
@@ -44,7 +47,7 @@ const apolloServer = new ApolloServer({
   extensions,
   plugins: [new BugsnagPlugin()],
   formatError: (error) => {
-    console.error(error.extensions.exception.stacktrace.join('\n'));
+    console.error(get(error, 'extensions.exception.stacktrace', []).join('\n'));
     return error;
   },
   playground: {
@@ -56,14 +59,31 @@ const apolloServer = new ApolloServer({
   engine: {
     apiKey: ENGINE.API_KEY,
     schemaTag: ENGINE.SCHEMA_TAG,
+    sendHeaders: {
+      all: true,
+    },
+    sendVariableValues: {
+      all: true,
+    },
   },
 });
 
 const app = express();
 
 // health check
-app.get('/health', (req, res) => {
+app.get('/health', cors(), (req, res) => {
   res.send('ok');
+});
+
+// apollos version
+app.get('/version', cors(), (req, res) => {
+  try {
+    const data = fs.readFileSync(path.join(__dirname, '..', 'apollos.json'));
+    const { version } = JSON.parse(data);
+    res.send(version);
+  } catch (e) {
+    res.send('unknown');
+  }
 });
 
 applyServerMiddleware({ app, dataSources, context });

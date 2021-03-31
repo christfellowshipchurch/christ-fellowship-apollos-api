@@ -1,13 +1,15 @@
-import { ContentItem } from '@apollosproject/data-connector-rock'
-import gql from 'graphql-tag'
+import { ContentItem } from '@apollosproject/data-connector-rock';
+import gql from 'graphql-tag';
 
-import * as EventContentItem from '../event-content-item'
-import * as InformationalContentItem from '../informational-content-item'
-import * as WebsiteContentItem from '../website-content-item'
-import * as WebsiteHtmlContentItem from '../website-html-content-item'
-import * as WebsiteFeature from '../website-feature'
-import * as WebsiteGroupContentItem from '../website-group-content-item'
-import * as WebsitePagesContentItem from '../website-pages-content-item'
+import { addInterfacesForEachContentItemType } from '@apollosproject/data-schema/lib/utils';
+
+import * as EventContentItem from '../event-content-item';
+import * as InformationalContentItem from '../informational-content-item';
+import * as WebsiteContentItem from '../website-content-item';
+import * as WebsiteHtmlContentItem from '../website-html-content-item';
+import * as WebsiteFeature from '../website-feature';
+import * as WebsiteGroupContentItem from '../website-group-content-item';
+import * as WebsitePagesContentItem from '../website-pages-content-item';
 
 export default gql`
   ${ContentItem.schema}
@@ -19,11 +21,29 @@ export default gql`
   ${WebsitePagesContentItem.schema}
   ${WebsiteContentItem.schema}
 
+  interface PublicationNode {
+    author: Person
+    estimatedTime: String
+    publishDate: String
+  }
+
+  # Maps to each type implementing each interface.
+  # Reduces visual fluff in this file. No magic.
+  ${addInterfacesForEachContentItemType(
+    ['PublicationNode'],
+    [
+      'DevotionalContentItem',
+      'UniversalContentItem',
+      'ContentSeriesContentItem',
+      'MediaContentItem',
+      'WeekendContentItem',
+    ]
+  )}
+
   extend type DevotionalContentItem {
     tags: [String]
     icon: String
     estimatedTime: String
-    publishDate: String
     author: Person
   }
 
@@ -31,7 +51,6 @@ export default gql`
     tags: [String]
     icon: String
     estimatedTime: String
-    publishDate: String
     author: Person
   }
 
@@ -39,7 +58,6 @@ export default gql`
     tags: [String]
     icon: String
     estimatedTime: String
-    publishDate: String
     author: Person
   }
 
@@ -47,7 +65,6 @@ export default gql`
     tags: [String]
     icon: String
     estimatedTime: String
-    publishDate: String
     author: Person
   }
 
@@ -55,7 +72,6 @@ export default gql`
     tags: [String]
     icon: String
     estimatedTime: String
-    publishDate: String
     author: Person
   }
 
@@ -66,4 +82,19 @@ export default gql`
     featuredEvents: ContentItemsConnection
     sermons(first: Int, after: String): ContentItemsConnection
   }
-`
+
+  # Maps to each type implementing each interface.
+  # Reduces visual fluff in this file. No magic.
+  ${addInterfacesForEachContentItemType(
+    [
+      'ContentNode',
+      'Card',
+      'VideoNode',
+      'AudioNode',
+      'ContentChildNode',
+      'ContentParentNode',
+      'ThemedNode',
+    ],
+    ['EventContentItem', 'InformationalContentItem']
+  )}
+`;

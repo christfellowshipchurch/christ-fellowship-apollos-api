@@ -56,6 +56,8 @@ const resolver = {
     photo: (root, args, { dataSources }) => {
       const guid = get(root, 'photo.guid');
 
+      // if (!guid) return null;
+
       return {
         uri: rockImageUrl(
           !isEmpty(guid) ? guid : '0ad7f78a-1e6b-46ad-a8be-baa0dbaaba8e',

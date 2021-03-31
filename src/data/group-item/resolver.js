@@ -1,4 +1,3 @@
-import { AuthenticationError } from 'apollo-server';
 import ApollosConfig from '@apollosproject/config';
 import { Group as baseGroup } from '@apollosproject/data-connector-rock';
 import {
@@ -6,14 +5,14 @@ import {
   parseGlobalId,
   createGlobalId,
 } from '@apollosproject/server-core';
-import { isWithinInterval, parseISO } from 'date-fns';
+import { get } from 'lodash';
 
 const defaultResolvers = {
   id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
   title: (root, args, { dataSources }) => dataSources.GroupItem.getTitle(root),
   summary: ({ description }, args, { dataSources }) => description,
-  groupType: ({ groupTypeId }, args, { dataSources }) =>
-    dataSources.GroupItem.getGroupTypeFromId(groupTypeId),
+  groupType: ({ attributeValues }, args, { dataSources }) =>
+    get(attributeValues, 'preference.valueFormatted'),
   groupResources: (root, args, { dataSources }) =>
     dataSources.GroupItem.getGroupResources(root),
   resources: ({ id }, args, { dataSources }) => dataSources.GroupItem.getResources(id),
@@ -196,11 +195,6 @@ const resolver = {
   Query: {
     groupCoverImages: async (root, args, { dataSources }) =>
       dataSources.GroupItem.getCoverImages(),
-    // groupResourceOptions: async (
-    //   root,
-    //   { groupId, input: { first, after } = {} },
-    //   { dataSources }
-    // ) => dataSources.GroupItem.getResourceOptions({ groupId, first, after }),
     groupResourceOptions: async (root, { groupId, input }, { dataSources }) => {
       const { id } = parseGlobalId(groupId);
       return dataSources.ContentItem.paginate({

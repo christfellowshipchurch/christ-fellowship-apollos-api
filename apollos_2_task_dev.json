@@ -1,0 +1,165 @@
+{
+  "family": "cf-apollos-2-api-dev",
+  "executionRoleArn": "arn:aws:iam::516877585062:role/ecsTaskExecutionRole",
+  "networkMode": "bridge",
+  "containerDefinitions": [
+    {
+      "name": "dev-apollos-2",
+      "image": "516877585062.dkr.ecr.us-east-2.amazonaws.com/cf-ecr-repo:latest",
+      "links": [],
+      "cpu": 8,
+      "memory": 512,
+      "memoryReservation": null,
+      "portMappings": [
+        {
+          "containerPort": 4000,
+          "hostPort": 0,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "entryPoint": [],
+      "command": [],
+      "environment": [
+        {
+          "name": "PORT",
+          "value": "4000"
+        },
+        {
+          "name": "ROCK_API",
+          "value": "https://rock-api.christfellowship.church"
+        },
+        {
+          "name": "ROCK_SHOW_INACTIVE_CONTENT",
+          "value": "false"
+        },
+        {
+          "name": "CLOUDFRONT",
+          "value": "https://cloudfront.christfellowship.church"
+        },
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "CONTENT",
+          "value": "production"
+        },
+        {
+          "name": "ALGOLIA_SEARCH_INDEX_CONTENT_ITEMS",
+          "value": "ContentItems"
+        },
+        {
+          "name": "ALGOLIA_SEARCH_INDEX_GROUPS",
+          "value": "Groups"
+        },
+        {
+          "name": "APOLLO_GRAPH_VARIANT",
+          "value": "2-stage"
+        },
+        {
+          "name": "APOLLO_SCHEMA_REPORTING",
+          "value": "true"
+        }
+      ],
+      "secrets": [
+        {
+          "valueFrom": "BIBLE_API_KEY",
+          "name": "BIBLE_API_KEY"
+        },
+        {
+          "valueFrom": "BIBLE_ID",
+          "name": "BIBLE_ID"
+        },
+        {
+          "valueFrom": "ESV_KEY",
+          "name": "ESV_KEY"
+        },
+        {
+          "valueFrom": "/prod/TWILIO_ACCOUNT_SID",
+          "name": "TWILIO_ACCOUNT_SID"
+        },
+        {
+          "valueFrom": "/prod/TWILIO_NOTIFY_SID",
+          "name": "TWILIO_NOTIFY_SID"
+        },
+        {
+          "valueFrom": "/prod/TWILIO_AUTH_TOKEN",
+          "name": "TWILIO_AUTH_TOKEN"
+        },
+        {
+          "valueFrom": "/prod/TWILIO_FROM_NUMBER",
+          "name": "TWILIO_FROM_NUMBER"
+        },
+        {
+          "valueFrom": "/prod/ROCK_TOKEN",
+          "name": "ROCK_TOKEN"
+        },
+        {
+          "valueFrom": "/prod/ONE_SIGNAL_REST_KEY",
+          "name": "ONE_SIGNAL_REST_KEY"
+        },
+        {
+          "valueFrom": "/prod/REDIS_URL",
+          "name": "REDIS_URL"
+        },
+        {
+          "valueFrom": "/prod/ALGOLIA_APP_ID",
+          "name": "ALGOLIA_APP_ID"
+        },
+        {
+          "valueFrom": "/prod/ALGOLIA_API_KEY",
+          "name": "ALGOLIA_API_KEY"
+        },
+        {
+          "valueFrom": "/prod/JOBS_USERNAME",
+          "name": "JOBS_USERNAME"
+        },
+        {
+          "valueFrom": "/prod/JOBS_PASSWORD",
+          "name": "JOBS_PASSWORD"
+        },
+        {
+          "valueFrom": "/dev/APOLLOS_SECRET",
+          "name": "APOLLOS_SECRET"
+        },
+        {
+          "valueFrom": "/dev/STREAM_CHAT_APP_ID",
+          "name": "STREAM_CHAT_APP_ID"
+        },
+        {
+          "valueFrom": "/dev/STREAM_CHAT_SECRET",
+          "name": "STREAM_CHAT_SECRET"
+        },
+        {
+          "valueFrom": "/dev/STREAM_CHAT_API_KEY",
+          "name": "STREAM_CHAT_API_KEY"
+        },
+        {
+          "valueFrom": "/prod/APOLLO_KEY",
+          "name": "APOLLO_KEY"
+        }
+      ],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "linuxParameters": null,
+      "privileged": null,
+      "readonlyRootFilesystem": null,
+      "interactive": null,
+      "pseudoTerminal": null
+    }
+  ],
+  "volumes": [],
+  "placementConstraints": [],
+  "requiresCompatibilities": ["EC2"],
+  "cpu": null,
+  "memory": null,
+  "tags": [
+    {
+      "key": "registeredBy",
+      "value": "github-action"
+    }
+  ],
+  "pidMode": null,
+  "ipcMode": null
+}

@@ -11,6 +11,13 @@ export default gql`
     READ_GROUP
   }
 
+  enum CONTENT_BLOCK_ORIENTATION {
+    DEFAULT
+    INVERTED
+    LEFT
+    RIGHT
+  }
+
   enum HorizontalCardType {
     DEFAULT
     HIGHLIGHT
@@ -19,7 +26,6 @@ export default gql`
   }
 
   extend type HorizontalCardListFeature {
-    primaryAction: FeatureAction
     cardType: HorizontalCardType
   }
 
@@ -33,20 +39,8 @@ export default gql`
     start: Int
   }
 
-  type ActionBarFeatureAction {
-    relatedNode: Node
-    action: ACTION_FEATURE_ACTION
-    title: String
-
-    icon: String
+  extend type ActionBarAction {
     theme: Theme
-  }
-
-  type ActionBarFeature implements Feature & Node {
-    id: ID!
-    order: Int
-
-    actions: [ActionBarFeatureAction]
   }
 
   type AvatarListFeature implements Feature & Node {
@@ -55,7 +49,7 @@ export default gql`
 
     people: [Person]
     isCard: Boolean
-    primaryAction: ActionBarFeatureAction
+    primaryAction: ActionBarAction
   }
 
   type LiveStreamListFeature implements Feature & Node {
@@ -66,10 +60,21 @@ export default gql`
     liveStreams: [LiveStream]
   }
 
-  extend type Query {
-    connectFeedFeatures: [Feature] @cacheControl(maxAge: 0)
-    eventsFeedFeatures: [Feature] @cacheControl(maxAge: 0)
-    giveFeedFeatures: [Feature] @cacheControl(maxAge: 0)
-    userHeaderFeatures: [Feature] @cacheControl(maxAge: 0)
+  type CommentListFeature implements Feature & Node {
+    id: ID!
+    order: Int
+  }
+
+  type ContentBlockFeature implements Feature & Node {
+    id: ID!
+    order: Int
+
+    title(hyphenated: Boolean): String
+    summary: String
+    htmlContent: String
+    coverImage: ImageMedia
+    videos: [VideoMedia]
+
+    orientation: CONTENT_BLOCK_ORIENTATION
   }
 `;

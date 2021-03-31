@@ -156,21 +156,21 @@ const resolver = {
   Mutation: {
     indexContentItem: async (root, { id, key, action }, { dataSources }) => {
       if (id && action && key === ApollosConfig.ROCK.APOLLOS_SECRET) {
-        const { ContentItem } = dataSources
+        const { ContentItem } = dataSources;
 
         switch (action) {
-          case "delete":
+          case 'delete':
             // TODO
-            return `⚠️ Action 'delete' not implemented | id: ${id} | key: ${key} | action: ${action}`
-          case "update":
+            return `⚠️ Action 'delete' not implemented | id: ${id} | key: ${key} | action: ${action}`;
+          case 'update':
           default:
             await ContentItem.updateContentItemIndex(id);
-            return `Successfully updated | id: ${id} | key: ${key} | action: ${action}`
+            return `Successfully updated | id: ${id} | key: ${key} | action: ${action}`;
         }
       }
 
-      return `Failed to update | id: ${id} | key: ${key} | action: ${action}`
-    }
+      return `Failed to update | id: ${id} | key: ${key} | action: ${action}`;
+    },
   },
   ContentItem: {
     ...titleResolver,
@@ -191,10 +191,21 @@ const resolver = {
   MediaContentItem: {
     ...resolverExtensions,
     ...connectionResolvers,
+    featureFeed: ({ id }, args, { dataSources: { FeatureFeed } }) =>
+      FeatureFeed.getFeed({
+        type: 'contentChannelItem',
+        args: {
+          contentChannelItemId: id,
+        },
+      }),
   },
   WeekendContentItem: {
     ...resolverExtensions,
     ...connectionResolvers,
+  },
+  PublicationNode: {
+    __resolveType: ({ __typename, __type }, args, resolveInfo) =>
+      __typename || resolveInfo.schema.getType(__type),
   },
   ...InformationalContentItem.resolver,
   ...EventContentItem.resolver,

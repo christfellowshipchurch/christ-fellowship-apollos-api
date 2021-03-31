@@ -33,6 +33,15 @@ export default class StreamChat extends RESTDataSource {
     GROUP: 'group',
   };
 
+  getFromId = (id) => {
+    const { channelId, channelType } = JSON.parse(id);
+
+    return {
+      channelId,
+      channelType,
+    };
+  };
+
   getStreamUserId(id) {
     const globalId = createGlobalId(id, 'AuthenticatedUser');
     return globalId.split(':')[1];
@@ -71,7 +80,7 @@ export default class StreamChat extends RESTDataSource {
   createStreamUsers = async ({ users }) => {
     await Promise.all(
       chunk(users, CREATE_USERS_LIMIT).map(async (chunkedUsers) => {
-        await chatClient.updateUsers(chunkedUsers);
+        await chatClient.upsertUsers(chunkedUsers);
       })
     );
   };

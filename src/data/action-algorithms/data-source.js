@@ -2,21 +2,22 @@ import {
   ActionAlgorithm as coreActionAlgorithm,
   Utils,
 } from '@apollosproject/data-connector-rock';
-import { get, flattenDeep } from 'lodash';
+import { createGlobalId } from '@apollosproject/server-core';
+import { get, flattenDeep, isEmpty, uniqBy } from 'lodash';
 import moment from 'moment-timezone';
 import ApollosConfig from '@apollosproject/config';
 
 const { ROCK_MAPPINGS, ROCK } = ApollosConfig;
 const { createImageUrlFromGuid } = Utils;
 
-export default class ActionAlgorithm extends coreActionAlgorithm {
+export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
   expanded = true;
 
   /** Base Attrs and Methods from the Core DataSource */
-  baseAlgorithms = this.ACTION_ALGORITHIMS;
+  baseAlgorithms = this.ACTION_ALGORITHMS;
 
   // Names of Action Algoritms mapping to the functions that create the actions.
-  ACTION_ALGORITHIMS = Object.entries({
+  ACTION_ALGORITHMS = Object.entries({
     ...this.baseAlgorithms,
     // We need to make sure `this` refers to the class, not the `ACTION_ALGORITHIMS` object.
     ALL_EVENTS: this.allEventsAlgorithm,
@@ -30,12 +31,12 @@ export default class ActionAlgorithm extends coreActionAlgorithm {
     MY_PRAYERS: this.myPrayersAlgorithm,
     MY_VOLUNTEER_GROUPS: this.myVolunteerGroupsAlgorithm,
     PERSONA_FEED: this.personaFeedAlgorithmWithActionOverride,
-    ROCK_DYNAMIC_FEED: this.rockDynamicFeed,
     SERMON_CHILDREN: this.sermonChildrenAlgorithm,
     UPCOMING_EVENTS: this.upcomingEventsAlgorithmWithActionOverride,
   }).reduce((accum, [key, value]) => {
-    // convenciance code to make sure all methods are bound to the Features dataSource
+    // convenciance code to make sure all methods are bound to the Action Algorithm dataSource
     // eslint-disable-next-line
+
     accum[key] = value.bind(this);
     return accum;
   }, {});
@@ -99,15 +100,30 @@ export default class ActionAlgorithm extends coreActionAlgorithm {
     ).expand('ContentChannel');
     const items = limit ? await cursor.top(limit).get() : await cursor.get();
 
-    return items.map((item, i) => ({
-      id: `${item.id}${i}`,
-      title: item.title,
-      subtitle: ContentItem.createSummary(item),
-      relatedNode: { ...item, __type: ContentItem.resolveType(item) },
-      image: ContentItem.getCoverImage(item),
-      action: 'READ_CONTENT',
-      summary: ContentItem.createSummary(item),
-    }));
+    return items.map((item, i) => {
+      const urlEndpoint = item?.attributeValues?.redirectUrl?.value;
+      const isUrl = urlEndpoint && !isEmpty(urlEndpoint);
+
+      const relatedNode = isUrl
+        ? {
+            __typename: 'Url',
+            url: urlEndpoint,
+          }
+        : { ...item, __type: ContentItem.resolveType(item) };
+
+      return {
+        id: `${item.id}${i}`,
+        title:
+          get(item, 'attributeValues.cardTitle.value', '') !== ''
+            ? get(item, 'attributeValues.cardTitle.value', item.title)
+            : item.title,
+        subtitle: ContentItem.createSummary(item),
+        relatedNode,
+        image: ContentItem.getCoverImage(item),
+        action: isUrl ? 'OPEN_URL' : 'READ_CONTENT',
+        summary: ContentItem.createSummary(item),
+      };
+    });
   }
 
   async globalContentAlgorithm({ index = 0, limit = null } = {}) {
@@ -223,7 +239,9 @@ export default class ActionAlgorithm extends coreActionAlgorithm {
         personId: id,
       });
 
-      return groups.map((item, i) => {
+      // ? this is just a temp solution : why are volunteer groups returning so many duplicate results??
+
+      return uniqBy(groups, 'id').map((item, i) => {
         return {
           id: `${item.id}${i}`,
           title: Group.getTitle(item),

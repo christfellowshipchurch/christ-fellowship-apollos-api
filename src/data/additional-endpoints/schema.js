@@ -22,5 +22,11 @@ export default gql`
     websiteBanner: CallToAction
     genderOptions: [String]
     inAppLink(url: String!): String
+    dannysContent: [ContentItem]
+  }
+
+  extend type MediaContentItem implements FeaturesNode {
+    features: [Feature] @deprecated(reason: "Use featureFeed")
+    featureFeed: FeatureFeed
   }
 `;

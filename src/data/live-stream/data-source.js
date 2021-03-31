@@ -6,10 +6,7 @@ import { createGlobalId } from '@apollosproject/server-core';
 import crypto from 'crypto-js';
 import { get } from 'lodash';
 
-import WeekendServices from './weekend-services';
-
 const { ROCK_MAPPINGS, ROCK } = ApollosConfig;
-const { TIMEZONE } = ROCK;
 const { DEFINED_TYPES } = ROCK_MAPPINGS;
 const { LIVE_STREAM_SCHEDULES } = DEFINED_TYPES;
 
@@ -59,6 +56,9 @@ export default class LiveStream extends definedValueDataSource {
             const dateB = parseISO(b.start);
 
             return compareAsc(dateA, dateB);
+          })
+          .filter(({ end }) => {
+            return isFuture(parseISO(end));
           })
           .find(() => true);
 
@@ -175,7 +175,6 @@ export default class LiveStream extends definedValueDataSource {
 
       return liveStreams
         .filter((liveStream) => !!liveStream)
-        .filter(({ isLive }) => isLive)
         .filter((liveStream) => filterByPersona(liveStream));
     } catch (e) {
       console.log('Error fetching Live Streams');
@@ -218,54 +217,5 @@ export default class LiveStream extends definedValueDataSource {
     );
 
     return definedValuesFilteredByShedule.find((definedValue) => !!definedValue);
-  }
-
-  weekendServiceIsLive(date) {
-    const mDate = moment(date).tz(TIMEZONE);
-
-    if (mDate.isValid()) {
-      const weekendService = WeekendServices.find((service) => {
-        const { day, start, end } = service;
-        const isDay = mDate.format('dddd').toLowerCase() === day;
-
-        const startTime = parseInt(`${start.hour}${start.minute}`);
-        const endTime = parseInt(`${end.hour}${end.minute}`);
-        const hourInt = parseInt(mDate.format('Hmm'));
-
-        const isBetween = hourInt >= startTime && hourInt <= endTime;
-
-        return isDay && isBetween;
-      });
-
-      if (!!weekendService) {
-        return [
-          {
-            isLive: true,
-            eventStartTime: moment()
-              .tz(TIMEZONE)
-              .hour(weekendService.start.hour)
-              .minute(weekendService.start.minute)
-              .utc()
-              .toISOString(),
-            eventEndTime: moment()
-              .tz(TIMEZONE)
-              .hour(weekendService.end.hour)
-              .minute(weekendService.end.minute)
-              .utc()
-              .toISOString(),
-            title: 'Tune In Online',
-            contentChannelItemId: 8377,
-            attributeValues: {
-              liveStreamUrl: {
-                value:
-                  'https://link.theplatform.com/s/IfSiAC/media/h9hnjqraubSs/file.m3u8?metafile=false&formats=m3u&auto=true',
-              },
-            },
-          },
-        ];
-      }
-    }
-
-    return [];
   }
 }

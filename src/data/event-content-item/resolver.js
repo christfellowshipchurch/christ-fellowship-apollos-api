@@ -1,5 +1,7 @@
+import ApollosConfig from '@apollosproject/config';
 import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock';
-import { get, flatten, uniq, uniqBy, first, filter } from 'lodash';
+import { get, flatten, uniq, uniqBy, first, filter, isEmpty } from 'lodash';
+import { compareAsc, parseISO } from 'date-fns';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 
@@ -9,6 +11,8 @@ import { sharingResolver } from '../content-item/resolver';
 import deprecatedResolvers from './deprecated-resolvers';
 
 import campusSortOrder from '../campus/campus-sort-order';
+
+const { CONTENT_CHANNEL_FEEDS } = ApollosConfig;
 
 const resolver = {
   EventContentItem: {
@@ -43,7 +47,39 @@ const resolver = {
         action: get(matrixItemAttributeValues, 'url.value', ''),
       }));
     },
-    label: async ({ attributeValues }) => get(attributeValues, 'label.value', ''),
+    labelText: async ({ attributeValues }, args, { dataSources }) => {
+      const label = attributeValues?.label?.value;
+
+      if (label && !isEmpty(label)) return label;
+
+      const { Event, MatrixItem, Schedule } = dataSources;
+      // Get Matrix Items
+      const matrixGuid = get(attributeValues, 'schedules.value', '');
+      let matrixItems = [];
+
+      if (!matrixGuid || matrixGuid === '') return [];
+
+      try {
+        matrixItems = await MatrixItem.getItemsFromId(matrixGuid);
+      } catch (e) {
+        console.log({ e });
+        return [];
+      }
+
+      /**
+       * Matrix Items are structured in Rock as: { schedule, [filters] }
+       * We need to resolve those schedules to schedule objects
+       */
+      const scheduleIds = matrixItems
+        .map((item) => item?.attributeValues?.schedule?.value)
+        .filter((item) => !!item && !isEmpty(item));
+      const schedules = await Schedule.getOccurrencesFromIds(scheduleIds);
+      const schedule = schedules
+        .sort((a, b) => compareAsc(parseISO(a), parseISO(b)))
+        .find(() => true);
+
+      return schedule?.start;
+    },
     eventGroupings: async (
       { attributeValues },
       args,
@@ -115,6 +151,11 @@ const resolver = {
     },
     liveStream: (root, args, { dataSources: { LiveStream } }) =>
       LiveStream.byContentItem(root),
+    featureFeed: (root, args, { dataSources: { FeatureFeed } }) =>
+      FeatureFeed.getFeed({
+        type: 'contentChannel',
+        args: { contentChannelId: CONTENT_CHANNEL_FEEDS.HOME_FEED, ...args },
+      }),
   },
 };
 
