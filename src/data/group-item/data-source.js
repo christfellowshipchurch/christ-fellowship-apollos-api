@@ -1000,9 +1000,9 @@ export default class GroupItem extends baseGroup.dataSource {
         channelId,
         channelType: CHANNEL_TYPE,
       };
-    } catch (e) {
-      console.warn('[Group.getStreamChatChannel] Error');
-      console.log({ e });
+    } catch (error) {
+      console.warn('[Group.getStreamChatChannel] Error!');
+      console.error(error);
     }
 
     return null;
