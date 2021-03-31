@@ -4,9 +4,18 @@ import { get, toUpper, split } from 'lodash';
 import { getIdentifierType } from '../utils';
 
 export default class Campus extends coreCampus.dataSource {
-  getForPerson = async ({ personId }) => {
+  getForPerson = async ({ personId, id }) => {
+    const idToQuery = personId || id;
+
+    if (idToQuery) {
+      console.error(
+        '[Campus.getForPerson()] Cannot find campus. No personId or id provided.'
+      );
+      return null;
+    }
+
     // TODO : cache this request
-    const family = await this.request(`/Groups/GetFamilies/${personId}`)
+    const family = await this.request(`/Groups/GetFamilies/${idToQuery}`)
       .expand('Campus')
       .expand('Campus/Location')
       .expand('Campus/Location/Image')
