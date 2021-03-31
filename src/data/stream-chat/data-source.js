@@ -80,7 +80,7 @@ export default class StreamChat extends RESTDataSource {
   createStreamUsers = async ({ users }) => {
     await Promise.all(
       chunk(users, CREATE_USERS_LIMIT).map(async (chunkedUsers) => {
-        await chatClient.updateUsers(chunkedUsers);
+        await chatClient.upsertUsers(chunkedUsers);
       })
     );
   };
