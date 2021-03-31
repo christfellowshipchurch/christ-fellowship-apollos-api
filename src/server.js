@@ -86,6 +86,21 @@ app.get('/version', cors(), (req, res) => {
   }
 });
 
+app.post('/stream-chat/webhook', cors(), (req, res) => {
+  try {
+    console.log('🪝 WEBHOOK TRIGGERED! 🪝');
+    console.log('req:', req);
+
+    // TODO Enforce security
+    // first argument is the request body as a string, second the signature header
+    // const valid = client.verifyWebhook(req.rawBody, req.headers['x-signature']);
+
+    res.send('ok');
+  } catch (error) {
+    console.error('/stream-chat/webhook Error!', error);
+  }
+});
+
 applyServerMiddleware({ app, dataSources, context });
 setupJobs({ app, dataSources, context });
 
