@@ -69,6 +69,7 @@ const apolloServer = new ApolloServer({
 });
 
 const app = express();
+app.use(express.json());
 
 // health check
 app.get('/health', cors(), (req, res) => {
@@ -83,21 +84,6 @@ app.get('/version', cors(), (req, res) => {
     res.send(version);
   } catch (e) {
     res.send('unknown');
-  }
-});
-
-app.post('/stream-chat/webhook', cors(), (req, res) => {
-  try {
-    console.log('🪝 WEBHOOK TRIGGERED! 🪝');
-    console.log('req:', req);
-
-    // TODO Enforce security
-    // first argument is the request body as a string, second the signature header
-    // const valid = client.verifyWebhook(req.rawBody, req.headers['x-signature']);
-
-    res.send('ok');
-  } catch (error) {
-    console.error('/stream-chat/webhook Error!', error);
   }
 });
 

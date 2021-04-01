@@ -1,6 +1,6 @@
 import ApollosConfig from '@apollosproject/config';
 import { RESTDataSource } from 'apollo-datasource-rest';
-import { createGlobalId } from '@apollosproject/server-core';
+import { createGlobalId, parseGlobalId } from '@apollosproject/server-core';
 import { StreamChat as StreamChatClient } from 'stream-chat';
 import { chunk, get } from 'lodash';
 import { Utils } from '@apollosproject/data-connector-rock';
@@ -221,5 +221,34 @@ export default class StreamChat extends RESTDataSource {
 
     const channel = chatClient.channel(channelType, channelId);
     await channel.demoteModerators([streamUserId]);
+  };
+
+  handleNewMessage = async (data) => {
+    const { OneSignal, Person } = this.context.dataSources;
+
+    const sender = get(data, 'user', {});
+    const content = get(data, 'message.text', '');
+    const members = get(data, 'members', []);
+    const memberIds = members
+      .map(({ user_id }) => user_id)
+      .filter((id) => id !== sender.id);
+
+    const rockAliasIds = await Promise.all(
+      memberIds.map(async (id) => {
+        const { id: rockPersonId } = parseGlobalId(`Person:${id}`);
+        const person = await Person.getFromId(rockPersonId);
+        return get(person, 'primaryAliasId');
+      })
+    );
+
+    if (rockAliasIds.length) {
+      // todo : send a deep link to the Channel using the `cid` from `data` as the relatedNode for ChatChannelSingle
+      // todo : use OneSignal's "smart notification" so that users don't get spammed too often with notifications
+      OneSignal.createNotification({
+        toUserIds: rockAliasIds.filter((id) => !!id),
+        content,
+        heading: `New Message from ${sender.name}`,
+      });
+    }
   };
 }
