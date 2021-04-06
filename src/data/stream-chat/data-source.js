@@ -243,7 +243,7 @@ export default class StreamChat extends RESTDataSource {
 
       const rockAliasIds = await Promise.all(
         memberIds
-          .filter((id) => !mutedUsers.inludes(id)) // user who doesn't have notifications disabled for this channel
+          .filter((id) => !mutedUsers.includes(id)) // user who doesn't have notifications disabled for this channel
           .map(async (id) => {
             const { id: rockPersonId } = parseGlobalId(`Person:${id}`);
             const person = await Person.getFromId(rockPersonId);
