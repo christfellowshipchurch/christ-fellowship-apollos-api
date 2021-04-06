@@ -235,7 +235,7 @@ export default class StreamChat extends RESTDataSource {
       .filter(({ user }) => !user.banned) // user isn't banned
       .filter(({ banned }) => !banned) // user isn't banned from the channel
       .filter(({ user }) => !user.shadow_banned) // user isn't shadow banned from the channel
-      // .filter(({ user }) => !user.online) // user isn't currently online
+      .filter(({ user }) => !user.online) // user isn't currently online so that we don't barade them with notifications
       .map(({ user_id }) => user_id)
       .filter((id) => id !== sender.id);
 
