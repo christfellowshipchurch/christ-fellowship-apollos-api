@@ -259,11 +259,16 @@ export default class StreamChat extends RESTDataSource {
       if (rockAliasIds.length) {
         // todo : send a deep link to the Channel using the `cid` from `data` as the relatedNode for ChatChannelSingle
         // todo : use OneSignal's "smart notification" so that users don't get spammed too often with notifications
-        OneSignal.createNotification({
-          toUserIds: rockAliasIds.filter((id) => !!id),
+
+        const data = {
+          toUserIds: rockAliasIds
+            .filter((id) => !!id) // filter out invalid ids as a last check
+            .map((id) => `${id}`), // OneSignal expects an array of string Ids
           content,
           heading: `New Message from ${sender.name}`,
-        });
+        };
+
+        OneSignal.createNotification(data);
       }
     }
   };
