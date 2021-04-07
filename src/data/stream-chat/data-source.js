@@ -265,7 +265,7 @@ export default class StreamChat extends RESTDataSource {
             .filter((id) => !!id) // filter out invalid ids as a last check
             .map((id) => `${id}`), // OneSignal expects an array of string Ids
           content,
-          heading: `New Message from ${sender.name}`,
+          heading: `💬 Message from ${sender.name}`,
         };
 
         OneSignal.createNotification(data);
