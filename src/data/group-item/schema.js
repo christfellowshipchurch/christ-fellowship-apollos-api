@@ -178,6 +178,7 @@ export const groupSchema = gql`
     GROUP_READ_PRAYER
     GROUP_READ_GROUP
     GROUP_OPEN_URL
+    GROUP_JOINED_PARENT_VIDEO
   }
 `;
 
