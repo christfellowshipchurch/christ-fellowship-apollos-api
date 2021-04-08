@@ -257,18 +257,14 @@ export default class StreamChat extends RESTDataSource {
       );
 
       if (rockAliasIds.length) {
-        // todo : send a deep link to the Channel using the `cid` from `data` as the relatedNode for ChatChannelSingle
-        // todo : use OneSignal's "smart notification" so that users don't get spammed too often with notifications
-
-        const data = {
+        OneSignal.createNotification({
           toUserIds: rockAliasIds
             .filter((id) => !!id) // filter out invalid ids as a last check
             .map((id) => `${id}`), // OneSignal expects an array of string Ids
           content,
           heading: `💬 Message from ${sender.name}`,
-        };
-
-        OneSignal.createNotification(data);
+          app_url: `christfellowship://c/ChatChannelSingle?streamChannelId=${channel_id}&streamChannelType=${channel_type}`,
+        });
       }
     }
   };
