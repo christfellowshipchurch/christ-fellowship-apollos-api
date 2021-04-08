@@ -235,9 +235,11 @@ export default class StreamChat extends RESTDataSource {
       .filter(({ user }) => !user.banned) // user isn't banned
       .filter(({ banned }) => !banned) // user isn't banned from the channel
       .filter(({ user }) => !user.shadow_banned) // user isn't shadow banned from the channel
-      .filter(({ user }) => !user.online) // user isn't currently online so that we don't barade them with notifications
+      // .filter(({ user }) => !user.online) // user isn't currently online so that we don't barade them with notifications
       .map(({ user_id }) => user_id)
       .filter((id) => id !== sender.id);
+
+    console.log(members);
 
     if (channelId && channelType) {
       const channel = await this.getChannel({ channelId, channelType });
@@ -263,7 +265,7 @@ export default class StreamChat extends RESTDataSource {
             .map((id) => `${id}`), // OneSignal expects an array of string Ids
           content,
           heading: `💬 Message from ${sender.name}`,
-          app_url: `christfellowship://c/ChatChannelSingle?streamChannelId=${channel_id}&streamChannelType=${channel_type}`,
+          app_url: `christfellowship://c/ChatChannelSingle?streamChannelId=${channelId}&streamChannelType=${channelType}`,
         });
       }
     }
