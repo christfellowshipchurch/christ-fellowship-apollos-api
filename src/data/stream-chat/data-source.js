@@ -233,13 +233,18 @@ export default class StreamChat extends RESTDataSource {
     const members = get(data, 'members', []);
     const memberIds = members
       .filter(({ user }) => !user.banned) // user isn't banned
-      .filter(({ user }) => !user.online) // user isn't currently online
+      .filter(({ banned }) => !banned) // user isn't banned from the channel
+      .filter(({ user }) => !user.shadow_banned) // user isn't shadow banned from the channel
       .map(({ user_id }) => user_id)
       .filter((id) => id !== sender.id);
 
+    console.log(members);
+
     if (channelId && channelType) {
       const channel = await this.getChannel({ channelId, channelType });
-      const mutedUsers = get(channel, 'channel.muteNotifications', []);
+      const mutedNotifications = get(channel, 'channel.muteNotifications', []);
+      const mutedUsers =
+        mutedNotifications && Array.isArray(mutedNotifications) ? mutedNotifications : [];
 
       const rockAliasIds = await Promise.all(
         memberIds
@@ -247,17 +252,19 @@ export default class StreamChat extends RESTDataSource {
           .map(async (id) => {
             const { id: rockPersonId } = parseGlobalId(`Person:${id}`);
             const person = await Person.getFromId(rockPersonId);
+
             return get(person, 'primaryAliasId');
           })
       );
 
       if (rockAliasIds.length) {
-        // todo : send a deep link to the Channel using the `cid` from `data` as the relatedNode for ChatChannelSingle
-        // todo : use OneSignal's "smart notification" so that users don't get spammed too often with notifications
         OneSignal.createNotification({
-          toUserIds: rockAliasIds.filter((id) => !!id),
+          toUserIds: rockAliasIds
+            .filter((id) => !!id) // filter out invalid ids as a last check
+            .map((id) => `${id}`), // OneSignal expects an array of string Ids
           content,
-          heading: `New Message from ${sender.name}`,
+          heading: `💬 Message from ${sender.name}`,
+          app_url: `christfellowship://c/ChatChannelSingle?streamChannelId=${channelId}&streamChannelType=${channelType}`,
         });
       }
     }
