@@ -337,7 +337,7 @@ CONNECT_FEATURES:
           __typename: Url
           url: 'https://rock.gocf.org/groups'
       - action: OPEN_URL
-        title: 'Serve'
+        title: 'Volunteer'
         icon: 'handshake'
         theme:
           colors:
