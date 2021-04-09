@@ -1,6 +1,6 @@
-import { Auth as coreAuth } from '@apollosproject/data-connector-rock'
-import ApollosConfig from '@apollosproject/config'
-import { resolverMerge } from '@apollosproject/server-core'
+import { Auth as coreAuth } from '@apollosproject/data-connector-rock';
+import ApollosConfig from '@apollosproject/config';
+import { resolverMerge } from '@apollosproject/server-core';
 
 const resolver = {
   Mutation: {
@@ -22,19 +22,29 @@ const resolver = {
         return null;
       }
 
-      if (await StreamChat.currentUserIsLiveStreamModerator()) {
-        await StreamChat.addModerator({ channelId, userId });
-        return 'MODERATOR';
-      }
+      try {
+        if (await StreamChat.currentUserIsLiveStreamModerator()) {
+          await StreamChat.addModerator({ channelId, userId });
+          return 'MODERATOR';
+        }
 
-      await StreamChat.removeModerator({ channelId, userId });
-      return 'USER';
+        await StreamChat.removeModerator({ channelId, userId });
+        return 'USER';
+      } catch (error) {
+        console.error(
+          `Error getting the chat role for user ${userId} in livestream channelId ${channelId}`
+        );
+        console.error(error);
+        return null;
+      }
     },
   },
   Query: {
     canAccessExperimentalFeatures: async (root, args, { dataSources }) =>
-      dataSources.Auth.isInSecurityGroup(ApollosConfig.ROCK_MAPPINGS.SECURITY_GROUPS.EXPERIMENTAL_FEATURES),
-  }
-}
+      dataSources.Auth.isInSecurityGroup(
+        ApollosConfig.ROCK_MAPPINGS.SECURITY_GROUPS.EXPERIMENTAL_FEATURES
+      ),
+  },
+};
 
-export default resolverMerge(resolver, coreAuth)
+export default resolverMerge(resolver, coreAuth);
