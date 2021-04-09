@@ -226,7 +226,9 @@ export default class Checkinable extends RockApolloDataSource {
         scheduleId,
         personId,
         forDate,
+        isActive: false, // For the time being, any Group should be able to check in at any time, so we'll disable this active filtering
       });
+
       if (schedule) {
         options.push(schedule);
       }

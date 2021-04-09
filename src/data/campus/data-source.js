@@ -7,7 +7,7 @@ export default class Campus extends coreCampus.dataSource {
   getForPerson = async ({ personId, id }) => {
     const idToQuery = personId || id;
 
-    if (idToQuery) {
+    if (!idToQuery) {
       console.error(
         '[Campus.getForPerson()] Cannot find campus. No personId or id provided.'
       );
