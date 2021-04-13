@@ -74,6 +74,12 @@ export default gql`
     htmlContent: String
     coverImage: ImageMedia
     videos: [VideoMedia]
+    imageRatio: String
+    imageAlt: String
+    subtitle: String
+
+    callToAction: CallToAction
+    secondaryCallToAction: CallToAction
 
     orientation: CONTENT_BLOCK_ORIENTATION
   }

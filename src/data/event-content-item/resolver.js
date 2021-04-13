@@ -153,8 +153,8 @@ const resolver = {
       LiveStream.byContentItem(root),
     featureFeed: (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
-        type: 'contentChannel',
-        args: { contentChannelId: CONTENT_CHANNEL_FEEDS.HOME_FEED, ...args },
+        type: 'contentChannelItem',
+        args: { contentChannelItemId: 7902, ...args },
       }),
   },
 };

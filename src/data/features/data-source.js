@@ -1,7 +1,8 @@
 import { Feature as coreFeatures } from '@apollosproject/data-connector-rock';
-import { get, isEmpty } from 'lodash';
+import { first, get, isEmpty } from 'lodash';
 
 import sanitizeHtml from '../sanitize-html';
+import { parseRockKeyValuePairs } from '../utils';
 
 export default class Feature extends coreFeatures.dataSource {
   expanded = true;
@@ -85,6 +86,22 @@ export default class Feature extends coreFeatures.dataSource {
       'attributeValues.contentLayout.value',
       ''
     );
+    const definedValueGuidImageRatio = get(
+      contentItem,
+      'attributeValues.imageRatio.value',
+      ''
+    );
+    const imageRatio = await this.context.dataSources.DefinedValue.getDefinedValueByIdentifier(
+      definedValueGuidImageRatio
+    );
+    const callToAction = get(contentItem, 'attributeValues.callToAction.value', null);
+
+    const secondaryCallToAction = get(
+      contentItem,
+      'attributeValues.secondaryCalltoAction.value',
+      null
+    );
+
     let orientation = 'default';
 
     if (!isEmpty(contentLayoutDefinedValue)) {
@@ -92,6 +109,8 @@ export default class Feature extends coreFeatures.dataSource {
 
       orientation = definedValue?.value ? definedValue?.value : orientation;
     }
+
+    console.log(contentItem.title, { callToAction });
 
     return {
       // The Feature ID is based on all of the action ids, added together.
@@ -101,8 +120,14 @@ export default class Feature extends coreFeatures.dataSource {
           contentChannelItemId,
         },
       }),
+      callToAction: first(parseRockKeyValuePairs(callToAction, 'call', 'action')),
+      secondaryCallToAction: first(
+        parseRockKeyValuePairs(secondaryCallToAction, 'call', 'action')
+      ),
       title: contentItem.title,
+      subtitle: get(contentItem, 'attributeValues.subtitle.value', ''),
       summary,
+      imageRatio: imageRatio.value,
       htmlContent: sanitizeHtml(contentItem.content),
       coverImage: ContentItem.getCoverImage(contentItem),
       orientation: orientation.toUpperCase(),
