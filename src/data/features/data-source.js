@@ -110,8 +110,6 @@ export default class Feature extends coreFeatures.dataSource {
       orientation = definedValue?.value ? definedValue?.value : orientation;
     }
 
-    console.log(contentItem.title, { callToAction });
-
     return {
       // The Feature ID is based on all of the action ids, added together.
       // This is naive, and could be improved.

@@ -107,14 +107,14 @@ export default class ContentChannel extends coreContentChannel.dataSource {
               ],
               title: item.title,
               subtitle: ContentItem.createSummary(item),
-              primaryAction: {
-                title: 'See More',
-                action: 'OPEN_URL',
-                relatedNode: {
-                  __typename: 'Url',
-                  url: 'https://christfellowship.church',
-                },
-              },
+              // primaryAction: {
+              //   title: 'See More',
+              //   action: 'OPEN_URL',
+              //   relatedNode: {
+              //     __typename: 'Url',
+              //     url: 'https://christfellowship.church',
+              //   },
+              // },
             });
           case 'DefaultHorizontalCardList':
           case 'HighlightHorizontalCardList':
@@ -150,14 +150,14 @@ export default class ContentChannel extends coreContentChannel.dataSource {
               title: item.title,
               subtitle: ContentItem.createSummary(item),
               cardType: getCardType(),
-              primaryAction: {
-                title: 'See More',
-                action: 'OPEN_URL',
-                relatedNode: {
-                  __typename: 'Url',
-                  url: 'https://christfellowship.church',
-                },
-              },
+              // primaryAction: {
+              //   title: 'See More',
+              //   action: 'OPEN_URL',
+              //   relatedNode: {
+              //     __typename: 'Url',
+              //     url: 'https://christfellowship.church',
+              //   },
+              // },
             });
           case 'READ_GLOBAL_CONTENT': // ! deprecated, old action
           case 'VerticalCardList':
