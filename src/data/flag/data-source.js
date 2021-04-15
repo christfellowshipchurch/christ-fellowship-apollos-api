@@ -36,17 +36,29 @@ export default class Flag extends RESTDataSource {
     return statuses;
   };
 
-  currentUserCanUseFeature = async (key) => {
+  /**
+   *
+   * @param {string}  key       | String key for the Feature Flag found in the config.yml
+   * @param {integer?} personId | Id for the person you want to check the feature flag for. If `null`, the current user will be used.
+   * @returns LIVE|DISABLED
+   */
+  userCanUseFeature = async (key, personId = null) => {
     const { Auth } = this.context.dataSources;
     const flag = get(ApollosConfig, `FEATURE_FLAGS.${key}`, null);
     if (flag && flag.status === 'LIVE') {
       if (flag.securityGroupId) {
-        return (await Auth.isInSecurityGroup(flag.securityGroupId)) ? 'LIVE' : 'DISABLED';
+        return (await Auth.isInSecurityGroup(flag.securityGroupId, { personId }))
+          ? 'LIVE'
+          : 'DISABLED';
       }
 
       return flag.status;
     }
 
     return 'DISABLED';
+  };
+
+  currentUserCanUseFeature = (key) => {
+    return this.userCanUseFeature(key);
   };
 }

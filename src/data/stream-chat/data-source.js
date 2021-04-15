@@ -224,7 +224,7 @@ export default class StreamChat extends RESTDataSource {
   };
 
   handleNewMessage = async (data) => {
-    const { OneSignal, Person } = this.context.dataSources;
+    const { Flag, OneSignal, Person } = this.context.dataSources;
 
     const sender = get(data, 'user', {});
     const channelId = get(data, 'channel_id');
@@ -238,8 +238,6 @@ export default class StreamChat extends RESTDataSource {
       .map(({ user_id }) => user_id)
       .filter((id) => id !== sender.id);
 
-    console.log(members);
-
     if (channelId && channelType) {
       const channel = await this.getChannel({ channelId, channelType });
       const mutedNotifications = get(channel, 'channel.muteNotifications', []);
@@ -251,9 +249,18 @@ export default class StreamChat extends RESTDataSource {
           .filter((id) => !mutedUsers.includes(id)) // user who doesn't have notifications disabled for this channel
           .map(async (id) => {
             const { id: rockPersonId } = parseGlobalId(`Person:${id}`);
-            const person = await Person.getFromId(rockPersonId);
+            const featureStatus = await Flag.userCanUseFeature(
+              'GROUP_CHAT',
+              rockPersonId
+            );
 
-            return get(person, 'primaryAliasId');
+            if (featureStatus === 'LIVE') {
+              const person = await Person.getFromId(rockPersonId);
+
+              return get(person, 'primaryAliasId');
+            }
+
+            return null;
           })
       );
 
