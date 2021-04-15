@@ -84,14 +84,14 @@ export default class AuthDataSource extends CoreAuth.dataSource {
 
       if (!id) {
         const { id: currentPersonId } = await this.getCurrentPerson();
+
         id = currentPersonId;
       }
-
       if (!id) return false;
 
       const groupMembers = await this.request('/GroupMembers')
         .filter(`GroupId eq ${securityGroupId}`)
-        .andFilter(`PersonId eq ${personId || currentPersonId}`)
+        .andFilter(`PersonId eq ${id}`)
         .get();
 
       return groupMembers.length > 0;
