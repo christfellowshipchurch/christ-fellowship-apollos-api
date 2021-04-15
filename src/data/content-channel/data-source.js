@@ -94,7 +94,7 @@ export default class ContentChannel extends coreContentChannel.dataSource {
         switch (
           action // TODO : support multiple algorithms from Rock
         ) {
-          case 'VIEW_CHILDREN': // ! deprecated, old action
+          case 'READ_GLOBAL_CONTENT': // ! deprecated, old action
           case 'HeroList':
             return Feature.createHeroListFeature({
               algorithms: [
@@ -159,7 +159,7 @@ export default class ContentChannel extends coreContentChannel.dataSource {
               //   },
               // },
             });
-          case 'READ_GLOBAL_CONTENT': // ! deprecated, old action
+          case 'VIEW_CHILDREN': // ! deprecated, old action
           case 'VerticalCardList':
           default:
             // VerticalCardList with the CONTENT_CHILDREN as default
