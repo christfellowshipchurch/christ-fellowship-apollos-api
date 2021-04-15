@@ -5,6 +5,8 @@ import { isRequired, isType, getIdentifierType } from '../utils';
 
 const { ROCK_ENTITY_IDS, ROCK_FIELD_TYPE_IDS } = ApollosConfig;
 const {
+  ATTRIBUTE_MATRIX,
+  ATTRIBUTE_MATRIX_ITEM,
   CONTENT_CHANNEL,
   CONTENT_CHANNEL_ITEM,
   DEFINED_TYPE,
@@ -32,12 +34,17 @@ export default class CacheManager extends RedisCache.dataSource {
         DefinedValueList,
         DefinedValue,
         Group,
+        MatrixItem,
         Person,
         PrayerRequest,
       } = this.context.dataSources;
       let entity = null;
 
       switch (entityTypeId) {
+        case ATTRIBUTE_MATRIX_ITEM:
+          entity = await MatrixItem.getFromId(entityId);
+
+          break;
         case CONTENT_CHANNEL:
           entity = await ContentChannel.getFromId(entityId);
           break;
@@ -87,6 +94,10 @@ export default class CacheManager extends RedisCache.dataSource {
           let relatedEntityTypeId = null;
 
           switch (get(entity, relatedEntityTypeIdPath)) {
+            case ROCK_FIELD_TYPE_IDS.ATTRIBUTE_MATRIX:
+              redisKeyTemplate = this.KEY_TEMPLATES.attributeMatrix;
+              relatedEntityTypeId = ATTRIBUTE_MATRIX;
+              break;
             case ROCK_FIELD_TYPE_IDS.CONTENT_CHANNEL_ITEM:
               redisKeyTemplate = this.KEY_TEMPLATES.contentItemGuidId;
               relatedEntityTypeId = CONTENT_CHANNEL_ITEM;
@@ -119,6 +130,23 @@ export default class CacheManager extends RedisCache.dataSource {
           }
         }
 
+        /**
+         * Entity Specific logic for handling Entity Prop caching
+         */
+        switch (entityTypeId) {
+          case GROUP:
+            const scheduleId = get(entity, 'scheduleId');
+            if (scheduleId) {
+              relatedEntityIds.push({
+                entityId: scheduleId,
+                entityTypeId: SCHEDULE,
+              });
+            }
+            break;
+          default:
+            break;
+        }
+
         return relatedEntityIds;
       }
     }
@@ -139,6 +167,14 @@ export default class CacheManager extends RedisCache.dataSource {
        */
       let recursiveEntities = [];
       switch (entityTypeId) {
+        case ATTRIBUTE_MATRIX:
+          cacheLog('Attribute Matrix', entityId);
+
+          await this.delete({
+            key: this.KEY_TEMPLATES.attributeMatrix`${entityId}`,
+          });
+
+          break;
         case CONTENT_CHANNEL:
           cacheLog('Content Channel', entityId);
 
@@ -183,6 +219,7 @@ export default class CacheManager extends RedisCache.dataSource {
             entityId,
             entityTypeId,
           });
+
           break;
         case PRAYER_REQUEST:
           cacheLog('Prayer Request', entityId);
@@ -205,6 +242,8 @@ export default class CacheManager extends RedisCache.dataSource {
             entityId,
             entityTypeId,
           });
+          break;
+        default:
           break;
       }
 
