@@ -6,11 +6,18 @@ const { CONTENT_CHANNEL_FEEDS, CONNECT_TAB } = ApollosConfig;
 
 const resolver = {
   Query: {
-    connectFeedFeatures: async (root, args, { dataSources: { FeatureFeed } }) =>
-      FeatureFeed.getFeed({
+    connectFeedFeatures: async (root, args, { dataSources: { FeatureFeed, Flag } }) => {
+      let section = 'CONNECT_FEATURES';
+
+      if (await Flag.currentUserCanUseFeature('VOLUNTEER_GROUPS')) {
+        section = 'CONNECT_FEATURES_BETA';
+      }
+
+      return FeatureFeed.getFeed({
         type: 'apollosConfig',
-        args: { section: 'CONNECT_FEATURES', ...args },
-      }),
+        args: { section, ...args },
+      });
+    },
     eventsFeedFeatures: async (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
         type: 'apollosConfig',

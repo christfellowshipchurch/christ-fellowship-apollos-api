@@ -1452,4 +1452,78 @@ export default class GroupItem extends baseGroup.dataSource {
       console.log(e);
     }
   };
+
+  async loadGroups() {
+    const { Cache } = this.context.dataSources;
+
+    const loadGroupMembers = async (groupType, groupRoleIds) => {
+      const groupTypeFilter = `GroupRole/GroupTypeId eq ${groupType}`;
+      const groupRoleFilters = groupRoleIds.map(
+        (groupRoleId) => `GroupRoleId eq ${groupRoleId}`
+      );
+
+      let skip = 0;
+      const batch = 20;
+      const count = await this.request('GroupMembers')
+        .filterOneOf(groupRoleFilters)
+        .andFilter(groupTypeFilter)
+        .count();
+
+      while (skip < count) {
+        const groupMembers = await this.request('GroupMembers')
+          .filterOneOf(groupRoleFilters)
+          .andFilter(groupTypeFilter)
+          .top(batch)
+          .skip(skip)
+          .get();
+
+        await Promise.all(
+          groupMembers.map(async ({ personId }) => {
+            await Cache.delete({ key: Cache.KEY_TEMPLATES.personGroups`${personId}` });
+            return this.getByPerson({ personId });
+          })
+        );
+
+        skip += batch;
+      }
+    };
+
+    const calculateTotalRequests = async (groupTypeIds, groupRoleIds) => {
+      const groupRoleFilter = groupRoleIds.map((id) => `(GroupRoleId eq ${id})`);
+
+      const groupMemberPromises = Promise.all(
+        groupTypeIds.map((id) =>
+          this.request('GroupMembers')
+            .filterOneOf(groupRoleFilter)
+            .andFilter(`GroupRole/GroupTypeId eq ${id}`)
+            .count()
+        )
+      );
+
+      const groupMembers = await groupMemberPromises;
+      const reducer = (accumulator, currentValue) => accumulator + currentValue;
+
+      console.log(
+        `[load groups cache] updating cache for ${groupMembers.reduce(
+          reducer
+        )} Group Members`
+      );
+    };
+
+    const groupTypeIds = await this.getValidGroupTypeIds();
+    const groupRoleIdObjects = await this._getValidGroupRoles();
+    const groupRoleIds = groupRoleIdObjects.map(({ id }) => id);
+
+    await calculateTotalRequests(groupTypeIds, groupRoleIds);
+
+    for (var i = 0; i < groupTypeIds.length; i++) {
+      const groupType = groupTypeIds[i];
+
+      try {
+        await loadGroupMembers(groupType, groupRoleIds);
+      } catch (e) {
+        console.warn({ e });
+      }
+    }
+  }
 }

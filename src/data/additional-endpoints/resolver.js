@@ -1,4 +1,5 @@
 import { get } from 'lodash';
+import { format, formatDistance } from 'date-fns';
 import { parseRockKeyValuePairs, generateAppLinkFromUrl } from '../utils';
 
 const moreLinkJson = [
@@ -131,6 +132,18 @@ const resolver = {
       const contentItem = await ContentItem.byContentChannelId(73).get();
       return contentItem;
     },
+    // ! remove after the Groups launch
+    // loadGroupsCache: async (root, args, { dataSources }) => {
+    //   const { Group } = dataSources;
+    //   const started = new Date();
+
+    //   console.log(`[load groups cache] started ${format(started, 'hh:mm:ss')}`);
+    //   await Group.loadGroups();
+
+    //   const end = new Date();
+    //   console.log(`[load groups cache] finished ${format(end, 'hh:mm:ss')}`);
+    //   console.log(`[load groups cache] duration ${formatDistance(started, end)}`);
+    // },
   },
 };
 

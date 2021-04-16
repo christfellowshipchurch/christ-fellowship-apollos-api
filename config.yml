@@ -359,6 +359,58 @@ CONNECT_FEATURES:
     title: 'My Groups'
     flagKey: GROUPS
   - type: HorizontalCardList
+    algorithms: [MY_PRAYERS]
+    title: 'My Prayers'
+    primaryAction:
+      action: OPEN_URL
+      title: 'See all'
+      relatedNode:
+        __typename: Url
+        url: 'christfellowship://c/MyPrayerRequestsFeed'
+CONNECT_FEATURES_BETA:
+  - type: AvatarList
+    algorithms: [CURRENT_USER]
+    isCard: false
+    primaryAction:
+      action: OPEN_URL
+      icon: 'settings'
+      relatedNode:
+        __typename: Url
+        url: 'christfellowship://c/EditCurrentUser'
+  - type: ActionBar
+    actions:
+      - action: OPEN_URL
+        title: 'Groups'
+        icon: 'users'
+        theme:
+          colors:
+            primary: '#00aeef'
+        relatedNode:
+          __typename: Url
+          url: 'https://rock.gocf.org/groups'
+      - action: OPEN_URL
+        title: 'Volunteer'
+        icon: 'handshake'
+        theme:
+          colors:
+            primary: '#d52158'
+        relatedNode:
+          __typename: Url
+          url: 'https://rock.christfellowship.church/dreamteam'
+      - action: OPEN_URL
+        title: 'Give Now'
+        icon: 'envelope-open-dollar'
+        theme:
+          colors:
+            primary: '#1ec27f'
+        relatedNode:
+          __typename: Url
+          url: 'https://cf.church/pushpay?feed=connect'
+  - type: HorizontalCardList
+    algorithms: [MY_GROUPS]
+    title: 'My Groups'
+    flagKey: GROUPS
+  - type: HorizontalCardList
     algorithms: [MY_VOLUNTEER_GROUPS]
     title: 'My Dream Teams'
     flagKey: VOLUNTEER_GROUPS
@@ -435,7 +487,7 @@ FEATURE_FLAGS:
   HOME_HEADER:
     status: 'LIVE'
   GROUP_CHAT:
-    securityGroupId: 1100551 # https://rock.christfellowship.church/page/2423?GroupId=1100551
+    # securityGroupId: 1100551 # https://rock.christfellowship.church/page/2423?GroupId=1100551
     status: 'LIVE'
   GROUP_CUSTOMIZATION:
     securityGroupId: 1052011 # https://rock.christfellowship.church/page/2423?GroupId=1100558&ExpandedIds=1100557
