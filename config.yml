@@ -471,9 +471,9 @@ GIVE_FEATURES:
           __typename: 'Url'
           url: 'http://cf.church/venmo?feed=give'
 HOME_HEADER_FEATURES:
-  - algorithms: [ALL_LIVE_CONTENT]
-    type: LiveContentList
-    title: Live Now
+  # - algorithms: [ALL_LIVE_CONTENT]
+  #   type: LiveContentList
+  #   title: Live Now
   - algorithms: [DAILY_PRAYER]
     isCard: false
     type: PrayerList
