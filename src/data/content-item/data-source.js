@@ -105,17 +105,24 @@ export default class ContentItem extends coreContentItem.dataSource {
    * @return {function}
    */
   sortByAssociationOrder = (associations) => (a, b) => {
-    if (!a.order || !b.order || !Array.isArray(associations)) return 0;
+    // Check to make sure associations is an array
+    if (!Array.isArray(associations)) return 0;
 
     /**
      * Find the Association Order for the given content channel items
      */
-    const { order: orderA } = associations.find(
+    const associationA = associations.find(
       (item) => item.childContentChannelItemId === a.id
     );
-    const { order: orderB } = associations.find(
+    const associationB = associations.find(
       (item) => item.childContentChannelItemId === b.id
     );
+
+    const orderA = associationA.order;
+    const orderB = associationB.order;
+
+    // If the orders are not integers, just return 0 to catch any comparision errors
+    if (!Number.isInteger(orderA) || !Number.isInteger(orderB)) return 0;
 
     /**
      * Compare functions want either `0`, `< 0` or `> 0` as a return value, so we'll just subtract
