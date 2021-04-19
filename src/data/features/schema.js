@@ -83,4 +83,12 @@ export default gql`
 
     orientation: CONTENT_BLOCK_ORIENTATION
   }
+
+  type HtmlBlockFeature implements Feature & Node {
+    id: ID!
+    order: Int
+
+    title(hyphenated: Boolean): String
+    htmlContent: String
+  }
 `;

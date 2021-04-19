@@ -57,8 +57,14 @@ const resolver = {
           });
         default:
           return FeatureFeed.getFeed({
-            type: 'pageBuilder',
-            args: { pathname, ...args },
+            /**
+             * todo : Configure how to pull 'contentChannelItemId' from 'pathname'
+             */
+            type: 'contentChannelItem',
+            args: {
+              contentChannelItemId: pathname,
+              ...args,
+            },
           });
       }
     },

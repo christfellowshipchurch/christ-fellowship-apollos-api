@@ -803,6 +803,8 @@ export default class ContentItem extends coreContentItem.dataSource {
         switch (typename) {
           case 'ContentBlock':
             return Feature.createContentBlockFeature({ contentChannelItemId: id });
+          case 'HtmlBlock':
+            return Feature.createHtmlBlockFeature({ contentChannelItemId: id });
           case 'HeroList':
             // todo :
             return null;

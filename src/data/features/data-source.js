@@ -76,6 +76,26 @@ export default class Feature extends coreFeatures.dataSource {
     };
   }
 
+  async createHtmlBlockFeature({ contentChannelItemId }) {
+    const { ContentItem, DefinedValue } = this.context.dataSources;
+
+    const contentItem = await ContentItem.getFromId(contentChannelItemId);
+
+    return {
+      // The Feature ID is based on all of the action ids, added together.
+      // This is naive, and could be improved.
+      id: this.createFeatureId({
+        args: {
+          contentChannelItemId,
+        },
+      }),
+      title: contentItem.title,
+      htmlContent: contentItem.content,
+      // Typename is required so GQL knows specifically what Feature is being created
+      __typename: 'HtmlBlockFeature',
+    };
+  }
+
   async createContentBlockFeature({ contentChannelItemId }) {
     const { ContentItem, DefinedValue } = this.context.dataSources;
 

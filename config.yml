@@ -308,6 +308,8 @@ ROCK_MAPPINGS:
   FEATURE_MAPPINGS:
     ContentBlock:
       ContentChannelTypeId: [15]
+    HtmlBlock:
+      ContentChannelTypeId: [26]
     HorizontalCardList:
       ContentChannelId: [44]
 

@@ -12,6 +12,9 @@ const resolver = {
   ContentBlockFeature: {
     id: ({ id }) => createGlobalId(id, 'ContentBlockFeature'),
   },
+  HtmlBlockFeature: {
+    id: ({ id }) => createGlobalId(id, 'HtmlBlockFeature'),
+  },
   CardListItem: {
     labelText: ({ labelText }) => labelText,
     hasAction: (root, args, { dataSources: { ContentItem } }) => {

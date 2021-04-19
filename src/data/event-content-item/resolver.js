@@ -154,7 +154,7 @@ const resolver = {
     featureFeed: (root, args, { dataSources: { FeatureFeed } }) =>
       FeatureFeed.getFeed({
         type: 'contentChannelItem',
-        args: { contentChannelItemId: 7902, ...args },
+        args: { contentChannelItemId: 9152, ...args },
       }),
   },
 };
