@@ -48,6 +48,9 @@ export default class StreamChat extends RESTDataSource {
   }
 
   generateUserToken = (userId) => {
+    // get or create user
+    // return valid user token
+
     const streamUserId = this.getStreamUserId(userId);
 
     return chatClient.createToken(streamUserId);
@@ -78,16 +81,31 @@ export default class StreamChat extends RESTDataSource {
   };
 
   createStreamUsers = async ({ users }) => {
-    await Promise.all(
-      chunk(users, CREATE_USERS_LIMIT).map(async (chunkedUsers) => {
-        await chatClient.upsertUsers(chunkedUsers);
-      })
-    );
+    let offset = 0;
+
+    // Paginate through users according to Stream's max call limit
+    do {
+      let endIndex = offset + CREATE_USERS_LIMIT;
+      const usersSubset = users.slice(offset, endIndex);
+
+      await chatClient.upsertUsers(usersSubset);
+
+      offset = offset + CREATE_USERS_LIMIT;
+    } while (users.length > offset);
   };
 
-  getChannel = async ({ channelId, channelType, options }) => {
+  getChannel = async ({ channelId, channelType, options = {} }) => {
+    // Find or create the channel
     const channel = chatClient.channel(channelType, channelId, options);
-    return channel.create();
+    channel.create();
+
+    // If options contains a name, update the name
+    // note : this is done this way in order to take into account updating existing channels as well as creating new channels
+    if (options.name) {
+      await channel.updatePartial({ set: { name: options.name } });
+    }
+
+    return channel;
   };
 
   getChannelMembers = async ({ channelId, channelType, filter = {} }) => {

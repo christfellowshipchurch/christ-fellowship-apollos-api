@@ -942,6 +942,7 @@ export default class GroupItem extends baseGroup.dataSource {
         return null;
       }
 
+      const groupName = this.getTitle(root);
       const currentPerson = await Auth.getCurrentPerson();
       const resolvedType = this.resolveType(root);
       const globalId = createGlobalId(root.id, resolvedType);
@@ -971,6 +972,7 @@ export default class GroupItem extends baseGroup.dataSource {
         options: {
           members,
           created_by: StreamChat.getStreamUser(currentPerson),
+          name: groupName,
         },
       });
 
