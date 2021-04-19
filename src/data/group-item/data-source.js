@@ -1457,6 +1457,7 @@ export default class GroupItem extends baseGroup.dataSource {
     const { Cache } = this.context.dataSources;
 
     const loadGroupMembers = async (groupType, groupRoleIds) => {
+      let total = 0;
       const groupTypeFilter = `GroupRole/GroupTypeId eq ${groupType}`;
       const groupRoleFilters = groupRoleIds.map(
         (groupRoleId) => `GroupRoleId eq ${groupRoleId}`
@@ -1479,13 +1480,21 @@ export default class GroupItem extends baseGroup.dataSource {
 
         await Promise.all(
           groupMembers.map(async ({ personId }) => {
-            await Cache.delete({ key: Cache.KEY_TEMPLATES.personGroups`${personId}` });
-            return this.getByPerson({ personId });
+            try {
+              await Cache.delete({ key: Cache.KEY_TEMPLATES.personGroups`${personId}` });
+              await this.getByPerson({ personId });
+
+              total++;
+            } catch (e) {
+              console.warn({ e });
+            }
           })
         );
 
         skip += batch;
       }
+
+      return total;
     };
 
     const calculateTotalRequests = async (groupTypeIds, groupRoleIds) => {
@@ -1510,6 +1519,7 @@ export default class GroupItem extends baseGroup.dataSource {
       );
     };
 
+    let total = 0;
     const groupTypeIds = await this.getValidGroupTypeIds();
     const groupRoleIdObjects = await this._getValidGroupRoles();
     const groupRoleIds = groupRoleIdObjects.map(({ id }) => id);
@@ -1519,11 +1529,9 @@ export default class GroupItem extends baseGroup.dataSource {
     for (var i = 0; i < groupTypeIds.length; i++) {
       const groupType = groupTypeIds[i];
 
-      try {
-        await loadGroupMembers(groupType, groupRoleIds);
-      } catch (e) {
-        console.warn({ e });
-      }
+      total += await loadGroupMembers(groupType, groupRoleIds);
     }
+
+    console.log(`[load groups cache] updated cache for ${total} Group Members`);
   }
 }

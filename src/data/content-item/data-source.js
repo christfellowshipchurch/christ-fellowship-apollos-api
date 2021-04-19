@@ -105,7 +105,7 @@ export default class ContentItem extends coreContentItem.dataSource {
    * @return {function}
    */
   sortByAssociationOrder = (associations) => (a, b) => {
-    if (!a.order || !b.order) return 0;
+    if (!a.order || !b.order || !Array.isArray(associations)) return 0;
 
     /**
      * Find the Association Order for the given content channel items
