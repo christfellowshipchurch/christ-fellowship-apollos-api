@@ -939,8 +939,6 @@ export default class GroupItem extends baseGroup.dataSource {
       const CHANNEL_TYPE = StreamChat.channelType.GROUP;
       const groupType = this.resolveType(root);
 
-      console.log({ groupType });
-
       if (featureFlagStatus !== 'LIVE') {
         return null;
       }
