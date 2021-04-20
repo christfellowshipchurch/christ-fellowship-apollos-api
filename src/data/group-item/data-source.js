@@ -962,7 +962,7 @@ export default class GroupItem extends baseGroup.dataSource {
       // Create any Stream users that might not exist
       // We need to do this before we can create a channel 🙄
       await StreamChat.createStreamUsers({
-        users: groupMembers.map(StreamChat.getStreamUser),
+        users: [...groupLeaders, ...groupMembers].map(StreamChat.getStreamUser),
       });
 
       // Make sure the channel exists.
