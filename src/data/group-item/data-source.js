@@ -937,6 +937,9 @@ export default class GroupItem extends baseGroup.dataSource {
       const { Auth, StreamChat, Flag } = this.context.dataSources;
       const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
       const CHANNEL_TYPE = StreamChat.channelType.GROUP;
+      const groupType = this.resolveType(root);
+
+      console.log({ groupType });
 
       if (featureFlagStatus !== 'LIVE') {
         return null;
@@ -966,7 +969,7 @@ export default class GroupItem extends baseGroup.dataSource {
 
       // Make sure the channel exists.
       // If it doesn't, create it.
-      await StreamChat.getChannel({
+      const channel = await StreamChat.getChannel({
         channelId,
         channelType: CHANNEL_TYPE,
         options: {
@@ -996,6 +999,18 @@ export default class GroupItem extends baseGroup.dataSource {
         groupLeaders: leaders,
         channelType: CHANNEL_TYPE,
       });
+
+      // todo : remove this once the mobile 6.0.2 version is released
+      if (groupType === 'VolunteerGroup') {
+        const hideVolunteerGroupForMembers = async () => {
+          const channelMembers = await StreamChat.getChannelMembers({
+            channelId,
+            channelType: CHANNEL_TYPE,
+          });
+          Promise.all(channelMembers.map(({ user_id }) => channel.hide(user_id)));
+        };
+        hideVolunteerGroupForMembers();
+      }
 
       return {
         id: root.id,
