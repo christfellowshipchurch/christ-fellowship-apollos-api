@@ -105,30 +105,30 @@ export default class ContentItem extends coreContentItem.dataSource {
    * @return {function}
    */
   sortByAssociationOrder = (associations) => (a, b) => {
-    // Check to make sure associations is an array
-    if (!Array.isArray(associations)) return 0;
+    // Check to make sure that associations is an array
+    // Check to make sure that a.id and b.id are numbers
+    if (Array.isArray(associations) && Number.isInteger(a.id) && Number.isInteger(b.id)) {
+      const { id: aId } = a;
+      const { id: bId } = b;
 
-    /**
-     * Find the Association Order for the given content channel items
-     */
-    const associationA = associations.find(
-      (item) => item.childContentChannelItemId === a.id
-    );
-    const associationB = associations.find(
-      (item) => item.childContentChannelItemId === b.id
-    );
+      // Find _either_ a child or parent association
+      const associationA = associations.find(
+        (association) =>
+          association.childContentChannelItemId === aId ||
+          association.contentChannelItemId === aId
+      );
+      const associationB = associations.find(
+        (association) =>
+          association.childContentChannelItemId === bId ||
+          association.contentChannelItemId === bId
+      );
 
-    const orderA = associationA.order;
-    const orderB = associationB.order;
+      if (Number.isInteger(associationA.order) && Number.isInteger(associationB.order)) {
+        return associationA.order - associationB.order;
+      }
+    }
 
-    // If the orders are not integers, just return 0 to catch any comparision errors
-    if (!Number.isInteger(orderA) || !Number.isInteger(orderB)) return 0;
-
-    /**
-     * Compare functions want either `0`, `< 0` or `> 0` as a return value, so we'll just subtract
-     * orderA - orderB in order to mimic the `Order asc` request
-     */
-    return orderA - orderB;
+    return 0;
   };
 
   CONTENT_ITEM_ASSOCIATION_SORT = () => [{ field: 'Order', direction: 'asc' }];
