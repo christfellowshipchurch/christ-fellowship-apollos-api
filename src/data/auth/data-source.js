@@ -17,7 +17,7 @@ export default class AuthDataSource extends CoreAuth.dataSource {
       RecordStatusValueId: 5,
     });
 
-    this.context.dataSources.Person.updateFirstConnection(personId);
+    // this.context.dataSources.Person.updateFirstConnection(personId);
 
     return personId;
   };
