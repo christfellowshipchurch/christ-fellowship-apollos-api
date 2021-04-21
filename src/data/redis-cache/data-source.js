@@ -41,6 +41,7 @@ export default class Cache extends RedisCache.dataSource {
     personas: (_, id) => `personas:${id}`,
     person: (_, id) => `person:${id}`,
     personAlias: (_, id) => `person-alias:${id}`,
+    personPhoto: (_, id) => `person-photo:${id}`,
     personGroups: (_, personId) => `person-groups:${personId}`,
     personPrayers: (_, personId) => `person-prayer-requests:${personId}`,
     prayerRequest: (_, id) => `prayer-request:${id}`,

@@ -3,7 +3,7 @@ import { get, has, forEach, camelCase, replace, snakeCase } from 'lodash';
 import ApollosConfig from '@apollosproject/config';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
-import { getIdentifierType } from '../utils';
+import { getIdentifierType, rockImageUrl } from '../utils';
 
 const RockGenderMap = {
   Unknown: 0,
@@ -56,6 +56,34 @@ export default class Person extends corePerson.dataSource {
     // Otherwise, return null.
     return null;
   };
+
+  getProfileImage(id) {
+    const { Cache } = this.context.dataSources;
+    const request = async () => {
+      const person = await this.request()
+        .expand('Photo')
+        .filter(getIdentifierType(id).query)
+        .select('Photo, Id')
+        .first();
+      const photo = person.photo;
+
+      if (photo && photo.guid) {
+        return rockImageUrl(photo.guid, {
+          h: 150,
+          w: 150,
+          format: 'jpg',
+          quality: 70,
+        });
+      }
+
+      return 'https://rock.christfellowship.church/Assets/Images/DigitalPlatform/default_profile_picture.png';
+    };
+
+    return Cache.request(request, {
+      key: Cache.KEY_TEMPLATES.personPhoto`${id}`,
+      expiresIn: 5, // 5 minute cache
+    });
+  }
 
   updateFirstConnection = async (id) => {
     const person = await this.getFromId(id);
@@ -423,16 +451,12 @@ export default class Person extends corePerson.dataSource {
     return 'Failed';
   };
 
-  superGetPersonas = this.getPersonas;
-  getPersonas = async ({ categoryId }) => {
-    const { Cache, Auth } = this.context.dataSources;
-    // Get current user
-    const { id } = await Auth.getCurrentPerson();
-    const request = () => this.superGetPersonas({ categoryId });
+  getPersonas = async (props) => {
+    console.warn(
+      '[People.getPersonas] Deprecated : please use Persona.getPersonas instead'
+    );
+    const { Persona } = this.context.dataSources;
 
-    return Cache.request(request, {
-      key: Cache.KEY_TEMPLATES.personas`${id}`,
-      duration: 60 * 60 * 6, // 6 hour cache
-    });
+    return Persona.getPersonas(props);
   };
 }

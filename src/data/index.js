@@ -49,6 +49,7 @@ import * as Metadata from './metadata';
 import * as PageBuilder from './page-builder';
 import * as NodePagination from './node-pagination';
 import * as Person from './people';
+import * as Persona from './personas';
 import * as PhoneNumber from './phone-number';
 import * as PrayerRequest from './prayer-request';
 import * as GroupPreferences from './group-preferences';
@@ -105,6 +106,7 @@ const data = {
   PageBuilder,
   Pass,
   Person,
+  Persona,
   PersonalDevice,
   PhoneNumber,
   PrayerRequest,
