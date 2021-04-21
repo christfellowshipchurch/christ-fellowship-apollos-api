@@ -163,6 +163,12 @@ ROCK_MAPPINGS:
     VolunteerGroup:
       GroupTypeId: [37]
 
+  # For fetching Content Channel Items given a Web Pathname, this object maps the prefix to a specific channel to limit the scope of requests
+  CONTENT_CHANNEL_PATHNAMES:
+    default: [85]
+    sermons: []
+    devotionals: []
+
   GROUP:
     LEADER_ROLE_IDS:
       - 47
@@ -307,7 +313,7 @@ ROCK_MAPPINGS:
 
   FEATURE_MAPPINGS:
     ContentBlock:
-      ContentChannelTypeId: [15]
+      ContentChannelTypeId: [22]
     HtmlBlock:
       ContentChannelTypeId: [26]
     HorizontalCardList:

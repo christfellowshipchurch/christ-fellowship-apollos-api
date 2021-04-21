@@ -1,6 +1,7 @@
 import { ContentItem } from '@apollosproject/data-connector-rock';
-
-import { getConfigurationFromUrl } from '../utils';
+import ApollosConfig from '@apollosproject/config';
+import { get } from 'lodash';
+import { isType } from '../utils';
 
 export default class PageBuilder extends ContentItem.dataSource {
   async getFeatures(pathname) {
@@ -18,34 +19,36 @@ export default class PageBuilder extends ContentItem.dataSource {
     return [];
   }
 
-  getIdByUrl(pathname = isRequired('ContentItem.getIdByUrl', 'pathname')) {
-    const { Cache, ContentItem } = this.context.dataSources;
+  getIdByPathname(
+    pathname = isRequired('PageBuilder.getIdByPathname', 'pathname'),
+    contentChannelIds = isRequired('PageBuilder.getIdByPathname', 'pathname')
+  ) {
+    if (
+      isType(pathname, 'PageBuilder.getIdByPathname', 'string') &&
+      Array.isArray(contentChannelIds) &&
+      contentChannelIds.length > 0
+    ) {
+      const { Cache, ContentItem } = this.context.dataSources;
 
-    const {
-      contentChannelIds,
-      queryAttribute,
-      page,
-      pathname: cleanedPathname,
-    } = getConfigurationFromUrl(pathname);
-
-    if (contentChannelIds) {
-      const request = async () => {
-        const contentItem = await ContentItem.byAttributeValue(queryAttribute, page)
-          .filterOneOf(
-            contentChannelIds.map(
-              (contentChannelId) => `ContentChannelId eq ${contentChannelId}`
+      if (contentChannelIds) {
+        const request = async () => {
+          const contentItem = await ContentItem.byAttributeValue('url', pathname)
+            .filterOneOf(
+              contentChannelIds.map(
+                (contentChannelId) => `ContentChannelId eq ${contentChannelId}`
+              )
             )
-          )
-          .select('Id')
-          .first();
+            .select('Id')
+            .first();
 
-        return contentItem.id;
-      };
+          return contentItem.id;
+        };
 
-      return Cache.request(request, {
-        key: Cache.KEY_TEMPLATES.pathnameId`${cleanedPathname}`,
-        expiresIn: 60 * 60 * 12, // 12 hour cache
-      });
+        return Cache.request(request, {
+          key: Cache.KEY_TEMPLATES.pathnameId`${pathname}`,
+          expiresIn: 60 * 60 * 12, // 12 hour cache
+        });
+      }
     }
 
     return null;

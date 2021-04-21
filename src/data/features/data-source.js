@@ -76,26 +76,6 @@ export default class Feature extends coreFeatures.dataSource {
     };
   }
 
-  async createHtmlBlockFeature({ contentChannelItemId }) {
-    const { ContentItem, DefinedValue } = this.context.dataSources;
-
-    const contentItem = await ContentItem.getFromId(contentChannelItemId);
-
-    return {
-      // The Feature ID is based on all of the action ids, added together.
-      // This is naive, and could be improved.
-      id: this.createFeatureId({
-        args: {
-          contentChannelItemId,
-        },
-      }),
-      title: contentItem.title,
-      htmlContent: contentItem.content,
-      // Typename is required so GQL knows specifically what Feature is being created
-      __typename: 'HtmlBlockFeature',
-    };
-  }
-
   async createContentBlockFeature({ contentChannelItemId }) {
     const { ContentItem, DefinedValue } = this.context.dataSources;
 
@@ -122,7 +102,7 @@ export default class Feature extends coreFeatures.dataSource {
       null
     );
 
-    let orientation = 'default';
+    let orientation = 'LEFT';
 
     if (!isEmpty(contentLayoutDefinedValue)) {
       const definedValue = await DefinedValue.getFromId(contentLayoutDefinedValue);
@@ -145,12 +125,32 @@ export default class Feature extends coreFeatures.dataSource {
       title: contentItem.title,
       subtitle: get(contentItem, 'attributeValues.subtitle.value', ''),
       summary,
-      imageRatio: imageRatio.value,
+      imageRatio: imageRatio?.value,
       htmlContent: sanitizeHtml(contentItem.content),
       coverImage: ContentItem.getCoverImage(contentItem),
       orientation: orientation.toUpperCase(),
       // Typename is required so GQL knows specifically what Feature is being created
       __typename: 'ContentBlockFeature',
+    };
+  }
+
+  async createHtmlBlockFeature({ contentChannelItemId }) {
+    const { ContentItem, DefinedValue } = this.context.dataSources;
+
+    const contentItem = await ContentItem.getFromId(contentChannelItemId);
+
+    return {
+      // The Feature ID is based on all of the action ids, added together.
+      // This is naive, and could be improved.
+      id: this.createFeatureId({
+        args: {
+          contentChannelItemId,
+        },
+      }),
+      title: contentItem.title,
+      htmlContent: contentItem.content,
+      // Typename is required so GQL knows specifically what Feature is being created
+      __typename: 'HtmlBlockFeature',
     };
   }
 

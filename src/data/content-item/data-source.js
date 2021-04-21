@@ -763,10 +763,10 @@ export default class ContentItem extends coreContentItem.dataSource {
     const childrenIds = await this.getChildrenIds(id);
     const children = await Promise.all(childrenIds.map((id) => this.getFromId(id)));
 
-    return children
-      .map((child) => {
+    const features = await Promise.all(
+      children.map((child) => {
         const { id, contentChannelId, contentChannelTypeId, title } = child;
-        let typename = null;
+        let typename = 'ContentBlock';
 
         // if we have defined an ContentChannelTypeId based maping in the YML file, use it!
         if (
@@ -838,6 +838,8 @@ export default class ContentItem extends coreContentItem.dataSource {
             return null;
         }
       })
-      .filter((child) => !!child);
+    );
+
+    return features.filter((feature) => !!feature);
   }
 }

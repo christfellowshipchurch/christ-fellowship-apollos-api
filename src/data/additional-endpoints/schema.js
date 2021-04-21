@@ -23,6 +23,7 @@ export default gql`
     genderOptions: [String]
     inAppLink(url: String!): String
     dannysContent: [ContentItem]
+    getNodeByPathname(pathname: String): Node
   }
 
   extend type MediaContentItem implements FeaturesNode {

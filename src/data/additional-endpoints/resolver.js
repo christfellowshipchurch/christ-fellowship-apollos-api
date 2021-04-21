@@ -1,6 +1,10 @@
-import { get } from 'lodash';
+import { get, has, dropRight } from 'lodash';
 import { format, formatDistance } from 'date-fns';
+import ApollosConfig from '@apollosproject/config';
 import { parseRockKeyValuePairs, generateAppLinkFromUrl } from '../utils';
+
+const { ROCK_MAPPINGS } = ApollosConfig;
+const { CONTENT_CHANNEL_PATHNAMES } = ROCK_MAPPINGS;
 
 const moreLinkJson = [
   {
@@ -132,18 +136,44 @@ const resolver = {
       const contentItem = await ContentItem.byContentChannelId(73).get();
       return contentItem;
     },
-    // ! remove after the Groups launch
-    // loadGroupsCache: async (root, args, { dataSources }) => {
-    //   const { Group } = dataSources;
-    //   const started = new Date();
+    getNodeByPathname: async (
+      root,
+      { pathname },
+      { dataSources: { PageBuilder, ContentItem } }
+    ) => {
+      const paths = pathname.split('/').filter((path) => path && path !== '');
+      const firstPath = paths.find(() => true);
 
-    //   console.log(`[load groups cache] started ${format(started, 'hh:mm:ss')}`);
-    //   await Group.loadGroups();
+      switch (firstPath) {
+        case 'groups':
+          return null;
+        case 'live':
+          return null;
+        default:
+          const contentChannelIds = get(
+            CONTENT_CHANNEL_PATHNAMES,
+            firstPath,
+            CONTENT_CHANNEL_PATHNAMES.default
+          );
 
-    //   const end = new Date();
-    //   console.log(`[load groups cache] finished ${format(end, 'hh:mm:ss')}`);
-    //   console.log(`[load groups cache] duration ${formatDistance(started, end)}`);
-    // },
+          if (has(CONTENT_CHANNEL_PATHNAMES, 'firstPath')) {
+            const cleanedPathname = dropRight(paths).join('/');
+            return null;
+          }
+
+          // Default Content Channels
+          const contentItemId = await PageBuilder.getIdByPathname(
+            pathname,
+            contentChannelIds
+          );
+          const contentItem = await ContentItem.getFromId(contentItemId);
+
+          return {
+            __typename: ContentItem.resolveType(contentItem),
+            ...contentItem,
+          };
+      }
+    },
   },
 };
 
