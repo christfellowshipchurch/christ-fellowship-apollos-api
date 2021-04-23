@@ -757,7 +757,13 @@ export default class ContentItem extends coreContentItem.dataSource {
     }
   }
 
-  async getFeatures(id) {
+  async getFeatures(props) {
+    let id = props;
+
+    if (!Number.isInteger(props) && props.id) {
+      id = props.id;
+    }
+
     // note : get the children of Content Item
     const { Feature } = this.context.dataSources;
     const childrenIds = await this.getChildrenIds(id);
