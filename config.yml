@@ -166,7 +166,8 @@ ROCK_MAPPINGS:
   # For fetching Content Channel Items given a Web Pathname, this object maps the prefix to a specific channel to limit the scope of requests
   CONTENT_CHANNEL_PATHNAMES:
     default: [85]
-    sermons: [43]
+    articles: [43]
+    messages: [63]
     devotionals: [83]
     events: [78]
 
