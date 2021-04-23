@@ -1,4 +1,4 @@
-import { get, has, dropRight } from 'lodash';
+import { get, has, dropRight, drop } from 'lodash';
 import { format, formatDistance } from 'date-fns';
 import ApollosConfig from '@apollosproject/config';
 import { parseRockKeyValuePairs, generateAppLinkFromUrl } from '../utils';
@@ -150,20 +150,19 @@ const resolver = {
         case 'live':
           return null;
         default:
+          let cleanedPathname = pathname;
           const contentChannelIds = get(
             CONTENT_CHANNEL_PATHNAMES,
             firstPath,
             CONTENT_CHANNEL_PATHNAMES.default
           );
 
-          if (has(CONTENT_CHANNEL_PATHNAMES, 'firstPath')) {
-            const cleanedPathname = dropRight(paths).join('/');
-            return null;
+          if (has(CONTENT_CHANNEL_PATHNAMES, firstPath)) {
+            cleanedPathname = drop(paths).join('/');
           }
 
-          // Default Content Channels
           const contentItemId = await PageBuilder.getIdByPathname(
-            pathname,
+            cleanedPathname,
             contentChannelIds
           );
 
