@@ -36,6 +36,7 @@ const resolver = {
       title: 'Share via ...',
       message: ContentItem.generateShareMessage(root),
     }),
+    routing: (root) => root,
   },
 };
 

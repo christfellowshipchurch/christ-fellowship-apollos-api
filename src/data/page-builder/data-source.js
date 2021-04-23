@@ -41,7 +41,7 @@ export default class PageBuilder extends ContentItem.dataSource {
             .select('Id')
             .first();
 
-          return contentItem.id;
+          return contentItem && Number.isInteger(contentItem.id) ? contentItem.id : null;
         };
 
         return Cache.request(request, {

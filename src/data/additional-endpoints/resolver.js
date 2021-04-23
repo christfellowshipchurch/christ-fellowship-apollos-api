@@ -166,13 +166,18 @@ const resolver = {
             pathname,
             contentChannelIds
           );
-          const contentItem = await ContentItem.getFromId(contentItemId);
 
-          return {
-            __typename: ContentItem.resolveType(contentItem),
-            ...contentItem,
-          };
+          if (contentItemId) {
+            const contentItem = await ContentItem.getFromId(contentItemId);
+
+            return {
+              __typename: ContentItem.resolveType(contentItem),
+              ...contentItem,
+            };
+          }
       }
+
+      return null;
     },
   },
 };

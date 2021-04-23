@@ -156,6 +156,7 @@ const resolver = {
         type: 'contentChannelItem',
         args: { contentChannelItemId: 9152, ...args },
       }),
+    routing: (root) => root,
   },
 };
 

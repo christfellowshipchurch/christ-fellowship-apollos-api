@@ -1,4 +1,7 @@
-import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock';
+import {
+  ContentItem,
+  ContentItem as coreContentItem,
+} from '@apollosproject/data-connector-rock';
 import { resolverMerge } from '@apollosproject/server-core';
 import ApollosConfig from '@apollosproject/config';
 import Hypher from 'hypher';
@@ -21,10 +24,11 @@ import * as WebsitePagesContentItem from '../website-pages-content-item';
 const hypher = new Hypher(english);
 
 const titleResolver = {
-  title: ({ title: originalTitle, attributeValues }, { hyphenated }) => {
-    // Check for an attribute value called titleOverride
-    const titleOverride = get(attributeValues, 'titleOverride.value', originalTitle);
-    const title = titleOverride !== '' ? titleOverride : originalTitle;
+  title: ({ title, attributeValues }, { hyphenated }) => {
+    // Check to see if it's been specified by the Content Manager to hide the title before returning its value
+    const hideTitle = get(attributeValues, 'hideTitle.value', 'false');
+
+    if (hideTitle.toLowerCase() === 'true') return '';
 
     if (!hyphenated) {
       return title;
@@ -68,6 +72,7 @@ const titleResolver = {
 
 const resolverExtensions = {
   ...titleResolver,
+  routing: (root) => root,
   sharing: (root, args, { dataSources: { ContentItem } }, { parentType }) => ({
     url: ContentItem.generateShareUrl(root, parentType),
     title: 'Share via ...',
