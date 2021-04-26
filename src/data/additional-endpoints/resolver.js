@@ -151,13 +151,14 @@ const resolver = {
           return null;
         default:
           let cleanedPathname = pathname;
-          const contentChannelIds = get(
-            CONTENT_CHANNEL_PATHNAMES,
-            firstPath,
-            CONTENT_CHANNEL_PATHNAMES.default
-          );
+          let contentChannelIds = CONTENT_CHANNEL_PATHNAMES.default;
 
-          if (has(CONTENT_CHANNEL_PATHNAMES, firstPath)) {
+          if (has(CONTENT_CHANNEL_PATHNAMES, firstPath) && paths.length > 1) {
+            contentChannelIds = get(
+              CONTENT_CHANNEL_PATHNAMES,
+              firstPath,
+              CONTENT_CHANNEL_PATHNAMES.default
+            );
             cleanedPathname = drop(paths).join('/');
           }
 
