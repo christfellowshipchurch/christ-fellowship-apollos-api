@@ -467,7 +467,7 @@ export default class GroupItem extends baseGroup.dataSource {
     );
 
     // Get the actual group data for the groups above.
-    const groups = await Promise.all(
+    const _groups = await Promise.all(
       groupIds
         // Filter out Groups that don't have any leaders
         .filter(({ groupId }) => {
@@ -483,6 +483,12 @@ export default class GroupItem extends baseGroup.dataSource {
         .map(({ groupId: id }) => this.getFromId(id))
     );
 
+    // Standard Groupd Filtering
+    // note : we do this here because we have to do a more comprehensive filter of schedules and just want to work with the simplest collection of Groups we can before we get to the more complex operations
+    const groups = _groups.filter(
+      (group) => group && group.isActive && !group.isArchived
+    );
+
     /**
      * [{ id: String, schedule: Boolean }]
      *
@@ -492,48 +498,60 @@ export default class GroupItem extends baseGroup.dataSource {
     const validGroupSchedules = await Promise.all(
       groups.map(({ id, scheduleId }) => {
         const filter = async () => {
-          let schedule = false;
-          /**
-           * If there is a Schedule Id on the Group, we can just go ahead and check for a Schedule from a Location attached on the Group.
-           */
-          const scheduleIsValid = (s) => {
-            if (s && s.nextStart) {
-              const { nextStart } = s;
-              const parsedDate = parseISO(nextStart);
-
-              return isToday(parsedDate) || isFuture(parsedDate);
-            }
-          };
-          if (scheduleId) {
-            const parsedSchedule = await Schedule.parseById(scheduleId);
-
-            schedule = scheduleIsValid(parsedSchedule);
-          } else {
-            const locations = await this.getLocations(id);
-
+          try {
+            let schedule = false;
             /**
-             * We're gonna use a simple For Loop here cause we can really easily exit it once we find at least 1 valid schedule
+             * If there is a Schedule Id on the Group, we can just go ahead and check for a Schedule from a Location attached on the Group.
              */
-            for (var i = 0; i < locations.length; i++) {
-              const location = locations[i];
-              const { schedules } = location;
+            const scheduleIsValid = (s) => {
+              if (s && s.nextStart) {
+                const { nextStart } = s;
+                const parsedDate = parseISO(nextStart);
 
-              for (var j = 0; j < schedules.length; j++) {
-                const s = schedules[j];
-                const parsedSchedule = await Schedule.parse(s);
+                return isToday(parsedDate) || isFuture(parsedDate);
+              }
+            };
+            if (scheduleId) {
+              const parsedSchedule = await Schedule.parseById(scheduleId);
 
-                schedule = scheduleIsValid(parsedSchedule);
+              schedule = scheduleIsValid(parsedSchedule);
+            } else {
+              const locations = await this.getLocations(id);
+
+              /**
+               * We're gonna use a simple For Loop here cause we can really easily exit it once we find at least 1 valid schedule
+               */
+              for (var i = 0; i < locations.length; i++) {
+                const location = locations[i];
+                const { schedules } = location;
+
+                for (var j = 0; j < schedules.length; j++) {
+                  const s = schedules[j];
+                  const parsedSchedule = await Schedule.parse(s);
+
+                  schedule = scheduleIsValid(parsedSchedule);
+
+                  if (schedule) break;
+                }
 
                 if (schedule) break;
               }
-
-              if (schedule) break;
             }
+
+            return {
+              id,
+              schedule,
+            };
+          } catch (e) {
+            console.warn(
+              `[Group.getByPerson] could not validate schedule ${scheduleId} for group ${id}`
+            );
+            console.warn(`[Group.getByPerson] cont`, e);
           }
 
           return {
-            id,
-            schedule,
+            id: null,
+            schedule: null,
           };
         };
 
@@ -541,10 +559,7 @@ export default class GroupItem extends baseGroup.dataSource {
       })
     );
 
-    // Filter the groups to make sure we only pull those that are
-    // active and NOT archived
     const filteredGroups = groups
-      .filter((group) => group && group.isActive && !group.isArchived)
       // Filter out Groups that don't have a valid schedule
       .filter(({ id: groupId }) => {
         return validGroupSchedules.find(({ id, schedule }) => groupId === id && schedule);
