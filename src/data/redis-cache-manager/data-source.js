@@ -232,6 +232,7 @@ export default class CacheManager extends RedisCache.dataSource {
           await this.delete({ key: this.KEY_TEMPLATES.person`${entityId}` });
           await this.delete({ key: this.KEY_TEMPLATES.personGroups`${entityId}` });
           await this.delete({ key: this.KEY_TEMPLATES.personPrayers`${entityId}` });
+          await this.delete({ key: this.KEY_TEMPLATES.personas`${entityId}` });
           break;
         case SCHEDULE:
           cacheLog('Schedule', entityId);
