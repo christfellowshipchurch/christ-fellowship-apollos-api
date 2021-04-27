@@ -33,7 +33,7 @@ export default class Persona extends corePersona.dataSource {
 
     return Cache.request(request, {
       key: Cache.KEY_TEMPLATES.personas`${id}`,
-      duration: 60 * 60 * 6, // 6 hour cache
+      duration: 10, // 10 minute
     });
   };
 }
