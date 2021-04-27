@@ -774,6 +774,23 @@ export default class ContentItem extends coreContentItem.dataSource {
         const { id, contentChannelId, contentChannelTypeId, title } = child;
         let typename = 'ContentBlock';
 
+        // TESTING SOMETHING
+        if (contentChannelId === 87) {
+          return Feature.createVerticalCardListFeature({
+            algorithms: [
+              {
+                type: 'CONTENT_CHILDREN',
+                arguments: {
+                  contentChannelItemId: id,
+                  limit: 0,
+                },
+              },
+            ],
+            title,
+            subtitle: this.createSummary(child),
+          });
+        }
+
         // if we have defined an ContentChannelTypeId based maping in the YML file, use it!
         if (
           Object.values(ROCK_MAPPINGS.FEATURE_MAPPINGS).some(

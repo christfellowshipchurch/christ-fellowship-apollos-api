@@ -11,9 +11,29 @@ export default class PageBuilder extends ContentItem.dataSource {
 
     if (contentItemId) {
       const childrenIds = await ContentItem.getChildrenIds(contentItemId);
-      return childrenIds.map((contentChannelItemId) =>
-        Feature.createContentBlockFeature({ contentChannelItemId })
-      );
+      const children = await Promise.all(childrenIds.map((id) => this.getFromId(id)));
+
+      return children.map((child) => {
+        const { id, contentChannelId } = child;
+
+        if (contentChannelId === 87) {
+          return Feature.createVerticalCardListFeature({
+            algorithms: [
+              {
+                type: 'CONTENT_CHILDREN',
+                arguments: {
+                  contentChannelItemId: id,
+                  limit: 0,
+                },
+              },
+            ],
+            title,
+            subtitle: this.createSummary(child),
+          });
+        }
+
+        return Feature.createContentBlockFeature({ contentChannelItemId });
+      });
     }
 
     return [];
@@ -33,10 +53,10 @@ export default class PageBuilder extends ContentItem.dataSource {
       if (contentChannelIds) {
         const request = async () => {
           const contentItem = await ContentItem.byAttributeValue('url', pathname)
-            .filterOneOf(
-              contentChannelIds.map(
-                (contentChannelId) => `ContentChannelId eq ${contentChannelId}`
-              )
+            .andFilter(
+              contentChannelIds
+                .map((contentChannelId) => `(ContentChannelId eq ${contentChannelId})`)
+                .join(' or ')
             )
             .select('Id')
             .first();

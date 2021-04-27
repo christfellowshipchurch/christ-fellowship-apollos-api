@@ -170,6 +170,7 @@ ROCK_MAPPINGS:
     messages: [63]
     devotionals: [83]
     events: [78]
+    locations: [88]
 
   GROUP:
     LEADER_ROLE_IDS:
@@ -489,6 +490,7 @@ HOME_HEADER_FEATURES:
     type: PrayerList
     title: Daily Prayer
 
+# Feature Flags
 FEATURE_FLAGS:
   CHECK_IN:
     status: 'LIVE'

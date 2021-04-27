@@ -12,11 +12,12 @@ export default class Feature extends coreFeatures.dataSource {
     ActionBar: this.createActionBarFeature,
     ActionList: this.createActionListFeature,
     AvatarList: this.createAvatarListFeature,
+    ContentBlock: this.createContentBlockFeature,
     HeroList: this.createHeroListFeature,
     HorizontalCardList: this.createHorizontalCardListFeature,
     PrayerList: this.createPrayerListFeature,
     LiveContentList: this.createLiveStreamListFeature,
-    VerticalCardList: this.createVerticalCardListFeature,
+    VerticalCardList: this.createVerticalCardListFeatureOverride,
   }).reduce((accum, [key, value]) => {
     // convenciance code to make sure all methods are bound to the Features dataSource
     // eslint-disable-next-line
@@ -76,7 +77,14 @@ export default class Feature extends coreFeatures.dataSource {
     };
   }
 
-  async createContentBlockFeature({ contentChannelItemId }) {
+  async createContentBlockFeature({ contentChannelItemId, ...props }) {
+    if (!contentChannelItemId) {
+      return {
+        __typename: 'ContentBlockFeature',
+        ...props,
+      };
+    }
+
     const { ContentItem, DefinedValue } = this.context.dataSources;
 
     const contentItem = await ContentItem.getFromId(contentChannelItemId);
@@ -214,6 +222,17 @@ export default class Feature extends coreFeatures.dataSource {
       // Typename is required so GQL knows specifically what Feature is being created
       __typename: 'LiveStreamListFeature',
     };
+  }
+
+  createVerticalCardListFeatureOverride(props) {
+    if (get(props, 'cards', []).length > 0) {
+      return {
+        __typename: 'VerticalCardListFeature',
+        ...props,
+      };
+    }
+
+    return this.createVerticalCardListFeature(props);
   }
 
   /** Create Feeds */
