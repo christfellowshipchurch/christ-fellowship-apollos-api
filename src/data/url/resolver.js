@@ -7,8 +7,8 @@ const { CONTENT_CHANNEL_PATHNAMES } = ROCK_MAPPINGS;
 
 const resolver = {
   Url: {
-    id: ({ url }, args, context, { parentType }) => {
-      return createGlobalId(url, parentType.name);
+    id: ({ id }, args, context, { parentType }) => {
+      return createGlobalId(id, parentType.name);
     },
   },
   Route: {
