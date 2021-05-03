@@ -334,24 +334,29 @@ export default class GroupItem extends baseGroup.dataSource {
   async groupResourceEntity({ groupId, relatedNodeId }) {
     const groupGlobalId = parseGlobalId(groupId)?.id;
     const relatedNodeGlobalId = parseGlobalId(relatedNodeId);
+    let targetEntityId = null;
+
     let entityTypeId;
     switch (relatedNodeGlobalId.__type) {
       case 'Url':
+        const jsonNode = JSON.parse(relatedNodeGlobalId.id);
+        targetEntityId = jsonNode.id;
         entityTypeId = ApollosConfig.ROCK_ENTITY_IDS.DEFINED_VALUE;
         break;
       case 'MediaContentItem':
         entityTypeId = ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM;
+        targetEntityId = relatedNodeGlobalId.id;
         break;
       default:
         break;
     }
-    if (entityTypeId) {
+    if (entityTypeId && targetEntityId) {
       return await this.request('/RelatedEntities')
         .filter(`SourceEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.GROUP}`)
         .andFilter(`SourceEntityId eq ${groupGlobalId}`)
         .andFilter(`QualifierValue eq 'APOLLOS_GROUP_RESOURCE'`)
         .andFilter(`TargetEntityTypeId eq ${entityTypeId}`)
-        .andFilter(`TargetEntityId eq ${relatedNodeGlobalId.id}`)
+        .andFilter(`TargetEntityId eq ${targetEntityId}`)
         .first();
     }
 
