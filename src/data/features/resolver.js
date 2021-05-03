@@ -11,6 +11,24 @@ const resolver = {
   },
   ContentBlockFeature: {
     id: ({ id }) => createGlobalId(id, 'ContentBlockFeature'),
+    // actions: () => [
+    //   {
+    //     title: 'Test Button',
+    //     relatedNode: {
+    //       __typename: 'Url',
+    //       url: 'https://christfellowship.church',
+    //     },
+    //     action: 'OPEN_URL',
+    //   },
+    //   {
+    //     title: 'Another Test Button',
+    //     relatedNode: {
+    //       __typename: 'Url',
+    //       url: 'https://christfellowship.church',
+    //     },
+    //     action: 'OPEN_URL',
+    //   },
+    // ],
   },
   HtmlBlockFeature: {
     id: ({ id }) => createGlobalId(id, 'HtmlBlockFeature'),
