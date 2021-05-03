@@ -950,13 +950,8 @@ export default class GroupItem extends baseGroup.dataSource {
     try {
       // TODO : break up this logic and move it to the StreamChat DataSource
       const { Auth, StreamChat, Flag } = this.context.dataSources;
-      const featureFlagStatus = await Flag.currentUserCanUseFeature('GROUP_CHAT');
       const CHANNEL_TYPE = StreamChat.channelType.GROUP;
       const groupType = this.resolveType(root);
-
-      if (featureFlagStatus !== 'LIVE') {
-        return null;
-      }
 
       const groupName = this.getTitle(root);
       const currentPerson = await Auth.getCurrentPerson();

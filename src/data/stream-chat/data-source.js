@@ -267,18 +267,8 @@ export default class StreamChat extends RESTDataSource {
           .filter((id) => !mutedUsers.includes(id)) // user who doesn't have notifications disabled for this channel
           .map(async (id) => {
             const { id: rockPersonId } = parseGlobalId(`Person:${id}`);
-            const featureStatus = await Flag.userCanUseFeature(
-              'GROUP_CHAT',
-              rockPersonId
-            );
-
-            if (featureStatus === 'LIVE') {
-              const person = await Person.getFromId(rockPersonId);
-
-              return get(person, 'primaryAliasId');
-            }
-
-            return null;
+            const person = await Person.getFromId(rockPersonId);
+            return get(person, 'primaryAliasId');
           })
       );
 
