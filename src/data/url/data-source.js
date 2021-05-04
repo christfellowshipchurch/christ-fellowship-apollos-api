@@ -7,9 +7,10 @@ const { DEFINED_TYPES } = ROCK_MAPPINGS;
 const { URLS: UrlDefinedTypeId } = DEFINED_TYPES;
 
 export default class Url extends RockApolloDataSource {
-  getFromId(url) {
-    // the url gets encoded as the id, so we can just return it with no fuss
-    return { url };
+  getFromId(root) {
+    const json = JSON.parse(root);
+
+    return json;
   }
 
   resolveType() {
@@ -37,6 +38,7 @@ export default class Url extends RockApolloDataSource {
     return {
       url,
       title: get(definedValue, 'value'),
+      id: get(definedValue, 'id'),
     };
   }
 
