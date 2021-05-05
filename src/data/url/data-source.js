@@ -6,11 +6,39 @@ const { ROCK_MAPPINGS } = ApollosConfig;
 const { DEFINED_TYPES } = ROCK_MAPPINGS;
 const { URLS: UrlDefinedTypeId } = DEFINED_TYPES;
 
+function validURL(str) {
+  var pattern = new RegExp(
+    '^(https?:\\/\\/)?' + // protocol
+      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+      '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+      '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+      '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+      '(\\#[-a-z\\d_]*)?$',
+    'i'
+  ); // fragment locator
+  return !!pattern.test(str);
+}
+
 export default class Url extends RockApolloDataSource {
   getFromId(root) {
-    const json = JSON.parse(root);
+    if (
+      /^[\],:{}\s]*$/.test(
+        root
+          .replace(/\\["\\\/bfnrtu]/g, '@')
+          .replace(
+            /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
+            ']'
+          )
+          .replace(/(?:^|:|,)(?:\s*\[)+/g, '')
+      )
+    ) {
+      const json = JSON.parse(root);
+      return json;
+    } else if (validURL(root)) {
+      return { url: root };
+    }
 
-    return json;
+    return null;
   }
 
   resolveType() {
