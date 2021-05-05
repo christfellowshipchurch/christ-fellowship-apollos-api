@@ -63,10 +63,6 @@ export default class StreamChat extends RESTDataSource {
     return flagStatus === 'LIVE';
   };
 
-  getChannel = ({ channelId, channelType = this.channelType.LIVESTREAM }) => {
-    return chatClient.channel(channelType, channelId);
-  };
-
   getStreamUser = (user) => {
     const imageId = get(user, 'photo.guid', '');
     let image = '';
@@ -95,13 +91,57 @@ export default class StreamChat extends RESTDataSource {
   };
 
   getChannel = async ({ channelId, channelType, options = {} }) => {
+    let channel;
+    const query = await chatClient.queryChannels(
+      { type: channelType, id: channelId },
+      { last_updated: -1 },
+      {
+        watch: false,
+        state: true,
+        limit: 1,
+      }
+    );
+
+    if (query.length) {
+      // Channel already exists
+      console.log('✅ CHANNEL EXISTS ALREADY');
+      console.log('channel: ', query[0]);
+      channel = chatClient.channel(channelType, channelId);
+    } else {
+      console.log('🚫 CHANNEL DOES NOT EXIST');
+      if (!options.created_by) {
+        throw new Error(
+          'getChannel requires an `options.created_by` user object when creating channels that do not exist.'
+        );
+      }
+
+      channel = chatClient.channel(channelType, channelId, options);
+      await channel.create();
+    }
+
+    return channel;
+
     // Find or create the channel
-    const channel = chatClient.channel(channelType, channelId, options);
-    channel.create();
+    try {
+      let channel = chatClient.channel(channelType, channelId);
+      console.log('🔵 [1] channel.data:', channel.data);
+      console.log('🔵 [1] options:', options);
+
+      channel = chatClient.channel(channelType, channelId, options);
+      console.log('🔵 [2] channel.data:', channel.data);
+      await channel.create();
+      // console.log('✅ CREATED ', channelId);
+      return channel;
+    } catch (error) {
+      console.error(error);
+      // channel.create();
+    }
+
+    return null;
 
     // If options contains a name, update the name
     // note : this is done this way in order to take into account updating existing channels as well as creating new channels
-    if (options.name) {
+    if (options?.name) {
       await channel.updatePartial({ set: { name: options.name } });
     }
 
@@ -165,9 +205,11 @@ export default class StreamChat extends RESTDataSource {
       (channelMember) => !groupMembers.includes(channelMember)
     );
 
+    console.log('badMembers:', badMembers);
     if (badMembers.length) {
       await Promise.all(
         chunk(badMembers, REMOVE_MEMBERS_LIMIT).map(async (chunkedMembers) => {
+          console.log('chunkedMembers:', chunkedMembers);
           await channel.removeMembers(chunkedMembers);
         })
       );
