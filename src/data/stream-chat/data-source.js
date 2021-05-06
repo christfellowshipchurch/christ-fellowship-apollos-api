@@ -102,13 +102,11 @@ export default class StreamChat extends RESTDataSource {
       }
     );
 
+    // Does the channel already exist?
     if (query.length) {
-      // Channel already exists
-      console.log('✅ CHANNEL EXISTS ALREADY');
-      console.log('channel: ', query[0]);
       channel = chatClient.channel(channelType, channelId);
     } else {
-      console.log('🚫 CHANNEL DOES NOT EXIST');
+      // We need to create it. Stream requires a `created_by` option when creating channels server side.
       if (!options.created_by) {
         throw new Error(
           'getChannel requires an `options.created_by` user object when creating channels that do not exist.'
@@ -120,32 +118,6 @@ export default class StreamChat extends RESTDataSource {
     }
 
     return channel;
-
-    // Find or create the channel
-    try {
-      let channel = chatClient.channel(channelType, channelId);
-      console.log('🔵 [1] channel.data:', channel.data);
-      console.log('🔵 [1] options:', options);
-
-      channel = chatClient.channel(channelType, channelId, options);
-      console.log('🔵 [2] channel.data:', channel.data);
-      await channel.create();
-      // console.log('✅ CREATED ', channelId);
-      return channel;
-    } catch (error) {
-      console.error(error);
-      // channel.create();
-    }
-
-    return null;
-
-    // If options contains a name, update the name
-    // note : this is done this way in order to take into account updating existing channels as well as creating new channels
-    if (options?.name) {
-      await channel.updatePartial({ set: { name: options.name } });
-    }
-
-    return channel;
   };
 
   getChannelMembers = async ({ channelId, channelType, filter = {} }) => {
@@ -153,6 +125,8 @@ export default class StreamChat extends RESTDataSource {
 
     const channelMembers = [];
     let responseMembers;
+
+    // Continuously get members until we've reached a page that isn't 100% full (i.e. the end).
     do {
       const channelMembersResponse = await channel.queryMembers(
         filter,
@@ -182,6 +156,7 @@ export default class StreamChat extends RESTDataSource {
     );
 
     if (newMembers.length) {
+      // Array of promises, each promise being 1 operation to add many members.
       await Promise.all(
         chunk(newMembers, ADD_MEMBERS_LIMIT).map(async (chunkedMembers) => {
           await channel.addMembers(chunkedMembers);
@@ -205,11 +180,10 @@ export default class StreamChat extends RESTDataSource {
       (channelMember) => !groupMembers.includes(channelMember)
     );
 
-    console.log('badMembers:', badMembers);
     if (badMembers.length) {
+      // Array of promises, each promise being 1 operation to remove many members.
       await Promise.all(
         chunk(badMembers, REMOVE_MEMBERS_LIMIT).map(async (chunkedMembers) => {
-          console.log('chunkedMembers:', chunkedMembers);
           await channel.removeMembers(chunkedMembers);
         })
       );
@@ -240,6 +214,7 @@ export default class StreamChat extends RESTDataSource {
     );
 
     if (newModerators.length) {
+      // Array of promises, each promise being 1 operation to promote many members.
       await Promise.all(
         chunk(newModerators, PROMOTE_MODERATORS_LIMIT).map(async (chunkedModerators) => {
           await channel.addModerators(chunkedModerators);
@@ -253,6 +228,7 @@ export default class StreamChat extends RESTDataSource {
     );
 
     if (badModerators.length) {
+      // Array of promises, each promise being 1 operation to demote many members.
       await Promise.all(
         chunk(badModerators, DEMOTE_MODERATORS_LIMIT).map(async (chunkedModerators) => {
           await channel.demoteModerators(chunkedModerators);

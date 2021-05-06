@@ -956,8 +956,7 @@ export default class GroupItem extends baseGroup.dataSource {
     const currentPerson = await Auth.getCurrentPerson();
     const resolvedType = this.resolveType(root);
     const globalId = createGlobalId(root.id, resolvedType);
-    // const channelId = crypto.SHA1(globalId).toString();
-    const channelId = 'ryan-group-members-test-2'; // ⚠️⚠️⚠️
+    const channelId = crypto.SHA1(globalId).toString();
 
     // Define the return value upfront
     const streamChatChannel = {
@@ -966,30 +965,28 @@ export default class GroupItem extends baseGroup.dataSource {
       channelType,
     };
 
-    // Get or create the channel
-    const channel = await StreamChat.getChannel({
-      channelId,
-      channelType,
-      options: {
-        created_by: StreamChat.getStreamUser(currentPerson),
-        name: groupName,
-        lastSyncedWithRockAt: null,
-      },
-    });
-
-    console.log('🟣 channel.data:', channel?.data);
-
     try {
+      // Get or create the channel. The options are only applied to the channel if
+      // creating it for the first time. We'll update the values further down if necessary.
+      const channel = await StreamChat.getChannel({
+        channelId,
+        channelType,
+        options: {
+          created_by: StreamChat.getStreamUser(currentPerson),
+          name: groupName,
+          lastSyncedWithRockAt: null,
+        },
+      });
+
       // Check to see if we need to sync the channel with Rock data.
       // If we don't, we can return early and avoid a bunch of work.
       const lastSyncedWithRockAt = channel?.data?.lastSyncedWithRockAt;
-      console.log('lastSyncedWithRockAt:', lastSyncedWithRockAt);
 
       if (lastSyncedWithRockAt) {
         const hoursAgo = differenceInHours(new Date(), new Date(lastSyncedWithRockAt));
 
         if (hoursAgo <= 24) {
-          // return streamChatChannel;
+          return streamChatChannel;
         }
       }
 
@@ -997,28 +994,18 @@ export default class GroupItem extends baseGroup.dataSource {
       // First, members. Make sure all group members have Stream Chat users.
       const groupMembers = await this.getMembers(root.id);
       const members = groupMembers
-        ? groupMembers.map((member) => StreamChat.getStreamUserId(member.id)).slice(0, 3)
+        ? groupMembers.map((member) => StreamChat.getStreamUserId(member.id))
         : [];
-
       const groupLeaders = await this.getLeaders(root.id);
       const leaders = groupLeaders
         ? groupLeaders.map((leader) => StreamChat.getStreamUserId(leader.id))
         : [];
 
+      // Stream will throw an error if you try to add arbitrary users to a channel.
+      // We need to ensure the users exist in Stream first.
       await StreamChat.createStreamUsers({
         users: [...groupLeaders, ...groupMembers].map(StreamChat.getStreamUser),
       });
-
-      // channel = await StreamChat.getChannel({
-      //   channelId,
-      //   channelType,
-      //   options: {
-      //     members,
-      //     created_by: StreamChat.getStreamUser(currentPerson),
-      //     name: groupName,
-      //     lastSyncedWithRockAt: new Date().toISOString(),
-      //   },
-      // });
 
       // Add group members not in channel
       await StreamChat.addMembers({
@@ -1034,7 +1021,7 @@ export default class GroupItem extends baseGroup.dataSource {
         channelType,
       });
 
-      // Promote/demote members for moderation if necessary
+      // Promote/demote members for moderation as necessary
       await StreamChat.updateModerators({
         channelId,
         groupLeaders: leaders,
@@ -1053,19 +1040,16 @@ export default class GroupItem extends baseGroup.dataSource {
         hideVolunteerGroupForMembers();
       }
 
-      // Update the channel's data
-      console.log('⌛ Updating channel...');
+      // Update the channel's data to match Rock, and mark that our sync is complete.
       await channel.updatePartial({
         set: {
           name: groupName,
           lastSyncedWithRockAt: new Date().toISOString(),
         },
       });
-      console.log('channel.data after update: ', channel.data);
-      console.log('✅ SYNCED');
     } catch (error) {
-      console.warn('[Group.getStreamChatChannel] Error!');
-      console.error(error?.message);
+      console.error('[GroupItem.getStreamChatChannel] Error!');
+      console.error(error);
     }
 
     return streamChatChannel;
