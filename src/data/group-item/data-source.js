@@ -20,7 +20,7 @@ import {
   uniqBy,
   zipObject,
 } from 'lodash';
-import { parseISO, isFuture, isToday } from 'date-fns';
+import { parseISO, isFuture, isToday, differenceInHours } from 'date-fns';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
@@ -953,9 +953,8 @@ export default class GroupItem extends baseGroup.dataSource {
 
   getStreamChatChannel = async (root) => {
     try {
-      // TODO : break up this logic and move it to the StreamChat DataSource
-      const { Auth, StreamChat, Flag } = this.context.dataSources;
-      const CHANNEL_TYPE = StreamChat.channelType.GROUP;
+      const { Auth, StreamChat } = this.context.dataSources;
+      const channelType = StreamChat.channelType.GROUP;
       const groupType = this.resolveType(root);
 
       const groupName = this.getTitle(root);
@@ -964,53 +963,73 @@ export default class GroupItem extends baseGroup.dataSource {
       const globalId = createGlobalId(root.id, resolvedType);
       const channelId = crypto.SHA1(globalId).toString();
 
+      // Define the return value upfront
+      const streamChatChannel = {
+        id: root.id,
+        channelId,
+        channelType,
+      };
+
+      // Get or create the channel. The options are only applied to the channel if
+      // creating it for the first time. We'll update the values further down if necessary.
+      const channel = await StreamChat.getChannel({
+        channelId,
+        channelType,
+        options: {
+          created_by: StreamChat.getStreamUser(currentPerson),
+          name: groupName,
+          lastSyncedWithRockAt: null,
+        },
+      });
+
+      // Check to see if we need to sync the channel with Rock data.
+      // If we don't, we can return early and avoid a bunch of work.
+      const lastSyncedWithRockAt = channel?.data?.lastSyncedWithRockAt;
+
+      if (lastSyncedWithRockAt) {
+        const hoursAgo = differenceInHours(new Date(), new Date(lastSyncedWithRockAt));
+
+        if (hoursAgo <= 24) {
+          return streamChatChannel;
+        }
+      }
+
+      // We need to sync this group's data from Rock to Stream Chat.
+      // First, members. Make sure all group members have Stream Chat users.
       const groupMembers = await this.getMembers(root.id);
       const members = groupMembers
         ? groupMembers.map((member) => StreamChat.getStreamUserId(member.id))
         : [];
-
       const groupLeaders = await this.getLeaders(root.id);
       const leaders = groupLeaders
         ? groupLeaders.map((leader) => StreamChat.getStreamUserId(leader.id))
         : [];
 
-      // Create any Stream users that might not exist
-      // We need to do this before we can create a channel 🙄
+      // Stream will throw an error if you try to add arbitrary users to a channel.
+      // We need to ensure the users exist in Stream first.
       await StreamChat.createStreamUsers({
         users: [...groupLeaders, ...groupMembers].map(StreamChat.getStreamUser),
-      });
-
-      // Make sure the channel exists.
-      // If it doesn't, create it.
-      const channel = await StreamChat.getChannel({
-        channelId,
-        channelType: CHANNEL_TYPE,
-        options: {
-          members,
-          created_by: StreamChat.getStreamUser(currentPerson),
-          name: groupName,
-        },
       });
 
       // Add group members not in channel
       await StreamChat.addMembers({
         channelId,
         groupMembers: members,
-        channelType: CHANNEL_TYPE,
+        channelType,
       });
 
       // Remove channel members not in group
       await StreamChat.removeMembers({
         channelId,
         groupMembers: members,
-        channelType: CHANNEL_TYPE,
+        channelType,
       });
 
-      // Promote/demote members for moderation if necessary
+      // Promote/demote members for moderation as necessary
       await StreamChat.updateModerators({
         channelId,
         groupLeaders: leaders,
-        channelType: CHANNEL_TYPE,
+        channelType,
       });
 
       // todo : remove this once the mobile 6.0.2 version is released
@@ -1018,24 +1037,26 @@ export default class GroupItem extends baseGroup.dataSource {
         const hideVolunteerGroupForMembers = async () => {
           const channelMembers = await StreamChat.getChannelMembers({
             channelId,
-            channelType: CHANNEL_TYPE,
+            channelType,
           });
           Promise.all(channelMembers.map(({ user_id }) => channel.hide(user_id)));
         };
         hideVolunteerGroupForMembers();
       }
 
-      return {
-        id: root.id,
-        channelId,
-        channelType: CHANNEL_TYPE,
-      };
+      // Update the channel's data to match Rock, and mark that our sync is complete.
+      await channel.updatePartial({
+        set: {
+          name: groupName,
+          lastSyncedWithRockAt: new Date().toISOString(),
+        },
+      });
     } catch (error) {
-      console.warn('[Group.getStreamChatChannel] Error!');
+      console.error('[GroupItem.getStreamChatChannel] Error!');
       console.error(error);
     }
 
-    return null;
+    return streamChatChannel;
   };
 
   resolveType({ groupTypeId, id }) {
