@@ -25,6 +25,8 @@ export default class Flag extends RESTDataSource {
             key,
             status: hasAccess ? 'LIVE' : 'DISABLED',
           };
+        } else {
+          return { key, status: 'LIVE' };
         }
       }
 
