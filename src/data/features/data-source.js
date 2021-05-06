@@ -94,21 +94,8 @@ export default class Feature extends coreFeatures.dataSource {
       'attributeValues.contentLayout.value',
       ''
     );
-    const definedValueGuidImageRatio = get(
-      contentItem,
-      'attributeValues.imageRatio.value',
-      ''
-    );
-    const imageRatio = await this.context.dataSources.DefinedValue.getDefinedValueByIdentifier(
-      definedValueGuidImageRatio
-    );
-    const callToAction = get(contentItem, 'attributeValues.callToAction.value', null);
-
-    const secondaryCallToAction = get(
-      contentItem,
-      'attributeValues.secondaryCalltoAction.value',
-      null
-    );
+    const actionsAttributeValue = get(contentItem, 'attributeValues.actions.value', '');
+    const actionsKeyValue = parseRockKeyValuePairs(actionsAttributeValue, 'title', 'url');
 
     let orientation = 'LEFT';
 
@@ -126,17 +113,20 @@ export default class Feature extends coreFeatures.dataSource {
           contentChannelItemId,
         },
       }),
-      callToAction: first(parseRockKeyValuePairs(callToAction, 'call', 'action')),
-      secondaryCallToAction: first(
-        parseRockKeyValuePairs(secondaryCallToAction, 'call', 'action')
-      ),
       title: contentItem.title,
-      subtitle: get(contentItem, 'attributeValues.subtitle.value', ''),
+      subtitle: get(contentItem, 'attributeValues.summary.value', ''),
       summary,
-      imageRatio: imageRatio?.value,
       htmlContent: sanitizeHtml(contentItem.content),
       coverImage: ContentItem.getCoverImage(contentItem),
       orientation: orientation.toUpperCase(),
+      actions: actionsKeyValue.map(({ title, url }) => ({
+        title,
+        action: 'OPEN_URL',
+        relatedNode: {
+          __typename: 'Url',
+          url,
+        },
+      })),
       // Typename is required so GQL knows specifically what Feature is being created
       __typename: 'ContentBlockFeature',
     };

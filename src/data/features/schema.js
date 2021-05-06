@@ -70,18 +70,20 @@ export default gql`
     order: Int
 
     title(hyphenated: Boolean): String
-    summary: String
+    subtitle: String
+
     htmlContent: String
     coverImage: ImageMedia
     videos: [VideoMedia]
-    imageRatio: String
-    imageAlt: String
-    subtitle: String
-
-    callToAction: CallToAction
-    secondaryCallToAction: CallToAction
 
     orientation: CONTENT_BLOCK_ORIENTATION
+    actions: [FeatureAction]
+
+    summary: String @deprecated(reason: "Please use 'subtitle' instead")
+    callToAction: CallToAction @deprecated(reason: "Please use 'actions' instead")
+    secondaryCallToAction: CallToAction @deprecated(reason: "Please use 'actions instead")
+    imageRatio: String @deprecated(reason: "UI doesn't respect this field")
+    imageAlt: String @deprecated(reason: "UI doesn't respect this field")
   }
 
   type HtmlBlockFeature implements Feature & Node {
