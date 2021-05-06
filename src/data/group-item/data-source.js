@@ -947,24 +947,24 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getStreamChatChannel = async (root) => {
-    const { Auth, StreamChat } = this.context.dataSources;
-    const channelType = StreamChat.channelType.GROUP;
-    const groupType = this.resolveType(root);
-
-    const groupName = this.getTitle(root);
-    const currentPerson = await Auth.getCurrentPerson();
-    const resolvedType = this.resolveType(root);
-    const globalId = createGlobalId(root.id, resolvedType);
-    const channelId = crypto.SHA1(globalId).toString();
-
-    // Define the return value upfront
-    const streamChatChannel = {
-      id: root.id,
-      channelId,
-      channelType,
-    };
-
     try {
+      const { Auth, StreamChat } = this.context.dataSources;
+      const channelType = StreamChat.channelType.GROUP;
+      const groupType = this.resolveType(root);
+
+      const groupName = this.getTitle(root);
+      const currentPerson = await Auth.getCurrentPerson();
+      const resolvedType = this.resolveType(root);
+      const globalId = createGlobalId(root.id, resolvedType);
+      const channelId = crypto.SHA1(globalId).toString();
+
+      // Define the return value upfront
+      const streamChatChannel = {
+        id: root.id,
+        channelId,
+        channelType,
+      };
+
       // Get or create the channel. The options are only applied to the channel if
       // creating it for the first time. We'll update the values further down if necessary.
       const channel = await StreamChat.getChannel({
