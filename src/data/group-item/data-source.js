@@ -947,7 +947,6 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getStreamChatChannel = async (root) => {
-    console.log('🟧 getStreamChatChannel()');
     const { Auth, StreamChat } = this.context.dataSources;
     const channelType = StreamChat.channelType.GROUP;
     const groupType = this.resolveType(root);
