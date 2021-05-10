@@ -105,7 +105,7 @@ export default class Feature extends coreFeatures.dataSource {
       orientation = definedValue?.value ? definedValue?.value : orientation;
     }
 
-    const grabContentImages = await ContentItem.getImages(contentItem)
+    const images = await ContentItem.getImages(contentItem)
 
     return {
       // The Feature ID is based on all of the action ids, added together.
@@ -119,7 +119,7 @@ export default class Feature extends coreFeatures.dataSource {
       subtitle: get(contentItem, 'attributeValues.summary.value', ''),
       summary,
       htmlContent: sanitizeHtml(contentItem.content),
-      coverImage: grabContentImages[0],
+      coverImage: get(images, '[0]', null),
       orientation: orientation.toUpperCase(),
       actions: actionsKeyValue.map(({ title, url }) => ({
         title,
