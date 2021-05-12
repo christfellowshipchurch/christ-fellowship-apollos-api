@@ -38,4 +38,8 @@ export default gql`
   extend type InformationalContentItem implements NodeRoute {
     routing: Route
   }
+
+  extend type GroupPreference implements NodeRoute {
+    routing: Route
+  }
 `;

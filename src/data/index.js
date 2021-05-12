@@ -52,7 +52,7 @@ import * as Person from './people';
 import * as Persona from './personas';
 import * as PhoneNumber from './phone-number';
 import * as PrayerRequest from './prayer-request';
-import * as GroupPreferences from './group-preferences';
+import * as GroupPreference from './group-preference';
 import * as RockConstants from './rock-constants';
 import * as Schedule from './schedule';
 import * as Search from './search';
@@ -92,7 +92,7 @@ const data = {
   Followings,
   Group,
   GroupItem,
-  GroupPreferences,
+  GroupPreference,
   Interactions,
   Interfaces,
   LinkTree,
