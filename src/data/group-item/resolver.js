@@ -208,6 +208,8 @@ const resolver = {
       dataSources.GroupItem.getGroupSearchOptions(),
     groupSearchFacetsAttributes: async (root, args, { dataSources }) =>
       dataSources.GroupItem.getGroupSearchFacetsAttributes(),
+    groupFacetFilters: async (root, { facet, facetFilters }, { dataSources }) =>
+      dataSources.GroupItem.getGroupFacetsByFilters(facet, facetFilters),
   },
 };
 

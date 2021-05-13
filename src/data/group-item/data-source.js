@@ -1477,6 +1477,13 @@ export default class GroupItem extends baseGroup.dataSource {
     return Object.keys(facets);
   };
 
+  getGroupFacetsByFilters = async (facet, facetFilters) => {
+    const { GroupItem } = this.context.dataSources;
+
+    const facets = await GroupItem.getSearchIndex().byFacetFilters(facet, facetFilters);
+    return Object.keys(facets[facet]);
+  };
+
   /**  :: Contact Group Leader
    * --------------------------------------------------------------------------
    * This workflow is triggered when a user clicks 'contact' leader
