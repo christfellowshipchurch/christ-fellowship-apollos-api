@@ -1326,25 +1326,21 @@ export default class GroupItem extends baseGroup.dataSource {
    * This method is temporary for development purposes, hence all the safety switches
    */
   async updateIndexAllGroups() {
-    console.log('\n[GroupItem] indexing "all" groups');
+    console.log('\n[GroupItem] indexing all groups');
 
-    const SAFETY_SWITCH = true;
     const DRY_RUN = true;
 
-    if (SAFETY_SWITCH) {
-      console.log('•••••••• 🛑 SAFETY SWITCH 🛑 ••••••••');
-      return null;
-    }
+    const validGroupTypeIds = await this.getValidGroupTypeIds();
+    const excludeList = await this._getExcludedGroupIds();
+    const groupTypeIds = validGroupTypeIds.filter(
+      (groupTypeId) => !excludeList.includes(groupTypeId)
+    );
 
-    const offset = 300;
-    const limit = 50;
+    console.log('validGroupTypeIds:', validGroupTypeIds);
+    console.log('excludeList:', excludeList);
+    console.log('groupTypeIds:', groupTypeIds);
 
-    const startIndex = offset;
-    const endIndex = offset + limit;
-
-    console.log(`Sampling groups between index ${startIndex} and ${endIndex}`);
-    const groups = this.sampleGroupIds.slice(startIndex, endIndex);
-    console.log('--> ', groups);
+    return;
 
     const groupsForIndex = await Promise.all(
       groups.map((id) => this.mapItemForIndex(id))
