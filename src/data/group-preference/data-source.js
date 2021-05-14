@@ -23,8 +23,6 @@ export default class GroupPreference extends RockApolloDataSource {
       (definedValue) => definedValue && definedValue.isActive
     );
 
-    console.log('HELLO');
-
     return filteredPreferences;
   };
 
