@@ -62,12 +62,20 @@ export default class SearchIndex {
       edges: hits.map((hit, i) => ({
         ...hit,
         cursor: createCursor({ position: i + offset }),
-      }))
+      })),
     };
   }
 
   async byFacets() {
     const { facets } = await this.index.search('', { facets: ['*'] });
+    return facets;
+  }
+
+  async byFacetFilters(facet, facetFilters) {
+    const { facets } = await this.index.search('', {
+      facets: facet,
+      facetFilters,
+    });
     return facets;
   }
 }

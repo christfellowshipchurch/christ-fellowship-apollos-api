@@ -165,6 +165,7 @@ export const groupSchema = gql`
     currentUserVolunteerGroups(first: Int, after: String): NodeConnection
     groupSearchOptions: GroupSearchFacetsOptions
     groupSearchFacetsAttributes: [String]
+    groupFacetFilters(facet: String, facetFilters: [String]): [String]
   }
 
   type GroupSearchFacetsOptions {

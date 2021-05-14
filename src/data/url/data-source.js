@@ -74,7 +74,12 @@ export default class Url extends RockApolloDataSource {
    * Adds a url to the master list of urls
    * @param {string} url
    */
-  async addToMasterList({ url, title }) {
+  async addToMasterList({ url: rawUrl, title }) {
+    /**
+     * note : checks to make sure that there is an http protocol enforced at the beginning of every url
+     */
+    const url = rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`;
+
     /**
      * Check to see if the url exists today
      */
