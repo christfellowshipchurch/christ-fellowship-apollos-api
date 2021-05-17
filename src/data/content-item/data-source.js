@@ -70,8 +70,8 @@ const processObjectSize = (obj) => {
   };
 };
 
-const deleteKeysByPattern = (pattern) => {
-  return new Promise((resolve, reject) => {
+const deleteKeysByPattern = (pattern) =>
+  new Promise((resolve, reject) => {
     const stream = redis.scanStream({
       match: pattern,
     });
@@ -91,7 +91,6 @@ const deleteKeysByPattern = (pattern) => {
       reject(e);
     });
   });
-};
 
 export default class ContentItem extends coreContentItem.dataSource {
   expanded = true;
@@ -207,6 +206,8 @@ export default class ContentItem extends coreContentItem.dataSource {
     );
   };
 
+  createSummary = (root) => get(root, 'attributeValues.summary.value', '');
+
   byAttributeValue = (key, value) => {
     const requestBase = 'ContentChannelItems/GetByAttributeValue';
     return this.request(
@@ -289,6 +290,7 @@ export default class ContentItem extends coreContentItem.dataSource {
   };
 
   getContentByTitle = (title) => this.getByTitle(title, 'BROWSE_CONTENT_CHANNEL_IDS');
+
   getCategoryByTitle = (title) => this.getByTitle(title, 'CATEGORY_CONTENT_CHANNEL_IDS');
 
   getFromTypeIds = (ids) =>
@@ -438,16 +440,13 @@ export default class ContentItem extends coreContentItem.dataSource {
    * Gets all Content Channel Item Associations for a given Content Channel Item
    * @param {number} id - Rock Id of the Content Channel Item for the Association
    */
-  getAssociationCursorByContentItemId = async (id) => {
-    return (
-      this.request('ContentChannelItemAssociations')
-        // .expand('ChildContentChannel')
-        .filter(`ContentChannelItemId eq ${id}`)
-        .andFilter(this.CHILDREN_LIVE_CONTENT())
-        .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
-        .cache({ ttl: 60 })
-    );
-  };
+  getAssociationCursorByContentItemId = async (id) =>
+    this.request('ContentChannelItemAssociations')
+      // .expand('ChildContentChannel')
+      .filter(`ContentChannelItemId eq ${id}`)
+      .andFilter(this.CHILDREN_LIVE_CONTENT())
+      .sort(this.CONTENT_ITEM_ASSOCIATION_SORT())
+      .cache({ ttl: 60 });
 
   /**
    * Gets all Child Content Channel Items for a given Parent Content Channel Item
@@ -825,7 +824,9 @@ export default class ContentItem extends coreContentItem.dataSource {
 
         switch (typename) {
           case 'ContentBlock':
-            return Feature.createContentBlockFeature({ contentChannelItemId: id });
+            return Feature.createContentBlockFeature({
+              contentChannelItemId: id,
+            });
           case 'HtmlBlock':
             return Feature.createHtmlBlockFeature({ contentChannelItemId: id });
           case 'HeroList':
