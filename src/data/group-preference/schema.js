@@ -5,12 +5,13 @@ export default gql`
     id: ID!
     title: String
     summary: String
-    coverImage: ImageMedia
+    coverImage(nodeId: ID): ImageMedia
     url: String
   }
 
   extend type Query {
     allPreferences: [GroupPreference]
     allSubPreferences: [GroupPreference]
+    groupSubPreferences(preferenceId: ID): [GroupPreference]
   }
 `;

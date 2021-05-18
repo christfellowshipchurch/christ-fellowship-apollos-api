@@ -1,5 +1,5 @@
 import { createGlobalId } from '@apollosproject/server-core';
-import { get, keys } from 'lodash';
+import { get, keys, kebabCase } from 'lodash';
 import ApollosConfig from '@apollosproject/config';
 
 const { ROCK_MAPPINGS } = ApollosConfig;
@@ -13,8 +13,19 @@ const resolver = {
   },
   Route: {
     __resolveType: () => 'Route',
-    pathname: async ({ __typename, id }, args, { dataSources: { ContentItem } }) => {
-      switch (__typename) {
+    pathname: async (
+      { __typename, id, ...node },
+      args,
+      { dataSources: { ContentItem } }
+    ) => {
+      switch (`${__typename}`) {
+        case 'GroupPreference':
+          // note : Group Preferences get returned as Defined Value
+          const title = get(node, 'attributeValues.titleOverride.value', null)
+            ? node.attributeValues.titleOverride.value
+            : get(node, 'value');
+
+          return ['community', kebabCase(title)].join('/');
         case 'MediaContentItem':
         default:
           const contentItem = await ContentItem.getFromId(id);
