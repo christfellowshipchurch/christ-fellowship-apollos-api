@@ -20,7 +20,7 @@ import {
   uniqBy,
   zipObject,
 } from 'lodash';
-import { parseISO, isFuture, isToday, differenceInHours } from 'date-fns';
+import { parseISO, isFuture, isToday, differenceInHours, sub } from 'date-fns';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
@@ -488,7 +488,7 @@ export default class GroupItem extends baseGroup.dataSource {
         .map(({ groupId: id }) => this.getFromId(id))
     );
 
-    // Standard Groupd Filtering
+    // Standard Group Filtering
     // note : we do this here because we have to do a more comprehensive filter of schedules and just want to work with the simplest collection of Groups we can before we get to the more complex operations
     const groups = _groups.filter(
       (group) => group && group.isActive && !group.isArchived
@@ -1122,7 +1122,7 @@ export default class GroupItem extends baseGroup.dataSource {
       const { definedValues } = await DefinedValueList.getFromId(id);
       /**
        * 1. Map to Group Type Ids
-       * 2. Filter out any falsey value
+       * 2. Filter out any falsy value
        * 3. Filter out duplicate Group Type Ids
        */
       const groupTypeIds = definedValues
@@ -1151,7 +1151,7 @@ export default class GroupItem extends baseGroup.dataSource {
       key: Cache.KEY_TEMPLATES.groupTypeIds`${id}`,
     });
 
-    // note : one last filter for falsey value
+    // note : one last filter for falsy value
     return ids.filter((id) => !!id);
   }
 
@@ -1161,7 +1161,7 @@ export default class GroupItem extends baseGroup.dataSource {
       const { definedValues } = await DefinedValueList.getFromId(GROUP_MEMBER_ROLES);
       /**
        * 1. Map to Group Type Ids
-       * 2. Filter out any falsey value
+       * 2. Filter out any falsy value
        * 3. Filter out duplicate Group Type Ids
        */
       const groupTypeRoles = definedValues
@@ -1327,11 +1327,16 @@ export default class GroupItem extends baseGroup.dataSource {
    */
   async updateIndexAllGroups() {
     console.log('\n[GroupItem] indexing all groups');
+    console.log('----------------------------------------------------------------------');
 
     const DRY_RUN = true;
 
     const validGroupFinderTypeIds = await this.getValidGroupFinderTypeIds();
     const excludeList = await this._getExcludedGroupIds();
+    const modifiedDateTime = sub(new Date(), { hours: 8760 }).toISOString();
+
+    console.log('• validGroupFinderTypeIds:', validGroupFinderTypeIds);
+    console.log('• modifiedDateTime:', modifiedDateTime);
 
     const rawGroups = await this.request('Groups')
       .filter(`IsActive eq true`)
@@ -1343,28 +1348,31 @@ export default class GroupItem extends baseGroup.dataSource {
           .map((groupTypeId) => `GroupTypeId eq ${groupTypeId}`)
           .join(' or ')
       )
-      .select(`Id, GroupTypeId`)
+      .andFilter(
+        `(CreatedDateTime ge datetime'${modifiedDateTime}' or ModifiedDateTime ge datetime'${modifiedDateTime}')`
+      )
+      .select(`Id, GroupTypeId, Name, CreatedDateTime, ModifiedDateTime`)
       .get();
-    console.log('rawGroups:', rawGroups);
 
-    const filteredGroupIds = rawGroups
-      .filter(({ id, name, groupTypeId }) => {
-        // console.log(`--> ${id}, ${groupTypeId} :: ${name}`);
+    const filteredGroups = rawGroups.filter(({ id }) => {
+      // ! Be aware, excludeList ids are strings
+      return !excludeList.includes(id.toString());
+    });
 
-        const excluded = excludeList.includes(id.toString()); // ! Be aware, excludeList ids are strings
-        // const validGroupType =
-        //   validGroupFinderTypeIds.length === 0 ||
-        //   validGroupFinderTypeIds.includes(groupTypeId);
+    console.log('filteredGroups:');
+    console.table(filteredGroups, [
+      'id',
+      'name',
+      'groupTypeId',
+      'createdDateTime',
+      'modifiedDateTime',
+    ]);
 
-        // return !excluded && validGroupType;
-        return !excluded;
-      })
-      .map(({ id }) => id);
-
-    console.log('validGroupFinderTypeIds:', validGroupFinderTypeIds);
-    console.log('excludeList:', excludeList);
-    console.log('filteredGroupIds:', filteredGroupIds);
-
+    const groupIdsToIndex = filteredGroups.map(({ id }) => id);
+    console.log(
+      `✅ Found ${groupIdsToIndex.length} groups that need indexed (groupIdsToIndex):`,
+      groupIdsToIndex
+    );
     return;
 
     const groupsForIndex = await Promise.all(
