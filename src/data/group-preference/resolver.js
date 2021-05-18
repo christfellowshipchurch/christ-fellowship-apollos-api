@@ -1,6 +1,6 @@
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId, parseGlobalId } from '@apollosproject/server-core';
-import { get, kebabCase } from 'lodash';
+import { get } from 'lodash';
 import { rockImageUrl } from '../utils';
 
 const { ROCK_MAPPINGS } = ApollosConfig;
@@ -24,18 +24,17 @@ function getTransformedCoverImage(item) {
 const resolver = {
   GroupPreference: {
     id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
-    title: ({ value, attributeValues }) => {
-      return get(attributeValues, 'titleOverride.value', null)
+    title: ({ value, attributeValues }) =>
+      get(attributeValues, 'titleOverride.value', null)
         ? attributeValues.titleOverride.value
-        : value;
-    },
+        : value,
     summary: ({ description }) => description,
     coverImage: async (
       root,
       args,
       { dataSources: { DefinedValueList, DefinedValue } }
     ) => {
-      const nodeId = args.nodeId;
+      const { nodeId } = args;
       let uniqueImage = null;
 
       if (nodeId) {
@@ -46,8 +45,6 @@ const resolver = {
           );
           const { definedValues } = definedType;
           const parentEntity = await DefinedValue.getFromId(parsedId.id);
-
-          console.log({ definedValues });
 
           uniqueImage = definedValues.find(({ attributeValues }) => {
             const parent = get(attributeValues, 'preference.value');
