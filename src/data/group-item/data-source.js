@@ -1330,15 +1330,40 @@ export default class GroupItem extends baseGroup.dataSource {
 
     const DRY_RUN = true;
 
-    const validGroupTypeIds = await this.getValidGroupTypeIds();
+    const validGroupFinderTypeIds = await this.getValidGroupFinderTypeIds();
     const excludeList = await this._getExcludedGroupIds();
-    const groupTypeIds = validGroupTypeIds.filter(
-      (groupTypeId) => !excludeList.includes(groupTypeId)
-    );
 
-    console.log('validGroupTypeIds:', validGroupTypeIds);
+    const rawGroups = await this.request('Groups')
+      .filter(`IsActive eq true`)
+      .andFilter(`IsPublic eq true`)
+      .andFilter(`IsArchived eq false`)
+      // Only query valid group types for group finder
+      .andFilter(
+        validGroupFinderTypeIds
+          .map((groupTypeId) => `GroupTypeId eq ${groupTypeId}`)
+          .join(' or ')
+      )
+      .select(`Id, GroupTypeId`)
+      .get();
+    console.log('rawGroups:', rawGroups);
+
+    const filteredGroupIds = rawGroups
+      .filter(({ id, name, groupTypeId }) => {
+        // console.log(`--> ${id}, ${groupTypeId} :: ${name}`);
+
+        const excluded = excludeList.includes(id.toString()); // ! Be aware, excludeList ids are strings
+        // const validGroupType =
+        //   validGroupFinderTypeIds.length === 0 ||
+        //   validGroupFinderTypeIds.includes(groupTypeId);
+
+        // return !excluded && validGroupType;
+        return !excluded;
+      })
+      .map(({ id }) => id);
+
+    console.log('validGroupFinderTypeIds:', validGroupFinderTypeIds);
     console.log('excludeList:', excludeList);
-    console.log('groupTypeIds:', groupTypeIds);
+    console.log('filteredGroupIds:', filteredGroupIds);
 
     return;
 
