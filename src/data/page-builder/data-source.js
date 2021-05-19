@@ -1,7 +1,7 @@
 import { ContentItem } from '@apollosproject/data-connector-rock';
 import ApollosConfig from '@apollosproject/config';
 import { get } from 'lodash';
-import { isType } from '../utils';
+import { isType, isRequired } from '../utils';
 
 export default class PageBuilder extends ContentItem.dataSource {
   async getFeatures(pathname) {
