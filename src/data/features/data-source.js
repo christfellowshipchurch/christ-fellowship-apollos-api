@@ -38,7 +38,9 @@ export default class Feature extends coreFeatures.dataSource {
       actions: actions.map((action) => {
         // Ensures that we have a generated ID for the Primary Action related node, if not provided.
         if (action && action.relatedNode && !action.relatedNode.id) {
-          action.relatedNode.id = this.createFeatureId({ args: action.relatedNode });
+          action.relatedNode.id = this.createFeatureId({
+            args: action.relatedNode,
+          });
         }
 
         return action;
@@ -96,6 +98,7 @@ export default class Feature extends coreFeatures.dataSource {
     );
     const actionsAttributeValue = get(contentItem, 'attributeValues.actions.value', '');
     const actionsKeyValue = parseRockKeyValuePairs(actionsAttributeValue, 'title', 'url');
+    const hideTitle = get(contentItem, 'attributeValues.hideTitle.value', 'false');
 
     let orientation = 'LEFT';
 
@@ -115,7 +118,7 @@ export default class Feature extends coreFeatures.dataSource {
           contentChannelItemId,
         },
       }),
-      title: contentItem.title,
+      title: hideTitle.toLowerCase() === 'true' ? '' : contentItem.title,
       subtitle: get(contentItem, 'attributeValues.summary.value', ''),
       summary,
       htmlContent: sanitizeHtml(contentItem.content),
@@ -229,8 +232,8 @@ export default class Feature extends coreFeatures.dataSource {
   }
 
   /** Create Feeds */
-  getFeatures = async (featuresConfig = [], args = {}) => {
-    return Promise.all(
+  getFeatures = async (featuresConfig = [], args = {}) =>
+    Promise.all(
       featuresConfig.map((featureConfig) => {
         const featureMap = this.FEATURE_MAP || {};
         // Lookup the feature function, based on the name, and run it.
@@ -242,17 +245,12 @@ export default class Feature extends coreFeatures.dataSource {
             console.warn(
               'Deprecated: Please use the name "HeroList" instead. You used "HeroListFeature"'
             );
-            return featureMap['HeroList'](finalConfig);
+            return featureMap.HeroList(finalConfig);
           }
 
-          const featureMethod = get(
-            featureMap,
-            finalConfig.type,
-            featureMap['ActionList']
-          );
+          const featureMethod = get(featureMap, finalConfig.type, featureMap.ActionList);
           return featureMethod(finalConfig);
         }
       })
     );
-  };
 }
