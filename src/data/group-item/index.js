@@ -1,5 +1,6 @@
+import jobs from './jobs';
 import schema from './schema';
 import resolver from './resolver';
 import dataSource from './data-source';
 
-export { schema, resolver, dataSource };
+export { jobs, schema, resolver, dataSource };
