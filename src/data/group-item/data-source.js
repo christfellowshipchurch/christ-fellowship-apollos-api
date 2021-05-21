@@ -1371,10 +1371,9 @@ export default class GroupItem extends baseGroup.dataSource {
       `✅ Found ${groupIdsToIndex.length} groups that need indexed (groupIdsToIndex):`,
       groupIdsToIndex
     );
-    return;
 
     const groupsForIndex = await Promise.all(
-      groups.map((id) => this.mapItemForIndex(id))
+      filteredGroups.map(({ id }) => this.mapItemForIndex(id))
     );
 
     console.log('groupsForIndex:', JSON.stringify(groupsForIndex, null, 2));
