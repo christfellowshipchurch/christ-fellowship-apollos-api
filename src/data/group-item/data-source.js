@@ -1376,18 +1376,14 @@ export default class GroupItem extends baseGroup.dataSource {
    */
   async updateIndexAllGroups() {
     console.log('\n[GroupItem] indexing all groups');
-    console.log(
-      '----------------------------------------------------------------------'
-    );
+    console.log('---------------------------------------------------------');
 
+    // Performing a dry run just prepares all the data for algolia
+    // without actually touching the records/using operations.
     const DRY_RUN = true;
 
     const validGroupFinderTypeIds = await this.getValidGroupFinderTypeIds();
     const excludeList = await this._getExcludedGroupIds();
-    const modifiedDateTime = sub(new Date(), { hours: 8760 }).toISOString();
-
-    console.log('• validGroupFinderTypeIds:', validGroupFinderTypeIds);
-    console.log('• modifiedDateTime:', modifiedDateTime);
 
     const rawGroups = await this.request('Groups')
       .filter(`IsActive eq true`)
@@ -1399,46 +1395,53 @@ export default class GroupItem extends baseGroup.dataSource {
           .map((groupTypeId) => `GroupTypeId eq ${groupTypeId}`)
           .join(' or ')
       )
-      // Only find recently created or modified groups
-      .andFilter(
-        `(CreatedDateTime ge datetime'${modifiedDateTime}' or ModifiedDateTime ge datetime'${modifiedDateTime}')`
-      )
       .select(`Id, GroupTypeId, Name, CreatedDateTime, ModifiedDateTime`)
       .get();
 
-    // Further filter groups (check individual group exclusions, etc)
+    // Filter out excluded groups
     const filteredGroups = rawGroups.filter(
-      ({ id }) =>
-        // ! Be aware, excludeList ids are strings
-        !excludeList.includes(id.toString())
+      // ! Be aware, excludeList ids are strings
+      ({ id }) => !excludeList.includes(id.toString())
     );
 
-    console.log('filteredGroups:');
-    console.table(filteredGroups, [
-      'id',
-      'name',
-      'groupTypeId',
-      'createdDateTime',
-      'modifiedDateTime',
-    ]);
+    // console.log('filteredGroups:');
+    // console.table(filteredGroups, [
+    //   'id',
+    //   'name',
+    //   'groupTypeId',
+    //   'createdDateTime',
+    //   'modifiedDateTime',
+    // ]);
 
     const groupIdsToIndex = filteredGroups.map(({ id }) => id);
-    console.log(
-      `✅ Found ${groupIdsToIndex.length} groups that need indexed (groupIdsToIndex):`,
-      groupIdsToIndex
-    );
+    console.log(`🔍 Found ${groupIdsToIndex.length} groups that need indexed`);
+    console.log('⌛ Mapping groups for index...');
 
     const groupsForIndex = await Promise.all(
       filteredGroups.map(({ id }) => this.mapItemForIndex(id))
     );
 
-    console.log('groupsForIndex:', JSON.stringify(groupsForIndex, null, 2));
+    console.log(`✅ Mapped ${groupsForIndex.length} groups for index`);
 
     if (DRY_RUN) {
       console.log('•••••••• 🙅‍♂️ DRY RUN, SKIPPING INDEX OPERATION 🙅‍♂️ ••••••••');
       return null;
     }
 
+    // If development environment...
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      process.env.NODE_ENV !== 'test'
+    ) {
+      console.log('\n🚨🚨🚨 Preventing accidental index to Algolia! 🚨🚨🚨');
+      console.log(
+        'If you meant to actually perform operations in Algolia, open src/data/group-item/data-source.js and comment out the return after this log message.'
+      );
+      // Make sure to uncomment this again before committing/merging!
+      return null;
+    }
+
+    await this.getSearchIndex().deleteAllObjects();
     return this.getSearchIndex().addObjects(
       groupsForIndex.filter((group) => !!group)
     );

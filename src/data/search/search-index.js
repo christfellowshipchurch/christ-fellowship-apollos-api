@@ -38,6 +38,10 @@ export default class SearchIndex {
     this.index.deleteObject(args);
   }
 
+  async deleteAllObjects() {
+    return this.index.clearObjects();
+  }
+
   async byPaginatedQuery({ query, filters, after, first = 20 }) {
     // Prepare pagination
     const length = first;
