@@ -948,7 +948,7 @@ export default class GroupItem extends baseGroup.dataSource {
       'attributeValues.titleOverride.value',
       undefined
     );
-    const value = get(preference, 'preference.value', null);
+    const value = get(preference, 'value', null);
     return titleOverride || value;
   };
 
@@ -1313,9 +1313,10 @@ export default class GroupItem extends baseGroup.dataSource {
 
     if (error || !data.node) {
       console.log(
-        `GroupItem.mapItemForIndex() Error indexing groupId ${groupId}: `,
+        `GroupItem.mapItemForIndex() Error mapping groupId ${groupId} for index `,
         error
       );
+      return null;
     }
 
     const {
@@ -1339,9 +1340,6 @@ export default class GroupItem extends baseGroup.dataSource {
     // @see https://www.algolia.com/doc/guides/managing-results/must-do/custom-ranking/#custom-ranking
     const groupForIndex = {
       id,
-      // ? Is there any real value in storing presentation-only props in Algolia?
-      // ? Should we refactor this and ContentItem indexing / SearchResult to remove cover image?
-      // Searchable properties
       campusName: campus?.name,
       preference,
       subPreference,
