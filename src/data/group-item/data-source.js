@@ -1427,13 +1427,13 @@ export default class GroupItem extends baseGroup.dataSource {
       `✅ Mapped ${groupsForIndex.length} groups for index in ${mapTimeDuration}s`
     );
 
-    // Make sure to leave this set to `false` before committing/merging!
-    const __DEV_SAFETY_SWITCH__ = true;
+    // Make sure to leave this set to `true` before committing/merging!
+    const __PREVENT_DEV_ALGOLIA_INDEXING__ = true;
 
     if (
       process.env.NODE_ENV !== 'production' &&
       process.env.NODE_ENV !== 'test' &&
-      __DEV_SAFETY_SWITCH__
+      __PREVENT_DEV_ALGOLIA_INDEXING__
     ) {
       console.log('\n🚨🚨🚨 Preventing accidental index to Algolia! 🚨🚨🚨');
       console.log(
