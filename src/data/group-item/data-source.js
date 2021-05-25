@@ -1376,10 +1376,8 @@ export default class GroupItem extends baseGroup.dataSource {
     return true;
   }
 
-  /**
-   * This method is temporary for development purposes, hence all the safety switches
-   */
   async updateIndexAllGroups() {
+    /* eslint-disable no-console */
     console.log('\n[GroupItem] indexing all groups');
     console.log('---------------------------------------------------------');
 
@@ -1451,6 +1449,8 @@ export default class GroupItem extends baseGroup.dataSource {
       groupsForIndex.filter((group) => !!group)
     );
     console.log('✅ Indexing complete');
+    return null;
+    /* eslint-enable no-console */
   }
 
   searchGroups(args) {
