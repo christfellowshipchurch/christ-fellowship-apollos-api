@@ -10,8 +10,10 @@ export default class Search {
     this.indices = SearchClient.INDICES;
 
     if (!SearchClient.CLIENT) {
-      // ⚠️ TODO :: Stub for testing
-      console.warn('No global Algolia search CLIENT set, so index methods need mocked for tests!');
+      // Todo :: Stub for testing
+      console.warn(
+        'No global Algolia search CLIENT set, so index methods need mocked for tests!'
+      );
     }
   }
 
@@ -24,8 +26,8 @@ export default class Search {
   index(key) {
     if (this.indices[key]) {
       return this.indices[key];
-    } else {
-      console.warn(`No Search index found for key ${key}`);
     }
+    console.warn(`No Search index found for key ${key}`);
+    return null;
   }
 }
