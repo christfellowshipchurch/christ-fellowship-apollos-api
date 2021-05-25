@@ -13,5 +13,6 @@ export default gql`
     allPreferences: [GroupPreference]
     allSubPreferences: [GroupPreference]
     groupSubPreferences(preferenceId: ID): [GroupPreference]
+    notifyMeBanner(preferenceId: ID!): ContentItem
   }
 `;
