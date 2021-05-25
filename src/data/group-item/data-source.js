@@ -20,7 +20,13 @@ import {
   uniqBy,
   zipObject,
 } from 'lodash';
-import { parseISO, isFuture, isToday, differenceInHours, sub } from 'date-fns';
+import {
+  parseISO,
+  isFuture,
+  isToday,
+  differenceInHours,
+  differenceInSeconds,
+} from 'date-fns';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
@@ -1313,7 +1319,7 @@ export default class GroupItem extends baseGroup.dataSource {
 
     if (error || !data.node) {
       console.log(
-        `GroupItem.mapItemForIndex() Error mapping groupId ${groupId} for index `,
+        `mapItemForIndex() Error mapping groupId ${groupId} for index!\n`,
         error
       );
       return null;
@@ -1354,6 +1360,7 @@ export default class GroupItem extends baseGroup.dataSource {
       meetingType,
     };
 
+    console.log(`mapItemForIndex() Group ID "${globalId}" mapped successfully`);
     return groupForIndex;
   }
 
@@ -1375,10 +1382,6 @@ export default class GroupItem extends baseGroup.dataSource {
   async updateIndexAllGroups() {
     console.log('\n[GroupItem] indexing all groups');
     console.log('---------------------------------------------------------');
-
-    // Performing a dry run just prepares all the data for algolia
-    // without actually touching the records/using operations.
-    const DRY_RUN = true;
 
     const validGroupFinderTypeIds = await this.getValidGroupFinderTypeIds();
     const excludeList = await this._getExcludedGroupIds();
@@ -1413,36 +1416,41 @@ export default class GroupItem extends baseGroup.dataSource {
 
     const groupIdsToIndex = filteredGroups.map(({ id }) => id);
     console.log(`🔍 Found ${groupIdsToIndex.length} groups that need indexed`);
-    console.log('⌛ Mapping groups for index...');
+    console.log('⌛ Mapping groups for index... this will take a while');
+    const mapStartTime = new Date().getTime();
 
     const groupsForIndex = await Promise.all(
       filteredGroups.map(({ id }) => this.mapItemForIndex(id))
     );
 
-    console.log(`✅ Mapped ${groupsForIndex.length} groups for index`);
+    const mapEndTime = new Date().getTime();
+    const mapTimeDuration = differenceInSeconds(mapEndTime, mapStartTime);
+    console.log(
+      `✅ Mapped ${groupsForIndex.length} groups for index in ${mapTimeDuration}s`
+    );
 
-    if (DRY_RUN) {
-      console.log('•••••••• 🙅‍♂️ DRY RUN, SKIPPING INDEX OPERATION 🙅‍♂️ ••••••••');
-      return null;
-    }
+    // Make sure to leave this set to `false` before committing/merging!
+    const __DEV_SAFETY_SWITCH__ = true;
 
-    // If development environment...
     if (
       process.env.NODE_ENV !== 'production' &&
-      process.env.NODE_ENV !== 'test'
+      process.env.NODE_ENV !== 'test' &&
+      __DEV_SAFETY_SWITCH__
     ) {
       console.log('\n🚨🚨🚨 Preventing accidental index to Algolia! 🚨🚨🚨');
       console.log(
-        'If you meant to actually perform operations in Algolia, open src/data/group-item/data-source.js and comment out the return after this log message.'
+        'If you meant to actually perform operations in Algolia, open src/data/group-item/data-source.js and comment out the return after this log message.\n'
       );
-      // Make sure to uncomment this again before committing/merging!
       return null;
     }
 
+    console.log('🗑️ Deleting all group objects from index...');
     await this.getSearchIndex().deleteAllObjects();
-    return this.getSearchIndex().addObjects(
+    console.log('💾 Adding all group objects from index...');
+    await this.getSearchIndex().addObjects(
       groupsForIndex.filter((group) => !!group)
     );
+    console.log('✅ Indexing complete');
   }
 
   searchGroups(args) {
@@ -1492,7 +1500,9 @@ export default class GroupItem extends baseGroup.dataSource {
     const getQueryAttribute = (key) =>
       query?.attributes?.find((attribute) => attribute.key === key);
 
-    // Return a query attribute's values prefixed with a string
+    // Return a query attribute's values prefixed with a string.
+    // `attributeKey` is the name of the value from the input `query`.
+    // `prefixString` should match the name of that attribute indexed in Algolia.
     const prefixAttributeValues = ({ attributeKey, prefixString }) => {
       const attribute = getQueryAttribute(attributeKey);
 
