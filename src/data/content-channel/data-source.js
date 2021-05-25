@@ -83,10 +83,6 @@ export default class ContentChannel extends coreContentChannel.dataSource {
       return true;
     });
 
-    const { clientVersion } = this.context;
-    const versionParse = split(clientVersion, '.').join('');
-    const versionNumber = parseInt(versionParse);
-
     return Promise.all(
       filteredContentChannelItems.map(async (item) => {
         const action = get(item, 'attributeValues.action.value', '');
@@ -107,19 +103,19 @@ export default class ContentChannel extends coreContentChannel.dataSource {
               ],
               title: item.title,
               subtitle: ContentItem.createSummary(item),
-              // primaryAction: {
-              //   title: 'See More',
-              //   action: 'OPEN_URL',
-              //   relatedNode: {
-              //     __typename: 'Url',
-              //     url: 'https://christfellowship.church',
-              //   },
-              // },
+              primaryAction: {
+                title: 'See More',
+                action: 'OPEN_CHANNEL',
+                relatedNode: {
+                  __typename: 'UniversalContentItem',
+                  ...item,
+                },
+              },
             });
           case 'DefaultHorizontalCardList':
           case 'HighlightHorizontalCardList':
           case 'HighlightMediumHorizontalCardList':
-          case 'HighlightSmallHorizontalCardList':
+          case 'HighlightSmallHorizontalCardList': {
             // note : the total number of cards we want to show is 3
             const horizontalCardLimit = 3;
 
@@ -150,15 +146,16 @@ export default class ContentChannel extends coreContentChannel.dataSource {
               title: item.title,
               subtitle: ContentItem.createSummary(item),
               cardType: getCardType(),
-              // primaryAction: {
-              //   title: 'See More',
-              //   action: 'OPEN_URL',
-              //   relatedNode: {
-              //     __typename: 'Url',
-              //     url: 'https://christfellowship.church',
-              //   },
-              // },
+              primaryAction: {
+                title: 'See More',
+                action: 'OPEN_CHANNEL',
+                relatedNode: {
+                  __typename: 'UniversalContentItem',
+                  ...item,
+                },
+              },
             });
+          }
           case 'VIEW_CHILDREN': // ! deprecated, old action
           case 'VerticalCardList':
           default:

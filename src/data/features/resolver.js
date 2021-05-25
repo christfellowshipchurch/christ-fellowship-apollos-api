@@ -12,6 +12,14 @@ const resolver = {
   ContentBlockFeature: {
     id: ({ id }) => createGlobalId(id, 'ContentBlockFeature'),
   },
+  HeroListFeature: {
+    primaryAction: ({ actions, primaryAction }) =>
+      actions.length > 3 ? primaryAction : null,
+  },
+  HorizontalCardListFeature: {
+    primaryAction: ({ cards, primaryAction }) =>
+      cards.length > 3 ? primaryAction : null,
+  },
   HtmlBlockFeature: {
     id: ({ id }) => createGlobalId(id, 'HtmlBlockFeature'),
   },
