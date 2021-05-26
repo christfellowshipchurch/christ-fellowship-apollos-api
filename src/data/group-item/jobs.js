@@ -27,14 +27,17 @@ if (REDIS_URL) {
 }
 
 const createJobs = ({ getContext, queues, trigger = () => null }) => {
-  const FullIndexQueue = queues.add('algolia-groups-full-index-queue', queueOpts);
+  const FullIndexQueue = queues.add(
+    'algolia-groups-full-index-queue',
+    queueOpts
+  );
 
   FullIndexQueue.process(async () => {
     const context = getContext();
     return context.dataSources.GroupItem.updateIndexAllGroups();
   });
 
-  FullIndexQueue.add(null, { repeat: { cron: '15 3 * * 1' } });
+  FullIndexQueue.add(null, { repeat: { cron: '15 3 * * *' } });
 
   // add manual index trigger
   trigger('/manual-index', FullIndexQueue);
