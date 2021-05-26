@@ -138,7 +138,7 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
     InformationalContentItem:
       EntityType: ContentChannelItem
-      ContentChannelId: [45, 76]
+      ContentChannelId: [45, 60, 76]
     EventContentItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [29]
