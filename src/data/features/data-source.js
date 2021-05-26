@@ -83,6 +83,9 @@ export default class Feature extends coreFeatures.dataSource {
     if (!contentChannelItemId) {
       return {
         __typename: 'ContentBlockFeature',
+        id: this.createFeatureId({
+          args: props,
+        }),
         ...props,
       };
     }
