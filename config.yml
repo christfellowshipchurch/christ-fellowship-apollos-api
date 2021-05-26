@@ -138,7 +138,7 @@ ROCK_MAPPINGS:
       EntityType: ContentChannelItem
     InformationalContentItem:
       EntityType: ContentChannelItem
-      ContentChannelId: [45, 76]
+      ContentChannelId: [45, 76, 60]
     EventContentItem:
       EntityType: ContentChannelItem
       ContentChannelTypeId: [29]
@@ -440,11 +440,6 @@ EVENTS_FEATURES:
   - type: VerticalCardList
     algorithms: [ALL_EVENTS]
 GIVE_FEATURES:
-  - type: HeroList
-    algorithms:
-      - type: CONTENT_CHANNEL
-        arguments:
-          contentChannelId: 76
   - type: ActionBar
     actions:
       - action: 'OPEN_URL'
@@ -483,6 +478,76 @@ GIVE_FEATURES:
         relatedNode:
           __typename: 'Url'
           url: 'http://cf.church/venmo?feed=give'
+  - type: ContentBlock
+    title: Give Online
+    subtitle: See what God can do through your generosity by giving easily and securely online.
+    htmlContent: <p>We are so thankful for you as you give and build God's house—through you, we’ve seen that God is not limited by our location. In this season of uncertainty, your faithfulness to give has been essential to rewriting stories across our region, in our communities, and in our homes. See what God can do through your generosity by giving easily and securely online.</p>
+    orientation: DEFAULT
+    coverImage:
+      sources:
+        - uri: https://cloudfront.christfellowship.church/GetImage.ashx?guid=8416ef11-1712-4daf-b7c4-5ce052809098
+    videos:
+      - sources:
+          - uri: https://link.theplatform.com/s/IfSiAC/media/BBYZgg05u3_5/file.m3u8?format=redirect&formats=m3u,mpeg4
+    actions:
+      - title: Share Your Story
+        action: OPEN_URL
+        relatedNode:
+          __typename: Url
+          url: 'https://rock.gocf.org/story'
+      - title: Kingdom Builders
+        action: OPEN_URL
+        relatedNode:
+          __typename: Url
+          url: 'https://cf.church/kingdombuilders'
+  - type: ContentBlock
+    title: Additional Giving Options
+    subtitle: See what God can do through your generosity by giving easily and securely online.
+    htmlContent: <p>We are excited to announce there are now 3 additional ways to give online! Tithes and offerings can now be given on PayPal, Venmo, and Cash App for your convenience*. Want to know just how easy it is? We’ll show you in this one-minute video.</p>
+    orientation: DEFAULT
+    coverImage:
+      sources:
+        - uri: https://cloudfront.christfellowship.church/GetImage.ashx?guid=8416ef11-1712-4daf-b7c4-5ce052809098
+    videos:
+      - sources:
+          - uri: https://link.theplatform.com/s/IfSiAC/media/42V8KEseN9F6/file.m3u8?format=redirect&formats=m3u,mpeg4
+  - type: ContentBlock
+    title: Is tithing new for you?
+    subtitle: Take the Malachi 3:10 challenge today!
+    actions:
+      - title: Take the Challenge
+        action: OPEN_URL
+        relatedNode:
+          __typename: Url
+          url: 'https://cf.church/take-the-challenge'
+  - type: ContentBlock
+    title: Is improving your finances a goal this year?
+    htmlContent: '<p>We want to help you achieve that goal, which is why we’re offering the Financial Peace University (FPU) class for just $25 (that’s over $100 off!).</p><p>And as a follow-up class to the FPU class, the Legacy Journey goes deeper into baby steps 4, 5, and 6, covering retirement savings, estate planning, and giving.</p>'
+    actions:
+      - title: Financial Peace University
+        action: OPEN_URL
+        relatedNode:
+          __typename: Url
+          url: 'https://rock.gocf.org/fpuondemand'
+      - title: The Legacy Journey
+        action: OPEN_URL
+        relatedNode:
+          __typename: Url
+          url: 'https://rock.gocf.org/legacyJourney'
+  - type: ContentBlock
+    title: Need Help?
+    htmlContent: '<p>For help setting up electronic giving or other giving questions, call us.</p><p>To mail in your gift, please send it to:<br><i>Christ Fellowship Church Contributions&nbsp;<br></i><i>5343 Northlake Blvd.<br></i><i>Palm Beach Gardens, FL 33418</i></p>'
+    actions:
+      - title: Call Us
+        action: OPEN_URL
+        relatedNode:
+          __typename: Url
+          url: 'tel:5617763380'
+      - title: Give By Stock
+        action: OPEN_URL
+        relatedNode:
+          __typename: Url
+          url: 'https://mail.google.com/mail/u/0/?view=cm&fs=1&tf=1&source=mailto&to=vonae.ayoub@christfellowship.church'
 HOME_HEADER_FEATURES:
   # - algorithms: [ALL_LIVE_CONTENT]
   #   type: LiveContentList
