@@ -37,7 +37,27 @@ const createJobs = ({ getContext, queues, trigger = () => null }) => {
     return context.dataSources.GroupItem.updateIndexAllGroups();
   });
 
-  FullIndexQueue.add(null, { repeat: { cron: '15 3 * * *' } });
+  let schedule;
+
+  switch (process.env.NODE_ENV) {
+    // Production
+    case 'production':
+      // 3:15am Every day
+      schedule = '15 3 * * *';
+      break;
+    // Staging
+    case 'test':
+      // 3:15am on M/W/F
+      schedule = '15 3 * * 1,3,5';
+      break;
+    // Dev
+    default:
+      // 3:15am Every Day
+      schedule = '15 3 * * *';
+      break;
+  }
+
+  FullIndexQueue.add(null, { repeat: { cron: schedule } });
 
   // add manual index trigger
   trigger('/manual-index', FullIndexQueue);
