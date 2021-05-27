@@ -246,6 +246,7 @@ ROCK_MAPPINGS:
 
   ANNOUNCEMENTS_CHANNEL_ID: 50
   SERMON_CHANNEL_ID: 63
+  NOTIFY_ME_BANNERS_CHANNEL_ID: 89
 
   # List of Id's associated with important/commonly used Defined Types
   # (primarily used by the Defined Value List data type)

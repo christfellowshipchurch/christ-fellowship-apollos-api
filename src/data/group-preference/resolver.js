@@ -4,7 +4,7 @@ import { get } from 'lodash';
 import { rockImageUrl } from '../utils';
 
 const { ROCK_MAPPINGS } = ApollosConfig;
-const { DEFINED_TYPES } = ROCK_MAPPINGS;
+const { DEFINED_TYPES, NOTIFY_ME_BANNERS_CHANNEL_ID } = ROCK_MAPPINGS;
 const { GROUP_SUB_PREFERENCE_IMAGES } = DEFINED_TYPES;
 
 function getTransformedCoverImage(item) {
@@ -76,6 +76,28 @@ const resolver = {
       dataSources.GroupPreference.getGroupSubPreferences(),
     groupSubPreferences: async (root, { id }, { dataSources }) =>
       dataSources.GroupPreference.getGroupSubPreferences(),
+    notifyMeBanner: async (
+      root,
+      { preferenceId },
+      { dataSources: { ContentItem, GroupPreference } }
+    ) => {
+      const globalId = parseGlobalId(preferenceId);
+
+      if (globalId.id) {
+        const { id } = globalId;
+        const groupPreference = await GroupPreference.getFromId(id);
+
+        if (groupPreference.guid) {
+          const { guid } = groupPreference;
+
+          return ContentItem.byAttributeValue('GroupPreference', guid)
+            .andFilter(`ContentChannelId eq ${NOTIFY_ME_BANNERS_CHANNEL_ID}`)
+            .first();
+        }
+      }
+
+      return null;
+    },
   },
 };
 
