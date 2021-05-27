@@ -34,7 +34,6 @@
   "dependencies": {
     "@apollosproject/bugsnag": "^2.1.1",
     "@apollosproject/config": "^2.1.1",
-    "@apollosproject/data-connector-algolia-search": "^2.1.1",
     "@apollosproject/data-connector-analytics": "^2.1.1",
     "@apollosproject/data-connector-bible": "^2.1.1",
     "@apollosproject/data-connector-church-online": "^2.1.1",
@@ -47,6 +46,7 @@
     "@apollosproject/data-schema": "^2.1.1",
     "@apollosproject/rock-apollo-data-source": "^2.1.1",
     "@apollosproject/server-core": "^2.1.1",
+    "algoliasearch": "^4.9.1",
     "apollo-server": "^2.14.2",
     "apollo-server-express": "2.14.2",
     "color": "3.0.0",

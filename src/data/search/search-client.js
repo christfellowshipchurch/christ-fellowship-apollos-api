@@ -23,20 +23,24 @@ if (ApollosConfig.ALGOLIA.INDICES) {
   const indicesConfig = ApollosConfig.ALGOLIA.INDICES;
   INDICES = {};
 
-  for (let indexKey in indicesConfig) {
+  Object.keys(indicesConfig).forEach((indexKey) => {
     if (INDICES[indexKey]) {
       console.warn(`Duplicate Algolia index configuration key "${indexKey}"`);
     } else {
-      INDICES[indexKey] = new SearchIndex(CLIENT, indexKey, indicesConfig[indexKey]);
+      INDICES[indexKey] = new SearchIndex(
+        CLIENT,
+        indexKey,
+        indicesConfig[indexKey]
+      );
     }
-  }
+  });
 } else {
   console.warn(
     'You do not have any Algolia Search indices configured. Check your config.yml and ensure ALGOLIA.INDICES is configured properly.'
-  )
+  );
 }
 
 export default {
   CLIENT,
   INDICES,
-}
+};

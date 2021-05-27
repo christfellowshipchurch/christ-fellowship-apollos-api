@@ -22,20 +22,18 @@ export default class SearchIndex {
     this.index.setSettings(this.configuration);
   }
 
-  async addObjects(args) {
-    return new Promise((resolve, reject) => {
-      this.index.addObjects(args, (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(result);
-      });
+  async addObjects(objects) {
+    return this.index.saveObjects(objects, {
+      autoGenerateObjectIDIfNotExist: true,
     });
   }
 
-  async deleteObject(args) {
-    // Note: this isn't promisified since the only usage didn't require it.
-    this.index.deleteObject(args);
+  async deleteObject(object) {
+    return this.index.deleteObject(object);
+  }
+
+  async deleteAllObjects() {
+    return this.index.clearObjects();
   }
 
   async byPaginatedQuery({ query, filters, after, first = 20 }) {
@@ -54,7 +52,7 @@ export default class SearchIndex {
     }
 
     // Perform search
-    const results = await this.index.search({ query, filters, length, offset });
+    const results = await this.index.search(query, { filters, length, offset });
     const { hits, nbHits: totalResults } = results;
 
     return {

@@ -20,17 +20,23 @@ import {
   uniqBy,
   zipObject,
 } from 'lodash';
-import { parseISO, isFuture, isToday, differenceInHours, sub } from 'date-fns';
+import {
+  parseISO,
+  isFuture,
+  isToday,
+  differenceInHours,
+  differenceInSeconds,
+} from 'date-fns';
 import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
 
 import { getIdentifierType } from '../utils';
+
 const { createImageUrlFromGuid } = Utils;
 
 const { ROCK_MAPPINGS } = ApollosConfig;
-const { GROUP, DEFINED_TYPES } = ROCK_MAPPINGS;
-const { LEADER_ROLE_IDS } = GROUP;
+const { DEFINED_TYPES } = ROCK_MAPPINGS;
 const {
   GROUP_MEMBER_ROLES,
   GROUP_TYPES,
@@ -137,7 +143,9 @@ export default class GroupItem extends baseGroup.dataSource {
       .andFilter(`GroupMemberStatus eq '1'`)
       .get();
     const uniqueMembers = uniqBy(members, 'personId');
-    return Promise.all(uniqueMembers.map(({ personId }) => Person.getFromId(personId)));
+    return Promise.all(
+      uniqueMembers.map(({ personId }) => Person.getFromId(personId))
+    );
   };
 
   getLeaders = async (groupId) => {
@@ -166,14 +174,17 @@ export default class GroupItem extends baseGroup.dataSource {
     const { start } = await this.getDateTimeFromId(scheduleId);
 
     // Check to see if the current date is the date of the meeting before taking attendance.
-    if (moment(start).format('MMDDYYYY') !== moment().format('MMDDYYYY')) return null;
+    if (moment(start).format('MMDDYYYY') !== moment().format('MMDDYYYY'))
+      return null;
 
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
 
     const { locationId } = await this.request('Campuses')
       .filter(`Id eq ${campusId}`)
       .first();
-    const occurrenceDate = momentTz.tz(start, ApollosConfig.ROCK.TIMEZONE).format('l LT');
+    const occurrenceDate = momentTz
+      .tz(start, ApollosConfig.ROCK.TIMEZONE)
+      .format('l LT');
 
     try {
       console.log('Adding current user to attendance');
@@ -193,6 +204,8 @@ export default class GroupItem extends baseGroup.dataSource {
     } catch (e) {
       console.log(`Could not take attendance for current user`, e);
     }
+
+    return null;
   };
 
   userIsLeader = async (groupId, userId) => {
@@ -212,13 +225,11 @@ export default class GroupItem extends baseGroup.dataSource {
       GROUP_COVER_IMAGES_DEFINED_TYPE_ID
     );
 
-    return images.definedValues.map((image) => {
-      return {
-        guid: image.attributeValues.image.value,
-        name: image.value, // The attribute value's name/label at top level
-        image: ContentItem.getImages(image)[0],
-      };
-    });
+    return images.definedValues.map((image) => ({
+      guid: image.attributeValues.image.value,
+      name: image.value, // The attribute value's name/label at top level
+      image: ContentItem.getImages(image)[0],
+    }));
   };
 
   updateCoverImage = async ({ groupId, imageId }) => {
@@ -248,6 +259,8 @@ export default class GroupItem extends baseGroup.dataSource {
 
       return group;
     }
+
+    return null;
   };
 
   async addResource({ groupId, title, url, contentItemId }) {
@@ -264,7 +277,8 @@ export default class GroupItem extends baseGroup.dataSource {
       };
 
       if (contentItemId) {
-        data.TargetEntityTypeId = ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM;
+        data.TargetEntityTypeId =
+          ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM;
         data.TargetEntityId = parseGlobalId(contentItemId)?.id;
       } else if (title && url) {
         const definedValueId = await Url.addToMasterList({ title, url });
@@ -278,6 +292,8 @@ export default class GroupItem extends baseGroup.dataSource {
 
       return this.updateCache(groupGlobalId);
     }
+
+    return null;
   }
 
   async updateResource({ groupId, relatedNodeId, title, url, contentItemId }) {
@@ -307,6 +323,8 @@ export default class GroupItem extends baseGroup.dataSource {
         return this.updateCache(groupGlobalId);
       }
     }
+
+    return null;
   }
 
   async removeResource({ groupId, relatedNodeId }) {
@@ -318,7 +336,10 @@ export default class GroupItem extends baseGroup.dataSource {
 
       const groupGlobalId = parseGlobalId(groupId)?.id;
       if (this.userIsLeader(groupGlobalId, currentPerson.id)) {
-        const entity = await this.groupResourceEntity({ groupId, relatedNodeId });
+        const entity = await this.groupResourceEntity({
+          groupId,
+          relatedNodeId,
+        });
         if (entity) {
           await this.delete(`/RelatedEntities/${entity.id}`);
           return this.updateCache(groupGlobalId);
@@ -329,6 +350,8 @@ export default class GroupItem extends baseGroup.dataSource {
     } catch (e) {
       console.log(e);
     }
+
+    return null;
   }
 
   async groupResourceEntity({ groupId, relatedNodeId }) {
@@ -351,7 +374,7 @@ export default class GroupItem extends baseGroup.dataSource {
         break;
     }
     if (entityTypeId && targetEntityId) {
-      return await this.request('/RelatedEntities')
+      return this.request('/RelatedEntities')
         .filter(`SourceEntityTypeId eq ${ApollosConfig.ROCK_ENTITY_IDS.GROUP}`)
         .andFilter(`SourceEntityId eq ${groupGlobalId}`)
         .andFilter(`QualifierValue eq 'APOLLOS_GROUP_RESOURCE'`)
@@ -387,7 +410,7 @@ export default class GroupItem extends baseGroup.dataSource {
        *
        * We will also take into consideration whether our request should limit to just Groups in which the user is a leader of. If `asLeader` is true, we filter to _only_ Member Roles that are marked in Rock as Leader Roles. Otherwise, we'll use all valid roles.
        */
-      let validRoles = await this._getValidGroupRoles();
+      const validRoles = await this._getValidGroupRoles();
       if (asLeader) {
         validRoles.filter(({ isLeader }) => isLeader);
       }
@@ -410,7 +433,11 @@ export default class GroupItem extends baseGroup.dataSource {
               .andFilter(`GroupMemberStatus ne 'Pending'`)
               // Check for the appropriate GroupRole
               .andFilter(
-                groupTypeRoles.map(({ id }) => `(GroupRoleId eq ${id})`).join(' or ')
+                groupTypeRoles
+                  .map(
+                    ({ id: groupRoleId }) => `(GroupRoleId eq ${groupRoleId})`
+                  )
+                  .join(' or ')
               )
               .expand('GroupRole')
               .get()
@@ -422,7 +449,9 @@ export default class GroupItem extends baseGroup.dataSource {
 
       return groupAssociations.map(({ groupId, groupRoleId, groupRole }) => ({
         groupId,
-        isLeader: !!validRoles.find(({ id, isLeader }) => groupRoleId === id && isLeader),
+        isLeader: !!validRoles.find(
+          ({ id, isLeader }) => groupRoleId === id && isLeader
+        ),
         groupTypeId: groupRole?.groupTypeId,
       }));
     };
@@ -452,7 +481,7 @@ export default class GroupItem extends baseGroup.dataSource {
      */
     const validGroupLeaders = await Promise.all(
       groupIds.map(({ groupId, isLeader }) => {
-        const filter = async () => {
+        const filterGroupIds = async () => {
           if (isLeader)
             return {
               id: groupId,
@@ -467,7 +496,7 @@ export default class GroupItem extends baseGroup.dataSource {
           };
         };
 
-        return filter();
+        return filterGroupIds();
       })
     );
 
@@ -475,9 +504,9 @@ export default class GroupItem extends baseGroup.dataSource {
     const _groups = await Promise.all(
       groupIds
         // Filter out Groups that don't have any leaders
-        .filter(({ groupId }) => {
-          return validGroupLeaders.find(({ id, leaders }) => groupId === id && leaders);
-        })
+        .filter(({ groupId }) =>
+          validGroupLeaders.find(({ id, leaders }) => groupId === id && leaders)
+        )
         // Temp solution for protected group ids
         .filter(({ groupId }) => !EXCLUDE_IDS.includes(groupId))
         // If `asLeader`, return only those you are a leader of, otherwise return everything
@@ -502,12 +531,13 @@ export default class GroupItem extends baseGroup.dataSource {
 
     const validGroupSchedules = await Promise.all(
       groups.map(({ id, scheduleId }) => {
-        const filter = async () => {
+        const filterGroupSchedules = async () => {
           try {
             let schedule = false;
             /**
              * If there is a Schedule Id on the Group, we can just go ahead and check for a Schedule from a Location attached on the Group.
              */
+            // eslint-disable-next-line consistent-return
             const scheduleIsValid = (s) => {
               if (s && s.nextStart) {
                 const { nextStart } = s;
@@ -526,12 +556,13 @@ export default class GroupItem extends baseGroup.dataSource {
               /**
                * We're gonna use a simple For Loop here cause we can really easily exit it once we find at least 1 valid schedule
                */
-              for (var i = 0; i < locations.length; i++) {
+              for (let i = 0; i < locations.length; i += 1) {
                 const location = locations[i];
                 const { schedules } = location;
 
-                for (var j = 0; j < schedules.length; j++) {
+                for (let j = 0; j < schedules.length; j += 1) {
                   const s = schedules[j];
+                  // eslint-disable-next-line no-await-in-loop
                   const parsedSchedule = await Schedule.parse(s);
 
                   schedule = scheduleIsValid(parsedSchedule);
@@ -560,15 +591,17 @@ export default class GroupItem extends baseGroup.dataSource {
           };
         };
 
-        return filter();
+        return filterGroupSchedules();
       })
     );
 
     const filteredGroups = groups
       // Filter out Groups that don't have a valid schedule
-      .filter(({ id: groupId }) => {
-        return validGroupSchedules.find(({ id, schedule }) => groupId === id && schedule);
-      });
+      .filter(({ id: groupId }) =>
+        validGroupSchedules.find(
+          ({ id, schedule }) => groupId === id && schedule
+        )
+      );
 
     return filteredGroups;
   };
@@ -580,13 +613,12 @@ export default class GroupItem extends baseGroup.dataSource {
    */
   getLocations(id) {
     const { Cache } = this.context.dataSources;
-    const request = () => {
-      return this.request('/GroupLocations')
+    const request = () =>
+      this.request('/GroupLocations')
         .filter(`GroupId eq ${id}`)
         .andFilter(`LocationId eq ${ROCK_MAPPINGS.LOCATION_IDS.WEB_AND_APP}`)
         .expand('Schedules')
         .get();
-    };
 
     return Cache.request(request, {
       expiresIn: 60 * 60 * 12, // 12 hour cache
@@ -630,7 +662,9 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getContentChannelItem = (id) =>
-    this.request('ContentChannelItems').filter(getIdentifierType(id).query).first();
+    this.request('ContentChannelItems')
+      .filter(getIdentifierType(id).query)
+      .first();
 
   getPhoneNumbers = (id) =>
     this.request('PhoneNumbers')
@@ -704,7 +738,9 @@ export default class GroupItem extends baseGroup.dataSource {
                   },
                 };
               case ApollosConfig.ROCK_ENTITY_IDS.DEFINED_VALUE:
-                const definedValue = await Url.getFromMasterList(targetEntityId);
+                const definedValue = await Url.getFromMasterList(
+                  targetEntityId
+                );
 
                 return {
                   action: 'OPEN_URL',
@@ -735,11 +771,13 @@ export default class GroupItem extends baseGroup.dataSource {
       .andFilter(`QualifierValue eq 'APOLLOS_GROUP_RESOURCE'`)
       .get();
 
-    const filter = groupResources.map((f) => `(Id ne ${f.targetEntityId})`).join(' and ');
+    const filterResources = groupResources
+      .map((f) => `(Id ne ${f.targetEntityId})`)
+      .join(' and ');
 
     return this.request('/ContentChannelItems')
       .filter(`ContentChannelId eq 79`)
-      .andFilter(filter);
+      .andFilter(filterResources);
   };
 
   async paginateMembersById({ after, first = 20, id, isLeader = false }) {
@@ -772,9 +810,7 @@ export default class GroupItem extends baseGroup.dataSource {
       .skip(skip)
       .transform((results) => {
         const resultIds = results
-          .filter((groupMember) => {
-            return !!groupMember.person;
-          })
+          .filter((groupMember) => !!groupMember.person)
           .map(({ person }) => person.id);
         return uniqBy(resultIds);
       });
@@ -788,8 +824,8 @@ export default class GroupItem extends baseGroup.dataSource {
 
     return {
       getTotalCount: personIdsCursor.count,
-      edges: personIds.map((id, i) => ({
-        node: this.context.dataSources.Person.getFromId(id),
+      edges: personIds.map((personId, i) => ({
+        node: this.context.dataSources.Person.getFromId(personId),
         cursor: createCursor({ position: i + skip }),
       })),
     };
@@ -803,9 +839,11 @@ export default class GroupItem extends baseGroup.dataSource {
       const filteredMembers = firstLeader
         ? filter(members, (o) => o.id !== firstLeader.id)
         : members;
-      let avatars = [];
+      const avatars = [];
       filteredMembers.map((member) =>
-        member.photo.guid ? avatars.push(createImageUrlFromGuid(member.photo.guid)) : null
+        member.photo.guid
+          ? avatars.push(createImageUrlFromGuid(member.photo.guid))
+          : null
       );
       return take(avatars, 15);
     } catch (e) {
@@ -819,13 +857,13 @@ export default class GroupItem extends baseGroup.dataSource {
     const members = await this.getMembers(id);
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
     const filteredMembers = filter(members, (o) => o.id !== currentPerson.id);
-    return Promise.all(filteredMembers.map(({ id }) => this.getPhoneNumbers(id))).then(
-      (values) => {
-        const numbers = [];
-        values.map((o) => (o && o.number ? numbers.push(o.number) : null));
-        return numbers;
-      }
-    );
+    return Promise.all(
+      filteredMembers.map(({ id: memberId }) => this.getPhoneNumbers(memberId))
+    ).then((values) => {
+      const numbers = [];
+      values.map((o) => (o && o.number ? numbers.push(o.number) : null));
+      return numbers;
+    });
   };
 
   getDateTimeFromId = async (id) => {
@@ -839,7 +877,7 @@ export default class GroupItem extends baseGroup.dataSource {
       const endOfMeetingDay = moment(nextStart).endOf('day').utc().format();
       const isAfter = moment().isAfter(endOfMeetingDay);
       if (isAfter) {
-        const nextMeetingTime = moment(time).add(7, 'd').utc().format();
+        const nextMeetingTime = moment(nextStart).add(7, 'd').utc().format();
         return { start: nextMeetingTime, end: nextMeetingTime };
       }
 
@@ -852,8 +890,12 @@ export default class GroupItem extends baseGroup.dataSource {
   getGroupVideoCallParams = ({ attributeValues }) => {
     const zoomLink = get(attributeValues, 'zoom.value', '');
     // Returns a Defined Value Guid
-    const videoCallLabelText = get(attributeValues, 'videoCallLabelText.value', '');
-    if (zoomLink != '') {
+    const videoCallLabelText = get(
+      attributeValues,
+      'videoCallLabelText.value',
+      ''
+    );
+    if (zoomLink !== '') {
       const { DefinedValue } = this.context.dataSources;
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
@@ -865,7 +907,7 @@ export default class GroupItem extends baseGroup.dataSource {
 
       return {
         link: zoomLink,
-        meetingId: meetingId,
+        meetingId,
         passcode,
         labelText: DefinedValue.getValueById(videoCallLabelText),
       };
@@ -873,7 +915,10 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
   };
 
-  getGroupParentVideoCallParams = async ({ parentGroupId, attributeValues }) => {
+  getGroupParentVideoCallParams = async ({
+    parentGroupId,
+    attributeValues,
+  }) => {
     const groupParent = await this.request('Groups').find(parentGroupId).get();
     const zoomLink = get(groupParent, 'attributeValues.zoom.value', '');
     // Returns a Defined Value Guid
@@ -882,7 +927,7 @@ export default class GroupItem extends baseGroup.dataSource {
       'parentVideoCallLabelText.value',
       ''
     );
-    if (zoomLink != '') {
+    if (zoomLink !== '') {
       const { DefinedValue } = this.context.dataSources;
       // Parse Zoom Meeting links that have ids and/or passwords.
       const regexMeetingId = zoomLink.match(/j\/(\d+)/);
@@ -892,7 +937,7 @@ export default class GroupItem extends baseGroup.dataSource {
       const meetingId = isNull(regexMeetingId) ? null : regexMeetingId[1];
       return {
         link: zoomLink,
-        meetingId: meetingId,
+        meetingId,
         passcode,
         labelText: DefinedValue.getValueById(parentVideoCallLabelText),
       };
@@ -909,7 +954,7 @@ export default class GroupItem extends baseGroup.dataSource {
       'attributeValues.titleOverride.value',
       undefined
     );
-    const value = get(preference, 'preference.value', null);
+    const value = get(preference, 'value', null);
     return titleOverride || value;
   };
 
@@ -925,19 +970,16 @@ export default class GroupItem extends baseGroup.dataSource {
         ids.map((id) => this.getPreferenceString(id))
       );
       return preferences;
-    } else {
-      const preference = await this.getPreferenceString(preferenceId);
-      return [preference];
     }
+    const preference = await this.getPreferenceString(preferenceId);
+    return [preference];
   }
 
-  getSubPreference({ attributeValues }) {
-    return get(attributeValues, 'subPreference.valueFormatted', null);
-  }
+  getSubPreference = ({ attributeValues }) =>
+    get(attributeValues, 'subPreference.valueFormatted', null);
 
-  allowMessages = ({ attributeValues }) => {
-    return get(attributeValues, 'allowMessages.value', '');
-  };
+  allowMessages = ({ attributeValues }) =>
+    get(attributeValues, 'allowMessages.value', '');
 
   getTitle = ({ attributeValues, name }) => {
     const titleOverride = get(attributeValues, 'titleOverride.value', '');
@@ -947,11 +989,12 @@ export default class GroupItem extends baseGroup.dataSource {
     return name;
   };
 
-  getMeetingType = ({ attributeValues }) => {
-    return get(attributeValues, 'meetingType.valueFormatted', '');
-  };
+  getMeetingType = ({ attributeValues }) =>
+    get(attributeValues, 'meetingType.valueFormatted', '');
 
   getStreamChatChannel = async (root) => {
+    let streamChatChannel;
+
     try {
       const { Auth, StreamChat } = this.context.dataSources;
       const channelType = StreamChat.channelType.GROUP;
@@ -964,7 +1007,7 @@ export default class GroupItem extends baseGroup.dataSource {
       const channelId = crypto.SHA1(globalId).toString();
 
       // Define the return value upfront
-      const streamChatChannel = {
+      streamChatChannel = {
         id: root.id,
         channelId,
         channelType,
@@ -987,7 +1030,10 @@ export default class GroupItem extends baseGroup.dataSource {
       const lastSyncedWithRockAt = channel?.data?.lastSyncedWithRockAt;
 
       if (lastSyncedWithRockAt) {
-        const hoursAgo = differenceInHours(new Date(), new Date(lastSyncedWithRockAt));
+        const hoursAgo = differenceInHours(
+          new Date(),
+          new Date(lastSyncedWithRockAt)
+        );
 
         if (hoursAgo <= 24) {
           return streamChatChannel;
@@ -1039,7 +1085,10 @@ export default class GroupItem extends baseGroup.dataSource {
             channelId,
             channelType,
           });
-          Promise.all(channelMembers.map(({ user_id }) => channel.hide(user_id)));
+          Promise.all(
+            // eslint-disable-next-line camelcase
+            channelMembers.map(({ user_id }) => channel.hide(user_id))
+          );
         };
         hideVolunteerGroupForMembers();
       }
@@ -1059,7 +1108,7 @@ export default class GroupItem extends baseGroup.dataSource {
     return streamChatChannel;
   };
 
-  resolveType({ groupTypeId, id }) {
+  resolveType = ({ groupTypeId, id }) => {
     // if we have defined an ContentChannelTypeId based mapping in the YML file, use it!
     if (
       Object.values(ROCK_MAPPINGS.GROUP_ITEM).some(
@@ -1084,7 +1133,7 @@ export default class GroupItem extends baseGroup.dataSource {
     }
 
     return 'Group';
-  }
+  };
 
   /**
    * Get Valid Group Type Ids
@@ -1126,9 +1175,13 @@ export default class GroupItem extends baseGroup.dataSource {
        * 3. Filter out duplicate Group Type Ids
        */
       const groupTypeIds = definedValues
-        .map((definedValue) => get(definedValue, 'attributeValues.groupType.value'))
+        .map((definedValue) =>
+          get(definedValue, 'attributeValues.groupType.value')
+        )
         .filter((groupTypeId) => !!groupTypeId)
-        .filter((groupTypeId, index, self) => self.indexOf(groupTypeId) === index);
+        .filter(
+          (groupTypeId, index, self) => self.indexOf(groupTypeId) === index
+        );
 
       return Promise.all(
         groupTypeIds.map((groupTypeId) => {
@@ -1152,22 +1205,28 @@ export default class GroupItem extends baseGroup.dataSource {
     });
 
     // note : one last filter for falsy value
-    return ids.filter((id) => !!id);
+    return ids.filter((cacheId) => !!cacheId);
   }
 
   async _getValidGroupRoles() {
     const { Cache, DefinedValueList } = this.context.dataSources;
     const request = async () => {
-      const { definedValues } = await DefinedValueList.getFromId(GROUP_MEMBER_ROLES);
+      const { definedValues } = await DefinedValueList.getFromId(
+        GROUP_MEMBER_ROLES
+      );
       /**
        * 1. Map to Group Type Ids
        * 2. Filter out any falsy value
        * 3. Filter out duplicate Group Type Ids
        */
       const groupTypeRoles = definedValues
-        .map((definedValue) => get(definedValue, 'attributeValues.groupRole.value'))
+        .map((definedValue) =>
+          get(definedValue, 'attributeValues.groupRole.value')
+        )
         .filter((groupTypeRole) => !!groupTypeRole)
-        .filter((groupTypeRole, index, self) => self.indexOf(groupTypeRole) === index);
+        .filter(
+          (groupTypeRole, index, self) => self.indexOf(groupTypeRole) === index
+        );
 
       const memberRoles = await Promise.all(
         groupTypeRoles.map((groupTypeRole) => {
@@ -1194,15 +1253,13 @@ export default class GroupItem extends baseGroup.dataSource {
 
   async _getExcludedGroupIds() {
     const { Cache } = this.context.dataSources;
-    const request = async () => {
+    const request = async () =>
       // Group Ids will be set to the  `value` property of the Defined Value in Rock
-      return this.request('DefinedValues')
+      this.request('DefinedValues')
         .filter(`DefinedTypeId eq ${EXCLUDE_GROUPS}`)
         .orFilter(`DefinedTypeId eq ${EXCLUDE_VOLUNTEER_GROUPS}`)
         .transform((results) => results.map((result) => get(result, 'value')))
         .get();
-    };
-
     return Cache.request(request, {
       expiresIn: 60 * 60 * 24, // 24 hour cache
       key: Cache.KEY_TEMPLATES.groupExcludeIds,
@@ -1262,9 +1319,10 @@ export default class GroupItem extends baseGroup.dataSource {
 
     if (error || !data.node) {
       console.log(
-        `GroupItem.mapItemForIndex() Error indexing groupId ${groupId}: `,
+        `mapItemForIndex() Error mapping groupId ${groupId} for index!\n`,
         error
       );
+      return null;
     }
 
     const {
@@ -1282,15 +1340,12 @@ export default class GroupItem extends baseGroup.dataSource {
 
     const dateTimeFormatted = moment(dateTime?.start).format('dddd');
 
-    // Remember — Algolia uses the order of attributes on items in its results
+    // Remember: Algolia uses the order of attributes on items in its results
     // ranking logic, in lieu of other settings/custom ranking formula, etc.
     // @see https://www.algolia.com/doc/guides/managing-results/must-do/searchable-attributes/#ordering-your-attributes
     // @see https://www.algolia.com/doc/guides/managing-results/must-do/custom-ranking/#custom-ranking
     const groupForIndex = {
       id,
-      // ? Is there any real value in storing presentation-only props in Algolia?
-      // ? Should we refactor this and ContentItem indexing / SearchResult to remove cover image?
-      // Searchable properties
       campusName: campus?.name,
       preference,
       subPreference,
@@ -1298,11 +1353,14 @@ export default class GroupItem extends baseGroup.dataSource {
       title,
       summary,
       leaders:
-        leaders?.edges?.map(({ node }) => `${node.firstName} ${node.lastName}`) || [],
+        leaders?.edges?.map(
+          ({ node }) => `${node.firstName} ${node.lastName}`
+        ) || [],
       coverImage, // Presentation only
       meetingType,
     };
 
+    console.log(`mapItemForIndex() Group ID "${globalId}" mapped successfully`);
     return groupForIndex;
   }
 
@@ -1318,21 +1376,13 @@ export default class GroupItem extends baseGroup.dataSource {
     return true;
   }
 
-  /**
-   * This method is temporary for development purposes, hence all the safety switches
-   */
   async updateIndexAllGroups() {
+    /* eslint-disable no-console */
     console.log('\n[GroupItem] indexing all groups');
-    console.log('----------------------------------------------------------------------');
-
-    const DRY_RUN = true;
+    console.log('---------------------------------------------------------');
 
     const validGroupFinderTypeIds = await this.getValidGroupFinderTypeIds();
     const excludeList = await this._getExcludedGroupIds();
-    const modifiedDateTime = sub(new Date(), { hours: 8760 }).toISOString();
-
-    console.log('• validGroupFinderTypeIds:', validGroupFinderTypeIds);
-    console.log('• modifiedDateTime:', modifiedDateTime);
 
     const rawGroups = await this.request('Groups')
       .filter(`IsActive eq true`)
@@ -1344,47 +1394,63 @@ export default class GroupItem extends baseGroup.dataSource {
           .map((groupTypeId) => `GroupTypeId eq ${groupTypeId}`)
           .join(' or ')
       )
-      // Only find recently created or modified groups
-      .andFilter(
-        `(CreatedDateTime ge datetime'${modifiedDateTime}' or ModifiedDateTime ge datetime'${modifiedDateTime}')`
-      )
       .select(`Id, GroupTypeId, Name, CreatedDateTime, ModifiedDateTime`)
       .get();
 
-    // Further filter groups (check individual group exclusions, etc)
-    const filteredGroups = rawGroups.filter(({ id }) => {
+    // Filter out excluded groups
+    const filteredGroups = rawGroups.filter(
       // ! Be aware, excludeList ids are strings
-      return !excludeList.includes(id.toString());
-    });
+      ({ id }) => !excludeList.includes(id.toString())
+    );
 
-    console.log('filteredGroups:');
-    console.table(filteredGroups, [
-      'id',
-      'name',
-      'groupTypeId',
-      'createdDateTime',
-      'modifiedDateTime',
-    ]);
+    // console.log('filteredGroups:');
+    // console.table(filteredGroups, [
+    //   'id',
+    //   'name',
+    //   'groupTypeId',
+    //   'createdDateTime',
+    //   'modifiedDateTime',
+    // ]);
 
     const groupIdsToIndex = filteredGroups.map(({ id }) => id);
-    console.log(
-      `✅ Found ${groupIdsToIndex.length} groups that need indexed (groupIdsToIndex):`,
-      groupIdsToIndex
-    );
-    return;
+    console.log(`🔍 Found ${groupIdsToIndex.length} groups that need indexed`);
+    console.log('⌛ Mapping groups for index... this will take a while');
+    const mapStartTime = new Date().getTime();
 
     const groupsForIndex = await Promise.all(
-      groups.map((id) => this.mapItemForIndex(id))
+      filteredGroups.map(({ id }) => this.mapItemForIndex(id))
     );
 
-    console.log('groupsForIndex:', JSON.stringify(groupsForIndex, null, 2));
+    const mapEndTime = new Date().getTime();
+    const mapTimeDuration = differenceInSeconds(mapEndTime, mapStartTime);
+    console.log(
+      `✅ Mapped ${groupsForIndex.length} groups for index in ${mapTimeDuration}s`
+    );
 
-    if (DRY_RUN) {
-      console.log('•••••••• 🙅‍♂️ DRY RUN, SKIPPING INDEX OPERATION 🙅‍♂️ ••••••••');
+    // Make sure to leave this set to `true` before committing/merging!
+    const __PREVENT_DEV_ALGOLIA_INDEXING__ = true;
+
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      process.env.NODE_ENV !== 'test' &&
+      __PREVENT_DEV_ALGOLIA_INDEXING__
+    ) {
+      console.log('\n🚨🚨🚨 Preventing accidental index to Algolia! 🚨🚨🚨');
+      console.log(
+        'If you meant to actually perform operations in Algolia, open src/data/group-item/data-source.js and comment out the return after this log message.\n'
+      );
       return null;
     }
 
-    return this.getSearchIndex().addObjects(groupsForIndex.filter((group) => !!group));
+    console.log('🗑️ Deleting all group objects from index...');
+    await this.getSearchIndex().deleteAllObjects();
+    console.log('💾 Adding all group objects from index...');
+    await this.getSearchIndex().addObjects(
+      groupsForIndex.filter((group) => !!group)
+    );
+    console.log('✅ Indexing complete');
+    return null;
+    /* eslint-enable no-console */
   }
 
   searchGroups(args) {
@@ -1431,15 +1497,18 @@ export default class GroupItem extends baseGroup.dataSource {
     // ✂️ -------------------------------------------------------------------------------
 
     // Get a query attribute by key from the input `query.attributes`
-    const getQueryAttribute = (key) => {
-      return query?.attributes?.find((attribute) => attribute.key === key);
-    };
+    const getQueryAttribute = (key) =>
+      query?.attributes?.find((attribute) => attribute.key === key);
 
-    // Return a query attribute's values prefixed with a string
+    // Return a query attribute's values prefixed with a string.
+    // `attributeKey` is the name of the value from the input `query`.
+    // `prefixString` should match the name of that attribute indexed in Algolia.
     const prefixAttributeValues = ({ attributeKey, prefixString }) => {
       const attribute = getQueryAttribute(attributeKey);
 
-      return attribute ? prefixValues(prefixString, attribute.values) : undefined;
+      return attribute
+        ? prefixValues(prefixString, attribute.values)
+        : undefined;
     };
 
     const queryText = getQueryAttribute('text')?.values[0];
@@ -1485,29 +1554,26 @@ export default class GroupItem extends baseGroup.dataSource {
   }
 
   getGroupSearchOptions = async () => {
-    const { GroupItem, GroupPreferences } = this.context.dataSources;
+    const facets = await this.getSearchIndex().byFacets();
 
-    const facets = await GroupItem.getSearchIndex().byFacets();
-
-    const groupSearchOptions = Object.keys(facets).map((key, index) => {
-      return Object.keys(facets[key]);
-    });
+    const groupSearchOptions = Object.keys(facets).map((key) =>
+      Object.keys(facets[key])
+    );
 
     return zipObject(Object.keys(facets), groupSearchOptions);
   };
 
   getGroupSearchFacetsAttributes = async () => {
-    const { GroupItem } = this.context.dataSources;
-
-    const facets = await GroupItem.getSearchIndex().byFacets();
+    const facets = await this.getSearchIndex().byFacets();
 
     return Object.keys(facets);
   };
 
   getGroupFacetsByFilters = async (facet, facetFilters) => {
-    const { GroupItem } = this.context.dataSources;
-
-    const facets = await GroupItem.getSearchIndex().byFacetFilters(facet, facetFilters);
+    const facets = await this.getSearchIndex().byFacetFilters(
+      facet,
+      facetFilters
+    );
     return Object.keys(facets[facet]);
   };
 
@@ -1536,6 +1602,8 @@ export default class GroupItem extends baseGroup.dataSource {
     } catch (e) {
       console.log(e);
     }
+
+    return null;
   };
 
   async loadGroups() {
@@ -1555,7 +1623,21 @@ export default class GroupItem extends baseGroup.dataSource {
         .andFilter(groupTypeFilter)
         .count();
 
+      const memberMapper = async ({ personId }) => {
+        try {
+          await Cache.delete({
+            key: Cache.KEY_TEMPLATES.personGroups`${personId}`,
+          });
+          await this.getByPerson({ personId });
+
+          total += 1;
+        } catch (e) {
+          console.warn({ e });
+        }
+      };
+
       while (skip < count) {
+        // eslint-disable-next-line no-await-in-loop
         const groupMembers = await this.request('GroupMembers')
           .filterOneOf(groupRoleFilters)
           .andFilter(groupTypeFilter)
@@ -1563,19 +1645,8 @@ export default class GroupItem extends baseGroup.dataSource {
           .skip(skip)
           .get();
 
-        await Promise.all(
-          groupMembers.map(async ({ personId }) => {
-            try {
-              await Cache.delete({ key: Cache.KEY_TEMPLATES.personGroups`${personId}` });
-              await this.getByPerson({ personId });
-
-              total++;
-            } catch (e) {
-              console.warn({ e });
-            }
-          })
-        );
-
+        // eslint-disable-next-line no-await-in-loop
+        await Promise.all(groupMembers.map(memberMapper));
         skip += batch;
       }
 
@@ -1583,7 +1654,9 @@ export default class GroupItem extends baseGroup.dataSource {
     };
 
     const calculateTotalRequests = async (groupTypeIds, groupRoleIds) => {
-      const groupRoleFilter = groupRoleIds.map((id) => `(GroupRoleId eq ${id})`);
+      const groupRoleFilter = groupRoleIds.map(
+        (id) => `(GroupRoleId eq ${id})`
+      );
 
       const groupMemberPromises = Promise.all(
         groupTypeIds.map((id) =>
@@ -1611,9 +1684,10 @@ export default class GroupItem extends baseGroup.dataSource {
 
     await calculateTotalRequests(groupTypeIds, groupRoleIds);
 
-    for (var i = 0; i < groupTypeIds.length; i++) {
+    for (let i = 0; i < groupTypeIds.length; i += 1) {
       const groupType = groupTypeIds[i];
 
+      // eslint-disable-next-line no-await-in-loop
       total += await loadGroupMembers(groupType, groupRoleIds);
     }
 
