@@ -856,8 +856,27 @@ export default class ContentItem extends coreContentItem.dataSource {
               },
             });
           case 'VerticalCardList':
-            // todo :
-            return null;
+            return Feature.createVerticalCardListFeature({
+              algorithms: [
+                {
+                  type: 'CONTENT_CHILDREN',
+                  arguments: {
+                    contentChannelItemId: id,
+                    limit: 0,
+                  },
+                },
+              ],
+              title,
+              subtitle: this.createSummary(child),
+              primaryAction: {
+                title: 'See More',
+                action: 'OPEN_URL',
+                relatedNode: {
+                  __typename: 'Url',
+                  url: 'https://christfellowship.church',
+                },
+              },
+            });
           default:
             return null;
         }
