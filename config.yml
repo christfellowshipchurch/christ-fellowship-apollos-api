@@ -171,7 +171,7 @@ ROCK_MAPPINGS:
     events: [78]
     locations: [88]
     messages: [63]
-    studies: [80]
+    studies: [79, 80]
 
   GROUP:
     LEADER_ROLE_IDS:
