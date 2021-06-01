@@ -23,6 +23,9 @@ if (REDIS_URL) {
           return new Redis(REDIS_URL);
       }
     },
+    settings: {
+      stalledInterval: 120000,
+    },
   };
 }
 
