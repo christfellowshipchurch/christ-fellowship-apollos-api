@@ -24,6 +24,7 @@ export default gql`
     inAppLink(url: String!): String
     dannysContent: [ContentItem]
     getNodeByPathname(pathname: String): Node
+    nodeActions(nodeId: ID): [FeatureAction]
   }
 
   extend type MediaContentItem implements FeaturesNode {

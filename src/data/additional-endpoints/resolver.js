@@ -1,6 +1,6 @@
-import { get, has, dropRight, drop } from 'lodash';
-import { format, formatDistance } from 'date-fns';
+import { get, has, drop } from 'lodash';
 import ApollosConfig from '@apollosproject/config';
+import { parseGlobalId } from '@apollosproject/server-core';
 import { parseRockKeyValuePairs, generateAppLinkFromUrl } from '../utils';
 
 const { ROCK_MAPPINGS } = ApollosConfig;
@@ -135,6 +135,49 @@ const resolver = {
     dannysContent: async (root, args, { dataSources: { ContentItem } }) => {
       const contentItem = await ContentItem.byContentChannelId(73).get();
       return contentItem;
+    },
+    nodeActions: async (root, { nodeId }, { dataSources }) => {
+      const globalId = parseGlobalId(nodeId);
+
+      if (!globalId.id) return [];
+
+      const { ContentItem } = dataSources;
+      const contentItem = await ContentItem.getFromId(globalId.id);
+
+      if (!contentItem || !contentItem.attributeValues) return [];
+
+      const { attributeValues } = contentItem;
+
+      // Deprecated Content Channel Type
+      const ctaValuePairs = parseRockKeyValuePairs(
+        get(attributeValues, 'callsToAction.value', ''),
+        'call',
+        'action'
+      );
+
+      if (ctaValuePairs.length)
+        return ctaValuePairs.map(({ call, action }) => ({
+          title: call,
+          action: 'OPEN_URL',
+          relatedNode: {
+            __typename: 'Url',
+            url: action,
+          },
+        }));
+
+      // Get Matrix Items
+      const { MatrixItem } = dataSources;
+      const matrixGuid = get(attributeValues, 'actions.value', '');
+      const matrixItems = await MatrixItem.getItemsFromId(matrixGuid);
+
+      return matrixItems.map(({ attributeValues: matrixItemAttributeValues }) => ({
+        title: get(matrixItemAttributeValues, 'title.value', ''),
+        action: 'OPEN_URL',
+        relatedNode: {
+          __typename: 'Url',
+          url: get(matrixItemAttributeValues, 'url.value', ''),
+        },
+      }));
     },
     getNodeByPathname: async (
       root,
