@@ -92,7 +92,11 @@ export const rockImageUrl = (guid = isRequired('rockImageUrl', 'guid'), args) =>
   }
 
   if (isValidUrl(guid)) {
-    return processUrl(guid);
+    if (guid.includes('/GetImage.ashx')) {
+      return processUrl(guid);
+    }
+
+    return guid;
   }
 
   throw new Error(
