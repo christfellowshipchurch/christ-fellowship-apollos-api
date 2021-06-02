@@ -1,10 +1,10 @@
 import ApollosConfig from '@apollosproject/config';
 import RockApolloDataSource from '@apollosproject/rock-apollo-data-source';
-
-const { ROCK_MAPPINGS } = ApollosConfig;
 import { get } from 'lodash';
 
 import { rockImageUrl } from '../utils';
+
+const { ROCK_MAPPINGS } = ApollosConfig;
 
 export default class GroupPreference extends RockApolloDataSource {
   getFromId = (id) => {
