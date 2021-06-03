@@ -7,9 +7,8 @@ const { CONTENT_CHANNEL_PATHNAMES } = ROCK_MAPPINGS;
 
 const resolver = {
   Url: {
-    id: (root, args, context, { parentType }) => {
-      return createGlobalId(JSON.stringify(root), parentType.name);
-    },
+    id: (root, args, context, { parentType }) =>
+      createGlobalId(JSON.stringify(root), parentType.name),
   },
   Route: {
     __resolveType: () => 'Route',
@@ -25,7 +24,7 @@ const resolver = {
             ? node.attributeValues.titleOverride.value
             : get(node, 'value');
 
-          return ['community', kebabCase(title)].join('/');
+          return ['groups', kebabCase(title)].join('/');
         case 'MediaContentItem':
         default:
           const contentItem = await ContentItem.getFromId(id);

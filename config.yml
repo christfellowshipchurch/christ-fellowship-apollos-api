@@ -351,7 +351,7 @@ CONNECT_FEATURES:
             primary: '#00aeef'
         relatedNode:
           __typename: Url
-          url: 'https://rock.gocf.org/groups'
+          url: 'https://christfellowship.church/groups'
       - action: OPEN_URL
         title: 'Volunteer'
         icon: 'handshake'
@@ -403,7 +403,7 @@ CONNECT_FEATURES_BETA:
             primary: '#00aeef'
         relatedNode:
           __typename: Url
-          url: 'https://rock.gocf.org/groups'
+          url: 'https://christfellowship.church/groups'
       - action: OPEN_URL
         title: 'Volunteer'
         icon: 'handshake'
