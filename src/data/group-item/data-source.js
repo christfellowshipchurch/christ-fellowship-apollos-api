@@ -1586,7 +1586,7 @@ export default class GroupItem extends baseGroup.dataSource {
     const { Workflow, Auth } = this.context.dataSources;
     const currentUser = await Auth.getCurrentPerson();
 
-    switch ('FULL') {
+    switch (status) {
       case 'FULL':
         throw new ApolloError(
           'Could not add user to group. Group is full.',
