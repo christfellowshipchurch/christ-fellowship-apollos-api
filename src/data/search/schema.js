@@ -35,15 +35,20 @@ export default gql`
     search(query: String!, first: Int, after: String): SearchResultsConnection
 
     # Groups
-    searchGroups(query: SearchQueryInput!, first: Int, after: String): SearchResultsConnection
+    searchGroups(
+      query: SearchQueryInput!
+      first: Int
+      after: String
+    ): SearchResultsConnection
   }
 
   extend type Mutation {
     # ContentItems
+    indexAllContent(action: INDEX_ACTION, key: String): String
     indexContentItem(id: String, action: INDEX_ACTION, key: String): String
 
     # Groups
     indexGroup(id: String, action: INDEX_ACTION, key: String): String
     indexAllGroups(action: INDEX_ACTION, key: String): String
   }
-`
+`;

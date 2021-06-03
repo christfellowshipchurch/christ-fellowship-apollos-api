@@ -56,14 +56,16 @@ const titleResolver = {
      * TODO: Expose the hyphenation point to make this more flexible in the future.
      */
     const hyphenateEndOfWord = (word, segment) =>
-      word.length > 7 ? word + '\u00AD' + segment : word + segment;
+      word.length > 7 ? `${word}\u00AD${segment}` : word + segment;
 
     const hyphenateLongWords = (word, hyphenateFunction) =>
       word.length > 7 ? hyphenateFunction(word) : word;
 
     return words
       .map((w) =>
-        hyphenateLongWords(w, () => hypher.hyphenate(w).reduce(hyphenateEndOfWord))
+        hyphenateLongWords(w, () =>
+          hypher.hyphenate(w).reduce(hyphenateEndOfWord)
+        )
       )
       .join(' ');
   },
@@ -78,7 +80,8 @@ const resolverExtensions = {
     title: 'Share via ...',
     message: ContentItem.generateShareMessage(root),
   }),
-  tags: ({ attributeValues }) => split(get(attributeValues, 'tags.value', ''), ','),
+  tags: ({ attributeValues }) =>
+    split(get(attributeValues, 'tags.value', ''), ','),
   icon: ({ attributeValues }) => {
     const parsed = parseRockKeyValuePairs(
       get(attributeValues, 'icon.value', 'book-open')
@@ -88,8 +91,15 @@ const resolverExtensions = {
   estimatedTime: ({ attributeValues }) =>
     get(attributeValues, 'estimatedTime.value', null),
   publishDate: ({ startDateTime }) => {
-    if (!!startDateTime && startDateTime !== '' && moment(startDateTime).isValid()) {
-      return momentTz.tz(startDateTime, ApollosConfig.ROCK.TIMEZONE).utc().toISOString();
+    if (
+      !!startDateTime &&
+      startDateTime !== '' &&
+      moment(startDateTime).isValid()
+    ) {
+      return momentTz
+        .tz(startDateTime, ApollosConfig.ROCK.TIMEZONE)
+        .utc()
+        .toISOString();
     }
     return moment().utc().toISOString();
   },
@@ -139,7 +149,8 @@ const resolver = {
       dataSources.ContentItem.getCategoryByTitle(title),
     getEventContentByTitle: async (root, { title }, { dataSources }) =>
       dataSources.ContentItem.getEventByTitle(title),
-    allEvents: async (root, args, { dataSources }) => dataSources.ContentItem.getEvents(),
+    allEvents: async (root, args, { dataSources }) =>
+      dataSources.ContentItem.getEvents(),
     featuredEvents: (root, args, { dataSources }) =>
       dataSources.ContentItem.paginate({
         cursor: dataSources.ContentItem.getFeaturedEvents(),
@@ -159,6 +170,22 @@ const resolver = {
       dataSources.ContentItem.getSearchIndex().byPaginatedQuery(input),
   },
   Mutation: {
+    indexAllContent: async (root, { key, action }, { dataSources }) => {
+      if (action && key === ApollosConfig.ROCK.APOLLOS_SECRET) {
+        const { ContentItem } = dataSources;
+
+        switch (action) {
+          case 'delete':
+            return `⚠️ Action 'delete' not implemented | key: ${key} | action: ${action}`;
+          case 'update':
+          default:
+            await ContentItem.indexAll();
+            return `Successfully updated | key: ${key} | action: ${action}`;
+        }
+      }
+
+      return `Failed to update | key: ${key} | action: ${action}`;
+    },
     indexContentItem: async (root, { id, key, action }, { dataSources }) => {
       if (id && action && key === ApollosConfig.ROCK.APOLLOS_SECRET) {
         const { ContentItem } = dataSources;
