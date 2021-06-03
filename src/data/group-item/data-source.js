@@ -143,9 +143,7 @@ export default class GroupItem extends baseGroup.dataSource {
       .andFilter(`GroupMemberStatus eq '1'`)
       .get();
     const uniqueMembers = uniqBy(members, 'personId');
-    return Promise.all(
-      uniqueMembers.map(({ personId }) => Person.getFromId(personId))
-    );
+    return Promise.all(uniqueMembers.map(({ personId }) => Person.getFromId(personId)));
   };
 
   getLeaders = async (groupId) => {
@@ -174,17 +172,14 @@ export default class GroupItem extends baseGroup.dataSource {
     const { start } = await this.getDateTimeFromId(scheduleId);
 
     // Check to see if the current date is the date of the meeting before taking attendance.
-    if (moment(start).format('MMDDYYYY') !== moment().format('MMDDYYYY'))
-      return null;
+    if (moment(start).format('MMDDYYYY') !== moment().format('MMDDYYYY')) return null;
 
     const currentPerson = await this.context.dataSources.Auth.getCurrentPerson();
 
     const { locationId } = await this.request('Campuses')
       .filter(`Id eq ${campusId}`)
       .first();
-    const occurrenceDate = momentTz
-      .tz(start, ApollosConfig.ROCK.TIMEZONE)
-      .format('l LT');
+    const occurrenceDate = momentTz.tz(start, ApollosConfig.ROCK.TIMEZONE).format('l LT');
 
     try {
       console.log('Adding current user to attendance');
@@ -277,8 +272,7 @@ export default class GroupItem extends baseGroup.dataSource {
       };
 
       if (contentItemId) {
-        data.TargetEntityTypeId =
-          ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM;
+        data.TargetEntityTypeId = ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM;
         data.TargetEntityId = parseGlobalId(contentItemId)?.id;
       } else if (title && url) {
         const definedValueId = await Url.addToMasterList({ title, url });
@@ -434,9 +428,7 @@ export default class GroupItem extends baseGroup.dataSource {
               // Check for the appropriate GroupRole
               .andFilter(
                 groupTypeRoles
-                  .map(
-                    ({ id: groupRoleId }) => `(GroupRoleId eq ${groupRoleId})`
-                  )
+                  .map(({ id: groupRoleId }) => `(GroupRoleId eq ${groupRoleId})`)
                   .join(' or ')
               )
               .expand('GroupRole')
@@ -449,9 +441,7 @@ export default class GroupItem extends baseGroup.dataSource {
 
       return groupAssociations.map(({ groupId, groupRoleId, groupRole }) => ({
         groupId,
-        isLeader: !!validRoles.find(
-          ({ id, isLeader }) => groupRoleId === id && isLeader
-        ),
+        isLeader: !!validRoles.find(({ id, isLeader }) => groupRoleId === id && isLeader),
         groupTypeId: groupRole?.groupTypeId,
       }));
     };
@@ -598,9 +588,7 @@ export default class GroupItem extends baseGroup.dataSource {
     const filteredGroups = groups
       // Filter out Groups that don't have a valid schedule
       .filter(({ id: groupId }) =>
-        validGroupSchedules.find(
-          ({ id, schedule }) => groupId === id && schedule
-        )
+        validGroupSchedules.find(({ id, schedule }) => groupId === id && schedule)
       );
 
     return filteredGroups;
@@ -662,9 +650,7 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getContentChannelItem = (id) =>
-    this.request('ContentChannelItems')
-      .filter(getIdentifierType(id).query)
-      .first();
+    this.request('ContentChannelItems').filter(getIdentifierType(id).query).first();
 
   getPhoneNumbers = (id) =>
     this.request('PhoneNumbers')
@@ -719,11 +705,28 @@ export default class GroupItem extends baseGroup.dataSource {
       .transform(async (results) =>
         results
           .map(async (entity) => {
-            const { targetEntityId, targetEntityTypeId } = entity;
+            const { id: relatedEntityId, targetEntityId, targetEntityTypeId } = entity;
 
             switch (targetEntityTypeId) {
               case ApollosConfig.ROCK_ENTITY_IDS.CONTENT_CHANNEL_ITEM:
-                const contentItem = await ContentItem.getFromId(targetEntityId);
+                let contentItem = null;
+
+                try {
+                  contentItem = await ContentItem.getFromId(targetEntityId);
+                } catch (e) {
+                  const status = get(e, 'extensions.response.status');
+
+                  if (status === 404) {
+                    console.log(
+                      '[Group.getResources] could not find Content Item for Group Resource. Deleting the record from Related Entities.'
+                    );
+
+                    this.delete(`/RelatedEntities/${relatedEntityId}`);
+                  }
+
+                  return null;
+                }
+
                 const resolvedType = ContentItem.resolveType(contentItem);
 
                 return {
@@ -738,9 +741,34 @@ export default class GroupItem extends baseGroup.dataSource {
                   },
                 };
               case ApollosConfig.ROCK_ENTITY_IDS.DEFINED_VALUE:
-                const definedValue = await Url.getFromMasterList(
-                  targetEntityId
-                );
+                let definedValue = null;
+                let error = false;
+
+                try {
+                  definedValue = await Url.getFromMasterList(targetEntityId);
+
+                  if (!definedValue.id) {
+                    error = true;
+                  }
+                } catch (e) {
+                  const status = get(e, 'extensions.response.status');
+
+                  if (status === 404) {
+                    error = true;
+                  }
+
+                  return null;
+                }
+
+                if (error) {
+                  console.log(
+                    '[Group.getResources] could not find Defined Value for Group Resource. Deleting the record from Related Entities.'
+                  );
+
+                  this.delete(`/RelatedEntities/${relatedEntityId}`);
+
+                  return null;
+                }
 
                 return {
                   action: 'OPEN_URL',
@@ -841,9 +869,7 @@ export default class GroupItem extends baseGroup.dataSource {
         : members;
       const avatars = [];
       filteredMembers.map((member) =>
-        member.photo.guid
-          ? avatars.push(createImageUrlFromGuid(member.photo.guid))
-          : null
+        member.photo.guid ? avatars.push(createImageUrlFromGuid(member.photo.guid)) : null
       );
       return take(avatars, 15);
     } catch (e) {
@@ -890,11 +916,7 @@ export default class GroupItem extends baseGroup.dataSource {
   getGroupVideoCallParams = ({ attributeValues }) => {
     const zoomLink = get(attributeValues, 'zoom.value', '');
     // Returns a Defined Value Guid
-    const videoCallLabelText = get(
-      attributeValues,
-      'videoCallLabelText.value',
-      ''
-    );
+    const videoCallLabelText = get(attributeValues, 'videoCallLabelText.value', '');
     if (zoomLink !== '') {
       const { DefinedValue } = this.context.dataSources;
       // Parse Zoom Meeting links that have ids and/or passwords.
@@ -915,10 +937,7 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
   };
 
-  getGroupParentVideoCallParams = async ({
-    parentGroupId,
-    attributeValues,
-  }) => {
+  getGroupParentVideoCallParams = async ({ parentGroupId, attributeValues }) => {
     const groupParent = await this.request('Groups').find(parentGroupId).get();
     const zoomLink = get(groupParent, 'attributeValues.zoom.value', '');
     // Returns a Defined Value Guid
@@ -1030,10 +1049,7 @@ export default class GroupItem extends baseGroup.dataSource {
       const lastSyncedWithRockAt = channel?.data?.lastSyncedWithRockAt;
 
       if (lastSyncedWithRockAt) {
-        const hoursAgo = differenceInHours(
-          new Date(),
-          new Date(lastSyncedWithRockAt)
-        );
+        const hoursAgo = differenceInHours(new Date(), new Date(lastSyncedWithRockAt));
 
         if (hoursAgo <= 24) {
           return streamChatChannel;
@@ -1175,13 +1191,9 @@ export default class GroupItem extends baseGroup.dataSource {
        * 3. Filter out duplicate Group Type Ids
        */
       const groupTypeIds = definedValues
-        .map((definedValue) =>
-          get(definedValue, 'attributeValues.groupType.value')
-        )
+        .map((definedValue) => get(definedValue, 'attributeValues.groupType.value'))
         .filter((groupTypeId) => !!groupTypeId)
-        .filter(
-          (groupTypeId, index, self) => self.indexOf(groupTypeId) === index
-        );
+        .filter((groupTypeId, index, self) => self.indexOf(groupTypeId) === index);
 
       return Promise.all(
         groupTypeIds.map((groupTypeId) => {
@@ -1211,22 +1223,16 @@ export default class GroupItem extends baseGroup.dataSource {
   async _getValidGroupRoles() {
     const { Cache, DefinedValueList } = this.context.dataSources;
     const request = async () => {
-      const { definedValues } = await DefinedValueList.getFromId(
-        GROUP_MEMBER_ROLES
-      );
+      const { definedValues } = await DefinedValueList.getFromId(GROUP_MEMBER_ROLES);
       /**
        * 1. Map to Group Type Ids
        * 2. Filter out any falsy value
        * 3. Filter out duplicate Group Type Ids
        */
       const groupTypeRoles = definedValues
-        .map((definedValue) =>
-          get(definedValue, 'attributeValues.groupRole.value')
-        )
+        .map((definedValue) => get(definedValue, 'attributeValues.groupRole.value'))
         .filter((groupTypeRole) => !!groupTypeRole)
-        .filter(
-          (groupTypeRole, index, self) => self.indexOf(groupTypeRole) === index
-        );
+        .filter((groupTypeRole, index, self) => self.indexOf(groupTypeRole) === index);
 
       const memberRoles = await Promise.all(
         groupTypeRoles.map((groupTypeRole) => {
@@ -1353,9 +1359,7 @@ export default class GroupItem extends baseGroup.dataSource {
       title,
       summary,
       leaders:
-        leaders?.edges?.map(
-          ({ node }) => `${node.firstName} ${node.lastName}`
-        ) || [],
+        leaders?.edges?.map(({ node }) => `${node.firstName} ${node.lastName}`) || [],
       coverImage, // Presentation only
       meetingType,
     };
@@ -1445,9 +1449,7 @@ export default class GroupItem extends baseGroup.dataSource {
     console.log('🗑️ Deleting all group objects from index...');
     await this.getSearchIndex().deleteAllObjects();
     console.log('💾 Adding all group objects from index...');
-    await this.getSearchIndex().addObjects(
-      groupsForIndex.filter((group) => !!group)
-    );
+    await this.getSearchIndex().addObjects(groupsForIndex.filter((group) => !!group));
     console.log('✅ Indexing complete');
     return null;
     /* eslint-enable no-console */
@@ -1506,9 +1508,7 @@ export default class GroupItem extends baseGroup.dataSource {
     const prefixAttributeValues = ({ attributeKey, prefixString }) => {
       const attribute = getQueryAttribute(attributeKey);
 
-      return attribute
-        ? prefixValues(prefixString, attribute.values)
-        : undefined;
+      return attribute ? prefixValues(prefixString, attribute.values) : undefined;
     };
 
     const queryText = getQueryAttribute('text')?.values[0];
@@ -1556,9 +1556,7 @@ export default class GroupItem extends baseGroup.dataSource {
   getGroupSearchOptions = async () => {
     const facets = await this.getSearchIndex().byFacets();
 
-    const groupSearchOptions = Object.keys(facets).map((key) =>
-      Object.keys(facets[key])
-    );
+    const groupSearchOptions = Object.keys(facets).map((key) => Object.keys(facets[key]));
 
     return zipObject(Object.keys(facets), groupSearchOptions);
   };
@@ -1570,10 +1568,7 @@ export default class GroupItem extends baseGroup.dataSource {
   };
 
   getGroupFacetsByFilters = async (facet, facetFilters) => {
-    const facets = await this.getSearchIndex().byFacetFilters(
-      facet,
-      facetFilters
-    );
+    const facets = await this.getSearchIndex().byFacetFilters(facet, facetFilters);
     return Object.keys(facets[facet]);
   };
 
@@ -1654,9 +1649,7 @@ export default class GroupItem extends baseGroup.dataSource {
     };
 
     const calculateTotalRequests = async (groupTypeIds, groupRoleIds) => {
-      const groupRoleFilter = groupRoleIds.map(
-        (id) => `(GroupRoleId eq ${id})`
-      );
+      const groupRoleFilter = groupRoleIds.map((id) => `(GroupRoleId eq ${id})`);
 
       const groupMemberPromises = Promise.all(
         groupTypeIds.map((id) =>
