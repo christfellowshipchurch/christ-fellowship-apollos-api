@@ -18,6 +18,13 @@ export const groupSchema = gql`
     DreamTeam
   }
 
+  enum GROUP_MEMBER_STATUS {
+    OPEN
+    FULL
+    MEMBER
+    PENDING
+  }
+
   type Resource {
     id: String
     title: String
@@ -166,6 +173,7 @@ export const groupSchema = gql`
     groupSearchOptions: GroupSearchFacetsOptions
     groupSearchFacetsAttributes: [String]
     groupFacetFilters(facet: String, facetFilters: [String]): [String]
+    groupMemberStatus(groupId: ID!): GROUP_MEMBER_STATUS
   }
 
   type GroupSearchFacetsOptions {
