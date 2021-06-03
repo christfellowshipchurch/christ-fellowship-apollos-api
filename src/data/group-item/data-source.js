@@ -20,6 +20,7 @@ import {
   take,
   uniqBy,
   zipObject,
+  includes,
 } from 'lodash';
 import {
   parseISO,
@@ -1363,6 +1364,7 @@ export default class GroupItem extends baseGroup.dataSource {
         leaders?.edges?.map(({ node }) => `${node.firstName} ${node.lastName}`) || [],
       coverImage, // Presentation only
       meetingType,
+      priority: this.calculatePriority({ title, summary }),
     };
 
     console.log(`mapItemForIndex() Group ID "${globalId}" mapped successfully`);
@@ -1455,6 +1457,26 @@ export default class GroupItem extends baseGroup.dataSource {
     return null;
     /* eslint-enable no-console */
   }
+
+  calculatePriority = (args) => {
+    const { title = '', summary = '' } = args;
+    const preferredWords = ['Tom Mullins', 'Ted Cunningham', 'Lisa Harper'];
+    const mapper = (word) => {
+      let _priority = 0;
+
+      if (includes(title, word)) _priority += 1;
+
+      if (includes(summary, word)) _priority += 1;
+
+      return _priority;
+    };
+    const reducer = (accumulator, currentValue) => accumulator + currentValue;
+
+    const priorities = preferredWords.map(mapper);
+    const priority = priorities.reduce(reducer);
+
+    return priority;
+  };
 
   searchGroups(args) {
     const { query, first, after } = args;

@@ -70,6 +70,8 @@ ALGOLIA:
           - preference
           - subPreference
           - meetingType
+        customRanking:
+          - desc(priority)
 
 # Stream Chat https://getstream.io
 STREAM:
