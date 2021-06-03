@@ -1,3 +1,4 @@
+import { ApolloError } from 'apollo-server-errors';
 import ApollosConfig from '@apollosproject/config';
 import { Group as baseGroup, Utils } from '@apollosproject/data-connector-rock';
 import {
@@ -31,7 +32,7 @@ import moment from 'moment';
 import momentTz from 'moment-timezone';
 import crypto from 'crypto-js';
 
-import { getIdentifierType } from '../utils';
+import { getIdentifierType, isType, isRequired } from '../utils';
 
 const { createImageUrlFromGuid } = Utils;
 
@@ -1581,24 +1582,54 @@ export default class GroupItem extends baseGroup.dataSource {
   contactLeader = async ({ groupId }) => {
     if (!groupId) return null;
     const groupGlobalId = parseGlobalId(groupId)?.id;
+    const status = await this.getMemberStatus(groupGlobalId);
+    const { Workflow, Auth } = this.context.dataSources;
+    const currentUser = await Auth.getCurrentPerson();
 
-    try {
-      const { Workflow, Auth } = this.context.dataSources;
-      const currentUser = await Auth.getCurrentPerson();
-
-      const workflow = await Workflow.trigger({
-        id: ROCK_MAPPINGS.WORKFLOW_IDS.GROUP_CONTACT_LEADER,
-        attributes: {
-          personId: currentUser.id,
-          groupId: groupGlobalId,
-        },
-      });
-      return workflow.status;
-    } catch (e) {
-      console.log(e);
+    switch (status) {
+      case 'FULL':
+        throw new ApolloError(
+          'Could not add user to group. Group is full.',
+          'ADD_GROUP_MEMBER',
+          {
+            groupMemberStatus: status,
+            groupId,
+            personId: currentUser.id,
+          }
+        );
+      case 'MEMBER':
+        throw new ApolloError(
+          'Could not add user to group. User is already a member.',
+          'ADD_GROUP_MEMBER',
+          {
+            groupMemberStatus: status,
+            groupId,
+            personId: currentUser.id,
+          }
+        );
+      case 'PENDING':
+        throw new ApolloError(
+          'Could not add user to group. User is already a pending member.',
+          'ADD_GROUP_MEMBER',
+          {
+            groupMemberStatus: status,
+            groupId,
+            personId: currentUser.id,
+          }
+        );
+      case 'OPEN':
+      default:
+        break;
     }
 
-    return null;
+    const workflow = await Workflow.trigger({
+      id: ROCK_MAPPINGS.WORKFLOW_IDS.GROUP_CONTACT_LEADER,
+      attributes: {
+        personId: currentUser.id,
+        groupId: groupGlobalId,
+      },
+    });
+    return workflow.status;
   };
 
   async loadGroups() {
@@ -1685,5 +1716,53 @@ export default class GroupItem extends baseGroup.dataSource {
     }
 
     console.log(`[load groups cache] updated cache for ${total} Group Members`);
+  }
+
+  async getMemberStatus(groupId = isRequired('GroupItem.getMemberStatus', 'groupId')) {
+    if (isType(groupId, 'groupId', 'string')) {
+      const status = 'OPEN';
+      const group = await this.getFromId(groupId);
+
+      if (!group.id) {
+        throw new Error(`[Group.getMemberStatus] could not find Rock Group : ${groupId}`);
+      }
+
+      // Get Group Capacity from Rock
+      const capacity = group.groupCapacity;
+
+      if (Number.isInteger(capacity)) {
+        // Get all valid Group Members that should contribute to the capacity
+        const groupFilter = `GroupId eq ${groupId}`;
+        const groupRoleFilter = [48, 49]
+          .map((i) => `(GroupRoleId ne ${i})`)
+          .join(' and ');
+        const groupMemberStatusFilter = `GroupMemberStatus ne 'Inactive'`;
+        const members = await this.request('GroupMembers')
+          .filter(groupFilter)
+          .andFilter(groupRoleFilter)
+          .andFilter(groupMemberStatusFilter)
+          .select('Id, PersonId, GroupMemberStatus')
+          .get();
+
+        // note : if you are logged in, we will check to see if you are a leader or member
+        try {
+          const { id: personId } = await this.context.dataSources.Auth.getCurrentPerson();
+          const groupMember = members.find((member) => member.personId === personId);
+
+          if (groupMember) {
+            if (groupMember.groupMemberStatus === 1) return 'MEMBER';
+            if (groupMember.groupMemberStatus === 2) return 'PENDING';
+          }
+        } catch (e) {
+          console.log('[GroupItem.getMemberStatus] User is not logged in.');
+        }
+
+        return members.length >= capacity ? 'FULL' : 'OPEN';
+      }
+
+      return status;
+    }
+
+    return null;
   }
 }

@@ -39,9 +39,8 @@ const resolver = {
     ...defaultResolvers,
     schedule: ({ scheduleId }, args, { dataSources }) =>
       dataSources.GroupItem.getScheduleFromId(scheduleId),
-    phoneNumbers: ({ id }, args, { dataSources }) => {
-      return dataSources.GroupItem.groupPhoneNumbers(id);
-    },
+    phoneNumbers: ({ id }, args, { dataSources }) =>
+      dataSources.GroupItem.groupPhoneNumbers(id),
     dateTime: ({ scheduleId }, args, { dataSources }) =>
       dataSources.GroupItem.getDateTimeFromId(scheduleId),
     videoCall: async (root, args, { dataSources }) => {
@@ -108,9 +107,8 @@ const resolver = {
             title,
             url,
           });
-        } else {
-          return dataSources.GroupItem.addResource({ groupId, title, url });
         }
+        return dataSources.GroupItem.addResource({ groupId, title, url });
       } catch (e) {
         console.log({ e });
       }
@@ -129,12 +127,11 @@ const resolver = {
             relatedNodeId,
             contentItemId,
           });
-        } else {
-          return dataSources.GroupItem.addResource({
-            groupId,
-            contentItemId,
-          });
         }
+        return dataSources.GroupItem.addResource({
+          groupId,
+          contentItemId,
+        });
       } catch (e) {
         console.log({ e });
       }
@@ -210,6 +207,15 @@ const resolver = {
       dataSources.GroupItem.getGroupSearchFacetsAttributes(),
     groupFacetFilters: async (root, { facet, facetFilters }, { dataSources }) =>
       dataSources.GroupItem.getGroupFacetsByFilters(facet, facetFilters),
+    groupMemberStatus: (root, { groupId }, { dataSources: { GroupItem } }) => {
+      const globalId = parseGlobalId(groupId);
+
+      if (!globalId.id) {
+        throw new Error(`[groupMemberStatus] Invalid group id provided: ${groupId}`);
+      }
+
+      return GroupItem.getMemberStatus(globalId.id);
+    },
   },
 };
 
