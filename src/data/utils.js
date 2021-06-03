@@ -23,7 +23,7 @@ export const parseRockKeyValuePairs = (
   return keyValueStr
     ? keyValueStr.split('|').map((n) => {
         const splt = n.split('^');
-        let rtn = {};
+        const rtn = {};
 
         rtn[key] = splt[0] || '';
         rtn[value] = splt[1] || '';
@@ -42,8 +42,13 @@ export const getIdentifierType = (identifier) => {
   const stringId = identifier.toString();
 
   if (stringId.match(guidRegex)) {
-    return { type: 'guid', value: identifier, query: `Guid eq (guid'${identifier}')` };
-  } else if (!stringId.match(intRegex)) {
+    return {
+      type: 'guid',
+      value: identifier,
+      query: `Guid eq (guid'${identifier}')`,
+    };
+  }
+  if (!stringId.match(intRegex)) {
     return { type: 'int', value: identifier, query: `Id eq ${identifier}` };
   }
 
@@ -67,23 +72,30 @@ export const createVideoUrlFromGuid = (uri) =>
 export const rockImageUrl = (guid = isRequired('rockImageUrl', 'guid'), args) => {
   const mode = `mode=${get(args, 'mode', 'crop')}`;
   const identifierType = getIdentifierType(guid);
+  const processUrl = (url) => {
+    const params = [mode];
+    forEach(args, (value, key) => {
+      params.push(`${key}=${value}`);
+    });
+    const parsedUrl = URL.parse(url);
+    const preParam = `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
+
+    return `${preParam}?${parsedUrl.query}&${params.join('&')}`;
+  };
 
   if (identifierType.type === 'guid') {
     const imageUrl = createImageUrlFromGuid(guid);
 
     if (imageUrl.includes('/GetImage.ashx')) {
-      let params = [mode];
-      forEach(args, (value, key) => {
-        params.push(`${key}=${value}`);
-      });
-      const parsedUrl = URL.parse(imageUrl);
-      const preParam = `${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.pathname}`;
-
-      return `${preParam}?${parsedUrl.query}&${params.join('&')}`;
+      return processUrl(imageUrl);
     }
   }
 
   if (isValidUrl(guid)) {
+    if (guid.includes('/GetImage.ashx')) {
+      return processUrl(guid);
+    }
+
     return guid;
   }
 
@@ -111,7 +123,7 @@ export const generateAppLinkFromUrl = async (uri, context) => {
     'cf.church/cash-app',
   ];
   const parsedUrl = URL.parse(uri);
-  const host = parsedUrl.host;
+  const { host } = parsedUrl;
 
   if (host === 'christfellowship.church') {
     // Remove the first instance of / (/content/title-${itemId}) so that our array
@@ -185,7 +197,7 @@ export const isType = (param, name, type) => {
  * @return {boolean}
  */
 export const isValidUrl = (str) => {
-  var pattern = new RegExp(
+  const pattern = new RegExp(
     '^(https?:\\/\\/)?' + // protocol
       '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
       '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address

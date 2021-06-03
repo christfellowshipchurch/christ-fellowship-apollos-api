@@ -6,6 +6,20 @@ import {
   createGlobalId,
 } from '@apollosproject/server-core';
 import { get } from 'lodash';
+import { rockImageUrl } from '../utils';
+
+function getTransformedCoverImage(uri) {
+  if (uri) {
+    return rockImageUrl(uri, {
+      w: 1920,
+      h: 1080,
+      format: 'jpg',
+      quality: 70,
+    });
+  }
+
+  return null;
+}
 
 const defaultResolvers = {
   id: ({ id }, args, context, { parentType }) => createGlobalId(id, parentType.name),
@@ -16,8 +30,17 @@ const defaultResolvers = {
   groupResources: (root, args, { dataSources }) =>
     dataSources.GroupItem.getGroupResources(root),
   resources: ({ id }, args, { dataSources }) => dataSources.GroupItem.getResources(id),
-  coverImage: (root, args, { dataSources: { ContentItem } }) =>
-    ContentItem.getCoverImage(root),
+  coverImage: async (root, args, { dataSources: { ContentItem } }) => {
+    const selectedImage = await ContentItem.getCoverImage(root);
+    const sources = selectedImage.sources.map(({ uri }) => ({
+      uri: getTransformedCoverImage(uri),
+    }));
+
+    return {
+      ...selectedImage,
+      sources,
+    };
+  },
   avatars: ({ id }, args, { dataSources }) => dataSources.GroupItem.getAvatars(id),
   members: ({ id }, args, { dataSources }) => dataSources.GroupItem.getMembers(id),
   leaders: ({ id }, args, { dataSources }) => dataSources.GroupItem.getLeaders(id),
