@@ -8,7 +8,7 @@
       "image": "516877585062.dkr.ecr.us-east-2.amazonaws.com/cf-ecr-repo:latest",
       "links": [],
       "cpu": 8,
-      "memory": 2048,
+      "memory": 1536,
       "memoryReservation": null,
       "portMappings": [
         {
