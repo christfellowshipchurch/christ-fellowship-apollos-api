@@ -761,10 +761,9 @@ export default class ContentItem extends coreContentItem.dataSource {
       });
 
       const result = await edges;
-      console.log('- Mapping ', result.length);
+      console.log(`... Mapping next ${result.length} items ...`);
       const items = result.map(({ node }) => node);
-      // itemsLeft = items.length === 100;
-      itemsLeft = false;
+      itemsLeft = items.length === 100;
 
       if (itemsLeft) args.after = result[result.length - 1].cursor;
       const mappedItems = await Promise.all(
@@ -774,9 +773,7 @@ export default class ContentItem extends coreContentItem.dataSource {
       itemsToIndex = itemsToIndex.concat(mappedItems);
     }
 
-    console.log(
-      `🔍 Found ${itemsToIndex.length} content items that need indexed`
-    );
+    console.log(`🔍 Mapped ${itemsToIndex.length} content items for indexing`);
 
     // Make sure to leave this set to `true` before committing/merging!
     const __PREVENT_DEV_ALGOLIA_INDEXING__ = true;
