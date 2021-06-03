@@ -61,7 +61,7 @@ const deleteJobs = async () => {
 
 const createJobs = async ({ getContext, queues, trigger = () => null }) => {
   // Uncomment if you need to clear all queues, including past success/failures
-  // await deleteJobs();
+  await deleteJobs();
 
   const FullIndexQueue = queues.add(
     'algolia-groups-full-index-queue',
