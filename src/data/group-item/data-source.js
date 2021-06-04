@@ -1283,6 +1283,13 @@ export default class GroupItem extends baseGroup.dataSource {
     const globalId =
       typeof groupId === 'number' ? createGlobalId(groupId, 'Group') : groupId;
 
+    // Don't map this item if the group is full
+    const status = await this.getMemberStatus(groupId.toString());
+    if (status === 'FULL') {
+      console.log(`mapItemForIndex() Group ID "${globalId}" skipped because it is FULL capacity`);
+      return null;
+    }
+
     const getGroupQuery = `
       query getGroup {
         node(id: "${globalId}") {
@@ -1376,7 +1383,7 @@ export default class GroupItem extends baseGroup.dataSource {
 
     // TODO: Better error handling? Should this throw?
     if (!groupForIndex) {
-      console.log(`Error fetching data to index for Group "${id}"`);
+      console.log(`Error fetching data to index for Group "${id}", or it was not considered valid for indexing`);
       return false;
     }
 
@@ -1389,9 +1396,8 @@ export default class GroupItem extends baseGroup.dataSource {
     console.log('---------------------------------------------------------');
 
     const validGroupFinderTypeIds = await this.getValidGroupFinderTypeIds();
-    const excludeList = await this._getExcludedGroupIds();
 
-    const rawGroups = await this.request('Groups')
+    const groups = await this.request('Groups')
       .filter(`IsActive eq true`)
       .andFilter(`IsPublic eq true`)
       .andFilter(`IsArchived eq false`)
@@ -1404,12 +1410,6 @@ export default class GroupItem extends baseGroup.dataSource {
       .select(`Id, GroupTypeId, Name, CreatedDateTime, ModifiedDateTime`)
       .get();
 
-    // Filter out excluded groups
-    const filteredGroups = rawGroups.filter(
-      // ! Be aware, excludeList ids are strings
-      ({ id }) => !excludeList.includes(id.toString())
-    );
-
     // console.log('filteredGroups:');
     // console.table(filteredGroups, [
     //   'id',
@@ -1419,19 +1419,20 @@ export default class GroupItem extends baseGroup.dataSource {
     //   'modifiedDateTime',
     // ]);
 
-    const groupIdsToIndex = filteredGroups.map(({ id }) => id);
+    const groupIdsToIndex = groups.map(({ id }) => id);
     console.log(`🔍 Found ${groupIdsToIndex.length} groups that need indexed`);
     console.log('⌛ Mapping groups for index... this will take a while');
     const mapStartTime = new Date().getTime();
 
     const groupsForIndex = await Promise.all(
-      filteredGroups.map(({ id }) => this.mapItemForIndex(id))
+      groups.map(({ id }) => this.mapItemForIndex(id))
     );
+    const filteredGroupsForIndex = groupsForIndex.filter((group) => !!group);
 
     const mapEndTime = new Date().getTime();
     const mapTimeDuration = differenceInSeconds(mapEndTime, mapStartTime);
     console.log(
-      `✅ Mapped ${groupsForIndex.length} groups for index in ${mapTimeDuration}s`
+      `✅ Mapped ${filteredGroupsForIndex.length} groups for index in ${mapTimeDuration}s`
     );
 
     // Make sure to leave this set to `true` before committing/merging!
@@ -1452,7 +1453,7 @@ export default class GroupItem extends baseGroup.dataSource {
     console.log('🗑️ Deleting all group objects from index...');
     await this.getSearchIndex().deleteAllObjects();
     console.log('💾 Adding all group objects from index...');
-    await this.getSearchIndex().addObjects(groupsForIndex.filter((group) => !!group));
+    await this.getSearchIndex().addObjects(filteredGroupsForIndex);
     console.log('✅ Indexing complete');
     return null;
     /* eslint-enable no-console */
@@ -1777,7 +1778,7 @@ export default class GroupItem extends baseGroup.dataSource {
           if (groupMember.groupMemberStatus === 2) return 'PENDING';
         }
       } catch (e) {
-        console.log('[GroupItem.getMemberStatus] User is not logged in.');
+        // console.log('[GroupItem.getMemberStatus] User is not logged in.');
       }
 
       return members.length >= capacity ? 'FULL' : 'OPEN';
