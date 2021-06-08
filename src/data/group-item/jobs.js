@@ -29,7 +29,40 @@ if (REDIS_URL) {
   };
 }
 
-const createJobs = ({ getContext, queues, trigger = () => null }) => {
+const deleteJobs = async () => {
+  const redis = new Redis(REDIS_URL);
+
+  const deleteKeysByPattern = async (pattern) =>
+    new Promise((resolve, reject) => {
+      const stream = redis.scanStream({
+        match: pattern,
+      });
+      stream.on('data', (keys) => {
+        if (keys.length) {
+          const pipeline = redis.pipeline();
+          keys.forEach((key) => {
+            pipeline.del(key);
+            console.log(`Deleted algolia redis job key: ${key}`);
+          });
+          pipeline.exec();
+        }
+      });
+      stream.on('end', () => {
+        resolve();
+      });
+      stream.on('error', (e) => {
+        reject(e);
+      });
+    });
+
+  // "bull" is queue prefix (default), "example" is the name of queue
+  await deleteKeysByPattern('bull:algolia-groups-full-index-queue:*');
+};
+
+const createJobs = async ({ getContext, queues, trigger = () => null }) => {
+  // Uncomment if you need to clear all queues, including past success/failures
+  await deleteJobs();
+
   const FullIndexQueue = queues.add(
     'algolia-groups-full-index-queue',
     queueOpts
