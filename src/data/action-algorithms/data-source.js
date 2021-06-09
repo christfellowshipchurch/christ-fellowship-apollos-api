@@ -54,6 +54,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
       image: ContentItem.getCoverImage(item),
       action: 'READ_CONTENT',
       summary: ContentItem.createSummary(item),
+      labelText: item?.attributeValues?.label?.value,
     }));
   }
 
@@ -122,7 +123,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
         image: ContentItem.getCoverImage(item),
         action: isUrl ? 'OPEN_URL' : 'READ_CONTENT',
         summary: ContentItem.createSummary(item),
-        labelText: 'HELLO THERE',
+        labelText: item?.attributeValues?.label?.value,
       };
     });
   }
