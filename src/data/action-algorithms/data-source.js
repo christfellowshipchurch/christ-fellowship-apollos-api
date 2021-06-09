@@ -90,7 +90,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
       limit,
     });
 
-    return !!action ? contentChannel.map((n) => ({ ...n, action })) : contentChannel;
+    return action ? contentChannel.map((n) => ({ ...n, action })) : contentChannel;
   }
 
   async contentChildrenAlgorithm({ contentChannelItemId, limit = 10 }) {
@@ -122,6 +122,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
         image: ContentItem.getCoverImage(item),
         action: isUrl ? 'OPEN_URL' : 'READ_CONTENT',
         summary: ContentItem.createSummary(item),
+        labelText: 'HELLO THERE',
       };
     });
   }
@@ -241,19 +242,17 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
 
       // ? this is just a temp solution : why are volunteer groups returning so many duplicate results??
 
-      return uniqBy(groups, 'id').map((item, i) => {
-        return {
-          id: `${item.id}${i}`,
-          title: Group.getTitle(item),
-          relatedNode: {
-            __type: Group.resolveType(item),
-            ...item,
-          },
-          image: null,
-          action: 'READ_GROUP',
-          subtitle: '',
-        };
-      });
+      return uniqBy(groups, 'id').map((item, i) => ({
+        id: `${item.id}${i}`,
+        title: Group.getTitle(item),
+        relatedNode: {
+          __type: Group.resolveType(item),
+          ...item,
+        },
+        image: null,
+        action: 'READ_GROUP',
+        subtitle: '',
+      }));
     } catch (e) {
       console.log('Error getting Groups for current user. User likely not logged in', {
         e,
@@ -266,7 +265,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
   async personaFeedAlgorithmWithActionOverride({ action = null } = {}) {
     const personaFeed = await this.personaFeedAlgorithm();
 
-    return !!action ? personaFeed.map((n) => ({ ...n, action })) : personaFeed;
+    return action ? personaFeed.map((n) => ({ ...n, action })) : personaFeed;
   }
 
   async upcomingEventsAlgorithmWithActionOverride({
