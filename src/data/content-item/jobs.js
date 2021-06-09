@@ -76,27 +76,25 @@ const createJobs = async ({ getContext, queues, trigger = () => null }) => {
   let schedule;
 
   switch (process.env.NODE_ENV) {
-    // Production
+    // Production => 4:00am Every day
     case 'production':
-      // 3:15am Every day
-      schedule = '15 3 * * *';
+      schedule = '0 4 * * *';
       break;
-    // Staging
+    // Staging => 4:00am on Wednesdays
     case 'test':
-      // 3:15am on M/W/F
-      schedule = '15 3 * * 1,3,5';
+      schedule = '0 4 * * 3';
       break;
-    // Dev
+    // Dev => 4:00am Every day
     default:
-      // 3:15am Every Day
-      schedule = '15 3 * * *';
+      schedule = '0 4 * * *';
+      // schedule = '0/5 * * * *'; // Every 5 minutes
       break;
   }
 
   FullIndexQueue.add(null, { repeat: { cron: schedule } });
 
   // add manual index trigger
-  trigger('/manual-index', FullIndexQueue);
+  trigger('/manual-index/content', FullIndexQueue);
 };
 
 export default createJobs;
