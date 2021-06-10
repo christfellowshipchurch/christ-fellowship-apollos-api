@@ -4,6 +4,8 @@ import server from './server';
 
 export { testSchema } from './server'; // eslint-disable-line import/prefer-default-export
 
+// THIS IS A RANDOM COMMENT TO MAKE THE PROJECT REBUILD FEEL FREE TO REMOVE
+
 // Use the port, if provided.
 const { PORT } = process.env;
 if (!PORT && process.env.NODE_ENV !== 'test')
