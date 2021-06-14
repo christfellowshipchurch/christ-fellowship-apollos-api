@@ -1570,6 +1570,7 @@ export default class GroupItem extends baseGroup.dataSource {
     const searchParams = {
       query: queryText,
       filters: filtersString,
+      userToken: this.context.userToken,
       first,
       after,
     };
