@@ -15,4 +15,8 @@ export default gql`
     groupSubPreferences(preferenceId: ID): [GroupPreference]
     notifyMeBanner(preferenceId: ID!): ContentItem
   }
+
+  extend type Mutation {
+    subscribeToGroupPreference(groupPreferenceId: ID!, campusId: ID!): String
+  }
 `;

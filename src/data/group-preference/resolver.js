@@ -1,6 +1,6 @@
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId, parseGlobalId } from '@apollosproject/server-core';
-import { get } from 'lodash';
+import { get, isEmpty } from 'lodash';
 import { rockImageUrl } from '../utils';
 
 const { ROCK_MAPPINGS } = ApollosConfig;
@@ -97,6 +97,23 @@ const resolver = {
       }
 
       return null;
+    },
+  },
+  Mutation: {
+    subscribeToGroupPreference: async (
+      root,
+      { groupPreferenceId, campusId },
+      { dataSources: { GroupPreference } }
+    ) => {
+      const globalGroupPreferenceId = parseGlobalId(groupPreferenceId);
+      const globalCampusId = parseGlobalId(campusId);
+
+      if (isEmpty(globalGroupPreferenceId.id) || isEmpty(globalCampusId.id)) return null;
+
+      return GroupPreference.subscribeToUpdates({
+        preferenceId: globalGroupPreferenceId.id,
+        campusId: globalCampusId.id,
+      });
     },
   },
 };
