@@ -807,7 +807,9 @@ export default class GroupItem extends baseGroup.dataSource {
 
     return this.request('/ContentChannelItems')
       .filter(`ContentChannelId eq 79`)
-      .andFilter(filterResources);
+      .andFilter(filterResources)
+      .andFilter(this.context.dataSources.ContentItem.LIVE_CONTENT())
+      .sort([{ field: 'Order', direction: 'asc' }]);
   };
 
   async paginateMembersById({ after, first = 20, id, isLeader = false }) {
@@ -1286,7 +1288,9 @@ export default class GroupItem extends baseGroup.dataSource {
     // Don't map this item if the group is full
     const status = await this.getMemberStatus(groupId.toString());
     if (status === 'FULL') {
-      console.log(`mapItemForIndex() Group ID "${globalId}" skipped because it is FULL capacity`);
+      console.log(
+        `mapItemForIndex() Group ID "${globalId}" skipped because it is FULL capacity`
+      );
       return null;
     }
 
@@ -1383,7 +1387,9 @@ export default class GroupItem extends baseGroup.dataSource {
 
     // TODO: Better error handling? Should this throw?
     if (!groupForIndex) {
-      console.log(`Error fetching data to index for Group "${id}", or it was not considered valid for indexing`);
+      console.log(
+        `Error fetching data to index for Group "${id}", or it was not considered valid for indexing`
+      );
       return false;
     }
 
