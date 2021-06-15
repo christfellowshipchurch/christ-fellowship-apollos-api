@@ -165,6 +165,27 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
       const { id } = await Auth.getCurrentPerson();
       const groups = await Group.getByPerson({ personId: id, groupTypeIds });
 
+      if (groups.length === 0) {
+        return [
+          {
+            image: {
+              sources: [
+                {
+                  uri: 'https://christfellowship.church/groups-cover-image.jpg',
+                },
+              ],
+            },
+            title: 'Life is better together',
+            summary: 'We’ll help you find a group or class that’s right for you!',
+            action: 'OPEN_URL',
+            relatedNode: {
+              __typename: 'Url',
+              url: 'https://christfellowship.church/groups',
+            },
+          },
+        ];
+      }
+
       return groups.map((item, i) => {
         const getScheduleFriendlyText = async () => {
           const schedule = await Group.getScheduleFromId(item.scheduleId);
