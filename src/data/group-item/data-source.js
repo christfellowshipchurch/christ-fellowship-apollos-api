@@ -1282,8 +1282,13 @@ export default class GroupItem extends baseGroup.dataSource {
   // Note: The input `group` may have aliased fields etc, as it is assumed
   // to be passed from a specialized query and not raw Rock object/data.
   async mapItemForIndex(groupId) {
+    const { Cache } = this.context.dataSources;
     const globalId =
       typeof groupId === 'number' ? createGlobalId(groupId, 'Group') : groupId;
+
+    // Reload the cache of the Group for good measure
+    await Cache.delete(Cache.KEY_TEMPLATES.group`${groupId}`);
+    await this.getFromId(groupId);
 
     // Don't map this item if the group is full
     const status = await this.getMemberStatus(groupId.toString());
