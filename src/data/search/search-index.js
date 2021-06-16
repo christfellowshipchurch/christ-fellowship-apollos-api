@@ -36,7 +36,7 @@ export default class SearchIndex {
     return this.index.clearObjects();
   }
 
-  async byPaginatedQuery({ query, filters, after, first = 20 }) {
+  async byPaginatedQuery({ query, filters, userToken, after, first = 20 }) {
     // Prepare pagination
     const length = first;
     let offset = 0;
@@ -52,7 +52,12 @@ export default class SearchIndex {
     }
 
     // Perform search
-    const results = await this.index.search(query, { filters, length, offset });
+    const results = await this.index.search(query, {
+      filters,
+      userToken,
+      length,
+      offset,
+    });
     const { hits, nbHits: totalResults } = results;
 
     return {

@@ -166,8 +166,11 @@ const resolver = {
         website,
         title
       ),
-    search: async (root, input, { dataSources }) =>
-      dataSources.ContentItem.getSearchIndex().byPaginatedQuery(input),
+    search: async (root, input, { userToken, dataSources }) =>
+      dataSources.ContentItem.getSearchIndex().byPaginatedQuery({
+        userToken,
+        ...input,
+      }),
   },
   Mutation: {
     indexAllContent: async (root, { key, action }, { dataSources }) => {
