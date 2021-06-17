@@ -5,7 +5,7 @@ import { isType, isRequired } from '../utils';
 
 export default class PageBuilder extends ContentItem.dataSource {
   async getFeatures(pathname) {
-    const { ContentItem, Feature } = this.context.dataSources;
+    const { Feature } = this.context.dataSources;
 
     const contentItemId = await this.getIdByUrl(pathname);
 
@@ -14,7 +14,7 @@ export default class PageBuilder extends ContentItem.dataSource {
       const children = await Promise.all(childrenIds.map((id) => this.getFromId(id)));
 
       return children.map((child) => {
-        const { id, contentChannelId } = child;
+        const { id, contentChannelId, title, attributeValues } = child;
 
         if (contentChannelId === 87) {
           return Feature.createVerticalCardListFeature({
@@ -32,7 +32,7 @@ export default class PageBuilder extends ContentItem.dataSource {
           });
         }
 
-        return Feature.createContentBlockFeature({ contentChannelItemId });
+        return Feature.createContentBlockFeature({ contentChannelItemId: id });
       });
     }
 
