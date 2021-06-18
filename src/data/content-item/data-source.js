@@ -1,16 +1,7 @@
 import ApollosConfig from '@apollosproject/config';
 import { createGlobalId } from '@apollosproject/server-core';
 import { ContentItem as coreContentItem } from '@apollosproject/data-connector-rock';
-import {
-  get,
-  find,
-  kebabCase,
-  take,
-  toLower,
-  upperCase,
-  split,
-  parseInt,
-} from 'lodash';
+import { get, find, kebabCase, take, toLower, upperCase, split, parseInt } from 'lodash';
 import moment from 'moment-timezone';
 import Queue from 'bull';
 import { graphql } from 'graphql';
@@ -22,6 +13,41 @@ import sanitizeHtml from 'sanitize-html';
 import { createVideoUrlFromGuid, getIdentifierType } from '../utils';
 
 const { ROCK_MAPPINGS, ROCK, FEATURE_FLAGS } = ApollosConfig;
+
+const PRIORITIZED_INDEXED_ITEMS = ['Redirect:d54ec5dc-4edf-4912-87fd-deb19bab4bce'];
+
+const HARDCODED_INDEXED_ITEMS = [
+  {
+    id: 'Redirect:d54ec5dc-4edf-4912-87fd-deb19bab4bce',
+    url: 'http://www.google.com',
+    title: 'Google',
+    summary: 'Redirect to Google',
+    htmlContent: ['google', 'redirect'],
+    coverImage: {
+      sources: [
+        {
+          uri:
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/2560px-Google_2015_logo.svg.png',
+        },
+      ],
+    },
+  },
+  {
+    id: 'Redirect:10d76052-d1e7-488b-8f87-cce205c2f96b',
+    url: 'http://www.bing.com',
+    title: 'Bing',
+    summary: 'Redirect to Bing',
+    htmlContent: ['bing', 'redirect'],
+    coverImage: {
+      sources: [
+        {
+          uri:
+            'https://cdn.vox-cdn.com/thumbor/yDQsZmY1o79nAGd0dfCq9OP_8tk=/0x0:660x440/920x613/filters:focal(278x168:382x272):format(webp)/cdn.vox-cdn.com/uploads/chorus_image/image/67583196/binglogo.0.jpg',
+        },
+      ],
+    },
+  },
+];
 
 // Search Config & Utils
 // ----------------------------------------------------------------------------
@@ -44,6 +70,17 @@ const cleanHtmlContentForIndex = (htmlContent) => {
     return_changed_case: true,
     remove_duplicates: true,
   });
+};
+
+const prioritizeIndexItem = (obj) => {
+  const priority = PRIORITIZED_INDEXED_ITEMS.indexOf(obj.id);
+  const prioritizedItem = { ...obj };
+
+  if (priority >= 0) {
+    prioritizedItem.priority = priority;
+  }
+
+  return prioritizedItem;
 };
 
 const processObjectSize = (obj) => {
@@ -115,11 +152,7 @@ export default class ContentItem extends coreContentItem.dataSource {
   sortByAssociationOrder = (associations) => (a, b) => {
     // Check to make sure that associations is an array
     // Check to make sure that a.id and b.id are numbers
-    if (
-      Array.isArray(associations) &&
-      Number.isInteger(a.id) &&
-      Number.isInteger(b.id)
-    ) {
+    if (Array.isArray(associations) && Number.isInteger(a.id) && Number.isInteger(b.id)) {
       const { id: aId } = a;
       const { id: bId } = b;
 
@@ -135,10 +168,7 @@ export default class ContentItem extends coreContentItem.dataSource {
           association.contentChannelItemId === bId
       );
 
-      if (
-        Number.isInteger(associationA.order) &&
-        Number.isInteger(associationB.order)
-      ) {
+      if (Number.isInteger(associationA.order) && Number.isInteger(associationB.order)) {
         return associationA.order - associationB.order;
       }
     }
@@ -284,8 +314,7 @@ export default class ContentItem extends coreContentItem.dataSource {
       }))
       .filter(
         (video) =>
-          video.sources.length > 0 &&
-          !video.sources.find((source) => source.uri === '')
+          video.sources.length > 0 && !video.sources.find((source) => source.uri === '')
       );
   };
 
@@ -302,17 +331,13 @@ export default class ContentItem extends coreContentItem.dataSource {
 
     return find(
       contentItems,
-      (n) =>
-        this.formatTitleAsUrl(get(n, 'title', '')) ===
-        this.formatTitleAsUrl(title)
+      (n) => this.formatTitleAsUrl(get(n, 'title', '')) === this.formatTitleAsUrl(title)
     );
   };
 
-  getContentByTitle = (title) =>
-    this.getByTitle(title, 'BROWSE_CONTENT_CHANNEL_IDS');
+  getContentByTitle = (title) => this.getByTitle(title, 'BROWSE_CONTENT_CHANNEL_IDS');
 
-  getCategoryByTitle = (title) =>
-    this.getByTitle(title, 'CATEGORY_CONTENT_CHANNEL_IDS');
+  getCategoryByTitle = (title) => this.getByTitle(title, 'CATEGORY_CONTENT_CHANNEL_IDS');
 
   getFromTypeIds = (ids) =>
     this.request()
@@ -335,16 +360,12 @@ export default class ContentItem extends coreContentItem.dataSource {
     return Cache.request(
       () =>
         this.request(`ContentChannelItems`)
-          .filterOneOf(
-            contentChannelTypes.map((n) => `ContentChannelTypeId eq ${n}`)
-          )
+          .filterOneOf(contentChannelTypes.map((n) => `ContentChannelTypeId eq ${n}`))
           .andFilter(this.LIVE_CONTENT())
           .select('Id')
           .orderBy('Order')
           .top(limit)
-          .transform((results) =>
-            results.filter((item) => !!item.id).map(({ id }) => id)
-          )
+          .transform((results) => results.filter((item) => !!item.id).map(({ id }) => id))
           .get(),
       {
         key: Cache.KEY_TEMPLATES.eventContentItems,
@@ -366,8 +387,7 @@ export default class ContentItem extends coreContentItem.dataSource {
       return null;
     }
 
-    const usePersonas =
-      FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === 'LIVE';
+    const usePersonas = FEATURE_FLAGS.ROCK_DYNAMIC_FEED_WITH_PERSONAS.status === 'LIVE';
     let personas = [];
     if (usePersonas) {
       try {
@@ -381,9 +401,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     }
 
     const eventIds = await this.getEventContentIds(limit);
-    const contentItems = await Promise.all(
-      eventIds.map((id) => this.getFromId(id))
-    );
+    const contentItems = await Promise.all(eventIds.map((id) => this.getFromId(id)));
 
     return contentItems
       .map((event) => {
@@ -415,9 +433,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     );
 
     return this.request()
-      .filterOneOf(
-        contentChannelTypes.map((n) => `ContentChannelTypeId eq ${n}`)
-      )
+      .filterOneOf(contentChannelTypes.map((n) => `ContentChannelTypeId eq ${n}`))
       .andFilter(this.LIVE_CONTENT())
       .andFilter('Priority gt 0') // featured events have a priority in Rock >0
       .orderBy('Priority', 'desc');
@@ -430,9 +446,7 @@ export default class ContentItem extends coreContentItem.dataSource {
 
     return find(
       contentItems,
-      (n) =>
-        this.formatTitleAsUrl(get(n, 'title', '')) ===
-        this.formatTitleAsUrl(title)
+      (n) => this.formatTitleAsUrl(get(n, 'title', '')) === this.formatTitleAsUrl(title)
     );
   };
 
@@ -494,12 +508,8 @@ export default class ContentItem extends coreContentItem.dataSource {
     if (!associations || !associations.length) return this.request().empty();
 
     return this.getFromIds(
-      associations.map(
-        ({ childContentChannelItemId }) => childContentChannelItemId
-      )
-    ).transform((results) =>
-      results.sort(this.sortByAssociationOrder(associations))
-    );
+      associations.map(({ childContentChannelItemId }) => childContentChannelItemId)
+    ).transform((results) => results.sort(this.sortByAssociationOrder(associations)));
   };
 
   /**
@@ -517,9 +527,7 @@ export default class ContentItem extends coreContentItem.dataSource {
 
     return this.getFromIds(
       associations.map(({ contentChannelItemId }) => contentChannelItemId)
-    ).transform((results) =>
-      results.sort(this.sortByAssociationOrder(associations))
-    );
+    ).transform((results) => results.sort(this.sortByAssociationOrder(associations)));
   };
 
   /**
@@ -532,9 +540,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     const request = async () => {
       const cursor = (await this.getCursorByParentContentItemId(id))
         .expand('ContentChannel')
-        .transform((results) =>
-          results.filter((item) => !!item.id).map(({ id }) => id)
-        );
+        .transform((results) => results.filter((item) => !!item.id).map(({ id }) => id));
 
       return cursor.get();
     };
@@ -634,10 +640,12 @@ export default class ContentItem extends coreContentItem.dataSource {
       this.context
     );
 
-    return processObjectSize({
-      ...data.node,
-      htmlContent: cleanHtmlContentForIndex(data.node.htmlContent),
-    });
+    return processObjectSize(
+      prioritizeIndexItem({
+        ...data.node,
+        htmlContent: cleanHtmlContentForIndex(data.node.htmlContent),
+      })
+    );
   }
 
   async updateContentItemIndex(id) {
@@ -681,9 +689,7 @@ export default class ContentItem extends coreContentItem.dataSource {
      *  be active
      */
     if (startDateTime && startDateTime !== '') {
-      const mStartDateTime = moment(startDateTime).tz(
-        ApollosConfig.ROCK.TIMEZONE
-      );
+      const mStartDateTime = moment(startDateTime).tz(ApollosConfig.ROCK.TIMEZONE);
 
       log(
         `${moment().format()} : ${
@@ -749,25 +755,36 @@ export default class ContentItem extends coreContentItem.dataSource {
     console.log('---------------------------------------------------------');
     console.log('⌛ Mapping groups for index... this will take a while');
 
-    let itemsLeft = true;
+    // let itemsLeft = true;
     let itemsToIndex = [];
-    const args = { after: null, first: 100 };
+    // const args = { after: null, first: 100 };
 
-    /* eslint-disable no-await-in-loop */
-    while (itemsLeft) {
-      const { edges } = await this.paginate({
-        cursor: this.byActive(),
-        args,
-      });
+    // /* eslint-disable no-await-in-loop */
+    // while (itemsLeft) {
+    //   const { edges } = await this.paginate({
+    //     cursor: this.byActive(),
+    //     args,
+    //   });
 
-      const result = await edges;
-      console.log(`... Mapping next ${result.length} items ...`);
-      const items = result.map(({ node }) => node);
-      itemsLeft = items.length === 100;
+    //   const result = await edges;
+    //   console.log(`... Mapping next ${result.length} items ...`);
+    //   const items = result.map(({ node }) => node);
+    //   itemsLeft = items.length === 100;
 
-      if (itemsLeft) args.after = result[result.length - 1].cursor;
+    //   if (itemsLeft) args.after = result[result.length - 1].cursor;
+    //   const mappedItems = await Promise.all(
+    //     items.map((item) => this.mapItemToAlgolia(item))
+    //   );
+
+    //   itemsToIndex = itemsToIndex.concat(mappedItems);
+    // }
+
+    if (HARDCODED_INDEXED_ITEMS.length) {
+      console.log(`... Mapping hardcoded items ...`);
       const mappedItems = await Promise.all(
-        items.map((item) => this.mapItemToAlgolia(item))
+        HARDCODED_INDEXED_ITEMS.map((item) =>
+          processObjectSize(prioritizeIndexItem(item))
+        )
       );
 
       itemsToIndex = itemsToIndex.concat(mappedItems);
@@ -776,7 +793,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     console.log(`🔍 Mapped ${itemsToIndex.length} content items for indexing`);
 
     // Make sure to leave this set to `true` before committing/merging!
-    const __PREVENT_DEV_ALGOLIA_INDEXING__ = true;
+    const __PREVENT_DEV_ALGOLIA_INDEXING__ = false;
 
     if (
       process.env.NODE_ENV !== 'production' &&
@@ -812,9 +829,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     // note : get the children of Content Item
     const { Feature } = this.context.dataSources;
     const childrenIds = await this.getChildrenIds(id);
-    const children = await Promise.all(
-      childrenIds.map((id) => this.getFromId(id))
-    );
+    const children = await Promise.all(childrenIds.map((id) => this.getFromId(id)));
 
     const features = await Promise.all(
       children.map((child) => {
@@ -842,8 +857,7 @@ export default class ContentItem extends coreContentItem.dataSource {
         if (
           Object.values(ROCK_MAPPINGS.FEATURE_MAPPINGS).some(
             ({ ContentChannelTypeId }) =>
-              ContentChannelTypeId &&
-              ContentChannelTypeId.includes(contentChannelTypeId)
+              ContentChannelTypeId && ContentChannelTypeId.includes(contentChannelTypeId)
           )
         ) {
           typename = Object.keys(ROCK_MAPPINGS.FEATURE_MAPPINGS).find((key) => {
@@ -864,8 +878,7 @@ export default class ContentItem extends coreContentItem.dataSource {
           typename = Object.keys(ROCK_MAPPINGS.FEATURE_MAPPINGS).find((key) => {
             const value = ROCK_MAPPINGS.FEATURE_MAPPINGS[key];
             return (
-              value.ContentChannelId &&
-              value.ContentChannelId.includes(contentChannelId)
+              value.ContentChannelId && value.ContentChannelId.includes(contentChannelId)
             );
           });
         }
