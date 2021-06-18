@@ -793,7 +793,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     console.log(`🔍 Mapped ${itemsToIndex.length} content items for indexing`);
 
     // Make sure to leave this set to `true` before committing/merging!
-    const __PREVENT_DEV_ALGOLIA_INDEXING__ = false;
+    const __PREVENT_DEV_ALGOLIA_INDEXING__ = true;
 
     if (
       process.env.NODE_ENV !== 'production' &&
