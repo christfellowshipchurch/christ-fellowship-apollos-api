@@ -325,7 +325,7 @@ ROCK_MAPPINGS:
     HtmlBlock:
       ContentChannelTypeId: [26]
     VerticalCardList:
-      ContentChannelId: [44]
+      ContentChannelId: [44, 87]
 
 CONTENT_CHANNEL_FEEDS:
   HOME_FEED: 64
