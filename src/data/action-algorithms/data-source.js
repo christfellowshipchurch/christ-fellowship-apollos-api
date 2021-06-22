@@ -43,7 +43,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
 
   // MARK : - Algorithms
   async allEventsAlgorithm() {
-    const { ContentItem } = this.context.dataSources;
+    const { ContentItem, Event } = this.context.dataSources;
 
     const items = await ContentItem.getEvents();
 
@@ -54,7 +54,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
       image: ContentItem.getCoverImage(item),
       action: 'READ_CONTENT',
       summary: ContentItem.createSummary(item),
-      labelText: item?.attributeValues?.label?.value,
+      labelText: Event.createLabelText(item),
     }));
   }
 
@@ -95,7 +95,7 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
   }
 
   async contentChildrenAlgorithm({ contentChannelItemId, limit = 10 }) {
-    const { ContentItem } = this.context.dataSources;
+    const { ContentItem, Event } = this.context.dataSources;
     const cursor = (
       await ContentItem.getCursorByParentContentItemId(contentChannelItemId)
     ).expand('ContentChannel');
@@ -104,13 +104,14 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
     return items.map((item, i) => {
       const urlEndpoint = item?.attributeValues?.redirectUrl?.value;
       const isUrl = urlEndpoint && !isEmpty(urlEndpoint);
+      const __type = ContentItem.resolveType(item);
 
       const relatedNode = isUrl
         ? {
             __typename: 'Url',
             url: urlEndpoint,
           }
-        : { ...item, __type: ContentItem.resolveType(item) };
+        : { ...item, __type };
 
       return {
         id: `${item.id}${i}`,
@@ -123,7 +124,10 @@ export default class ActionAlgorithm extends coreActionAlgorithm.dataSource {
         image: ContentItem.getCoverImage(item),
         action: isUrl ? 'OPEN_URL' : 'READ_CONTENT',
         summary: ContentItem.createSummary(item),
-        labelText: item?.attributeValues?.label?.value,
+        labelText:
+          __type === 'EventContentItem'
+            ? Event.createLabelText(item)
+            : item?.attributeValues?.label?.value,
       };
     });
   }
