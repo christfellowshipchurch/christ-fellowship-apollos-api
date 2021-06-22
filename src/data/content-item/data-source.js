@@ -14,11 +14,11 @@ import { createVideoUrlFromGuid, getIdentifierType } from '../utils';
 
 const { ROCK_MAPPINGS, ROCK, FEATURE_FLAGS } = ApollosConfig;
 
-const PRIORITIZED_INDEXED_ITEMS = ['Redirect:d54ec5dc-4edf-4912-87fd-deb19bab4bce'];
-
-const HARDCODED_INDEXED_ITEMS = [
+/* ==== HARDCODED_INDEXED_ITEMS FORMAT ==== */
+/*
   {
-    id: 'Redirect:d54ec5dc-4edf-4912-87fd-deb19bab4bce',
+    id: 'Url:d54ec5dc-4edf-4912-87fd-deb19bab4bce',
+    action: 'OPEN_URL',
     url: 'http://www.google.com',
     title: 'Google',
     summary: 'Redirect to Google',
@@ -32,22 +32,12 @@ const HARDCODED_INDEXED_ITEMS = [
       ],
     },
   },
-  {
-    id: 'Redirect:10d76052-d1e7-488b-8f87-cce205c2f96b',
-    url: 'http://www.bing.com',
-    title: 'Bing',
-    summary: 'Redirect to Bing',
-    htmlContent: ['bing', 'redirect'],
-    coverImage: {
-      sources: [
-        {
-          uri:
-            'https://cdn.vox-cdn.com/thumbor/yDQsZmY1o79nAGd0dfCq9OP_8tk=/0x0:660x440/920x613/filters:focal(278x168:382x272):format(webp)/cdn.vox-cdn.com/uploads/chorus_image/image/67583196/binglogo.0.jpg',
-        },
-      ],
-    },
-  },
-];
+*/
+const HARDCODED_INDEXED_ITEMS = [];
+
+/* ==== Prioritized_INDEXED_ITEMS FORMAT ==== */
+/* 'Url:d54ec5dc-4edf-4912-87fd-deb19bab4bce' */
+const PRIORITIZED_INDEXED_ITEMS = [];
 
 // Search Config & Utils
 // ----------------------------------------------------------------------------
@@ -755,29 +745,29 @@ export default class ContentItem extends coreContentItem.dataSource {
     console.log('---------------------------------------------------------');
     console.log('⌛ Mapping groups for index... this will take a while');
 
-    // let itemsLeft = true;
+    let itemsLeft = true;
     let itemsToIndex = [];
-    // const args = { after: null, first: 100 };
+    const args = { after: null, first: 100 };
 
     // /* eslint-disable no-await-in-loop */
-    // while (itemsLeft) {
-    //   const { edges } = await this.paginate({
-    //     cursor: this.byActive(),
-    //     args,
-    //   });
+    while (itemsLeft) {
+      const { edges } = await this.paginate({
+        cursor: this.byActive(),
+        args,
+      });
 
-    //   const result = await edges;
-    //   console.log(`... Mapping next ${result.length} items ...`);
-    //   const items = result.map(({ node }) => node);
-    //   itemsLeft = items.length === 100;
+      const result = await edges;
+      console.log(`... Mapping next ${result.length} items ...`);
+      const items = result.map(({ node }) => node);
+      itemsLeft = items.length === 100;
 
-    //   if (itemsLeft) args.after = result[result.length - 1].cursor;
-    //   const mappedItems = await Promise.all(
-    //     items.map((item) => this.mapItemToAlgolia(item))
-    //   );
+      if (itemsLeft) args.after = result[result.length - 1].cursor;
+      const mappedItems = await Promise.all(
+        items.map((item) => this.mapItemToAlgolia(item))
+      );
 
-    //   itemsToIndex = itemsToIndex.concat(mappedItems);
-    // }
+      itemsToIndex = itemsToIndex.concat(mappedItems);
+    }
 
     if (HARDCODED_INDEXED_ITEMS.length) {
       console.log(`... Mapping hardcoded items ...`);

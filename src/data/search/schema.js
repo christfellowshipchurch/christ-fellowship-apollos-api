@@ -12,7 +12,10 @@ export default gql`
     title: String
     summary: String
     coverImage: ImageMedia
+    priority: Int
     node: Node
+    action: ACTION_FEATURE_ACTION
+    url: String
   }
 
   enum INDEX_ACTION {
