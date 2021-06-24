@@ -249,7 +249,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     ).filter(this.LIVE_CONTENT());
   };
 
-  attributeIsRedirect = ({ key, attributeValues, attributes }) =>
+  attributeIsRedirect = ({ key, attributeValues }) =>
     key.toLowerCase().includes('redirect') &&
     typeof attributeValues[key].value === 'string' &&
     attributeValues[key].value.startsWith('http') && // looks like a url
@@ -264,7 +264,7 @@ export default class ContentItem extends coreContentItem.dataSource {
       })
     ).length;
 
-  attributeIsCallToAction = ({ key, attributeValues, attributes }) =>
+  attributeIsCallToAction = ({ key, attributeValues }) =>
     key.toLowerCase().includes('call') &&
     key.toLowerCase().includes('action') &&
     typeof attributeValues[key].value === 'string' &&
@@ -528,7 +528,9 @@ export default class ContentItem extends coreContentItem.dataSource {
     const request = async () => {
       const cursor = (await this.getCursorByParentContentItemId(id))
         .expand('ContentChannel')
-        .transform((results) => results.filter((item) => !!item.id).map(({ id }) => id));
+        .transform((results) =>
+          results.filter((item) => !!item.id).map(({ id: _id }) => _id)
+        );
 
       return cursor.get();
     };
@@ -589,8 +591,8 @@ export default class ContentItem extends coreContentItem.dataSource {
   }
 
   resolveContentItem(item) {
-    const { ContentItem } = this.context.dataSources;
-    return ContentItem.resolveType(item);
+    const { ContentItem: _ContentItem } = this.context.dataSources;
+    return _ContentItem.resolveType(item);
   }
 
   async indexAllGeneralContent() {
@@ -737,13 +739,15 @@ export default class ContentItem extends coreContentItem.dataSource {
            *
            *  TODO : end date auto-remove
            */
-          const { data } = job;
-          const { action, item } = data;
+          const { data: _data } = job;
+          const { action, item: _item } = _data;
 
           if (action === 'update') {
             log(`Running scheduled search index update for "${item.title}"`);
-            return this.getSearchIndex().addObjects([item]);
+            return this.getSearchIndex().addObjects([_item]);
           }
+
+          return null;
         });
 
         return null;
@@ -764,7 +768,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     let itemsToIndex = [];
     const args = { after: null, first: 100 };
 
-    // /* eslint-disable no-await-in-loop */
+    /* eslint-disable no-await-in-loop */
     while (itemsLeft) {
       const { edges } = await this.paginate({
         cursor: this.byActive(),
@@ -832,11 +836,11 @@ export default class ContentItem extends coreContentItem.dataSource {
     // note : get the children of Content Item
     const { Feature } = this.context.dataSources;
     const childrenIds = await this.getChildrenIds(id);
-    const children = await Promise.all(childrenIds.map((id) => this.getFromId(id)));
+    const children = await Promise.all(childrenIds.map((_id) => this.getFromId(_id)));
 
     const features = await Promise.all(
       children.map((child) => {
-        const { id, contentChannelId, contentChannelTypeId, title } = child;
+        const { id: _id, contentChannelId, contentChannelTypeId, title } = child;
         let typename = 'ContentBlock';
 
         // TESTING SOMETHING
@@ -846,7 +850,7 @@ export default class ContentItem extends coreContentItem.dataSource {
               {
                 type: 'CONTENT_CHILDREN',
                 arguments: {
-                  contentChannelItemId: id,
+                  contentChannelItemId: _id,
                   limit: 0,
                 },
               },
@@ -891,10 +895,10 @@ export default class ContentItem extends coreContentItem.dataSource {
         switch (typename) {
           case 'ContentBlock':
             return Feature.createContentBlockFeature({
-              contentChannelItemId: id,
+              contentChannelItemId: _id,
             });
           case 'HtmlBlock':
-            return Feature.createHtmlBlockFeature({ contentChannelItemId: id });
+            return Feature.createHtmlBlockFeature({ contentChannelItemId: _id });
           case 'HeroList':
             // todo :
             return null;
@@ -904,7 +908,7 @@ export default class ContentItem extends coreContentItem.dataSource {
                 {
                   type: 'CONTENT_CHILDREN',
                   arguments: {
-                    contentChannelItemId: id,
+                    contentChannelItemId: _id,
                     limit: 0,
                   },
                 },
@@ -927,7 +931,7 @@ export default class ContentItem extends coreContentItem.dataSource {
                 {
                   type: 'CONTENT_CHILDREN',
                   arguments: {
-                    contentChannelItemId: id,
+                    contentChannelItemId: _id,
                     limit: 0,
                   },
                 },
