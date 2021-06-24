@@ -15,7 +15,6 @@ export default gql`
     priority: Int
     node: Node
     action: ACTION_FEATURE_ACTION
-    url: String
   }
 
   enum INDEX_ACTION {

@@ -14,30 +14,28 @@ import { createVideoUrlFromGuid, getIdentifierType } from '../utils';
 
 const { ROCK_MAPPINGS, ROCK, FEATURE_FLAGS } = ApollosConfig;
 
-/* ==== HARDCODED_INDEXED_ITEMS FORMAT ==== */
-/*
+const createUrlGlobalId = (url) =>
+  createGlobalId(JSON.stringify({ url, __typename: 'Url' }), 'Url');
+
+const HARDCODED_INDEXED_ITEMS = [
   {
-    id: 'Url:d54ec5dc-4edf-4912-87fd-deb19bab4bce',
+    id: createUrlGlobalId('/groups'),
     action: 'OPEN_URL',
-    url: 'http://www.google.com',
-    title: 'Google',
-    summary: 'Redirect to Google',
-    htmlContent: ['google', 'redirect'],
+    __typename: 'Url',
+    title: 'Groups',
+    summary: 'Groups page',
+    htmlContent: ['groups'],
     coverImage: {
       sources: [
         {
-          uri:
-            'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/2560px-Google_2015_logo.svg.png',
+          uri: 'https://christfellowship.church/groups-cover-image.jpg',
         },
       ],
     },
   },
-*/
-const HARDCODED_INDEXED_ITEMS = [];
+];
 
-/* ==== Prioritized_INDEXED_ITEMS FORMAT ==== */
-/* 'Url:d54ec5dc-4edf-4912-87fd-deb19bab4bce' */
-const PRIORITIZED_INDEXED_ITEMS = [];
+const PRIORITIZED_INDEXED_ITEMS = [createUrlGlobalId('/groups')];
 
 // Search Config & Utils
 // ----------------------------------------------------------------------------
@@ -609,31 +607,48 @@ export default class ContentItem extends coreContentItem.dataSource {
   }
 
   async mapItemToAlgolia(item) {
-    const type = await this.resolveContentItem(item);
+    let data = item;
+    if (item.attributes) {
+      const type = await this.resolveContentItem(item);
 
-    const { data } = await graphql(
-      this.context.schema,
-      `query getItem {
-        node(id: "${createGlobalId(item.id, type)}") {
-          ... on ContentItem {
-            id
-            title
-            summary
-            htmlContent
-            objectID: id
-            __typename
-            coverImage { sources { uri } }
+      const gqlData = await graphql(
+        this.context.schema,
+        `query getItem {
+          node(id: "${createGlobalId(item.id, type)}") {
+            ... on ContentItem {
+              id
+              title
+              summary
+              htmlContent
+              objectID: id
+              __typename
+              coverImage { sources { uri } }
+            }
           }
-        }
-      }`,
-      {},
-      this.context
-    );
+        }`,
+        {},
+        this.context
+      );
+
+      data = gqlData?.data?.node;
+    }
+
+    const { id, title, summary, htmlContent, objectID, __typename, coverImage } = data;
 
     return processObjectSize(
       prioritizeIndexItem({
-        ...data.node,
-        htmlContent: cleanHtmlContentForIndex(data.node.htmlContent),
+        // Visual representation
+        title,
+        summary,
+        coverImage,
+
+        // For Algolia
+        htmlContent: cleanHtmlContentForIndex(htmlContent),
+        objectID: objectID || id,
+
+        // For user interaction
+        relatedNode: { id, __typename },
+        action: item.action || 'READ_CONTENT',
       })
     );
   }
@@ -772,9 +787,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     if (HARDCODED_INDEXED_ITEMS.length) {
       console.log(`... Mapping hardcoded items ...`);
       const mappedItems = await Promise.all(
-        HARDCODED_INDEXED_ITEMS.map((item) =>
-          processObjectSize(prioritizeIndexItem(item))
-        )
+        HARDCODED_INDEXED_ITEMS.map(this.mapItemToAlgolia)
       );
 
       itemsToIndex = itemsToIndex.concat(mappedItems);
