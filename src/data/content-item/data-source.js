@@ -25,6 +25,7 @@ const HARDCODED_INDEXED_ITEMS = [
     title: 'Groups',
     summary: 'Groups page',
     htmlContent: ['groups'],
+    priorityTags: ['groups'], // Prioritizes items when these are present in search query
     coverImage: {
       sources: [
         {
@@ -35,7 +36,11 @@ const HARDCODED_INDEXED_ITEMS = [
   },
 ];
 
-const PRIORITIZED_INDEXED_ITEMS = [createUrlGlobalId('/groups')];
+// Format:
+// {
+//   [itemId]: { ...additionalItemAttributes },
+// }
+const ADDITIONAL_ITEM_ATTRIBUTES = {};
 
 // Search Config & Utils
 // ----------------------------------------------------------------------------
@@ -60,16 +65,10 @@ const cleanHtmlContentForIndex = (htmlContent) => {
   });
 };
 
-const prioritizeIndexItem = (obj) => {
-  const priority = PRIORITIZED_INDEXED_ITEMS.indexOf(obj.id);
-  const prioritizedItem = { ...obj };
-
-  if (priority >= 0) {
-    prioritizedItem.priority = priority;
-  }
-
-  return prioritizedItem;
-};
+const addAdditionalItemAttributes = (obj) => ({
+  ...obj,
+  ...(ADDITIONAL_ITEM_ATTRIBUTES[obj.relatedNode?.id] || {}),
+});
 
 const processObjectSize = (obj) => {
   const objSize = sizeof(obj);
@@ -635,10 +634,19 @@ export default class ContentItem extends coreContentItem.dataSource {
       data = gqlData?.data?.node;
     }
 
-    const { id, title, summary, htmlContent, objectID, __typename, coverImage } = data;
+    const {
+      id,
+      title,
+      summary,
+      htmlContent,
+      objectID,
+      __typename,
+      coverImage,
+      priorityTags,
+    } = data;
 
     return processObjectSize(
-      prioritizeIndexItem({
+      addAdditionalItemAttributes({
         // Visual representation
         title,
         summary,
@@ -647,6 +655,7 @@ export default class ContentItem extends coreContentItem.dataSource {
         // For Algolia
         htmlContent: cleanHtmlContentForIndex(htmlContent),
         objectID: objectID || id,
+        priorityTags,
 
         // For user interaction
         relatedNode: { id, __typename },
