@@ -849,25 +849,14 @@ export default class ContentItem extends coreContentItem.dataSource {
 
     const features = await Promise.all(
       children.map((child) => {
-        const { id: _id, contentChannelId, contentChannelTypeId, title } = child;
+        const {
+          id: _id,
+          contentChannelId,
+          contentChannelTypeId,
+          title,
+          attributeValues,
+        } = child;
         let typename = 'ContentBlock';
-
-        // TESTING SOMETHING
-        if (contentChannelId === 87) {
-          return Feature.createVerticalCardListFeature({
-            algorithms: [
-              {
-                type: 'CONTENT_CHILDREN',
-                arguments: {
-                  contentChannelItemId: _id,
-                  limit: 0,
-                },
-              },
-            ],
-            title,
-            subtitle: this.createSummary(child),
-          });
-        }
 
         // if we have defined an ContentChannelTypeId based maping in the YML file, use it!
         if (
@@ -945,7 +934,10 @@ export default class ContentItem extends coreContentItem.dataSource {
                   },
                 },
               ],
-              title,
+              title:
+                `${attributeValues?.hideTitle?.value}`.toUpperCase() === 'TRUE'
+                  ? null
+                  : title,
               subtitle: this.createSummary(child),
               primaryAction: {
                 title: 'See More',
