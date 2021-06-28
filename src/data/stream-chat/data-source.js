@@ -2,7 +2,7 @@ import ApollosConfig from '@apollosproject/config';
 import { RESTDataSource } from 'apollo-datasource-rest';
 import { createGlobalId, parseGlobalId } from '@apollosproject/server-core';
 import { StreamChat as StreamChatClient } from 'stream-chat';
-import { chunk, get } from 'lodash';
+import { chunk, get, isEmpty } from 'lodash';
 import { Utils } from '@apollosproject/data-connector-rock';
 
 const { STREAM } = ApollosConfig;
@@ -284,6 +284,7 @@ export default class StreamChat extends RESTDataSource {
 
     if (channelId && channelType) {
       const channel = await this.getChannel({ channelId, channelType });
+      const channelName = get(channel, 'data.name', null);
       const mutedNotifications = get(channel, 'data.muteNotifications', []);
       const mutedUsers =
         mutedNotifications && Array.isArray(mutedNotifications) ? mutedNotifications : [];
@@ -305,6 +306,7 @@ export default class StreamChat extends RESTDataSource {
             .map((id) => `${id}`), // OneSignal expects an array of string Ids
           content,
           heading: `💬 Message from ${sender.name}`,
+          ...(isEmpty(channelName) ? {} : { subtitle: channelName }),
           app_url: `christfellowship://c/ChatChannelSingle?streamChannelId=${channelId}&streamChannelType=${channelType}`,
         });
       }
