@@ -77,7 +77,7 @@ export default class GroupPreference extends RockApolloDataSource {
         let groupMemberId = null;
         const { guid } = groupPreference;
         const groupMemberStatus = 1;
-        const preferenceAttributeKey = 'attributeKey=Interest';
+        const preferenceAttributeKey = 'attributeKey=Preference';
         const preferenceAttributeValue = `attributeValue=${guid}`;
 
         const groupMember = await this.request(`/GroupMembers`)
@@ -104,15 +104,15 @@ export default class GroupPreference extends RockApolloDataSource {
         };
 
         console.log(`[GroupPreferece.subscribeToUpdates] Adding new Group Member`);
-        const newGroupMember = await this.post('GroupMembers', postData);
-        groupMemberId = newGroupMember.id;
+        const newGroupMemberId = await this.post('GroupMembers', postData);
+        groupMemberId = newGroupMemberId;
 
         if (groupMemberId) {
           console.log(
             `[GroupPreferece.subscribeToUpdates] Setting Group Member Interest attribute`
           );
           await this.post(
-            `GroupMembers/AttributeValue/${campusGroupId}?${preferenceAttributeKey}&${preferenceAttributeValue}`
+            `GroupMembers/AttributeValue/${groupMemberId}?${preferenceAttributeKey}&${preferenceAttributeValue}`
           );
         }
       }
