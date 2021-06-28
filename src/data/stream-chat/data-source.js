@@ -12,7 +12,9 @@ const { CHAT_SECRET, CHAT_API_KEY } = STREAM;
 let chatClient;
 
 if (CHAT_SECRET && CHAT_API_KEY && !chatClient) {
-  chatClient = new StreamChatClient(CHAT_API_KEY, CHAT_SECRET, { region: 'us-east-1' });
+  chatClient = new StreamChatClient(CHAT_API_KEY, CHAT_SECRET, {
+    region: 'us-east-1',
+  });
 } else {
   console.warn(
     'You are using the Stream Chat dataSource without Stream credentials. To avoid issues, add Stream Chat credentials to your config.yml or remove the Stream Chat dataSource'
@@ -81,12 +83,12 @@ export default class StreamChat extends RESTDataSource {
 
     // Paginate through users according to Stream's max call limit
     do {
-      let endIndex = offset + CREATE_USERS_LIMIT;
+      const endIndex = offset + CREATE_USERS_LIMIT;
       const usersSubset = users.slice(offset, endIndex);
 
       await chatClient.upsertUsers(usersSubset);
 
-      offset = offset + CREATE_USERS_LIMIT;
+      offset += CREATE_USERS_LIMIT;
     } while (users.length > offset);
   };
 
@@ -146,7 +148,10 @@ export default class StreamChat extends RESTDataSource {
     channelType = this.channelType.LIVESTREAM,
   }) => {
     const channel = chatClient.channel(channelType, channelId);
-    const channelMembers = await this.getChannelMembers({ channelId, channelType });
+    const channelMembers = await this.getChannelMembers({
+      channelId,
+      channelType,
+    });
     const channelMemberIds = channelMembers.map((channelMember) =>
       get(channelMember, 'user.id')
     );
@@ -171,7 +176,10 @@ export default class StreamChat extends RESTDataSource {
     channelType = this.channelType.LIVESTREAM,
   }) => {
     const channel = chatClient.channel(channelType, channelId);
-    const channelMembers = await this.getChannelMembers({ channelId, channelType });
+    const channelMembers = await this.getChannelMembers({
+      channelId,
+      channelType,
+    });
     const channelMemberIds = channelMembers.map((channelMember) =>
       get(channelMember, 'user.id')
     );
@@ -276,7 +284,7 @@ export default class StreamChat extends RESTDataSource {
 
     if (channelId && channelType) {
       const channel = await this.getChannel({ channelId, channelType });
-      const mutedNotifications = get(channel, 'channel.muteNotifications', []);
+      const mutedNotifications = get(channel, 'data.muteNotifications', []);
       const mutedUsers =
         mutedNotifications && Array.isArray(mutedNotifications) ? mutedNotifications : [];
 
