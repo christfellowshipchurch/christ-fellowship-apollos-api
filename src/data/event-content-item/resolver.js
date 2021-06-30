@@ -8,9 +8,8 @@ import momentTz from 'moment-timezone';
 import { parseRockKeyValuePairs } from '../utils';
 import sanitizeHtml from '../sanitize-html';
 import { sharingResolver } from '../content-item/resolver';
-import deprecatedResolvers from './deprecated-resolvers';
-
 import campusSortOrder from '../campus/campus-sort-order';
+import deprecatedResolvers from './deprecated-resolvers';
 
 const { CONTENT_CHANNEL_FEEDS } = ApollosConfig;
 
@@ -47,38 +46,10 @@ const resolver = {
         action: get(matrixItemAttributeValues, 'url.value', ''),
       }));
     },
-    labelText: async ({ attributeValues }, args, { dataSources }) => {
-      const label = attributeValues?.label?.value;
+    labelText: (root, args, { dataSources }) => {
+      const { Event } = dataSources;
 
-      if (label && !isEmpty(label)) return label;
-
-      const { Event, MatrixItem, Schedule } = dataSources;
-      // Get Matrix Items
-      const matrixGuid = get(attributeValues, 'schedules.value', '');
-      let matrixItems = [];
-
-      if (!matrixGuid || matrixGuid === '') return [];
-
-      try {
-        matrixItems = await MatrixItem.getItemsFromId(matrixGuid);
-      } catch (e) {
-        console.log({ e });
-        return [];
-      }
-
-      /**
-       * Matrix Items are structured in Rock as: { schedule, [filters] }
-       * We need to resolve those schedules to schedule objects
-       */
-      const scheduleIds = matrixItems
-        .map((item) => item?.attributeValues?.schedule?.value)
-        .filter((item) => !!item && !isEmpty(item));
-      const schedules = await Schedule.getOccurrencesFromIds(scheduleIds);
-      const schedule = schedules
-        .sort((a, b) => compareAsc(parseISO(a), parseISO(b)))
-        .find(() => true);
-
-      return schedule?.start;
+      return Event.createLabelText(root);
     },
     eventGroupings: async (
       { attributeValues },
@@ -119,22 +90,20 @@ const resolver = {
       });
 
       return Object.entries(filterScheduleDictionary)
-        .map(([name, schedules]) => {
-          return {
-            name,
-            instances: async () => {
-              const rockSchedules = await Schedule.getFromIds(schedules);
-              const times = await Promise.all(
-                rockSchedules.map((s) => Event.parseScheduleAsEvents(s))
-              );
+        .map(([name, schedules]) => ({
+          name,
+          instances: async () => {
+            const rockSchedules = await Schedule.getFromIds(schedules);
+            const times = await Promise.all(
+              rockSchedules.map((s) => Event.parseScheduleAsEvents(s))
+            );
 
-              return uniqBy(
-                flatten(times).sort((a, b) => moment(a.start).diff(b.start)),
-                'start'
-              );
-            },
-          };
-        })
+            return uniqBy(
+              flatten(times).sort((a, b) => moment(a.start).diff(b.start)),
+              'start'
+            );
+          },
+        }))
         .sort((a, b) => {
           /**
            * If an order for a given name doesn't exist in our ordering file,

@@ -1,8 +1,9 @@
 import { Event as coreEvent } from '@apollosproject/data-connector-rock';
-import { flattenDeep } from 'lodash';
-import { dataSource as scheduleDataSource } from '../schedule';
+import { flattenDeep, isEmpty, get } from 'lodash';
+import { compareAsc, parseISO } from 'date-fns';
 import moment from 'moment-timezone';
 import ApollosConfig from '@apollosproject/config';
+import { dataSource as scheduleDataSource } from '../schedule';
 
 export default class Event extends scheduleDataSource {
   getFromId = (id) => {
@@ -66,5 +67,44 @@ export default class Event extends scheduleDataSource {
       start: moment.tz(dateTimes[2], ApollosConfig.ROCK.TIMEZONE).utc().format(),
       end: moment.tz(dateTimes[1], ApollosConfig.ROCK.TIMEZONE).utc().format(),
     };
+  };
+
+  /**
+   * Creates a label based on a Rock Content Item
+   * @param {ContentItem} root
+   * @returns string
+   */
+  createLabelText = async ({ attributeValues }) => {
+    const label = attributeValues?.label?.value;
+
+    if (label && !isEmpty(label)) return label;
+
+    const { MatrixItem, Schedule } = this.context.dataSources;
+    // Get Matrix Items
+    const matrixGuid = get(attributeValues, 'schedules.value', '');
+    let matrixItems = [];
+
+    if (!matrixGuid || matrixGuid === '') return [];
+
+    try {
+      matrixItems = await MatrixItem.getItemsFromId(matrixGuid);
+    } catch (e) {
+      console.log({ e });
+      return [];
+    }
+
+    /**
+     * Matrix Items are structured in Rock as: { schedule, [filters] }
+     * We need to resolve those schedules to schedule objects
+     */
+    const scheduleIds = matrixItems
+      .map((item) => item?.attributeValues?.schedule?.value)
+      .filter((item) => !!item && !isEmpty(item));
+    const schedules = await Schedule.getOccurrencesFromIds(scheduleIds);
+    const schedule = schedules
+      .sort((a, b) => compareAsc(parseISO(a), parseISO(b)))
+      .find(() => true);
+
+    return schedule?.start;
   };
 }
