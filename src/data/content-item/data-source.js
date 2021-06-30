@@ -14,6 +14,34 @@ import { createVideoUrlFromGuid, getIdentifierType } from '../utils';
 
 const { ROCK_MAPPINGS, ROCK, FEATURE_FLAGS } = ApollosConfig;
 
+const createUrlGlobalId = (url) =>
+  createGlobalId(JSON.stringify({ url, __typename: 'Url' }), 'Url');
+
+const HARDCODED_INDEXED_ITEMS = [
+  // {
+  //   id: createUrlGlobalId('/groups'),
+  //   action: 'OPEN_URL',
+  //   __typename: 'Url',
+  //   title: 'Groups',
+  //   summary: 'Groups page',
+  //   htmlContent: ['groups'],
+  //   priorityTags: ['groups'], // Prioritizes items when these are present in search query
+  //   coverImage: {
+  //     sources: [
+  //       {
+  //         uri: 'https://christfellowship.church/groups-cover-image.jpg',
+  //       },
+  //     ],
+  //   },
+  // },
+];
+
+// Format:
+// {
+//   [itemId]: { ...additionalItemAttributes },
+// }
+const ADDITIONAL_ITEM_ATTRIBUTES = {};
+
 // Search Config & Utils
 // ----------------------------------------------------------------------------
 
@@ -36,6 +64,11 @@ const cleanHtmlContentForIndex = (htmlContent) => {
     remove_duplicates: true,
   });
 };
+
+const addAdditionalItemAttributes = (obj) => ({
+  ...obj,
+  ...(ADDITIONAL_ITEM_ATTRIBUTES[obj.relatedNode?.id] || {}),
+});
 
 const processObjectSize = (obj) => {
   const objSize = sizeof(obj);
@@ -215,7 +248,7 @@ export default class ContentItem extends coreContentItem.dataSource {
     ).filter(this.LIVE_CONTENT());
   };
 
-  attributeIsRedirect = ({ key, attributeValues, attributes }) =>
+  attributeIsRedirect = ({ key, attributeValues }) =>
     key.toLowerCase().includes('redirect') &&
     typeof attributeValues[key].value === 'string' &&
     attributeValues[key].value.startsWith('http') && // looks like a url
@@ -230,7 +263,7 @@ export default class ContentItem extends coreContentItem.dataSource {
       })
     ).length;
 
-  attributeIsCallToAction = ({ key, attributeValues, attributes }) =>
+  attributeIsCallToAction = ({ key, attributeValues }) =>
     key.toLowerCase().includes('call') &&
     key.toLowerCase().includes('action') &&
     typeof attributeValues[key].value === 'string' &&
@@ -494,7 +527,9 @@ export default class ContentItem extends coreContentItem.dataSource {
     const request = async () => {
       const cursor = (await this.getCursorByParentContentItemId(id))
         .expand('ContentChannel')
-        .transform((results) => results.filter((item) => !!item.id).map(({ id }) => id));
+        .transform((results) =>
+          results.filter((item) => !!item.id).map(({ id: _id }) => _id)
+        );
 
       return cursor.get();
     };
@@ -555,8 +590,8 @@ export default class ContentItem extends coreContentItem.dataSource {
   }
 
   resolveContentItem(item) {
-    const { ContentItem } = this.context.dataSources;
-    return ContentItem.resolveType(item);
+    const { ContentItem: _ContentItem } = this.context.dataSources;
+    return _ContentItem.resolveType(item);
   }
 
   async indexAllGeneralContent() {
@@ -573,31 +608,60 @@ export default class ContentItem extends coreContentItem.dataSource {
   }
 
   async mapItemToAlgolia(item) {
-    const type = await this.resolveContentItem(item);
+    let data = item;
+    if (item.attributes) {
+      const type = await this.resolveContentItem(item);
 
-    const { data } = await graphql(
-      this.context.schema,
-      `query getItem {
-        node(id: "${createGlobalId(item.id, type)}") {
-          ... on ContentItem {
-            id
-            title
-            summary
-            htmlContent
-            objectID: id
-            __typename
-            coverImage { sources { uri } }
+      const gqlData = await graphql(
+        this.context.schema,
+        `query getItem {
+          node(id: "${createGlobalId(item.id, type)}") {
+            ... on ContentItem {
+              id
+              title
+              summary
+              htmlContent
+              objectID: id
+              __typename
+              coverImage { sources { uri } }
+            }
           }
-        }
-      }`,
-      {},
-      this.context
-    );
+        }`,
+        {},
+        this.context
+      );
 
-    return processObjectSize({
-      ...data.node,
-      htmlContent: cleanHtmlContentForIndex(data.node.htmlContent),
-    });
+      data = gqlData?.data?.node;
+    }
+
+    const {
+      id,
+      title,
+      summary,
+      htmlContent,
+      objectID,
+      __typename,
+      coverImage,
+      priorityTags,
+    } = data;
+
+    return processObjectSize(
+      addAdditionalItemAttributes({
+        // Visual representation
+        title,
+        summary,
+        coverImage,
+
+        // For Algolia
+        htmlContent: cleanHtmlContentForIndex(htmlContent),
+        objectID: objectID || id,
+        priorityTags,
+
+        // For user interaction
+        relatedNode: { id, __typename },
+        action: item.action || 'READ_CONTENT',
+      })
+    );
   }
 
   async updateContentItemIndex(id) {
@@ -684,13 +748,15 @@ export default class ContentItem extends coreContentItem.dataSource {
            *
            *  TODO : end date auto-remove
            */
-          const { data } = job;
-          const { action, item } = data;
+          const { data: _data } = job;
+          const { action, item: _item } = _data;
 
           if (action === 'update') {
             log(`Running scheduled search index update for "${item.title}"`);
-            return this.getSearchIndex().addObjects([item]);
+            return this.getSearchIndex().addObjects([_item]);
           }
+
+          return null;
         });
 
         return null;
@@ -726,6 +792,15 @@ export default class ContentItem extends coreContentItem.dataSource {
       if (itemsLeft) args.after = result[result.length - 1].cursor;
       const mappedItems = await Promise.all(
         items.map((item) => this.mapItemToAlgolia(item))
+      );
+
+      itemsToIndex = itemsToIndex.concat(mappedItems);
+    }
+
+    if (HARDCODED_INDEXED_ITEMS.length) {
+      console.log(`... Mapping hardcoded items ...`);
+      const mappedItems = await Promise.all(
+        HARDCODED_INDEXED_ITEMS.map(this.mapItemToAlgolia)
       );
 
       itemsToIndex = itemsToIndex.concat(mappedItems);
@@ -770,12 +845,12 @@ export default class ContentItem extends coreContentItem.dataSource {
     // note : get the children of Content Item
     const { Feature } = this.context.dataSources;
     const childrenIds = await this.getChildrenIds(id);
-    const children = await Promise.all(childrenIds.map((id) => this.getFromId(id)));
+    const children = await Promise.all(childrenIds.map((_id) => this.getFromId(_id)));
 
     const features = await Promise.all(
       children.map((child) => {
         const {
-          id,
+          id: _id,
           contentChannelId,
           contentChannelTypeId,
           title,
@@ -818,10 +893,10 @@ export default class ContentItem extends coreContentItem.dataSource {
         switch (typename) {
           case 'ContentBlock':
             return Feature.createContentBlockFeature({
-              contentChannelItemId: id,
+              contentChannelItemId: _id,
             });
           case 'HtmlBlock':
-            return Feature.createHtmlBlockFeature({ contentChannelItemId: id });
+            return Feature.createHtmlBlockFeature({ contentChannelItemId: _id });
           case 'HeroList':
             // todo :
             return null;
@@ -831,7 +906,7 @@ export default class ContentItem extends coreContentItem.dataSource {
                 {
                   type: 'CONTENT_CHILDREN',
                   arguments: {
-                    contentChannelItemId: id,
+                    contentChannelItemId: _id,
                     limit: 0,
                   },
                 },
@@ -854,7 +929,7 @@ export default class ContentItem extends coreContentItem.dataSource {
                 {
                   type: 'CONTENT_CHILDREN',
                   arguments: {
-                    contentChannelItemId: id,
+                    contentChannelItemId: _id,
                     limit: 0,
                   },
                 },

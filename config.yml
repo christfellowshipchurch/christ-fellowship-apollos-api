@@ -218,6 +218,7 @@ ROCK_MAPPINGS:
     - 45 # Informational Items
     - 60 # Resources
     - 63 # Sermons
+    # - 78 # Events
 
   CAMPUS_FAQ_CONTENT_CHANNEL_IDS:
     - 61

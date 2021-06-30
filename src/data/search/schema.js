@@ -13,6 +13,7 @@ export default gql`
     summary: String
     coverImage: ImageMedia
     node: Node
+    action: ACTION_FEATURE_ACTION
   }
 
   enum INDEX_ACTION {
