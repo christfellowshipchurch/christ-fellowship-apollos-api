@@ -18,22 +18,22 @@ const createUrlGlobalId = (url) =>
   createGlobalId(JSON.stringify({ url, __typename: 'Url' }), 'Url');
 
 const HARDCODED_INDEXED_ITEMS = [
-  {
-    id: createUrlGlobalId('/groups'),
-    action: 'OPEN_URL',
-    __typename: 'Url',
-    title: 'Groups',
-    summary: 'Groups page',
-    htmlContent: ['groups'],
-    priorityTags: ['groups'], // Prioritizes items when these are present in search query
-    coverImage: {
-      sources: [
-        {
-          uri: 'https://christfellowship.church/groups-cover-image.jpg',
-        },
-      ],
-    },
-  },
+  // {
+  //   id: createUrlGlobalId('/groups'),
+  //   action: 'OPEN_URL',
+  //   __typename: 'Url',
+  //   title: 'Groups',
+  //   summary: 'Groups page',
+  //   htmlContent: ['groups'],
+  //   priorityTags: ['groups'], // Prioritizes items when these are present in search query
+  //   coverImage: {
+  //     sources: [
+  //       {
+  //         uri: 'https://christfellowship.church/groups-cover-image.jpg',
+  //       },
+  //     ],
+  //   },
+  // },
 ];
 
 // Format:
