@@ -300,7 +300,7 @@ export default class StreamChat extends RESTDataSource {
       );
 
       if (rockAliasIds.length) {
-        OneSignal.createNotification({
+        const basePayload = {
           toUserIds: rockAliasIds
             .filter((id) => !!id) // filter out invalid ids as a last check
             .map((id) => `${id}`), // OneSignal expects an array of string Ids
@@ -308,6 +308,25 @@ export default class StreamChat extends RESTDataSource {
           heading: `💬 Message from ${sender.name}`,
           ...(isEmpty(channelName) ? {} : { subtitle: channelName }),
           app_url: `christfellowship://c/ChatChannelSingle?streamChannelId=${channelId}&streamChannelType=${channelType}`,
+        };
+
+        /**
+         * ! Backwards compatibility requirements
+         * 6.0.2 or earlier : do not auto-increment the Notification Badges as there is no way for the client-side applications to clear those badges
+         * 6.0.3 or later : auto-incrememnt the Notification Badges
+         */
+
+        // note : 6.0.2 or earlier
+        OneSignal.createNotification({
+          ...basePayload,
+          filters: [{ field: 'app_version', relation: '<', value: '6.0.3' }],
+        });
+
+        // note : 6.0.3 or later
+        OneSignal.createNotification({
+          ...basePayload,
+          ios_badgeType: 'Increase',
+          filters: [{ field: 'app_version', relation: '>', value: '6.0.2' }],
         });
       }
     }
