@@ -300,6 +300,7 @@ export default class StreamChat extends RESTDataSource {
       );
 
       if (rockAliasIds.length) {
+        return;
         const basePayload = {
           toUserIds: rockAliasIds
             .filter((id) => !!id) // filter out invalid ids as a last check
